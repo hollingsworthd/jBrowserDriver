@@ -18,6 +18,8 @@ There are three dependencies, one Selenium JAR and two Monocle JARs (a headless 
 
 It runs headless by default, but for debugging you can force GUI to be shown with JVM argument: `-Dbrowsergui=true`
 
+Currently there's no way to bypass untrusted certificates (a config option will be added), but you can specify trusted PEMs and their source. Recommended is the Mozilla CA list, which can be added with JVM argument: `-Dpemfile='https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
+
 - - -
 
 Copyright (C) 2014-2015 [Machine Publishers, LLC](https://machinepublishers.com)
