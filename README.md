@@ -14,7 +14,7 @@ This project requires Java 8. Note to Linux users: JavaFX is needed and it's par
 
 The primary class here is `JBrowserDriver`. Your code should be something like `WebDriver driver = new JBrowserDriver();` and then use it like any other Selenium WebDriver. A notable addition to the API is ability to get HTTP response codes, `((JBrowserDriver)driver).getStatusCode();`
 
-There are three dependencies, one Selenium JAR and two Monocle JARs (a headless windowing toolkit). No build script yet exists but the Eclipse project is part of the source tree (just import this project into your Eclipse workspace). And the required JARs are in the `lib` directory. Binary releases will be posted when the project is stable.
+There are two dependencies, Selenium and Monocle (a headless windowing toolkit). No build script yet exists but the Eclipse project is part of the source tree (just import this project into your Eclipse workspace). And the required JARs are in the `lib` directory. Binary releases will be posted when the project is stable.
 
 It runs headless by default, but for debugging you can force GUI to be shown with JVM argument: `-Dbrowsergui=true`
 
