@@ -114,13 +114,10 @@ public class JBrowserDriver implements Browser {
     Util.exec(new Sync<Object>() {
       public Object perform() {
         synchronized (lock) {
-          Screen.addScreen(1, 1, 96);
           final Stage stage = new Stage();
           final WebView view = new WebView();
           view.setCache(false);
           final WebEngine engine = view.getEngine();
-          System.out.println(engine.getUserAgent());
-          engine.executeScript("Object.defineProperty(navigator, 'appName', {get:function(){return 'hi';},configurable:false});");
           engine.titleProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable,
@@ -148,7 +145,6 @@ public class JBrowserDriver implements Browser {
                   } else if (Worker.State.SUCCEEDED.equals(newValue)
                       || Worker.State.CANCELLED.equals(newValue)
                       || Worker.State.FAILED.equals(newValue)) {
-                    System.out.println(executeScript("return navigator.appName;"));
                     int code = StreamHandler.stopStatusMonitor(engine.getLocation());
                     view.setVisible(true);
                     statusCode.set(Worker.State.SUCCEEDED.equals(newValue) ? code : 499);

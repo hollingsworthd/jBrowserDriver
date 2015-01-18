@@ -293,7 +293,10 @@ public class StreamHandler implements URLStreamHandlerFactory {
       byte[] content = toBytes(in);
       synchronized (injectorLock) {
         for (Injector injector : injectors) {
-          content = injector.inject(conn, content);
+          byte[] newContent = injector.inject(conn, content);
+          if (newContent != null) {
+            content = newContent;
+          }
         }
       }
       if (content != null) {
