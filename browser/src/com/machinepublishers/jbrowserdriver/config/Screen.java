@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver;
+package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -27,9 +27,16 @@ import java.lang.reflect.Method;
 
 import javafx.geometry.Rectangle2D;
 
+import com.machinepublishers.jbrowserdriver.Logs;
 import com.sun.javafx.Utils;
 
-public class Screen {
+/**
+ * This class is experimental and causes various issues with the GUI toolkit.
+ * Recommended that this not be used. Might be removed at any time.
+ * Thus, scope of this class is limited to this package.
+ * Use BrowserProperties instead.
+ */
+class Screen {
 
   private static final Object lock = new Object();
   private static boolean initialized;
@@ -46,7 +53,7 @@ public class Screen {
     }
   }
 
-  public static void addScreen(double width, double height, double dpi) {
+  static void addScreen(double width, double height, double dpi) {
     try {
       synchronized (lock) {
         if (!initialized) {

@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver;
+package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -38,7 +38,7 @@ import java.util.TimeZone;
  * until WebKit engine supports Intl classes.
  * Timezone and daylight savings offsets change according to locale.
  */
-public class BrowserDate {
+public class BrowserTimeZone {
   private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-HH-mm");
   static {
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -83,87 +83,87 @@ public class BrowserDate {
     daylightTimzones.put("NZST", "NZDT");
     daylightTimzones.put("MIT", "MIT");
   }
-  public static final BrowserDate UTC = new BrowserDate("UTC");
-  public static final BrowserDate AFRICA_ABIDJAN = new BrowserDate("Africa/Abidjan");
-  public static final BrowserDate AFRICA_ACCRA = new BrowserDate("Africa/Accra");
-  public static final BrowserDate AFRICA_ADDISABABA = new BrowserDate("Africa/Addis_Ababa");
-  public static final BrowserDate AFRICA_ALGIERS = new BrowserDate("Africa/Algiers");
-  public static final BrowserDate AFRICA_CAIRO = new BrowserDate("Africa/Cairo");
-  public static final BrowserDate AFRICA_CASABLANCA = new BrowserDate("Africa/Casablanca");
-  public static final BrowserDate AFRICA_DARESSALAAM = new BrowserDate("Africa/Dar_es_Salaam");
-  public static final BrowserDate AFRICA_FREETOWN = new BrowserDate("Africa/Freetown");
-  public static final BrowserDate AFRICA_JOHANNESBURG = new BrowserDate("Africa/Johannesburg");
-  public static final BrowserDate AFRICA_KHARTOUM = new BrowserDate("Africa/Khartoum");
-  public static final BrowserDate AFRICA_KINSHASA = new BrowserDate("Africa/Kinshasa");
-  public static final BrowserDate AFRICA_LAGOS = new BrowserDate("Africa/Lagos");
-  public static final BrowserDate AFRICA_MOGADISHU = new BrowserDate("Africa/Mogadishu");
-  public static final BrowserDate AFRICA_NAIROBI = new BrowserDate("Africa/Nairobi");
-  public static final BrowserDate AFRICA_TRIPOLI = new BrowserDate("Africa/Tripoli");
-  public static final BrowserDate AMERICA_ANCHORAGE = new BrowserDate("America/Anchorage");
-  public static final BrowserDate AMERICA_BELIZE = new BrowserDate("America/Belize");
-  public static final BrowserDate AMERICA_BOGOTA = new BrowserDate("America/Bogota");
-  public static final BrowserDate AMERICA_CANCUN = new BrowserDate("America/Cancun");
-  public static final BrowserDate AMERICA_CAYMAN = new BrowserDate("America/Cayman");
-  public static final BrowserDate AMERICA_CHICAGO = new BrowserDate("America/Chicago");
-  public static final BrowserDate AMERICA_COSTARICA = new BrowserDate("America/Costa_Rica");
-  public static final BrowserDate AMERICA_DENVER = new BrowserDate("America/Denver");
-  public static final BrowserDate AMERICA_GUATEMALA = new BrowserDate("America/Guatemala");
-  public static final BrowserDate AMERICA_JAMAICA = new BrowserDate("America/Jamaica");
-  public static final BrowserDate AMERICA_LIMA = new BrowserDate("America/Lima");
-  public static final BrowserDate AMERICA_LOSANGELES = new BrowserDate("America/Los_Angeles");
-  public static final BrowserDate AMERICA_MEXICOCITY = new BrowserDate("America/Mexico_City");
-  public static final BrowserDate AMERICA_MONTERREY = new BrowserDate("America/Monterrey");
-  public static final BrowserDate AMERICA_MONTREAL = new BrowserDate("America/Montreal");
-  public static final BrowserDate AMERICA_NEWYORK = new BrowserDate("America/New_York");
-  public static final BrowserDate AMERICA_PANAMA = new BrowserDate("America/Panama");
-  public static final BrowserDate AMERICA_PHOENIX = new BrowserDate("America/Phoenix");
-  public static final BrowserDate AMERICA_TIJUANA = new BrowserDate("America/Tijuana");
-  public static final BrowserDate AMERICA_TORONTO = new BrowserDate("America/Toronto");
-  public static final BrowserDate AMERICA_VANCOUVER = new BrowserDate("America/Vancouver");
-  public static final BrowserDate AMERICA_WINNIPEG = new BrowserDate("America/Winnipeg");
-  public static final BrowserDate ASIA_BEIRUT = new BrowserDate("Asia/Beirut");
-  public static final BrowserDate ASIA_CALCUTTA = new BrowserDate("Asia/Calcutta");
-  public static final BrowserDate ASIA_DAMASCUS = new BrowserDate("Asia/Damascus");
-  public static final BrowserDate ASIA_DHAKA = new BrowserDate("Asia/Dhaka");
-  public static final BrowserDate ASIA_ISTANBUL = new BrowserDate("Asia/Istanbul");
-  public static final BrowserDate ASIA_NOVOSIBIRSK = new BrowserDate("Asia/Novosibirsk");
-  public static final BrowserDate ASIA_QATAR = new BrowserDate("Asia/Qatar");
-  public static final BrowserDate ASIA_SEOUL = new BrowserDate("Asia/Seoul");
-  public static final BrowserDate ASIA_TELAVIV = new BrowserDate("Asia/Tel_Aviv");
-  public static final BrowserDate ASIA_TOKYO = new BrowserDate("Asia/Tokyo");
-  public static final BrowserDate EUROPE_AMSTERDAM = new BrowserDate("Europe/Amsterdam");
-  public static final BrowserDate EUROPE_ATHENS = new BrowserDate("Europe/Athens");
-  public static final BrowserDate EUROPE_BERLIN = new BrowserDate("Europe/Berlin");
-  public static final BrowserDate EUROPE_BRUSSELS = new BrowserDate("Europe/Brussels");
-  public static final BrowserDate EUROPE_BUCHAREST = new BrowserDate("Europe/Bucharest");
-  public static final BrowserDate EUROPE_BUDAPEST = new BrowserDate("Europe/Budapest");
-  public static final BrowserDate EUROPE_COPENHAGEN = new BrowserDate("Europe/Copenhagen");
-  public static final BrowserDate EUROPE_ISTANBUL = new BrowserDate("Europe/Istanbul");
-  public static final BrowserDate EUROPE_KIEV = new BrowserDate("Europe/Kiev");
-  public static final BrowserDate EUROPE_LONDON = new BrowserDate("Europe/London");
-  public static final BrowserDate EUROPE_MADRID = new BrowserDate("Europe/Madrid");
-  public static final BrowserDate EUROPE_MINSK = new BrowserDate("Europe/Minsk");
-  public static final BrowserDate EUROPE_MOSCOW = new BrowserDate("Europe/Moscow");
-  public static final BrowserDate EUROPE_PARIS = new BrowserDate("Europe/Paris");
-  public static final BrowserDate EUROPE_PRAGUE = new BrowserDate("Europe/Prague");
-  public static final BrowserDate EUROPE_ROME = new BrowserDate("Europe/Rome");
-  public static final BrowserDate EUROPE_SOFIA = new BrowserDate("Europe/Sofia");
-  public static final BrowserDate EUROPE_STOCKHOLM = new BrowserDate("Europe/Stockholm");
-  public static final BrowserDate EUROPE_VIENNA = new BrowserDate("Europe/Vienna");
-  public static final BrowserDate EUROPE_WARSAW = new BrowserDate("Europe/Warsaw");
-  public static final BrowserDate EUROPE_ZURICH = new BrowserDate("Europe/Zurich");
-  public static final BrowserDate PACIFIC_AUCKLAND = new BrowserDate("Pacific/Auckland");
-  public static final BrowserDate PACIFIC_FIJI = new BrowserDate("Pacific/Fiji");
-  public static final BrowserDate PACIFIC_HONOLULU = new BrowserDate("Pacific/Honolulu");
-  public static final Set<BrowserDate> ALL_ZONES;
+  public static final BrowserTimeZone UTC = new BrowserTimeZone("UTC");
+  public static final BrowserTimeZone AFRICA_ABIDJAN = new BrowserTimeZone("Africa/Abidjan");
+  public static final BrowserTimeZone AFRICA_ACCRA = new BrowserTimeZone("Africa/Accra");
+  public static final BrowserTimeZone AFRICA_ADDISABABA = new BrowserTimeZone("Africa/Addis_Ababa");
+  public static final BrowserTimeZone AFRICA_ALGIERS = new BrowserTimeZone("Africa/Algiers");
+  public static final BrowserTimeZone AFRICA_CAIRO = new BrowserTimeZone("Africa/Cairo");
+  public static final BrowserTimeZone AFRICA_CASABLANCA = new BrowserTimeZone("Africa/Casablanca");
+  public static final BrowserTimeZone AFRICA_DARESSALAAM = new BrowserTimeZone("Africa/Dar_es_Salaam");
+  public static final BrowserTimeZone AFRICA_FREETOWN = new BrowserTimeZone("Africa/Freetown");
+  public static final BrowserTimeZone AFRICA_JOHANNESBURG = new BrowserTimeZone("Africa/Johannesburg");
+  public static final BrowserTimeZone AFRICA_KHARTOUM = new BrowserTimeZone("Africa/Khartoum");
+  public static final BrowserTimeZone AFRICA_KINSHASA = new BrowserTimeZone("Africa/Kinshasa");
+  public static final BrowserTimeZone AFRICA_LAGOS = new BrowserTimeZone("Africa/Lagos");
+  public static final BrowserTimeZone AFRICA_MOGADISHU = new BrowserTimeZone("Africa/Mogadishu");
+  public static final BrowserTimeZone AFRICA_NAIROBI = new BrowserTimeZone("Africa/Nairobi");
+  public static final BrowserTimeZone AFRICA_TRIPOLI = new BrowserTimeZone("Africa/Tripoli");
+  public static final BrowserTimeZone AMERICA_ANCHORAGE = new BrowserTimeZone("America/Anchorage");
+  public static final BrowserTimeZone AMERICA_BELIZE = new BrowserTimeZone("America/Belize");
+  public static final BrowserTimeZone AMERICA_BOGOTA = new BrowserTimeZone("America/Bogota");
+  public static final BrowserTimeZone AMERICA_CANCUN = new BrowserTimeZone("America/Cancun");
+  public static final BrowserTimeZone AMERICA_CAYMAN = new BrowserTimeZone("America/Cayman");
+  public static final BrowserTimeZone AMERICA_CHICAGO = new BrowserTimeZone("America/Chicago");
+  public static final BrowserTimeZone AMERICA_COSTARICA = new BrowserTimeZone("America/Costa_Rica");
+  public static final BrowserTimeZone AMERICA_DENVER = new BrowserTimeZone("America/Denver");
+  public static final BrowserTimeZone AMERICA_GUATEMALA = new BrowserTimeZone("America/Guatemala");
+  public static final BrowserTimeZone AMERICA_JAMAICA = new BrowserTimeZone("America/Jamaica");
+  public static final BrowserTimeZone AMERICA_LIMA = new BrowserTimeZone("America/Lima");
+  public static final BrowserTimeZone AMERICA_LOSANGELES = new BrowserTimeZone("America/Los_Angeles");
+  public static final BrowserTimeZone AMERICA_MEXICOCITY = new BrowserTimeZone("America/Mexico_City");
+  public static final BrowserTimeZone AMERICA_MONTERREY = new BrowserTimeZone("America/Monterrey");
+  public static final BrowserTimeZone AMERICA_MONTREAL = new BrowserTimeZone("America/Montreal");
+  public static final BrowserTimeZone AMERICA_NEWYORK = new BrowserTimeZone("America/New_York");
+  public static final BrowserTimeZone AMERICA_PANAMA = new BrowserTimeZone("America/Panama");
+  public static final BrowserTimeZone AMERICA_PHOENIX = new BrowserTimeZone("America/Phoenix");
+  public static final BrowserTimeZone AMERICA_TIJUANA = new BrowserTimeZone("America/Tijuana");
+  public static final BrowserTimeZone AMERICA_TORONTO = new BrowserTimeZone("America/Toronto");
+  public static final BrowserTimeZone AMERICA_VANCOUVER = new BrowserTimeZone("America/Vancouver");
+  public static final BrowserTimeZone AMERICA_WINNIPEG = new BrowserTimeZone("America/Winnipeg");
+  public static final BrowserTimeZone ASIA_BEIRUT = new BrowserTimeZone("Asia/Beirut");
+  public static final BrowserTimeZone ASIA_CALCUTTA = new BrowserTimeZone("Asia/Calcutta");
+  public static final BrowserTimeZone ASIA_DAMASCUS = new BrowserTimeZone("Asia/Damascus");
+  public static final BrowserTimeZone ASIA_DHAKA = new BrowserTimeZone("Asia/Dhaka");
+  public static final BrowserTimeZone ASIA_ISTANBUL = new BrowserTimeZone("Asia/Istanbul");
+  public static final BrowserTimeZone ASIA_NOVOSIBIRSK = new BrowserTimeZone("Asia/Novosibirsk");
+  public static final BrowserTimeZone ASIA_QATAR = new BrowserTimeZone("Asia/Qatar");
+  public static final BrowserTimeZone ASIA_SEOUL = new BrowserTimeZone("Asia/Seoul");
+  public static final BrowserTimeZone ASIA_TELAVIV = new BrowserTimeZone("Asia/Tel_Aviv");
+  public static final BrowserTimeZone ASIA_TOKYO = new BrowserTimeZone("Asia/Tokyo");
+  public static final BrowserTimeZone EUROPE_AMSTERDAM = new BrowserTimeZone("Europe/Amsterdam");
+  public static final BrowserTimeZone EUROPE_ATHENS = new BrowserTimeZone("Europe/Athens");
+  public static final BrowserTimeZone EUROPE_BERLIN = new BrowserTimeZone("Europe/Berlin");
+  public static final BrowserTimeZone EUROPE_BRUSSELS = new BrowserTimeZone("Europe/Brussels");
+  public static final BrowserTimeZone EUROPE_BUCHAREST = new BrowserTimeZone("Europe/Bucharest");
+  public static final BrowserTimeZone EUROPE_BUDAPEST = new BrowserTimeZone("Europe/Budapest");
+  public static final BrowserTimeZone EUROPE_COPENHAGEN = new BrowserTimeZone("Europe/Copenhagen");
+  public static final BrowserTimeZone EUROPE_ISTANBUL = new BrowserTimeZone("Europe/Istanbul");
+  public static final BrowserTimeZone EUROPE_KIEV = new BrowserTimeZone("Europe/Kiev");
+  public static final BrowserTimeZone EUROPE_LONDON = new BrowserTimeZone("Europe/London");
+  public static final BrowserTimeZone EUROPE_MADRID = new BrowserTimeZone("Europe/Madrid");
+  public static final BrowserTimeZone EUROPE_MINSK = new BrowserTimeZone("Europe/Minsk");
+  public static final BrowserTimeZone EUROPE_MOSCOW = new BrowserTimeZone("Europe/Moscow");
+  public static final BrowserTimeZone EUROPE_PARIS = new BrowserTimeZone("Europe/Paris");
+  public static final BrowserTimeZone EUROPE_PRAGUE = new BrowserTimeZone("Europe/Prague");
+  public static final BrowserTimeZone EUROPE_ROME = new BrowserTimeZone("Europe/Rome");
+  public static final BrowserTimeZone EUROPE_SOFIA = new BrowserTimeZone("Europe/Sofia");
+  public static final BrowserTimeZone EUROPE_STOCKHOLM = new BrowserTimeZone("Europe/Stockholm");
+  public static final BrowserTimeZone EUROPE_VIENNA = new BrowserTimeZone("Europe/Vienna");
+  public static final BrowserTimeZone EUROPE_WARSAW = new BrowserTimeZone("Europe/Warsaw");
+  public static final BrowserTimeZone EUROPE_ZURICH = new BrowserTimeZone("Europe/Zurich");
+  public static final BrowserTimeZone PACIFIC_AUCKLAND = new BrowserTimeZone("Pacific/Auckland");
+  public static final BrowserTimeZone PACIFIC_FIJI = new BrowserTimeZone("Pacific/Fiji");
+  public static final BrowserTimeZone PACIFIC_HONOLULU = new BrowserTimeZone("Pacific/Honolulu");
+  public static final Set<BrowserTimeZone> ALL_ZONES;
   static {
-    Set<BrowserDate> tmp = new HashSet<BrowserDate>();
-    Field[] fields = BrowserDate.class.getDeclaredFields();
+    Set<BrowserTimeZone> tmp = new HashSet<BrowserTimeZone>();
+    Field[] fields = BrowserTimeZone.class.getDeclaredFields();
     for (int i = 0; i < fields.length; i++) {
       try {
         Object obj = fields[i].get(null);
-        if (obj instanceof BrowserDate) {
-          tmp.add((BrowserDate) fields[i].get(null));
+        if (obj instanceof BrowserTimeZone) {
+          tmp.add((BrowserTimeZone) fields[i].get(null));
         }
       } catch (Throwable t) {}
     }
@@ -173,15 +173,15 @@ public class BrowserDate {
   private String script;
   private final String timeZoneName;
 
-  private BrowserDate(String timeZoneName) {
+  private BrowserTimeZone(String timeZoneName) {
     this.timeZoneName = timeZoneName;
   }
 
   private static String timeZoneDesc(boolean daylight, int rawOffset, int timeZoneMinutes, int daylightMinutes) {
     int totalOffsetMinutes = timeZoneMinutes - (daylight ? daylightMinutes : 0);
-    int formattedOffsetHours = totalOffsetMinutes / 60;
-    int formattedOffsetMinutes = (formattedOffsetHours * 60) - totalOffsetMinutes;
-    String timeZoneDesc = (totalOffsetMinutes < 0 ? "+" : "-")
+    int formattedOffsetHours = Math.abs(totalOffsetMinutes / 60);
+    int formattedOffsetMinutes = Math.abs(totalOffsetMinutes) - (formattedOffsetHours * 60);
+    String timeZoneDesc = (totalOffsetMinutes <= 0 ? "+" : "-")
         + (formattedOffsetHours < 10 ? "0" + formattedOffsetHours : "" + formattedOffsetHours)
         + (formattedOffsetMinutes == 0 ? "00"
             : (formattedOffsetMinutes < 10 ? "0" + formattedOffsetMinutes : formattedOffsetMinutes));
@@ -234,7 +234,7 @@ public class BrowserDate {
     String timeZoneDescExpr = builder.toString();
     builder = new StringBuilder();
 
-    builder.append("var tmpDate = new Date(this.getTime() " + timeZone.getRawOffset() + ");");
+    builder.append("var tmpDate = new Date(this.getTime() + " + timeZone.getRawOffset() + ");");
     builder.append(isDaylightSavings);
     builder.append("if(isDaylightSavings){");
     builder.append("  tmpDate = new Date(tmpDate.getTime() + " + timeZone.getDSTSavings() + ");");
@@ -362,6 +362,11 @@ public class BrowserDate {
       init();
     }
     return script;
+  }
+
+  @Override
+  public String toString() {
+    return script();
   }
 
   private static int[][] daylightSavings(TimeZone timeZone) {

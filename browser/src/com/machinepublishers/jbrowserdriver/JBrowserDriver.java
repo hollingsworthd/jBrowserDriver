@@ -28,6 +28,7 @@ import java.net.CacheRequest;
 import java.net.CacheResponse;
 import java.net.CookieHandler;
 import java.net.CookieManager;
+import java.net.HttpURLConnection;
 import java.net.ResponseCache;
 import java.net.URI;
 import java.net.URL;
@@ -35,9 +36,12 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -62,9 +66,12 @@ import org.openqa.selenium.WebElement;
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Async;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.StreamHandler;
+import com.machinepublishers.jbrowserdriver.config.StreamHandler.Injector;
 import com.sun.javafx.webkit.Accessor;
 
 public class JBrowserDriver implements Browser {
+  private static final Random rand = new Random();
   private static final CookieManager cookieManager = new CookieManager();
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
@@ -116,8 +123,34 @@ public class JBrowserDriver implements Browser {
         synchronized (lock) {
           final Stage stage = new Stage();
           final WebView view = new WebView();
-          view.setCache(false);
           final WebEngine engine = view.getEngine();
+          StringBuilder scriptBuilder = new StringBuilder();
+          String id = "A" + rand.nextLong();
+          scriptBuilder.append("<script id='" + id + "' language='javascript'>");
+          scriptBuilder.append("try{");
+          scriptBuilder.append(settings.browserTimeZone().script());
+          scriptBuilder.append(settings.browserProperties().script());
+          scriptBuilder.append("}catch(e){}");
+          scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + id + "'));");
+          scriptBuilder.append("</script>");
+          final String script = scriptBuilder.toString();
+          StreamHandler.addInjector(new Injector() {
+            @Override
+            public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
+              if (connection.getContentType().indexOf("text/html") > -1) {
+                try {
+                  String charset = StreamHandler.charset(connection);
+                  String content = new String(inflatedContent, charset);
+                  Pattern head = Pattern.compile("<head\\b[^>]*>");
+                  Matcher matcher = head.matcher(content);
+                  if (matcher.find()) {
+                    return matcher.replaceFirst(matcher.group(0) + script).getBytes(charset);
+                  }
+                } catch (Throwable t) {}
+              }
+              return null;
+            }
+          });
           engine.titleProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable,

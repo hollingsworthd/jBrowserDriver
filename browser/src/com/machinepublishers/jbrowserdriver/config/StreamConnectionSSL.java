@@ -19,26 +19,51 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver;
+package com.machinepublishers.jbrowserdriver.config;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.net.CookieHandler;
+import java.net.HttpURLConnection;
 import java.net.ProtocolException;
-import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.security.Permission;
+import java.security.Principal;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import sun.net.www.http.HttpClient;
-import sun.net.www.protocol.http.HttpURLConnection;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import javax.security.cert.X509Certificate;
 
-public class StreamConnection extends HttpURLConnection {
-  private final HttpURLConnection conn;
+import sun.net.www.protocol.https.HttpsURLConnectionImpl;
+
+import com.machinepublishers.jbrowserdriver.Logs;
+import com.machinepublishers.jbrowserdriver.Settings;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
+
+public class StreamConnectionSSL extends HttpsURLConnectionImpl {
+  private static final Object lock = new Object();
+  private static SSLSocketFactory socketFactory;
+  private static long lastCertUpdate;
+  //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
+  private static final String pemFile = System.getProperty("pemfile");
+  private final HttpsURLConnectionImpl conn;
   private Settings settings;
   private static final URL dummy;
   static {
@@ -48,20 +73,86 @@ public class StreamConnection extends HttpURLConnection {
     } catch (Throwable t) {}
     dummy = dummyTmp;
   }
+  private static Pattern pemBlock = Pattern.compile(
+      "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
 
-  public StreamConnection(HttpURLConnection conn) {
-    super(dummy, (Proxy) null);
+  public static SSLSocketFactory updatedSocketFactory() {
+    synchronized (lock) {
+      if (pemFile != null && System.currentTimeMillis() - lastCertUpdate > 48 * 60 * 60 * 1000) {
+        try {
+          String location = pemFile;
+          File cachedPemFile = new File("./pemfile_cached");
+          boolean remote = location.startsWith("https://") || location.startsWith("http://");
+          if (remote && cachedPemFile.exists()
+              && (System.currentTimeMillis() - cachedPemFile.lastModified() < 48 * 60 * 60 * 1000)) {
+            location = cachedPemFile.getAbsolutePath();
+            remote = false;
+          }
+          String pemBlocks = null;
+          if (remote) {
+            HttpURLConnection remotePemFile = StreamHandler.defaultConnection(location);
+            remotePemFile.setRequestMethod("GET");
+            remotePemFile.connect();
+            pemBlocks = StreamHandler.toString(remotePemFile.getInputStream(), StreamHandler.charset(remotePemFile));
+            cachedPemFile.delete();
+            Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
+          } else {
+            pemBlocks = new String(Files.readAllBytes(Paths.get(new File(location).getAbsolutePath())), "utf-8");
+          }
+          KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+          keyStore.load(null);
+          CertificateFactory cf = CertificateFactory.getInstance("X.509");
+          Matcher matcher = pemBlock.matcher(pemBlocks);
+          boolean found = false;
+          while (matcher.find()) {
+            String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.decode(pemBlock));
+            java.security.cert.X509Certificate cert =
+                (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
+            String alias = cert.getSubjectX500Principal().getName("RFC2253");
+            if (alias != null && !keyStore.containsAlias(alias)) {
+              found = true;
+              keyStore.setCertificateEntry(alias, cert);
+            }
+          }
+          if (found) {
+            KeyManagerFactory keyManager =
+                KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManager.init(keyStore, null);
+            TrustManagerFactory trustManager =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManager.init(keyStore);
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
+            lastCertUpdate = System.currentTimeMillis();
+            socketFactory = context.getSocketFactory();
+            return socketFactory;
+          }
+        } catch (Throwable t) {
+          Logs.exception(t);
+        }
+      }
+      return socketFactory;
+    }
+  }
+
+  public StreamConnectionSSL(HttpsURLConnectionImpl conn) throws IOException {
+    super(dummy);
     this.conn = conn;
+    SSLSocketFactory socketFactory = updatedSocketFactory();
+    if (socketFactory != null) {
+      this.conn.setSSLSocketFactory(socketFactory);
+    }
   }
 
   @Override
   public void setRequestProperty(String arg0, String arg1) {
-    settings = Settings.requestPropertyHelper(conn, settings, false, arg0, arg1);
+    settings = RequestHeaders.requestPropertyHelper(conn, settings, false, arg0, arg1);
   }
 
   @Override
   public void addRequestProperty(String arg0, String arg1) {
-    settings = Settings.requestPropertyHelper(conn, settings, true, arg0, arg1);
+    settings = RequestHeaders.requestPropertyHelper(conn, settings, true, arg0, arg1);
   }
 
   @Override
@@ -76,94 +167,46 @@ public class StreamConnection extends HttpURLConnection {
 
   @Override
   protected void finalize() throws Throwable {
-    super.finalize();
+    try {
+      super.finalize();
+    } catch (Throwable t) {}
+    try {
+      Method method = conn.getClass().getDeclaredMethod("finalize");
+      method.setAccessible(true);
+      method.invoke(conn);
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
     StreamHandler.clearFields(this);
     StreamHandler.clearFields(conn);
   }
 
   @Override
-  public Object authObj() {
-    return conn.authObj();
+  public X509Certificate[] getServerCertificateChain() {
+    return conn.getServerCertificateChain();
   }
 
   @Override
-  public void authObj(Object arg0) {
-    conn.authObj(arg0);
-  }
-
-  @Override
-  public synchronized void doTunneling() throws IOException {
-    conn.doTunneling();
-  }
-
-  @Override
-  public CookieHandler getCookieHandler() {
-    return conn.getCookieHandler();
-  }
-
-  @Override
-  protected HttpClient getNewHttpClient(URL arg0, Proxy arg1, int arg2, boolean arg3) throws IOException {
+  protected boolean isConnected() {
     try {
-      Method method = conn.getClass().getDeclaredMethod("getNewHttpClient",
-          URL.class, Proxy.class, int.class, boolean.class);
+      Method method = conn.getClass().getDeclaredMethod("isConnected");
       method.setAccessible(true);
-      return (HttpClient) method.invoke(conn, arg0, arg1, arg2, arg3);
+      return (Boolean) method.invoke(conn);
     } catch (Throwable t) {
       Logs.exception(t);
     }
-    return null;
+    return false;
   }
 
   @Override
-  protected HttpClient getNewHttpClient(URL arg0, Proxy arg1, int arg2) throws IOException {
+  protected void setConnected(boolean arg0) {
     try {
-      Method method = conn.getClass().getDeclaredMethod("getNewHttpClient",
-          URL.class, Proxy.class, int.class);
+      Method method = conn.getClass().getDeclaredMethod("setConnected", boolean.class);
       method.setAccessible(true);
-      return (HttpClient) method.invoke(conn, arg0, arg1, arg2);
+      method.invoke(conn, arg0);
     } catch (Throwable t) {
       Logs.exception(t);
     }
-    return null;
-  }
-
-  @Override
-  protected void plainConnect() throws IOException {
-    try {
-      Method method = conn.getClass().getDeclaredMethod("plainConnect");
-      method.setAccessible(true);
-      method.invoke(conn);
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-  }
-
-  @Override
-  protected void plainConnect0() throws IOException {
-    try {
-      Method method = conn.getClass().getDeclaredMethod("plainConnect0");
-      method.setAccessible(true);
-      method.invoke(conn);
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-  }
-
-  @Override
-  protected void proxiedConnect(URL arg0, String arg1, int arg2, boolean arg3) throws IOException {
-    try {
-      Method method = conn.getClass().getDeclaredMethod("proxiedConnect",
-          URL.class, String.class, int.class, boolean.class);
-      method.setAccessible(true);
-      method.invoke(conn, arg0, arg1, arg2, arg3);
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-  }
-
-  @Override
-  public void setAuthenticationProperty(String arg0, String arg1) {
-    conn.setAuthenticationProperty(arg0, arg1);
   }
 
   @Override
@@ -192,7 +235,7 @@ public class StreamConnection extends HttpURLConnection {
   protected void setProxiedClient(URL arg0, String arg1, int arg2, boolean arg3) throws IOException {
     try {
       Method method = conn.getClass().getDeclaredMethod("setProxiedClient",
-          URL.class, String.class, Integer.class, boolean.class);
+          URL.class, String.class, int.class, boolean.class);
       method.setAccessible(true);
       method.invoke(conn, arg0, arg1, arg2, arg3);
     } catch (Throwable t) {
@@ -213,13 +256,48 @@ public class StreamConnection extends HttpURLConnection {
   }
 
   @Override
-  public void setTunnelState(TunnelState arg0) {
-    conn.setTunnelState(arg0);
+  public String getCipherSuite() {
+    return conn.getCipherSuite();
   }
 
   @Override
-  public boolean streaming() {
-    return conn.streaming();
+  public HostnameVerifier getHostnameVerifier() {
+    return conn.getHostnameVerifier();
+  }
+
+  @Override
+  public Certificate[] getLocalCertificates() {
+    return conn.getLocalCertificates();
+  }
+
+  @Override
+  public Principal getLocalPrincipal() {
+    return conn.getLocalPrincipal();
+  }
+
+  @Override
+  public Principal getPeerPrincipal() throws SSLPeerUnverifiedException {
+    return conn.getPeerPrincipal();
+  }
+
+  @Override
+  public SSLSocketFactory getSSLSocketFactory() {
+    return conn.getSSLSocketFactory();
+  }
+
+  @Override
+  public Certificate[] getServerCertificates() throws SSLPeerUnverifiedException {
+    return conn.getServerCertificates();
+  }
+
+  @Override
+  public void setHostnameVerifier(HostnameVerifier arg0) {
+    conn.setHostnameVerifier(arg0);
+  }
+
+  @Override
+  public void setSSLSocketFactory(SSLSocketFactory arg0) {
+    conn.setSSLSocketFactory(arg0);
   }
 
   @Override

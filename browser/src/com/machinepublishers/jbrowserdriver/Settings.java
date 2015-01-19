@@ -21,84 +21,51 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.net.HttpURLConnection;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.machinepublishers.jbrowserdriver.config.BrowserProperties;
+import com.machinepublishers.jbrowserdriver.config.BrowserTimeZone;
+import com.machinepublishers.jbrowserdriver.config.Proxy;
+import com.machinepublishers.jbrowserdriver.config.RequestHeaders;
 
 public class Settings {
   private static final Map<Long, Settings> registry = new HashMap<Long, Settings>();
-  private final Map<String, String> headers = new LinkedHashMap<String, String>();
-  private static final Collection<String> defaultHeaders = new HashSet<String>(Arrays.asList(new String[] {
-      "Accept", "User-Agent", "Accept-Encoding", "Accept-Language", "Accept-Charset"
-  }));
+  private RequestHeaders requestHeaders = new RequestHeaders();
+  private BrowserTimeZone browserTimeZone = BrowserTimeZone.UTC;
+  private BrowserProperties browserProperties = new BrowserProperties();
+  private Proxy proxy = new Proxy();
 
-  private ProxyType proxyType;
-  private String proxyHost;
-  private int proxyPort;
-  private String proxyUser;
-  private String proxyPassword;
-
-  public Settings() {
-    headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-    headers.put("User-Agent",
-        "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2114.2 Safari/537.36");
-    headers.put("Accept-Encoding", "gzip,deflate");
-    headers.put("Accept-Language", "en-US,en;q=0.5");
-    headers.put("Accept-Charset", "");
+  public void setHeaders(RequestHeaders requestHeaders) {
+    this.requestHeaders = requestHeaders;
   }
 
-  public static enum ProxyType {
-    SOCKS_5, SOCKS_4, HTTP, SSL, ALL
-  };
-
-  public void setProxy(ProxyType type, String host, int port, String user, String password) {
-    this.proxyType = type;
-    this.proxyHost = host;
-    this.proxyPort = port;
-    this.proxyUser = user;
-    this.proxyPassword = password;
+  public void setBrowserTimeZone(BrowserTimeZone browserTimeZone) {
+    this.browserTimeZone = browserTimeZone;
   }
 
-  synchronized boolean hasProxy() {
-    return proxyType != null
-        && proxyHost != null && !proxyHost.isEmpty()
-        && proxyPort > 0;
+  public void setBrowserProperties(BrowserProperties browserProperties) {
+    this.browserProperties = browserProperties;
   }
 
-  synchronized ProxyType proxyType() {
-    return proxyType;
+  public void setProxy(Proxy proxy) {
+    this.proxy = proxy;
   }
 
-  synchronized String proxyHost() {
-    return proxyHost;
+  public RequestHeaders headers() {
+    return requestHeaders;
   }
 
-  synchronized int proxyPort() {
-    return proxyPort;
+  public BrowserTimeZone browserTimeZone() {
+    return browserTimeZone;
   }
 
-  synchronized String proxyUser() {
-    return proxyUser == null ? "" : proxyUser;
+  public BrowserProperties browserProperties() {
+    return browserProperties;
   }
 
-  synchronized String proxyPassword() {
-    return proxyPassword == null ? "" : proxyPassword;
-  }
-
-  public synchronized void setHeader(String name, String value) {
-    headers.put(name, value);
-  }
-
-  synchronized Collection<String> headerNames() {
-    return headers.keySet();
-  }
-
-  synchronized String header(String name) {
-    return headers.get(name);
+  public Proxy proxy() {
+    return proxy;
   }
 
   static synchronized void register(Long id, Settings settings) {
@@ -109,24 +76,7 @@ public class Settings {
     registry.remove(id);
   }
 
-  static synchronized Settings requestPropertyHelper(HttpURLConnection conn,
-      Settings settings, boolean add, String name, String value) {
-    if (name.equals("User-Agent")) {
-      settings = registry.get(Long.parseLong(value));
-      for (String curName : settings.headerNames()) {
-        String curVal = settings.header(curName);
-        if (curVal != null && !curVal.isEmpty()) {
-          conn.setRequestProperty(curName, curVal);
-        }
-      }
-    } else if (!defaultHeaders.contains(name)
-        && (settings == null || !settings.headerNames().contains(name))) {
-      if (add) {
-        conn.addRequestProperty(name, value);
-      } else {
-        conn.setRequestProperty(name, value);
-      }
-    }
-    return settings;
+  public static synchronized Settings get(Long id) {
+    return registry.get(id);
   }
 }
