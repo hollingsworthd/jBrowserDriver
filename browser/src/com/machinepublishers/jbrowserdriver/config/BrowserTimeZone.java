@@ -57,31 +57,33 @@ public class BrowserTimeZone {
     offsets.put(10800000, "EAT");
     offsets.put(19800000, "IST");
     offsets.put(21600000, "BST");
+    offsets.put(28800000, "CST");
     offsets.put(32400000, "JST");
     offsets.put(34200000, "ACST");
     offsets.put(39600000, "SST");
     offsets.put(43200000, "NZST");
     offsets.put(46800000, "MIT");
   }
-  private static final Map<String, String> daylightTimzones = new HashMap<String, String>();
+  private static final Map<Integer, String> daylightTimzones = new HashMap<Integer, String>();
   static {
-    daylightTimzones.put("HAST", "HADT");
-    daylightTimzones.put("AKST", "AKDT");
-    daylightTimzones.put("PST", "PDT");
-    daylightTimzones.put("MST", "MDT");
-    daylightTimzones.put("CST", "CDT");
-    daylightTimzones.put("EST", "EDT");
-    daylightTimzones.put("UTC", "UTC");
-    daylightTimzones.put("CET", "CEST");
-    daylightTimzones.put("EET", "EEST");
-    daylightTimzones.put("EAT", "EAT");
-    daylightTimzones.put("IST", "IST");
-    daylightTimzones.put("BST", "BST");
-    daylightTimzones.put("JST", "JST");
-    daylightTimzones.put("ACST", "ACDT");
-    daylightTimzones.put("SST", "SST");
-    daylightTimzones.put("NZST", "NZDT");
-    daylightTimzones.put("MIT", "MIT");
+    daylightTimzones.put(-36000000, "HADT");
+    daylightTimzones.put(-32400000, "AKDT");
+    daylightTimzones.put(-28800000, "PDT");
+    daylightTimzones.put(-25200000, "MDT");
+    daylightTimzones.put(-21600000, "CDT");
+    daylightTimzones.put(-18000000, "EDT");
+    daylightTimzones.put(0, "UTC");
+    daylightTimzones.put(3600000, "CEST");
+    daylightTimzones.put(7200000, "EEST");
+    daylightTimzones.put(10800000, "EAT");
+    daylightTimzones.put(19800000, "IST");
+    daylightTimzones.put(21600000, "BST");
+    daylightTimzones.put(28800000, "CST");
+    daylightTimzones.put(32400000, "JST");
+    daylightTimzones.put(34200000, "ACDT");
+    daylightTimzones.put(39600000, "SST");
+    daylightTimzones.put(43200000, "NZDT");
+    daylightTimzones.put(46800000, "MIT");
   }
   public static final BrowserTimeZone UTC = new BrowserTimeZone("UTC");
   public static final BrowserTimeZone AFRICA_ABIDJAN = new BrowserTimeZone("Africa/Abidjan");
@@ -129,6 +131,8 @@ public class BrowserTimeZone {
   public static final BrowserTimeZone ASIA_NOVOSIBIRSK = new BrowserTimeZone("Asia/Novosibirsk");
   public static final BrowserTimeZone ASIA_QATAR = new BrowserTimeZone("Asia/Qatar");
   public static final BrowserTimeZone ASIA_SEOUL = new BrowserTimeZone("Asia/Seoul");
+  public static final BrowserTimeZone ASIA_SHANGHAI = new BrowserTimeZone("Asia/Shanghai");
+  public static final BrowserTimeZone ASIA_SINGAPORE = new BrowserTimeZone("Asia/Singapore");
   public static final BrowserTimeZone ASIA_TELAVIV = new BrowserTimeZone("Asia/Tel_Aviv");
   public static final BrowserTimeZone ASIA_TOKYO = new BrowserTimeZone("Asia/Tokyo");
   public static final BrowserTimeZone EUROPE_AMSTERDAM = new BrowserTimeZone("Europe/Amsterdam");
@@ -185,7 +189,7 @@ public class BrowserTimeZone {
         + (formattedOffsetHours < 10 ? "0" + formattedOffsetHours : "" + formattedOffsetHours)
         + (formattedOffsetMinutes == 0 ? "00"
             : (formattedOffsetMinutes < 10 ? "0" + formattedOffsetMinutes : formattedOffsetMinutes));
-    return daylight ? timeZoneDesc + " (" + daylightTimzones.get(offsets.get(rawOffset)) + ")"
+    return daylight ? timeZoneDesc + " (" + daylightTimzones.get(rawOffset) + ")"
         : timeZoneDesc + " (" + offsets.get(rawOffset) + ")";
   }
 
