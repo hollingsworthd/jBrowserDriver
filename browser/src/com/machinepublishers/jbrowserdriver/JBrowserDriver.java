@@ -77,6 +77,7 @@ public class JBrowserDriver implements Browser {
   private static final AtomicLong settingsId = new AtomicLong();
   private static final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+  private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private final long mySettingsId;
   static {
     if (!"true".equals(System.getProperty("browsergui"))) {
@@ -189,14 +190,16 @@ public class JBrowserDriver implements Browser {
             Matcher matcher = head.matcher(content);
             if (matcher.find()) {
               return matcher.replaceFirst(matcher.group(0) + script).getBytes(charset);
-            } else {
-              matcher = html.matcher(content);
-              if (matcher.find()) {
-                return matcher.replaceFirst(matcher.group(0) + "<head>" + script + "</head>").getBytes(charset);
-              } else {
-                return ("<html><head>" + script + "</head>" + content + "</html>").getBytes(charset);
-              }
             }
+            matcher = html.matcher(content);
+            if (matcher.find()) {
+              return matcher.replaceFirst(matcher.group(0) + "<head>" + script + "</head>").getBytes(charset);
+            }
+            matcher = body.matcher(content);
+            if (matcher.find()) {
+              return ("<html><head>" + script + "</head>" + content + "</html>").getBytes(charset);
+            }
+            return ("<html><head>" + script + "</head><body>" + content + "</body></html>").getBytes(charset);
           } catch (Throwable t) {}
         }
         return null;
