@@ -46,9 +46,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
+
+import com.machinepublishers.jbrowserdriver.Logs;
 
 public class StreamHandler implements URLStreamHandlerFactory {
   private static final HttpHandler httpHandler = new HttpHandler();
@@ -56,7 +56,8 @@ public class StreamHandler implements URLStreamHandlerFactory {
   private static int monitors;
   private static final Object lock = new Object();
   private static final Map<String, HttpURLConnection> connections = new HashMap<String, HttpURLConnection>();
-  private static final Pattern charsetPattern = Pattern.compile("charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
+  private static final Pattern charsetPattern = Pattern.compile(
+      "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Object injectorLock = new Object();
   private static final List<Injector> injectors = new ArrayList<Injector>();
 

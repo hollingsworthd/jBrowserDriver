@@ -131,7 +131,8 @@ public class JBrowserDriver implements Browser {
           scriptBuilder.append(settings.browserTimeZone().script());
           scriptBuilder.append(settings.browserProperties().script());
           scriptBuilder.append("}catch(e){}");
-          scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + id + "'));");
+          scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
+              + "document.getElementById('" + id + "'));");
           scriptBuilder.append("</script>");
           final String script = scriptBuilder.toString();
           StreamHandler.addInjector(new Injector() {

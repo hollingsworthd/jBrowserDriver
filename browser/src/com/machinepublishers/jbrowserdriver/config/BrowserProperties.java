@@ -36,13 +36,20 @@ public class BrowserProperties {
   public BrowserProperties(boolean canvasProtection, Dimension size, Map<String, Object> navigator) {
     StringBuilder builder = new StringBuilder();
     if (canvasProtection) {
-      builder.append("Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, 'createImageData', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, 'getImageData', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, 'measureText', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, 'isPointInPath', {value:function(){return undefined;}});");
-      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, 'isPointInStroke', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
+          + "'toBlob', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
+          + "'toDataURL', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+          + "'createImageData', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+          + "'getImageData', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+          + "'measureText', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+          + "'isPointInPath', {value:function(){return undefined;}});");
+      builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+          + "'isPointInStroke', {value:function(){return undefined;}});");
     }
     if (size != null) {
       builder.append("Object.defineProperty(window,'outerWidth',{value:" + size.getWidth() + "});");

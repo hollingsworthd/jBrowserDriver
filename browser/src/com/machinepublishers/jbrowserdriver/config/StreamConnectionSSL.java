@@ -93,11 +93,13 @@ public class StreamConnectionSSL extends HttpsURLConnectionImpl {
             HttpURLConnection remotePemFile = StreamHandler.defaultConnection(location);
             remotePemFile.setRequestMethod("GET");
             remotePemFile.connect();
-            pemBlocks = StreamHandler.toString(remotePemFile.getInputStream(), StreamHandler.charset(remotePemFile));
+            pemBlocks = StreamHandler.toString(remotePemFile.getInputStream(),
+                StreamHandler.charset(remotePemFile));
             cachedPemFile.delete();
             Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
           } else {
-            pemBlocks = new String(Files.readAllBytes(Paths.get(new File(location).getAbsolutePath())), "utf-8");
+            pemBlocks = new String(Files.readAllBytes(
+                Paths.get(new File(location).getAbsolutePath())), "utf-8");
           }
           KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
           keyStore.load(null);

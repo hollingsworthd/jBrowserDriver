@@ -61,7 +61,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath {
   private static final AtomicLong latestThread = new AtomicLong();
   private static final AtomicLong curThread = new AtomicLong();
-  private static final Pattern rgb = Pattern.compile("rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
+  private static final Pattern rgb = Pattern.compile(
+      "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final Node node;
   private final JSObject jsObject;
   private final Robot robot;
@@ -174,7 +175,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     if (rgbStr != null) {
       Matcher matcher = rgb.matcher(rgbStr);
       if (matcher.matches()) {
-        return "rgba(" + matcher.group(1) + ", " + matcher.group(2) + ", " + matcher.group(3) + ", 1)";
+        return "rgba(" + matcher.group(1) + ", "
+            + matcher.group(2) + ", " + matcher.group(3) + ", 1)";
       }
     }
     return rgbStr == null ? "" : rgbStr;
@@ -284,7 +286,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       public WebElement perform() {
         try {
           XPath xPath = XPathFactory.newInstance().newXPath();
-          return new Element((Node) xPath.evaluate(expr, node, XPathConstants.NODE), robot, timeouts);
+          return new Element((Node) xPath.evaluate(
+              expr, node, XPathConstants.NODE), robot, timeouts);
         } catch (XPathExpressionException e) {
           throw new RuntimeException(e);
         }
@@ -393,7 +396,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return byLinkText(text, true, true);
   }
 
-  private List<WebElement> byLinkText(final String text, final boolean multiple, final boolean partial) {
+  private List<WebElement> byLinkText(final String text,
+      final boolean multiple, final boolean partial) {
     return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
