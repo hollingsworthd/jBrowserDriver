@@ -124,70 +124,12 @@ public class JBrowserDriver implements Browser {
           final Stage stage = new Stage();
           final WebView view = new WebView();
           final WebEngine engine = view.getEngine();
-          StringBuilder scriptBuilder = new StringBuilder();
-          String id = "A" + rand.nextLong();
-          scriptBuilder.append("<script id='" + id + "' language='javascript'>");
-          scriptBuilder.append("try{");
-          scriptBuilder.append(settings.browserTimeZone().script());
-          scriptBuilder.append(settings.browserProperties().script());
-          scriptBuilder.append("}catch(e){}");
-          scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
-              + "document.getElementById('" + id + "'));");
-          scriptBuilder.append("</script>");
-          final String script = scriptBuilder.toString();
-          StreamHandler.addInjector(new Injector() {
-            @Override
-            public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
-              if (connection.getContentType().indexOf("text/html") > -1) {
-                try {
-                  String charset = StreamHandler.charset(connection);
-                  String content = new String(inflatedContent, charset);
-                  Pattern head = Pattern.compile("<head\\b[^>]*>");
-                  Matcher matcher = head.matcher(content);
-                  if (matcher.find()) {
-                    return matcher.replaceFirst(matcher.group(0) + script).getBytes(charset);
-                  }
-                } catch (Throwable t) {}
-              }
-              return null;
-            }
-          });
-          engine.titleProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable,
-                String oldValue, final String newValue) {
-              Util.exec(new Sync<Object>() {
-                public Object perform() {
-                  stage.setTitle(newValue);
-                  return null;
-                }
-              });
-            }
-          });
+          addInjector(settings);
+          addTitleListener(engine, stage);
           engine.getHistory().setMaxSize(2);
           engine.setUserAgent("" + mySettingsId);
           Settings.register(mySettingsId, settings);
-          engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
-            @Override
-            public void changed(final ObservableValue<? extends Worker.State> observable,
-                final Worker.State oldValue, final Worker.State newValue) {
-              Util.exec(new Sync<Object>() {
-                public Object perform() {
-                  if (Worker.State.SCHEDULED.equals(newValue)) {
-                    view.setVisible(false);
-                    StreamHandler.startStatusMonitor();
-                  } else if (Worker.State.SUCCEEDED.equals(newValue)
-                      || Worker.State.CANCELLED.equals(newValue)
-                      || Worker.State.FAILED.equals(newValue)) {
-                    int code = StreamHandler.stopStatusMonitor(engine.getLocation());
-                    view.setVisible(true);
-                    statusCode.set(Worker.State.SUCCEEDED.equals(newValue) ? code : 499);
-                  }
-                  return null;
-                }
-              });
-            }
-          });
+          addPageLoader(engine, view, statusCode);
           final StackPane root = new StackPane();
           root.getChildren().add(view);
           root.setCache(false);
@@ -219,6 +161,77 @@ public class JBrowserDriver implements Browser {
       options = new com.machinepublishers.jbrowserdriver.Options(window, timeouts, cookieManager);
       targetLocator = new com.machinepublishers.jbrowserdriver.TargetLocator();
     }
+  }
+
+  private static void addInjector(Settings settings) {
+    StringBuilder scriptBuilder = new StringBuilder();
+    String id = "A" + rand.nextLong();
+    scriptBuilder.append("<script id='" + id + "' language='javascript'>");
+    scriptBuilder.append("try{");
+    scriptBuilder.append(settings.browserTimeZone().script());
+    scriptBuilder.append(settings.browserProperties().script());
+    scriptBuilder.append("}catch(e){}");
+    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
+        + "document.getElementById('" + id + "'));");
+    scriptBuilder.append("</script>");
+    final String script = scriptBuilder.toString();
+    StreamHandler.addInjector(new Injector() {
+      @Override
+      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
+        if (connection.getContentType().indexOf("text/html") > -1) {
+          try {
+            String charset = StreamHandler.charset(connection);
+            String content = new String(inflatedContent, charset);
+            Pattern head = Pattern.compile("<head\\b[^>]*>");
+            Matcher matcher = head.matcher(content);
+            if (matcher.find()) {
+              return matcher.replaceFirst(matcher.group(0) + script).getBytes(charset);
+            }
+          } catch (Throwable t) {}
+        }
+        return null;
+      }
+    });
+  }
+
+  private static void addTitleListener(final WebEngine engine, final Stage stage) {
+    engine.titleProperty().addListener(new ChangeListener<String>() {
+      @Override
+      public void changed(ObservableValue<? extends String> observable,
+          String oldValue, final String newValue) {
+        Util.exec(new Sync<Object>() {
+          public Object perform() {
+            stage.setTitle(newValue);
+            return null;
+          }
+        });
+      }
+    });
+  }
+
+  private static void addPageLoader(final WebEngine engine,
+      final WebView view, final AtomicInteger statusCode) {
+    engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
+      @Override
+      public void changed(final ObservableValue<? extends Worker.State> observable,
+          final Worker.State oldValue, final Worker.State newValue) {
+        Util.exec(new Sync<Object>() {
+          public Object perform() {
+            if (Worker.State.SCHEDULED.equals(newValue)) {
+              view.setVisible(false);
+              StreamHandler.startStatusMonitor();
+            } else if (Worker.State.SUCCEEDED.equals(newValue)
+                || Worker.State.CANCELLED.equals(newValue)
+                || Worker.State.FAILED.equals(newValue)) {
+              int code = StreamHandler.stopStatusMonitor(engine.getLocation());
+              view.setVisible(true);
+              statusCode.set(Worker.State.SUCCEEDED.equals(newValue) ? code : 499);
+            }
+            return null;
+          }
+        });
+      }
+    });
   }
 
   @Override
