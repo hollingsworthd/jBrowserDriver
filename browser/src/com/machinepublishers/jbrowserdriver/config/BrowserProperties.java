@@ -28,12 +28,14 @@ import org.openqa.selenium.Dimension;
 
 public class BrowserProperties {
   private final String script;
+  private final Dimension size;
 
   public BrowserProperties() {
     this(true, new Dimension(1366, 768), new HashMap<String, Object>());
   }
 
   public BrowserProperties(boolean canvasProtection, Dimension size, Map<String, Object> navigator) {
+    this.size = size;
     StringBuilder builder = new StringBuilder();
     if (canvasProtection) {
       builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
@@ -79,6 +81,10 @@ public class BrowserProperties {
       builder.append("Object.defineProperty(window,'navigator',{value:{}});");
     }
     this.script = builder.toString();
+  }
+
+  public Dimension size() {
+    return size;
   }
 
   public String script() {

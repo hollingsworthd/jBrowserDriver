@@ -58,6 +58,7 @@ import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
@@ -133,7 +134,8 @@ public class JBrowserDriver implements Browser {
           final StackPane root = new StackPane();
           root.getChildren().add(view);
           root.setCache(false);
-          final Scene scene = new Scene(root, 800, 600);
+          Dimension size = settings.browserProperties().size();
+          final Scene scene = new Scene(root, size.getWidth(), size.getHeight());
           stage.setScene(scene);
           Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
           Accessor.getPageFor(engine).setUsePageCache(false);
