@@ -59,21 +59,18 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static synchronized Map<String, Object> _register(final Settings settings, final AtomicInteger statusCode) {
-    return Util.exec(new Sync<Map<String, Object>>() {
-      public Map<String, Object> perform() {
-        final Map<String, Object> objects = new HashMap<String, Object>();
-        final Stage stage = new Stage();
-        final WebView view = new WebView();
+  public static synchronized void _register(final Stage stage, final WebView view,
+      final Settings settings, final AtomicInteger statusCode) {
+    Util.exec(new Sync<Object>() {
+      public Object perform() {
         final WebEngine engine = view.getEngine();
         final StackPane root = new StackPane();
         final Dimension size = settings.browserProperties().size();
-        final Scene scene = new Scene(root, size.getWidth(), size.getHeight());
         engine.getHistory().setMaxSize(2);
         engine.setUserAgent("" + settings.id());
         root.getChildren().add(view);
         root.setCache(false);
-        stage.setScene(scene);
+        stage.setScene(new Scene(root, size.getWidth(), size.getHeight()));
         Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
         Accessor.getPageFor(engine).setUsePageCache(false);
         stage.sizeToScene();
@@ -85,11 +82,7 @@ public class SettingsManager {
         addTitleListener(engine, stage);
         addPageLoader(engine, view, statusCode);
         addInjector(settings);
-
-        objects.put("stage", stage);
-        objects.put("view", view);
-        objects.put("engine", engine);
-        return objects;
+        return null;
       }
     });
   }

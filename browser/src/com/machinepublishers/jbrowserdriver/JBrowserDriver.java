@@ -27,7 +27,6 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -76,13 +75,22 @@ public class JBrowserDriver implements Browser {
 
   public JBrowserDriver(final Settings settings) {
     this.settings = settings;
-    final Map<String, Object> objects = SettingsManager._register(settings, statusCode);
-    engine = (WebEngine) objects.get("engine");
-    view = (WebView) objects.get("view");
-    robot = new Robot((Stage) objects.get("stage"));
-    window = new com.machinepublishers.jbrowserdriver.Window((Stage) objects.get("stage"));
+    view = Util.exec(new Sync<WebView>() {
+      public WebView perform() {
+        return new WebView();
+      }
+    });
+    final Stage stage = Util.exec(new Sync<Stage>() {
+      public Stage perform() {
+        return new Stage();
+      }
+    });
+    SettingsManager._register(stage, view, settings, statusCode);
+    engine = view.getEngine();
+    robot = new Robot(stage);
     keyboard = new Keyboard(robot);
     mouse = new Mouse(robot);
+    window = new com.machinepublishers.jbrowserdriver.Window(stage);
     navigation = new com.machinepublishers.jbrowserdriver.Navigation(this, engine);
     capabilities = new Capabilities();
     timeouts = new com.machinepublishers.jbrowserdriver.Timeouts();
