@@ -31,7 +31,7 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 public class Window implements org.openqa.selenium.WebDriver.Window {
   private final Stage stage;
 
-  public Window(Stage stage) {
+  Window(Stage stage) {
     this.stage = stage;
   }
 

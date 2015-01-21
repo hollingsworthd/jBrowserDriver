@@ -42,7 +42,7 @@ public class Options implements org.openqa.selenium.WebDriver.Options {
   private final Window window;
   private final Timeouts timeouts;
 
-  public Options(Window window, Timeouts timeouts, CookieManager cookieManager) {
+  Options(Window window, Timeouts timeouts, CookieManager cookieManager) {
     this.window = window;
     this.timeouts = timeouts;
     this.cookieManager = cookieManager;

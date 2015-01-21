@@ -28,6 +28,8 @@ public class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   private volatile long load;
   private volatile long script;
 
+  Timeouts() {}
+
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
     implicit = unit.convert(duration, TimeUnit.MILLISECONDS);
@@ -46,15 +48,15 @@ public class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     return this;
   }
 
-  public long getImplicitlyWaitMS() {
+  long getImplicitlyWaitMS() {
     return implicit;
   }
 
-  public long getPageLoadTimeoutMS() {
+  long getPageLoadTimeoutMS() {
     return load;
   }
 
-  public long getScriptTimeoutMS() {
+  long getScriptTimeoutMS() {
     return script;
   }
 

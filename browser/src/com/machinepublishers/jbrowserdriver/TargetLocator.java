@@ -27,6 +27,8 @@ import org.openqa.selenium.WebElement;
 
 public class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
 
+  TargetLocator() {}
+
   @Override
   public WebElement activeElement() {
     // TODO Auto-generated method stub

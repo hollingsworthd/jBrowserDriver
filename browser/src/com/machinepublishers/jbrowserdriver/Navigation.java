@@ -31,7 +31,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final JBrowserDriver driver;
   private final WebEngine engine;
 
-  public Navigation(JBrowserDriver driver, WebEngine engine) {
+  Navigation(JBrowserDriver driver, WebEngine engine) {
     this.driver = driver;
     this.engine = engine;
   }

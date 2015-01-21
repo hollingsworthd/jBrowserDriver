@@ -26,6 +26,8 @@ import java.util.List;
 
 public class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
 
+  ImeHandler() {}
+
   @Override
   public void activateEngine(String name) {}
 

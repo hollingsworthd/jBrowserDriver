@@ -54,10 +54,9 @@ import javax.security.cert.X509Certificate;
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
 import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Settings;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
-public class StreamConnectionSSL extends HttpsURLConnectionImpl {
+class StreamConnectionSSL extends HttpsURLConnectionImpl {
   private static final Object lock = new Object();
   private static SSLSocketFactory socketFactory;
   private static long lastCertUpdate;
@@ -76,7 +75,7 @@ public class StreamConnectionSSL extends HttpsURLConnectionImpl {
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
 
-  public static SSLSocketFactory updatedSocketFactory() {
+  private static SSLSocketFactory updatedSocketFactory() {
     synchronized (lock) {
       if (pemFile != null && System.currentTimeMillis() - lastCertUpdate > 48 * 60 * 60 * 1000) {
         try {

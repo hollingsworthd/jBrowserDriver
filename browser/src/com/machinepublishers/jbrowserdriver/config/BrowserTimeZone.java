@@ -33,10 +33,8 @@ import java.util.Set;
 import java.util.TimeZone;
 
 /**
- * This class returns a script to override browser timezone.
- * Locale for formatting of date strings will always be en-US
- * until WebKit engine supports Intl classes.
- * Timezone and daylight savings offsets change according to locale.
+ * Browser timezone and daylight savings offsets change according to this locale.
+ * Regardless, locale for formatting of date strings will be en-US.
  */
 public class BrowserTimeZone {
   private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-HH-mm");
@@ -361,16 +359,11 @@ public class BrowserTimeZone {
     this.script = builder.toString();
   }
 
-  public String script() {
+  String script() {
     if (script == null) {
       init();
     }
     return script;
-  }
-
-  @Override
-  public String toString() {
-    return script();
   }
 
   private static int[][] daylightSavings(TimeZone timeZone) {

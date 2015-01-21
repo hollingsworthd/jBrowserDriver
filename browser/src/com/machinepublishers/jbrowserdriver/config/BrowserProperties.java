@@ -83,16 +83,11 @@ public class BrowserProperties {
     this.script = builder.toString();
   }
 
-  public Dimension size() {
+  Dimension size() {
     return size;
   }
 
-  public String script() {
+  String script() {
     return script;
-  }
-
-  @Override
-  public String toString() {
-    return script();
   }
 }

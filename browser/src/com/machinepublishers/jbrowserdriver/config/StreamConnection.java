@@ -34,13 +34,12 @@ import java.security.Permission;
 import java.util.List;
 import java.util.Map;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Settings;
-
 import sun.net.www.http.HttpClient;
 import sun.net.www.protocol.http.HttpURLConnection;
 
-public class StreamConnection extends HttpURLConnection {
+import com.machinepublishers.jbrowserdriver.Logs;
+
+class StreamConnection extends HttpURLConnection {
   private final HttpURLConnection conn;
   private Settings settings;
   private static final URL dummy;

@@ -29,7 +29,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
-import java.net.ResponseCache;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -50,7 +49,7 @@ import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
 import com.machinepublishers.jbrowserdriver.Logs;
 
-public class StreamHandler implements URLStreamHandlerFactory {
+class StreamHandler implements URLStreamHandlerFactory {
   private static final HttpHandler httpHandler = new HttpHandler();
   private static final HttpsHandler httpsHandler = new HttpsHandler();
   private static int monitors;
@@ -61,55 +60,29 @@ public class StreamHandler implements URLStreamHandlerFactory {
   private static final Object injectorLock = new Object();
   private static final List<Injector> injectors = new ArrayList<Injector>();
 
-  public static void addInjector(Injector injector) {
+  static void addInjector(Injector injector) {
     synchronized (injectorLock) {
       injectors.add(injector);
     }
   }
 
-  public static void removeInjector(Injector injector) {
+  static void removeInjector(Injector injector) {
     synchronized (injectorLock) {
       injectors.remove(injector);
     }
   }
 
-  public static void removeAllInjectors() {
+  static void removeAllInjectors() {
     synchronized (injectorLock) {
       injectors.clear();
     }
   }
 
-  public static interface Injector {
+  static interface Injector {
     byte[] inject(HttpURLConnection connection, byte[] inflatedContent);
   }
 
-  public static void init() {
-    try {
-      URL.setURLStreamHandlerFactory(new StreamHandler());
-      ResponseCache.setDefault(null);
-    } catch (Throwable t) {
-      Field factory = null;
-      try {
-        factory = URL.class.getDeclaredField("factory");
-        factory.setAccessible(true);
-        Object curFac = factory.get(null);
-
-        //assume we're in the Eclipse jar-in-jar loader
-        Field chainedFactory = curFac.getClass().getDeclaredField("chainFac");
-        chainedFactory.setAccessible(true);
-        chainedFactory.set(curFac, new StreamHandler());
-      } catch (Throwable t2) {
-        try {
-          //this should work regardless
-          factory.set(null, new StreamHandler());
-        } catch (Throwable t3) {}
-      }
-    }
-  }
-
-  private StreamHandler() {
-
-  }
+  StreamHandler() {}
 
   static void clearFields(Object obj) throws Throwable {
     Class<?> cur = obj.getClass();
@@ -128,7 +101,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     }
   }
 
-  public static class HttpHandler extends sun.net.www.protocol.http.Handler {
+  static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       sun.net.www.protocol.http.HttpURLConnection conn =
@@ -146,7 +119,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     }
   }
 
-  public static class HttpsHandler extends sun.net.www.protocol.https.Handler {
+  static class HttpsHandler extends sun.net.www.protocol.https.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       HttpsURLConnectionImpl conn =
@@ -164,7 +137,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     }
   }
 
-  public static HttpURLConnection defaultConnection(String location) throws IOException {
+  static HttpURLConnection defaultConnection(String location) throws IOException {
     URL url = new URL(location);
     if (url.getProtocol().equalsIgnoreCase("http")) {
       return (HttpURLConnection) new HttpHandler().defaultConnection(url);
@@ -242,7 +215,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     return null;
   }
 
-  public static String toString(InputStream inputStream, String charset) {
+  static String toString(InputStream inputStream, String charset) {
     try {
       final char[] chars = new char[8192];
       StringBuilder builder = new StringBuilder();
@@ -257,7 +230,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     }
   }
 
-  private static byte[] toBytes(InputStream inputStream) throws IOException {
+  static byte[] toBytes(InputStream inputStream) throws IOException {
     final byte[] bytes = new byte[8192];
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     for (int len = 0; -1 != (len = inputStream.read(bytes));) {
@@ -266,7 +239,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     return out.toByteArray();
   }
 
-  public static String charset(URLConnection conn) {
+  static String charset(URLConnection conn) {
     String charset = conn.getContentType();
     if (charset != null) {
       Matcher matcher = charsetPattern.matcher(charset);
@@ -280,7 +253,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
     return "utf-8";
   }
 
-  public static InputStream injectedStream(HttpURLConnection conn) throws IOException {
+  static InputStream injectedStream(HttpURLConnection conn) throws IOException {
     if (conn.getErrorStream() != null) {
       return conn.getInputStream();
     }

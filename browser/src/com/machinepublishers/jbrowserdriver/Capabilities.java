@@ -28,6 +28,8 @@ import org.openqa.selenium.Platform;
 
 public class Capabilities implements org.openqa.selenium.Capabilities {
 
+  Capabilities() {}
+
   @Override
   public Map<String, ?> asMap() {
     return new HashMap<String, String>();

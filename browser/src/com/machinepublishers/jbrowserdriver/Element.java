@@ -69,7 +69,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private final boolean isWindow;
   private final Timeouts timeouts;
 
-  public Element(Node node, Robot robot, Timeouts timeouts) {
+  Element(Node node, Robot robot, Timeouts timeouts) {
     this.isWindow = node instanceof Document;
     this.node = node;
     this.jsObject = (JSObject) node;
@@ -77,7 +77,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     this.timeouts = timeouts;
   }
 
-  public Element(final WebEngine engine, Robot robot, Timeouts timeouts) {
+  Element(final WebEngine engine, Robot robot, Timeouts timeouts) {
     this.isWindow = true;
     this.node = Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Document>() {
       @Override

@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.machinepublishers.jbrowserdriver.Settings;
-
 public class RequestHeaders {
   private final Map<String, String> headers = new LinkedHashMap<String, String>();
   private static final Collection<String> defaultHeaders = new HashSet<String>(Arrays.asList(new String[] {
@@ -60,7 +58,7 @@ public class RequestHeaders {
   static synchronized Settings requestPropertyHelper(HttpURLConnection conn,
       Settings settings, boolean add, String name, String value) {
     if (name.equals("User-Agent")) {
-      settings = Settings.get(Long.parseLong(value));
+      settings = SettingsManager.get(Long.parseLong(value));
       for (String curName : settings.headers().names()) {
         String curVal = settings.headers().header(curName);
         if (curVal != null && !curVal.isEmpty()) {

@@ -28,7 +28,7 @@ import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 public class Mouse implements org.openqa.selenium.interactions.Mouse {
   private final Robot robot;
 
-  public Mouse(Robot robot) {
+  Mouse(Robot robot) {
     this.robot = robot;
   }
 

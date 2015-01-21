@@ -25,7 +25,7 @@ public class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final Robot robot;
 
-  public Keyboard(Robot robot) {
+  Keyboard(Robot robot) {
     this.robot = robot;
   }
 

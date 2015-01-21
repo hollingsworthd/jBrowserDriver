@@ -39,9 +39,16 @@ import org.openqa.selenium.Keys;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Application;
 
-public class Robot {
+class Robot {
   private static final Random rand = new Random();
-  private static final com.sun.glass.ui.Robot robot = Application.GetApplication().createRobot();
+  private static final com.sun.glass.ui.Robot robot;
+  static {
+    robot = Util.exec(new Sync<com.sun.glass.ui.Robot>() {
+      public com.sun.glass.ui.Robot perform() {
+        return Application.GetApplication().createRobot();
+      }
+    });
+  }
   private static final AtomicLong latestThread = new AtomicLong();
   private static final AtomicLong curThread = new AtomicLong();
   private static final Map<Keys, Integer> keyConvert = new HashMap<Keys, Integer>();
@@ -211,7 +218,7 @@ public class Robot {
     keyMap.put(" ", new int[] { KeyEvent.VK_SPACE });
   }
 
-  public static enum MouseButton {
+  static enum MouseButton {
     LEFT(com.sun.glass.ui.Robot.MOUSE_LEFT_BTN),
     MIDDLE(com.sun.glass.ui.Robot.MOUSE_MIDDLE_BTN),
     RIGHT(com.sun.glass.ui.Robot.MOUSE_RIGHT_BTN);
@@ -228,7 +235,7 @@ public class Robot {
 
   private final Stage stage;
 
-  public Robot(Stage stage) {
+  Robot(Stage stage) {
     this.stage = stage;
   }
 
@@ -287,7 +294,7 @@ public class Robot {
     }
   }
 
-  public void keysPress(final CharSequence chars) {
+  void keysPress(final CharSequence chars) {
     lock();
     try {
       final int[] codePoints = chars.codePoints().toArray();
@@ -312,7 +319,7 @@ public class Robot {
     }
   }
 
-  public void keysRelease(final CharSequence chars) {
+  void keysRelease(final CharSequence chars) {
     lock();
     try {
       final int[] codePoints = chars.codePoints().toArray();
@@ -349,7 +356,7 @@ public class Robot {
     });
   }
 
-  public void keysType(final CharSequence... charsList) {
+  void keysType(final CharSequence... charsList) {
     StringJoiner joiner = new StringJoiner("");
     for (CharSequence chars : charsList) {
       joiner.add(chars);
@@ -358,7 +365,7 @@ public class Robot {
     keysType(toSend);
   }
 
-  public void keysType(final CharSequence chars) {
+  void keysType(final CharSequence chars) {
     lock();
     try {
       final int[] codePoints = chars.codePoints().toArray();
@@ -409,7 +416,7 @@ public class Robot {
     }
   }
 
-  public void mouseMove(final double pageX, final double pageY) {
+  void mouseMove(final double pageX, final double pageY) {
     lock();
     try {
       Util.exec(new Sync<Object>() {
@@ -426,12 +433,12 @@ public class Robot {
     }
   }
 
-  public void mouseClick(final MouseButton button) {
+  void mouseClick(final MouseButton button) {
     mousePress(button);
     mouseRelease(button);
   }
 
-  public void mousePress(final MouseButton button) {
+  void mousePress(final MouseButton button) {
     lock();
     try {
       Util.exec(new Sync<Object>() {
@@ -447,7 +454,7 @@ public class Robot {
     }
   }
 
-  public void mouseRelease(final MouseButton button) {
+  void mouseRelease(final MouseButton button) {
     lock();
     try {
       Util.exec(new Sync<Object>() {
@@ -463,7 +470,7 @@ public class Robot {
     }
   }
 
-  public void mouseWheel(final int wheelAmt) {
+  void mouseWheel(final int wheelAmt) {
     lock();
     try {
       Util.exec(new Sync<Object>() {
