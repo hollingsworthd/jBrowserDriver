@@ -51,29 +51,29 @@ public class Proxy {
     this.password = password;
   }
 
-  synchronized boolean hasProxy() {
+  boolean hasProxy() {
     return type != null
         && host != null && !host.isEmpty()
         && port > 0;
   }
 
-  synchronized Type proxyType() {
+  Type proxyType() {
     return type;
   }
 
-  synchronized String proxyHost() {
+  String proxyHost() {
     return host;
   }
 
-  synchronized int proxyPort() {
+  int proxyPort() {
     return port;
   }
 
-  synchronized String proxyUser() {
+  String proxyUser() {
     return user == null ? "" : user;
   }
 
-  synchronized String proxyPassword() {
+  String proxyPassword() {
     return password == null ? "" : password;
   }
 }

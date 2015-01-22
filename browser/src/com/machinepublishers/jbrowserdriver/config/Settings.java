@@ -33,6 +33,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Settings {
@@ -78,35 +79,42 @@ public class Settings {
       }
     });
   }
-  private RequestHeaders requestHeaders = new RequestHeaders();
-  private BrowserTimeZone browserTimeZone = BrowserTimeZone.UTC;
-  private BrowserProperties browserProperties = new BrowserProperties();
-  private Proxy proxy = new Proxy();
+  private static final Random rand = new Random();
+  private final RequestHeaders requestHeaders;
+  private final BrowserTimeZone browserTimeZone;
+  private final BrowserProperties browserProperties;
+  private final Proxy proxy;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
+  private final String script;
 
   public Settings() {
+    this(new RequestHeaders(), BrowserTimeZone.UTC, new BrowserProperties(), new Proxy());
+  }
+
+  public Settings(RequestHeaders requestHeaders, BrowserTimeZone browserTimeZone,
+      BrowserProperties browserProperties, Proxy proxy) {
     mySettingsId = settingsId.incrementAndGet();
+    this.requestHeaders = requestHeaders;
+    this.browserTimeZone = browserTimeZone;
+    this.browserProperties = browserProperties;
+    this.proxy = proxy;
+
+    StringBuilder scriptBuilder = new StringBuilder();
+    String scriptId = "A" + rand.nextLong();
+    scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
+    scriptBuilder.append("try{");
+    scriptBuilder.append(browserTimeZone().script());
+    scriptBuilder.append(browserProperties().script());
+    scriptBuilder.append("}catch(e){}");
+    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
+        + "document.getElementById('" + scriptId + "'));");
+    scriptBuilder.append("</script>");
+    script = scriptBuilder.toString();
   }
 
   long id() {
     return mySettingsId;
-  }
-
-  public void setHeaders(RequestHeaders requestHeaders) {
-    this.requestHeaders = requestHeaders;
-  }
-
-  public void setBrowserTimeZone(BrowserTimeZone browserTimeZone) {
-    this.browserTimeZone = browserTimeZone;
-  }
-
-  public void setBrowserProperties(BrowserProperties browserProperties) {
-    this.browserProperties = browserProperties;
-  }
-
-  public void setProxy(Proxy proxy) {
-    this.proxy = proxy;
   }
 
   RequestHeaders headers() {
@@ -123,5 +131,9 @@ public class Settings {
 
   Proxy proxy() {
     return proxy;
+  }
+
+  String script() {
+    return script;
   }
 }

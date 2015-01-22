@@ -24,7 +24,6 @@ package com.machinepublishers.jbrowserdriver.config;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +48,6 @@ import com.sun.javafx.webkit.Accessor;
  * Internal use only
  */
 public class SettingsManager {
-  private static final Random rand = new Random();
   private static final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -59,7 +57,7 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static synchronized void _register(final Stage stage, final WebView view,
+  public static void _register(final Stage stage, final WebView view,
       final Settings settings, final AtomicInteger statusCode) {
     Util.exec(new Sync<Object>() {
       public Object perform() {
@@ -102,18 +100,7 @@ public class SettingsManager {
     }
   }
 
-  private static void addInjector(Settings settings) {
-    StringBuilder scriptBuilder = new StringBuilder();
-    String id = "A" + rand.nextLong();
-    scriptBuilder.append("<script id='" + id + "' language='javascript'>");
-    scriptBuilder.append("try{");
-    scriptBuilder.append(settings.browserTimeZone().script());
-    scriptBuilder.append(settings.browserProperties().script());
-    scriptBuilder.append("}catch(e){}");
-    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
-        + "document.getElementById('" + id + "'));");
-    scriptBuilder.append("</script>");
-    final String script = scriptBuilder.toString();
+  private static void addInjector(final Settings settings) {
     StreamHandler.addInjector(new Injector() {
       @Override
       public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
@@ -123,17 +110,20 @@ public class SettingsManager {
             String content = new String(inflatedContent, charset);
             Matcher matcher = head.matcher(content);
             if (matcher.find()) {
-              return matcher.replaceFirst(matcher.group(0) + script).getBytes(charset);
+              return matcher.replaceFirst(matcher.group(0) + settings.script()).getBytes(charset);
             }
             matcher = html.matcher(content);
             if (matcher.find()) {
-              return matcher.replaceFirst(matcher.group(0) + "<head>" + script + "</head>").getBytes(charset);
+              return matcher.replaceFirst(
+                  matcher.group(0) + "<head>" + settings.script() + "</head>").getBytes(charset);
             }
             matcher = body.matcher(content);
             if (matcher.find()) {
-              return ("<html><head>" + script + "</head>" + content + "</html>").getBytes(charset);
+              return ("<html><head>" + settings.script() + "</head>"
+                  + content + "</html>").getBytes(charset);
             }
-            return ("<html><head>" + script + "</head><body>" + content + "</body></html>").getBytes(charset);
+            return ("<html><head>" + settings.script() + "</head><body>"
+                + content + "</body></html>").getBytes(charset);
           } catch (Throwable t) {}
         }
         return null;
@@ -179,6 +169,27 @@ public class SettingsManager {
         });
       }
     });
+  }
+
+  static Settings requestPropertyHelper(HttpURLConnection conn,
+      Settings settings, boolean add, String name, String value) {
+    if (name.equals("User-Agent")) {
+      settings = get(Long.parseLong(value));
+      for (String curName : settings.headers().names()) {
+        String curVal = settings.headers().header(curName);
+        if (curVal != null && !curVal.isEmpty()) {
+          conn.setRequestProperty(curName, curVal);
+        }
+      }
+    } else if (!RequestHeaders.defaultHeaders().contains(name)
+        && (settings == null || !settings.headers().names().contains(name))) {
+      if (add) {
+        conn.addRequestProperty(name, value);
+      } else {
+        conn.setRequestProperty(name, value);
+      }
+    }
+    return settings;
   }
 
 }

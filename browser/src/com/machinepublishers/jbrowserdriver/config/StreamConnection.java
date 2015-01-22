@@ -58,12 +58,12 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public void setRequestProperty(String arg0, String arg1) {
-    settings = RequestHeaders.requestPropertyHelper(conn, settings, false, arg0, arg1);
+    settings = SettingsManager.requestPropertyHelper(conn, settings, false, arg0, arg1);
   }
 
   @Override
   public void addRequestProperty(String arg0, String arg1) {
-    settings = RequestHeaders.requestPropertyHelper(conn, settings, true, arg0, arg1);
+    settings = SettingsManager.requestPropertyHelper(conn, settings, true, arg0, arg1);
   }
 
   @Override

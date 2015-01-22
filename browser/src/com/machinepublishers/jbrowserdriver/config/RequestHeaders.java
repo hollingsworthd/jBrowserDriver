@@ -21,58 +21,44 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
-import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class RequestHeaders {
-  private final Map<String, String> headers = new LinkedHashMap<String, String>();
-  private static final Collection<String> defaultHeaders = new HashSet<String>(Arrays.asList(new String[] {
-      "Accept", "User-Agent", "Accept-Encoding", "Accept-Language", "Accept-Charset"
-  }));
+  private final Map<String, String> headers;
+  private static final Collection<String> defaultHeaders = Collections.unmodifiableSet(
+      new HashSet<String>(Arrays.asList(new String[] {
+          "Accept", "User-Agent", "Accept-Encoding", "Accept-Language", "Accept-Charset"
+      })));
 
   public RequestHeaders() {
-    headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-    headers.put("User-Agent",
+    Map<String, String> headersTmp = new LinkedHashMap<String, String>();
+    headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+    headersTmp.put("User-Agent",
         "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2114.2 Safari/537.36");
-    headers.put("Accept-Encoding", "gzip,deflate");
-    headers.put("Accept-Language", "en-US,en;q=0.5");
-    headers.put("Accept-Charset", "");
+    headersTmp.put("Accept-Encoding", "gzip,deflate");
+    headersTmp.put("Accept-Language", "en-US,en;q=0.5");
+    headersTmp.put("Accept-Charset", "");
+    headers = Collections.unmodifiableMap(headersTmp);
   }
 
-  public synchronized void set(String name, String value) {
-    headers.put(name, value);
+  public RequestHeaders(Map<String, String> headers) {
+    this.headers = Collections.unmodifiableMap(headers);
   }
 
-  synchronized Collection<String> names() {
+  Collection<String> names() {
     return headers.keySet();
   }
 
-  synchronized String header(String name) {
+  String header(String name) {
     return headers.get(name);
   }
 
-  static synchronized Settings requestPropertyHelper(HttpURLConnection conn,
-      Settings settings, boolean add, String name, String value) {
-    if (name.equals("User-Agent")) {
-      settings = SettingsManager.get(Long.parseLong(value));
-      for (String curName : settings.headers().names()) {
-        String curVal = settings.headers().header(curName);
-        if (curVal != null && !curVal.isEmpty()) {
-          conn.setRequestProperty(curName, curVal);
-        }
-      }
-    } else if (!defaultHeaders.contains(name)
-        && (settings == null || !settings.headers().names().contains(name))) {
-      if (add) {
-        conn.addRequestProperty(name, value);
-      } else {
-        conn.setRequestProperty(name, value);
-      }
-    }
-    return settings;
+  static Collection<String> defaultHeaders() {
+    return defaultHeaders;
   }
 }
