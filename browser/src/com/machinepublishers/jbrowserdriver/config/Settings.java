@@ -88,17 +88,23 @@ public class Settings {
   private final long mySettingsId;
   private final String script;
 
+  /**
+   * Create default settings.
+   */
   public Settings() {
-    this(new RequestHeaders(), BrowserTimeZone.UTC, new BrowserProperties(), new Proxy());
+    this(null, null, null, null);
   }
 
+  /**
+   * Pass null for any parameter which you want left as default.
+   */
   public Settings(RequestHeaders requestHeaders, BrowserTimeZone browserTimeZone,
       BrowserProperties browserProperties, Proxy proxy) {
     mySettingsId = settingsId.incrementAndGet();
-    this.requestHeaders = requestHeaders;
-    this.browserTimeZone = browserTimeZone;
-    this.browserProperties = browserProperties;
-    this.proxy = proxy;
+    this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
+    this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
+    this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
+    this.proxy = proxy == null ? new Proxy() : proxy;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();

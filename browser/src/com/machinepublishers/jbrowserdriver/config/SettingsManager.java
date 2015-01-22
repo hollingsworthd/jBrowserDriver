@@ -52,7 +52,43 @@ public class SettingsManager {
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Map<Long, Settings> registry = new HashMap<Long, Settings>();
+  private static final Map<HttpURLConnection, Settings> connectionSettings =
+      new HashMap<HttpURLConnection, Settings>();
   private static final Object lock = new Object();
+  static {
+    StreamHandler.addInjector(new Injector() {
+      @Override
+      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
+        Settings settings;
+        synchronized (lock) {
+          settings = connectionSettings.get(connection);
+        }
+        if (connection.getContentType().indexOf("text/html") > -1) {
+          try {
+            String charset = StreamHandler.charset(connection);
+            String content = new String(inflatedContent, charset);
+            Matcher matcher = head.matcher(content);
+            if (matcher.find()) {
+              return matcher.replaceFirst(matcher.group(0) + settings.script()).getBytes(charset);
+            }
+            matcher = html.matcher(content);
+            if (matcher.find()) {
+              return matcher.replaceFirst(
+                  matcher.group(0) + "<head>" + settings.script() + "</head>").getBytes(charset);
+            }
+            matcher = body.matcher(content);
+            if (matcher.find()) {
+              return ("<html><head>" + settings.script() + "</head>"
+                  + content + "</html>").getBytes(charset);
+            }
+            return ("<html><head>" + settings.script() + "</head><body>"
+                + content + "</body></html>").getBytes(charset);
+          } catch (Throwable t) {}
+        }
+        return null;
+      }
+    });
+  }
 
   /**
    * Internal use only
@@ -79,7 +115,6 @@ public class SettingsManager {
         }
         addTitleListener(engine, stage);
         addPageLoader(engine, view, statusCode);
-        addInjector(settings);
         return null;
       }
     });
@@ -100,35 +135,10 @@ public class SettingsManager {
     }
   }
 
-  private static void addInjector(final Settings settings) {
-    StreamHandler.addInjector(new Injector() {
-      @Override
-      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
-        if (connection.getContentType().indexOf("text/html") > -1) {
-          try {
-            String charset = StreamHandler.charset(connection);
-            String content = new String(inflatedContent, charset);
-            Matcher matcher = head.matcher(content);
-            if (matcher.find()) {
-              return matcher.replaceFirst(matcher.group(0) + settings.script()).getBytes(charset);
-            }
-            matcher = html.matcher(content);
-            if (matcher.find()) {
-              return matcher.replaceFirst(
-                  matcher.group(0) + "<head>" + settings.script() + "</head>").getBytes(charset);
-            }
-            matcher = body.matcher(content);
-            if (matcher.find()) {
-              return ("<html><head>" + settings.script() + "</head>"
-                  + content + "</html>").getBytes(charset);
-            }
-            return ("<html><head>" + settings.script() + "</head><body>"
-                + content + "</body></html>").getBytes(charset);
-          } catch (Throwable t) {}
-        }
-        return null;
-      }
-    });
+  static void clearConnections() {
+    synchronized (lock) {
+      connectionSettings.clear();
+    }
   }
 
   private static void addTitleListener(final WebEngine engine, final Stage stage) {
@@ -175,6 +185,9 @@ public class SettingsManager {
       Settings settings, boolean add, String name, String value) {
     if (name.equals("User-Agent")) {
       settings = get(Long.parseLong(value));
+      synchronized (lock) {
+        connectionSettings.put(conn, settings);
+      }
       for (String curName : settings.headers().names()) {
         String curVal = settings.headers().header(curName);
         if (curVal != null && !curVal.isEmpty()) {

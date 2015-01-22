@@ -166,6 +166,7 @@ class StreamHandler implements URLStreamHandlerFactory {
           } catch (Throwable t) {}
         }
         connections.clear();
+        SettingsManager.clearConnections();
         System.gc();
         System.runFinalization();
         System.gc();
