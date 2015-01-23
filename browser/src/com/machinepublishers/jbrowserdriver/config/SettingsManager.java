@@ -129,12 +129,6 @@ public class SettingsManager {
     }
   }
 
-  static Settings get(Long id) {
-    synchronized (lock) {
-      return registry.get(id);
-    }
-  }
-
   static void clearConnections() {
     synchronized (lock) {
       connectionSettings.clear();
@@ -184,8 +178,8 @@ public class SettingsManager {
   static Settings requestPropertyHelper(HttpURLConnection conn,
       Settings settings, boolean add, String name, String value) {
     if (name.equals("User-Agent")) {
-      settings = get(Long.parseLong(value));
       synchronized (lock) {
+        settings = registry.get(Long.parseLong(value));
         connectionSettings.put(conn, settings);
       }
       for (String curName : settings.headers().names()) {
