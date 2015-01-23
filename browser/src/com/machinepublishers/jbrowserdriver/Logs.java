@@ -33,7 +33,6 @@ import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
 public class Logs implements org.openqa.selenium.logging.Logs {
-
   private static final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
   private static final int MAX_LOGS = 50;
   private static final Logs instance = new Logs();
@@ -47,29 +46,43 @@ public class Logs implements org.openqa.selenium.logging.Logs {
   }
 
   public static void warn(String message) {
+    final LogEntry entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
-      entries.add(new LogEntry(Level.WARNING, System.currentTimeMillis(), message));
+      entries.add(entry);
       if (entries.size() > MAX_LOGS) {
         entries.removeFirst();
       }
     }
+    if ("true".equals(System.getProperty("jbd.standarderror"))) {
+      System.err.println(entry);
+    }
   }
 
   public static void exception(Throwable t) {
-    synchronized (entries) {
-      StringWriter writer = null;
-      try {
-        writer = new StringWriter();
-        t.printStackTrace(new PrintWriter(writer));
-        entries.add(new LogEntry(Level.WARNING, System.currentTimeMillis(), writer.toString()));
+    final LogEntry entry;
+    StringWriter writer = null;
+    try {
+      writer = new StringWriter();
+      t.printStackTrace(new PrintWriter(writer));
+      entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), writer.toString());
+      synchronized (entries) {
+        entries.add(entry);
         if (entries.size() > MAX_LOGS) {
           entries.removeFirst();
         }
-      } finally {
-        try {
-          writer.close();
-        } catch (Throwable t2) {}
       }
+    } catch (Throwable t2) {
+      if ("true".equals(System.getProperty("jbd.standarderror"))) {
+        System.err.println("While logging a message, an error occurred: " + t2.getMessage());
+      }
+      return;
+    } finally {
+      try {
+        writer.close();
+      } catch (Throwable t3) {}
+    }
+    if ("true".equals(System.getProperty("jbd.standarderror"))) {
+      System.err.println(entry);
     }
   }
 

@@ -61,7 +61,7 @@ class StreamConnectionSSL extends HttpsURLConnectionImpl {
   private static SSLSocketFactory socketFactory;
   private static long lastCertUpdate;
   //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
-  private static final String pemFile = System.getProperty("pemfile");
+  private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpsURLConnectionImpl conn;
   private Settings settings;
   private static final URL dummy;
