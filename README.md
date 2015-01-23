@@ -16,9 +16,11 @@ The primary class here is `JBrowserDriver`. Your code should be something like `
 
 There are two dependencies, Selenium and Monocle (a headless windowing toolkit). No build script yet exists but the Eclipse project is part of the source tree (just import this project into your Eclipse workspace). And the required JARs are in the `lib` directory. Binary releases will be posted when the project is stable.
 
-It runs headless by default, but for debugging you can force GUI to be shown with JVM argument: `-Dbrowsergui=true`
+It runs headless by default, but for debugging you can force GUI to be shown with JVM argument: `-Djbd.browsergui=true`
 
-Currently there's no way to bypass untrusted certificates (a config option will be added), but you can specify trusted PEMs and their source. Recommended is the Mozilla CA list, which can be added with JVM argument: `-Dpemfile='https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
+Currently there's no way to bypass untrusted certificates (a config option will be added), but you can specify trusted PEMs and their source. Recommended is the Mozilla CA list, which can be added with JVM argument: `-Djbd.pemfile='https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
+
+Logging uses the Selenium Logs class by default. To print logs to standard error, use JVM argument `-Djbd.standarderror=true`.
 
 - - -
 
