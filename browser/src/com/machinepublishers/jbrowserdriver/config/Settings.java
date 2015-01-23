@@ -39,6 +39,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Settings {
   static {
     if (!"true".equals(System.getProperty("jbd.browsergui"))) {
+      if (System.getProperty("headless.geometry") == null) {
+        System.setProperty("headless.geometry", "2048x1152");
+      }
       System.setProperty("glass.platform", "Monocle");
       System.setProperty("monocle.platform", "Headless");
       System.setProperty("prism.order", "sw");
