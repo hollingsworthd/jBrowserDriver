@@ -63,7 +63,13 @@ public class SettingsManager {
         synchronized (lock) {
           settings = connectionSettings.get(connection);
         }
-        if (connection.getContentType().indexOf("text/html") > -1) {
+        if ((connection.getContentType().startsWith("image/")
+            || connection.getContentType().startsWith("video/")
+            || connection.getContentType().startsWith("audio/")
+            || connection.getContentType().startsWith("model/"))
+            && !"false".equals(System.getProperty("jbd.quickrender"))) {
+          return new byte[0];
+        } else if (connection.getContentType().indexOf("text/html") > -1) {
           try {
             String charset = StreamHandler.charset(connection);
             String content = new String(inflatedContent, charset);
