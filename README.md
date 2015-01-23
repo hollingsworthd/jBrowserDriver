@@ -20,7 +20,7 @@ It runs headless by default, but for debugging you can force GUI to be shown wit
 
 Currently there's no way to bypass untrusted certificates (a config option will be added), but you can specify trusted PEMs and their source. Recommended is the Mozilla CA list, which can be added with JVM argument: `-Djbd.pemfile='https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 
-Logging uses the Selenium Logs class by default. To print logs to standard error, use JVM argument `-Djbd.standarderror=true`.
+Logging uses the Selenium Logs class by default. To also print logs to standard error, use JVM argument `-Djbd.standarderror=true`.
 
 - - -
 
