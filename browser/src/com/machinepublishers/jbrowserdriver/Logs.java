@@ -77,9 +77,7 @@ public class Logs implements org.openqa.selenium.logging.Logs {
       }
       return;
     } finally {
-      try {
-        writer.close();
-      } catch (Throwable t3) {}
+      Util.close(writer);
     }
     if ("true".equals(System.getProperty("jbd.standarderror"))) {
       System.err.println(entry);

@@ -365,11 +365,7 @@ public class JBrowserDriver implements Browser {
       Logs.exception(t);
       return null;
     } finally {
-      try {
-        out.close();
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
+      Util.close(out);
     }
   }
 }

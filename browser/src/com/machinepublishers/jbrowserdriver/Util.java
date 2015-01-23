@@ -21,6 +21,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.Closeable;
+import java.net.HttpURLConnection;
+
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 
@@ -29,6 +32,37 @@ public class Util {
   static {
     //needed to initialize jfx
     new JFXPanel();
+  }
+
+  public static void close(Closeable closeable) {
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+    }
+  }
+
+  public static void close(HttpURLConnection conn) {
+    /*
+     * Don't log exceptions here: we assume that we're being overly cautious,
+     * trying to close streams that don't exist or are already closed.
+     */
+    if (conn != null) {
+      try {
+        conn.disconnect();
+      } catch (Throwable t) {}
+      try {
+        conn.getInputStream().close();
+      } catch (Throwable t) {}
+      try {
+        conn.getOutputStream().close();
+      } catch (Throwable t) {}
+      try {
+        conn.getErrorStream().close();
+      } catch (Throwable t) {}
+    }
   }
 
   public static interface Sync<T> {
