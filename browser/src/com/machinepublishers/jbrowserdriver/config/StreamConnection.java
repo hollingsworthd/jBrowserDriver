@@ -24,6 +24,7 @@ package com.machinepublishers.jbrowserdriver.config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.CookieHandler;
 import java.net.ProtocolException;
@@ -41,7 +42,6 @@ import com.machinepublishers.jbrowserdriver.Logs;
 
 class StreamConnection extends HttpURLConnection {
   private final HttpURLConnection conn;
-  private Settings settings;
   private static final URL dummy;
   static {
     URL dummyTmp = null;
@@ -54,16 +54,23 @@ class StreamConnection extends HttpURLConnection {
   public StreamConnection(HttpURLConnection conn) {
     super(dummy, (Proxy) null);
     this.conn = conn;
+    try {
+      Field field = HttpURLConnection.class.getDeclaredField("requests");
+      field.setAccessible(true);
+      field.set(conn, new StreamHeader(conn, false));
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
   }
 
   @Override
   public void setRequestProperty(String arg0, String arg1) {
-    settings = SettingsManager.requestPropertyHelper(conn, settings, false, arg0, arg1);
+    conn.setRequestProperty(arg0, arg1);
   }
 
   @Override
   public void addRequestProperty(String arg0, String arg1) {
-    settings = SettingsManager.requestPropertyHelper(conn, settings, true, arg0, arg1);
+    conn.addRequestProperty(arg0, arg1);
   }
 
   @Override

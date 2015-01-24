@@ -21,18 +21,10 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.CacheRequest;
-import java.net.CacheResponse;
 import java.net.CookieHandler;
 import java.net.CookieManager;
-import java.net.ResponseCache;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -50,7 +42,6 @@ public class Settings {
     }
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
-      ResponseCache.setDefault(null);
     } catch (Throwable t) {
       Field factory = null;
       try {
@@ -70,17 +61,6 @@ public class Settings {
       }
     }
     CookieHandler.setDefault(new CookieManager());
-    ResponseCache.setDefault(new ResponseCache() {
-      @Override
-      public CacheRequest put(URI arg0, URLConnection arg1) throws IOException {
-        return null;
-      }
-
-      @Override
-      public CacheResponse get(URI arg0, String arg1, Map<String, List<String>> arg2) throws IOException {
-        return null;
-      }
-    });
   }
   private static final Random rand = new Random();
   private final RequestHeaders requestHeaders;

@@ -107,8 +107,6 @@ class StreamHandler implements URLStreamHandlerFactory {
     protected URLConnection openConnection(URL url) throws IOException {
       sun.net.www.protocol.http.HttpURLConnection conn =
           new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(url));
-      conn.setDefaultUseCaches(false);
-      conn.setUseCaches(false);
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
@@ -125,8 +123,6 @@ class StreamHandler implements URLStreamHandlerFactory {
     protected URLConnection openConnection(URL url) throws IOException {
       HttpsURLConnectionImpl conn =
           new StreamConnectionSSL((HttpsURLConnectionImpl) super.openConnection(url));
-      conn.setDefaultUseCaches(false);
-      conn.setUseCaches(false);
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }

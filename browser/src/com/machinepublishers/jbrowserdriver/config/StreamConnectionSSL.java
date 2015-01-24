@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -63,7 +64,6 @@ class StreamConnectionSSL extends HttpsURLConnectionImpl {
   //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
   private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpsURLConnectionImpl conn;
-  private Settings settings;
   private static final URL dummy;
   static {
     URL dummyTmp = null;
@@ -140,6 +140,16 @@ class StreamConnectionSSL extends HttpsURLConnectionImpl {
   public StreamConnectionSSL(HttpsURLConnectionImpl conn) throws IOException {
     super(dummy);
     this.conn = conn;
+    try {
+      Field requests = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
+      requests.setAccessible(true);
+      Field delegate = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
+      delegate.setAccessible(true);
+      requests.set((sun.net.www.protocol.http.HttpURLConnection) delegate.get(conn),
+          new StreamHeader(conn, true));
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
     SSLSocketFactory socketFactory = updatedSocketFactory();
     if (socketFactory != null) {
       this.conn.setSSLSocketFactory(socketFactory);
@@ -148,12 +158,12 @@ class StreamConnectionSSL extends HttpsURLConnectionImpl {
 
   @Override
   public void setRequestProperty(String arg0, String arg1) {
-    settings = SettingsManager.requestPropertyHelper(conn, settings, false, arg0, arg1);
+    conn.setRequestProperty(arg0, arg1);
   }
 
   @Override
   public void addRequestProperty(String arg0, String arg1) {
-    settings = SettingsManager.requestPropertyHelper(conn, settings, true, arg0, arg1);
+    conn.addRequestProperty(arg0, arg1);
   }
 
   @Override

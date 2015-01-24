@@ -21,44 +21,98 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class RequestHeaders {
-  private final Map<String, String> headers;
-  private static final Collection<String> defaultHeaders = Collections.unmodifiableSet(
-      new HashSet<String>(Arrays.asList(new String[] {
-          "Accept", "User-Agent", "Accept-Encoding", "Accept-Language", "Accept-Charset"
-      })));
 
+  private final Map<String, String> headersHttp;
+  private final Map<String, String> headersHttps;
+  /**
+   * Use this as a header value to force the header to be dropped from the request. For instance,
+   * JavaFX WebKit will always add the Cookie header but adding the header map entry
+   * &lt;"Cookie", RequestHeaders.DROP_HEADER&gt; will force the header to not be sent.
+   */
+  public static final String DROP_HEADER = "drop_header";
+  /**
+   * Use this as a header value to force the header to be replaced by a value generated at runtime
+   * by the browser engine. For instance, JavaFX WebKit will always add Host header. Adding the
+   * header map entry &lt;"Host", RequestHeaders.DYNAMIC_HEADER&gt; will preserve its ordering in
+   * the headers map you specify, but its value will be decided at runtime for each request.
+   */
+  public static final String DYNAMIC_HEADER = "dynamic_header";
+
+  /**
+   * Creates default headers which are similar to those sent by Tor Browser.
+   */
   public RequestHeaders() {
-    Map<String, String> headersTmp = new LinkedHashMap<String, String>();
-    headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+    LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
+    headersTmp.put("Host", DYNAMIC_HEADER);
     headersTmp.put("User-Agent",
-        "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2114.2 Safari/537.36");
-    headersTmp.put("Accept-Encoding", "gzip,deflate");
-    headersTmp.put("Accept-Language", "en-US,en;q=0.5");
-    headersTmp.put("Accept-Charset", "");
-    headers = Collections.unmodifiableMap(headersTmp);
+        "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0");
+    headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    headersTmp.put("Accept-Language", "en-us,en;q=0.5");
+    headersTmp.put("Accept-Encoding", "gzip, deflate");
+    headersTmp.put("Cookie", DYNAMIC_HEADER);
+    headersTmp.put("Connection", DYNAMIC_HEADER);
+    headersHttp = createHeaders(headersTmp);
+    headersHttps = headersHttp;
   }
 
-  public RequestHeaders(Map<String, String> headers) {
-    this.headers = Collections.unmodifiableMap(headers);
+  /**
+   * Specify the ordered headers to be sent on each request.
+   * 
+   * @see {@link RequestHeaders.DROP_HEADER}
+   * @see {@link RequestHeaders.DYNAMIC_HEADER}
+   */
+  public RequestHeaders(LinkedHashMap<String, String> headers) {
+    headersHttp = createHeaders(headers);
+    headersHttps = headersHttp;
   }
 
-  Collection<String> names() {
-    return headers.keySet();
+  /**
+   * Specify the ordered headers to be sent on each request.
+   * Allows different sets of headers for HTTP and HTTPS.
+   * 
+   * @see {@link RequestHeaders.DROP_HEADER}
+   * @see {@link RequestHeaders.DYNAMIC_HEADER}
+   */
+  public RequestHeaders(LinkedHashMap<String, String> headersHttp, LinkedHashMap<String, String> headersHttps) {
+    this.headersHttp = createHeaders(headersHttp);
+    this.headersHttps = createHeaders(headersHttps);
   }
 
-  String header(String name) {
-    return headers.get(name);
+  private static Map<String, String> createHeaders(LinkedHashMap<String, String> headers) {
+    LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>(headers);
+    if (!headersTmp.containsKey("Accept-Charset")
+        && !headersTmp.containsKey("accept-charset")
+        && !headersTmp.containsKey("Accept-charset")
+        && !headersTmp.containsKey("ACCEPT-CHARSET")) {
+      headersTmp.put("Accept-Charset", DROP_HEADER);
+    }
+    if (!headersTmp.containsKey("Pragma")
+        && !headersTmp.containsKey("pragma")
+        && !headersTmp.containsKey("PRAGMA")) {
+      headersTmp.put("Pragma", DROP_HEADER);
+    }
+    return Collections.unmodifiableMap(headersTmp);
   }
 
-  static Collection<String> defaultHeaders() {
-    return defaultHeaders;
+  Collection<String> namesHttp() {
+    return headersHttp.keySet();
+  }
+
+  String headerHttp(String name) {
+    return headersHttp.get(name);
+  }
+
+  Collection<String> namesHttps() {
+    return headersHttps.keySet();
+  }
+
+  String headerHttps(String name) {
+    return headersHttps.get(name);
   }
 }

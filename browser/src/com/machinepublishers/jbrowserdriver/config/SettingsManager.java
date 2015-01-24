@@ -22,7 +22,9 @@
 package com.machinepublishers.jbrowserdriver.config;
 
 import java.net.HttpURLConnection;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -112,7 +114,6 @@ public class SettingsManager {
         root.setCache(false);
         stage.setScene(new Scene(root, size.getWidth(), size.getHeight()));
         Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
-        Accessor.getPageFor(engine).setUsePageCache(false);
         stage.sizeToScene();
         stage.show();
 
@@ -181,28 +182,35 @@ public class SettingsManager {
     });
   }
 
-  static Settings requestPropertyHelper(HttpURLConnection conn,
-      Settings settings, boolean add, String name, String value) {
-    if (name.equals("User-Agent")) {
-      synchronized (lock) {
-        settings = registry.get(Long.parseLong(value));
-        connectionSettings.put(conn, settings);
+  static LinkedHashMap<String, String> processHeaders(
+      LinkedHashMap<String, String> headers, HttpURLConnection conn, boolean https) {
+    final Settings settings;
+    synchronized (lock) {
+      settings = registry.get(Long.parseLong(headers.get("User-Agent")));
+      connectionSettings.put(conn, settings);
+    }
+    LinkedHashMap<String, String> headersIn = new LinkedHashMap<String, String>(headers);
+    LinkedHashMap<String, String> headersOut = new LinkedHashMap<String, String>();
+    Collection<String> names = https ? settings.headers().namesHttps() : settings.headers().namesHttp();
+    for (String name : names) {
+      String valueIn = headersIn.remove(name);
+      String valueSettings = https ? settings.headers().headerHttps(name) : settings.headers().headerHttp(name);
+      if (valueSettings == RequestHeaders.DROP_HEADER) {
+        continue;
       }
-      for (String curName : settings.headers().names()) {
-        String curVal = settings.headers().header(curName);
-        if (curVal != null && !curVal.isEmpty()) {
-          conn.setRequestProperty(curName, curVal);
+      if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
+        if (valueIn != null && !valueIn.isEmpty()) {
+          headersOut.put(name, valueIn);
         }
-      }
-    } else if (!RequestHeaders.defaultHeaders().contains(name)
-        && (settings == null || !settings.headers().names().contains(name))) {
-      if (add) {
-        conn.addRequestProperty(name, value);
       } else {
-        conn.setRequestProperty(name, value);
+        headersOut.put(name, valueSettings);
       }
     }
-    return settings;
+    if ("no-cache".equals(headersIn.get("Cache-Control"))) {
+      //JavaFX initially sets Cache-Control to no-cache but real browsers don't 
+      headersIn.remove("Cache-Control");
+    }
+    headersOut.putAll(headersIn);
+    return headersOut;
   }
-
 }
