@@ -24,6 +24,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,44 +64,44 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private static final AtomicLong curThread = new AtomicLong();
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
-  private final Node node;
-  private final JSObject jsObject;
-  private final Robot robot;
+  private final AtomicReference<Node> node;
+  private final AtomicReference<JSObject> jsObject;
+  private final AtomicReference<Robot> robot;
   private final boolean isWindow;
-  private final Timeouts timeouts;
+  private final AtomicReference<Timeouts> timeouts;
 
-  Element(Node node, Robot robot, Timeouts timeouts) {
+  Element(AtomicReference<Node> node, AtomicReference<Robot> robot, AtomicReference<Timeouts> timeouts) {
     this.isWindow = node instanceof Document;
     this.node = node;
-    this.jsObject = (JSObject) node;
+    this.jsObject = new AtomicReference<JSObject>((JSObject) this.node.get());
     this.robot = robot;
     this.timeouts = timeouts;
   }
 
-  Element(final WebEngine engine, Robot robot, Timeouts timeouts) {
+  Element(final WebEngine engine, AtomicReference<Robot> robot, AtomicReference<Timeouts> timeouts) {
     this.isWindow = true;
-    this.node = Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Document>() {
+    this.node = new AtomicReference<Node>(Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Document>() {
       @Override
       public Document perform() {
         return engine.getDocument();
       }
-    });
-    this.jsObject = (JSObject) node;
+    }));
+    this.jsObject = new AtomicReference<JSObject>((JSObject) this.node.get());
     this.robot = robot;
     this.timeouts = timeouts;
   }
 
   @Override
   public void click() {
-    Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.call("scrollIntoView");
-        JSObject obj = (JSObject) jsObject.call("getBoundingClientRect");
+        jsObject.get().call("scrollIntoView");
+        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
         double y = Double.parseDouble(obj.getMember("top").toString());
         double x = Double.parseDouble(obj.getMember("left").toString());
-        robot.mouseMove(x, y);
-        robot.mouseClick(MouseButton.LEFT);
+        robot.get().mouseMove(x, y);
+        robot.get().mouseClick(MouseButton.LEFT);
         return null;
       }
     });
@@ -108,13 +109,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void submit() {
-    Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        if (node instanceof HTMLInputElement) {
-          ((HTMLInputElement) node).getForm().submit();
-        } else if (node instanceof HTMLFormElement) {
-          ((HTMLFormElement) node).submit();
+        if (node.get() instanceof HTMLInputElement) {
+          ((HTMLInputElement) node.get()).getForm().submit();
+        } else if (node.get() instanceof HTMLFormElement) {
+          ((HTMLFormElement) node.get()).submit();
         }
         return null;
       }
@@ -123,12 +124,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void sendKeys(final CharSequence... keys) {
-    Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.call("scrollIntoView");
-        jsObject.call("focus");
-        robot.keysType(keys);
+        jsObject.get().call("scrollIntoView");
+        jsObject.get().call("focus");
+        robot.get().keysType(keys);
         return null;
       }
     });
@@ -136,12 +137,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void clear() {
-    Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.call("scrollIntoView");
-        jsObject.call("focus");
-        jsObject.call("setValue", "");
+        jsObject.get().call("scrollIntoView");
+        jsObject.get().call("focus");
+        jsObject.get().call("setValue", "");
         return null;
       }
     });
@@ -149,10 +150,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public String getAttribute(final String attrName) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<String>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        String val = (String) jsObject.getMember(attrName);
+        String val = (String) jsObject.get().getMember(attrName);
         return val == null || val.equals("undefined") ? "" : val;
       }
     });
@@ -160,10 +161,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public String getCssValue(final String name) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<String>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        return cleanUpCssVal((String) jsObject.eval("var me = this;"
+        return cleanUpCssVal((String) jsObject.get().eval("var me = this;"
             + "(function(){"
             + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
             + "})();"));
@@ -184,10 +185,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public Point getLocation() {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Point>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
-        JSObject obj = (JSObject) jsObject.call("getBoundingClientRect");
+        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
         return new Point(x, y);
@@ -197,10 +198,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public Dimension getSize() {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Dimension>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        JSObject obj = (JSObject) jsObject.call("getBoundingClientRect");
+        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
@@ -222,16 +223,16 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isDisplayed() {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        JSObject obj = (JSObject) jsObject.call("getBoundingClientRect");
+        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
         int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
         return (Boolean)
-        jsObject.eval("var me = this;"
+        jsObject.get().eval("var me = this;"
             + "        (function(){"
             + "          for(var i = " + x + "; i < " + (x2 + 1) + "; i++){"
             + "            for(var j = " + y + "; j < " + (y2 + 1) + "; j++){"
@@ -247,10 +248,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isEnabled() {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String val = jsObject.getMember("disabled").toString();
+        String val = jsObject.get().getMember("disabled").toString();
         return val == null || "undefined".equals(val) || val.isEmpty();
       }
     });
@@ -258,11 +259,11 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isSelected() {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String selected = jsObject.getMember("selected").toString();
-        String checked = jsObject.getMember("checked").toString();
+        String selected = jsObject.get().getMember("selected").toString();
+        String checked = jsObject.get().getMember("checked").toString();
         return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
             || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
       }
@@ -281,13 +282,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public WebElement findElementByXPath(final String expr) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<WebElement>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
         try {
-          XPath xPath = XPathFactory.newInstance().newXPath();
-          return new Element((Node) xPath.evaluate(
-              expr, node, XPathConstants.NODE), robot, timeouts);
+          final XPath xPath = XPathFactory.newInstance().newXPath();
+          return new Element(new AtomicReference<Node>((Node) xPath.evaluate(
+              expr, node.get(), XPathConstants.NODE)), robot, timeouts);
         } catch (XPathExpressionException e) {
           throw new RuntimeException(e);
         }
@@ -297,15 +298,15 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public List<WebElement> findElementsByXPath(final String expr) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         try {
           XPath xPath = XPathFactory.newInstance().newXPath();
-          NodeList list = (NodeList) xPath.evaluate(expr, node, XPathConstants.NODESET);
+          NodeList list = (NodeList) xPath.evaluate(expr, node.get(), XPathConstants.NODESET);
           List<WebElement> elements = new ArrayList<WebElement>();
           for (int i = 0; i < list.getLength(); i++) {
-            elements.add(new Element(list.item(i), robot, timeouts));
+            elements.add(new Element(new AtomicReference<Node>(list.item(i)), robot, timeouts));
           }
           return elements;
         } catch (XPathExpressionException e) {
@@ -332,29 +333,29 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public WebElement findElementByCssSelector(final String expr) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<WebElement>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        JSObject result = (JSObject) jsObject.call("querySelector", expr);
+        JSObject result = (JSObject) jsObject.get().call("querySelector", expr);
         if (result == null) {
           return null;
         }
-        return new Element((Node) result, robot, timeouts);
+        return new Element(new AtomicReference<Node>((Node) result), robot, timeouts);
       }
     });
   }
 
   @Override
   public List<WebElement> findElementsByCssSelector(final String expr) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
-        JSObject result = (JSObject) jsObject.call("querySelectorAll", expr);
+        JSObject result = (JSObject) jsObject.get().call("querySelectorAll", expr);
         for (int i = 0;; i++) {
           Object cur = result.getSlot(i);
           if (cur instanceof Node) {
-            elements.add(new Element((Node) cur, robot, timeouts));
+            elements.add(new Element(new AtomicReference<Node>((Node) cur), robot, timeouts));
           } else {
             break;
           }
@@ -398,7 +399,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   private List<WebElement> byLinkText(final String text,
       final boolean multiple, final boolean partial) {
-    return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         List<WebElement> nodes = (List<WebElement>) findElementsByTagName("a");
@@ -446,7 +447,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   public Object executeAsyncScript(final String script, final Object... args) {
     lock();
     try {
-      Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+      Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
         @Override
         public Object perform() {
           return script(true, script, args);
@@ -460,10 +461,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        Object result = Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+        Object result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
           @Override
           public Object perform() {
-            return jsObject.eval("(function(){return this.screenslicerCallbackVal;})();");
+            return jsObject.get().eval("(function(){return this.screenslicerCallbackVal;})();");
           }
         });
         if (!(result instanceof String) || !"undefined".equals(result)) {
@@ -488,7 +489,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   public Object executeScript(final String script, final Object... args) {
     lock();
     try {
-      return Util.exec(timeouts.getScriptTimeoutMS(), new Sync<Object>() {
+      return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
         @Override
         public Object perform() {
           return script(false, script, args);
@@ -527,7 +528,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         tmp[i] = args[i];
       }
       args = tmp;
-      jsObject.eval("(function(){"
+      jsObject.get().eval("(function(){"
           + "          this.screenslicerCallback = function(){"
           + "            this.screenslicerCallbackVal = arguments;"
           + "          }"
@@ -538,12 +539,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     } else {
-      jsObject.eval("this.screenslicerJS = function(){"
+      jsObject.get().eval("this.screenslicerJS = function(){"
           + (isWindow ? "var window = this;" : "")
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     }
-    return parseScriptResult(jsObject.call("screenslicerJS", args));
+    return parseScriptResult(jsObject.get().call("screenslicerJS", args));
   }
 
   private Object parseScriptResult(Object obj) {
@@ -551,7 +552,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       return null;
     }
     if (obj instanceof Node) {
-      return new Element((Node) obj, robot, timeouts);
+      return new Element(new AtomicReference<Node>((Node) obj), robot, timeouts);
     }
     if (obj instanceof JSObject) {
       JSObject jsObj = (JSObject) obj;

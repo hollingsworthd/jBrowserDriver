@@ -21,66 +21,68 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.openqa.selenium.interactions.internal.Coordinates;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
 public class Mouse implements org.openqa.selenium.interactions.Mouse {
-  private final Robot robot;
+  private final AtomicReference<Robot> robot;
 
-  Mouse(Robot robot) {
+  Mouse(final AtomicReference<Robot> robot) {
     this.robot = robot;
   }
 
   @Override
   public void click(Coordinates coords) {
     if (coords != null) {
-      robot.mouseMove(coords.onPage().x, coords.onPage().y);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
-    robot.mouseClick(MouseButton.LEFT);
+    robot.get().mouseClick(MouseButton.LEFT);
   }
 
   @Override
   public void contextClick(Coordinates coords) {
     if (coords != null) {
-      robot.mouseMove(coords.onPage().x, coords.onPage().y);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
-    robot.mouseClick(MouseButton.RIGHT);
+    robot.get().mouseClick(MouseButton.RIGHT);
   }
 
   @Override
   public void doubleClick(Coordinates coords) {
     if (coords != null) {
-      robot.mouseMove(coords.onPage().x, coords.onPage().y);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
-    robot.mouseClick(MouseButton.LEFT);
-    robot.mouseClick(MouseButton.LEFT);
+    robot.get().mouseClick(MouseButton.LEFT);
+    robot.get().mouseClick(MouseButton.LEFT);
   }
 
   @Override
   public void mouseDown(Coordinates coords) {
     if (coords != null) {
-      robot.mouseMove(coords.onPage().x, coords.onPage().y);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
-    robot.mousePress(MouseButton.LEFT);
+    robot.get().mousePress(MouseButton.LEFT);
   }
 
   @Override
   public void mouseMove(Coordinates coords) {
-    robot.mouseMove(coords.onPage().x, coords.onPage().y);
+    robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
   }
 
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
-    robot.mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
+    robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
   }
 
   @Override
   public void mouseUp(Coordinates coords) {
     if (coords != null) {
-      robot.mouseMove(coords.onPage().x, coords.onPage().y);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
-    robot.mouseRelease(MouseButton.LEFT);
+    robot.get().mouseRelease(MouseButton.LEFT);
   }
 
 }

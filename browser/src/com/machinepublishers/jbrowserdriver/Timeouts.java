@@ -22,42 +22,43 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
-  private volatile long implicit;
-  private volatile long load;
-  private volatile long script;
+  private AtomicLong implicit = new AtomicLong();
+  private AtomicLong load = new AtomicLong();
+  private AtomicLong script = new AtomicLong();
 
   Timeouts() {}
 
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
-    implicit = unit.convert(duration, TimeUnit.MILLISECONDS);
+    implicit.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
   @Override
   public Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
-    load = unit.convert(duration, TimeUnit.MILLISECONDS);
+    load.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
   @Override
   public Timeouts setScriptTimeout(long duration, TimeUnit unit) {
-    script = unit.convert(duration, TimeUnit.MILLISECONDS);
+    script.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
   long getImplicitlyWaitMS() {
-    return implicit;
+    return implicit.get();
   }
 
   long getPageLoadTimeoutMS() {
-    return load;
+    return load.get();
   }
 
   long getScriptTimeoutMS() {
-    return script;
+    return script.get();
   }
 
 }

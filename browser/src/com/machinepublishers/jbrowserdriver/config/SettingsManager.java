@@ -21,12 +21,14 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,15 +37,18 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
 import org.openqa.selenium.Dimension;
 
+import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.StreamHandler.Injector;
+import com.sun.glass.ui.Screen;
+import com.sun.glass.ui.monocle.NativePlatform;
+import com.sun.glass.ui.monocle.NativePlatformFactory;
 import com.sun.javafx.webkit.Accessor;
 
 /**
@@ -53,7 +58,7 @@ public class SettingsManager {
   private static final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-  private static final Map<Long, Settings> registry = new HashMap<Long, Settings>();
+  private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
   private static final Map<HttpURLConnection, Settings> connectionSettings =
       new HashMap<HttpURLConnection, Settings>();
   private static final Object lock = new Object();
@@ -65,13 +70,15 @@ public class SettingsManager {
         synchronized (lock) {
           settings = connectionSettings.get(connection);
         }
-        if ((connection.getContentType().startsWith("image/")
-            || connection.getContentType().startsWith("video/")
-            || connection.getContentType().startsWith("audio/")
-            || connection.getContentType().startsWith("model/"))
-            && !"false".equals(System.getProperty("jbd.quickrender"))) {
+        if (connection.getContentType() != null
+            && !"false".equals(System.getProperty("jbd.quickrender"))
+            && (connection.getContentType().startsWith("image/")
+                || connection.getContentType().startsWith("video/")
+                || connection.getContentType().startsWith("audio/")
+                || connection.getContentType().startsWith("model/"))) {
           return new byte[0];
-        } else if (connection.getContentType().indexOf("text/html") > -1) {
+        } else if (connection.getContentType() != null
+            && connection.getContentType().indexOf("text/html") > -1) {
           try {
             String charset = StreamHandler.charset(connection);
             String content = new String(inflatedContent, charset);
@@ -101,27 +108,41 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static void _register(final Stage stage, final WebView view,
-      final Settings settings, final AtomicInteger statusCode) {
+  public static void _register(final AtomicReference<Stage> stage, final AtomicReference<WebView> view,
+      final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
     Util.exec(new Sync<Object>() {
       public Object perform() {
-        final WebEngine engine = view.getEngine();
+        if (Settings.headless()) {
+          try {
+            System.setProperty("headless.geometry", settings.get().browserProperties().size().getWidth()
+                + "x" + settings.get().browserProperties().size().getHeight());
+            NativePlatform nativePlatform = NativePlatformFactory.getNativePlatform();
+            Field field = NativePlatform.class.getDeclaredField("screen");
+            field.setAccessible(true);
+            field.set(nativePlatform, null);
+            Screen.notifySettingsChanged();
+          } catch (Throwable t) {
+            Logs.exception(t);
+          }
+        }
+        view.set(new WebView());
+        stage.set(new Stage());
         final StackPane root = new StackPane();
-        final Dimension size = settings.browserProperties().size();
-        engine.getHistory().setMaxSize(2);
-        engine.setUserAgent("" + settings.id());
-        root.getChildren().add(view);
+        final Dimension size = settings.get().browserProperties().size();
+        view.get().getEngine().getHistory().setMaxSize(2);
+        view.get().getEngine().setUserAgent("" + settings.get().id());
+        root.getChildren().add(view.get());
         root.setCache(false);
-        stage.setScene(new Scene(root, size.getWidth(), size.getHeight()));
-        Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
-        stage.sizeToScene();
-        stage.show();
+        stage.get().setScene(new Scene(root, size.getWidth(), size.getHeight()));
+        Accessor.getPageFor(view.get().getEngine()).setDeveloperExtrasEnabled(false);
+        stage.get().sizeToScene();
+        stage.get().show();
 
         synchronized (lock) {
-          registry.put(settings.id(), settings);
+          registry.put(settings.get().id(), settings);
         }
-        addTitleListener(engine, stage);
-        addPageLoader(engine, view, statusCode);
+        addTitleListener(view, stage);
+        addPageLoader(view, statusCode);
         return null;
       }
     });
@@ -130,9 +151,9 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static void _deregister(Settings settings) {
+  public static void _deregister(AtomicReference<Settings> settings) {
     synchronized (lock) {
-      registry.remove(settings.id());
+      registry.remove(settings.get().id());
     }
   }
 
@@ -142,14 +163,14 @@ public class SettingsManager {
     }
   }
 
-  private static void addTitleListener(final WebEngine engine, final Stage stage) {
-    engine.titleProperty().addListener(new ChangeListener<String>() {
+  private static void addTitleListener(final AtomicReference<WebView> view, final AtomicReference<Stage> stage) {
+    view.get().getEngine().titleProperty().addListener(new ChangeListener<String>() {
       @Override
       public void changed(ObservableValue<? extends String> observable,
           String oldValue, final String newValue) {
         Util.exec(new Sync<Object>() {
           public Object perform() {
-            stage.setTitle(newValue);
+            stage.get().setTitle(newValue);
             return null;
           }
         });
@@ -157,22 +178,21 @@ public class SettingsManager {
     });
   }
 
-  private static void addPageLoader(final WebEngine engine,
-      final WebView view, final AtomicInteger statusCode) {
-    engine.getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
+  private static void addPageLoader(final AtomicReference<WebView> view, final AtomicInteger statusCode) {
+    view.get().getEngine().getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
       @Override
       public void changed(final ObservableValue<? extends Worker.State> observable,
           final Worker.State oldValue, final Worker.State newValue) {
         Util.exec(new Sync<Object>() {
           public Object perform() {
             if (Worker.State.SCHEDULED.equals(newValue)) {
-              view.setVisible(false);
+              view.get().setVisible(false);
               StreamHandler.startStatusMonitor();
             } else if (Worker.State.SUCCEEDED.equals(newValue)
                 || Worker.State.CANCELLED.equals(newValue)
                 || Worker.State.FAILED.equals(newValue)) {
-              int code = StreamHandler.stopStatusMonitor(engine.getLocation());
-              view.setVisible(true);
+              int code = StreamHandler.stopStatusMonitor(view.get().getEngine().getLocation());
+              view.get().setVisible(true);
               statusCode.set(Worker.State.SUCCEEDED.equals(newValue) ? code : 499);
             }
             return null;
@@ -186,7 +206,7 @@ public class SettingsManager {
       LinkedHashMap<String, String> headers, HttpURLConnection conn, boolean https) {
     final Settings settings;
     synchronized (lock) {
-      settings = registry.get(Long.parseLong(headers.get("User-Agent")));
+      settings = registry.get(Long.parseLong(headers.get("User-Agent"))).get();
       connectionSettings.put(conn, settings);
     }
     LinkedHashMap<String, String> headersIn = new LinkedHashMap<String, String>(headers);

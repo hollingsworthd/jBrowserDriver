@@ -29,16 +29,17 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Settings {
+  private static final boolean headless;
   static {
     if (!"true".equals(System.getProperty("jbd.browsergui"))) {
-      if (System.getProperty("headless.geometry") == null) {
-        System.setProperty("headless.geometry", "2048x1152");
-      }
+      headless = true;
       System.setProperty("glass.platform", "Monocle");
       System.setProperty("monocle.platform", "Headless");
       System.setProperty("prism.order", "sw");
       //AWT gui is never used anyhow, but set this to prevent programmer errors
       System.setProperty("java.awt.headless", "true");
+    } else {
+      headless = false;
     }
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
@@ -81,8 +82,8 @@ public class Settings {
   /**
    * Pass null for any parameter which you want left as default.
    */
-  public Settings(RequestHeaders requestHeaders, BrowserTimeZone browserTimeZone,
-      BrowserProperties browserProperties, Proxy proxy) {
+  public Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
+      final BrowserProperties browserProperties, final Proxy proxy) {
     mySettingsId = settingsId.incrementAndGet();
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
@@ -124,5 +125,9 @@ public class Settings {
 
   String script() {
     return script;
+  }
+
+  static boolean headless() {
+    return headless;
   }
 }

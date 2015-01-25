@@ -22,18 +22,19 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
-  private final JBrowserDriver driver;
-  private final WebEngine engine;
+  private final AtomicReference<JBrowserDriver> driver;
+  private final AtomicReference<WebView> view;
 
-  Navigation(JBrowserDriver driver, WebEngine engine) {
+  Navigation(final AtomicReference<JBrowserDriver> driver, final AtomicReference<WebView> view) {
     this.driver = driver;
-    this.engine = engine;
+    this.view = view;
   }
 
   @Override
@@ -41,7 +42,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     Util.exec(new Sync<Object>() {
       public Object perform() {
         try {
-          engine.getHistory().go(-1);
+          view.get().getEngine().getHistory().go(-1);
         } catch (IndexOutOfBoundsException e) {
           Logs.exception(e);
         }
@@ -55,7 +56,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     Util.exec(new Sync<Object>() {
       public Object perform() {
         try {
-          engine.getHistory().go(1);
+          view.get().getEngine().getHistory().go(1);
         } catch (IndexOutOfBoundsException e) {
           Logs.exception(e);
         }
@@ -68,7 +69,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void refresh() {
     Util.exec(new Sync<Object>() {
       public Object perform() {
-        engine.reload();
+        view.get().getEngine().reload();
         return null;
       }
     });
@@ -76,12 +77,12 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void to(String url) {
-    driver.get(url);
+    driver.get().get(url);
   }
 
   @Override
   public void to(URL url) {
-    driver.get(url.toExternalForm());
+    driver.get().get(url.toExternalForm());
   }
 
 }

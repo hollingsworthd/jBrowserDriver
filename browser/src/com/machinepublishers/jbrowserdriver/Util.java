@@ -23,12 +23,13 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.Closeable;
 import java.net.HttpURLConnection;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 
 public class Util {
-
   static {
     //needed to initialize jfx
     new JFXPanel();
@@ -69,19 +70,6 @@ public class Util {
     T perform();
   }
 
-  public static interface Async {
-    void perform();
-  }
-
-  public static void exec(final Async action) {
-    Platform.runLater(new Runnable() {
-      @Override
-      public void run() {
-        action.perform();
-      }
-    });
-  }
-
   public static <T> T exec(final Sync<T> action) {
     return exec(0, action);
   }
@@ -90,31 +78,31 @@ public class Util {
     if (Platform.isFxApplicationThread()) {
       return action.perform();
     }
-    final T[] ret = (T[]) new Object[1];
-    final boolean[] lock = new boolean[1];
+    final AtomicReference<T> ret = new AtomicReference<T>();
+    final AtomicBoolean lock = new AtomicBoolean();
     Platform.runLater(new Runnable() {
       @Override
       public void run() {
         T result = action.perform();
         synchronized (lock) {
-          ret[0] = result;
-          lock[0] = true;
+          ret.set(result);
+          lock.set(true);
           lock.notify();
         }
       }
     });
     synchronized (lock) {
-      if (!lock[0]) {
+      if (!lock.get()) {
         try {
           lock.wait(timeout);
         } catch (InterruptedException e) {
           Logs.exception(e);
         }
-        if (!lock[0]) {
+        if (!lock.get()) {
           Logs.exception(new RuntimeException("Action never completed."));
         }
       }
     }
-    return ret[0];
+    return ret.get();
   }
 }

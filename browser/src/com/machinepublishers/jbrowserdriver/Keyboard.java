@@ -21,27 +21,29 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
-  private final Robot robot;
+  private final AtomicReference<Robot> robot;
 
-  Keyboard(Robot robot) {
+  Keyboard(final AtomicReference<Robot> robot) {
     this.robot = robot;
   }
 
   @Override
   public void pressKey(CharSequence key) {
-    robot.keysPress(key);
+    robot.get().keysPress(key);
   }
 
   @Override
   public void releaseKey(CharSequence key) {
-    robot.keysRelease(key);
+    robot.get().keysRelease(key);
   }
 
   @Override
   public void sendKeys(CharSequence... keys) {
-    robot.keysType(keys);
+    robot.get().keysType(keys);
   }
 
 }

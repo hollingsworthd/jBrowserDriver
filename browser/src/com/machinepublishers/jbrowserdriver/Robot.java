@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -233,9 +235,9 @@ class Robot {
     }
   }
 
-  private final Stage stage;
+  private final AtomicReference<Stage> stage;
 
-  Robot(Stage stage) {
+  Robot(final AtomicReference<Stage> stage) {
     this.stage = stage;
   }
 
@@ -297,13 +299,18 @@ class Robot {
   void keysPress(final CharSequence chars) {
     lock();
     try {
-      final int[] codePoints = chars.codePoints().toArray();
-      for (int i = 0; i < codePoints.length; i++) {
+      final int[] ints = chars.codePoints().toArray();
+      final Integer[] integers = new Integer[ints.length];
+      for (int i = 0; i < ints.length; i++) {
+        integers[i] = ints[i];
+      }
+      final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
+      for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
         Util.exec(new Sync<Object>() {
           @Override
           public Object perform() {
-            int[] converted = convertKey(codePoints[cur], false);
+            int[] converted = convertKey(codePoints.get(cur), false);
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
                 robot.keyPress(converted[i]);
@@ -322,13 +329,18 @@ class Robot {
   void keysRelease(final CharSequence chars) {
     lock();
     try {
-      final int[] codePoints = chars.codePoints().toArray();
-      for (int i = 0; i < codePoints.length; i++) {
+      final int[] ints = chars.codePoints().toArray();
+      final Integer[] integers = new Integer[ints.length];
+      for (int i = 0; i < ints.length; i++) {
+        integers[i] = ints[i];
+      }
+      final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
+      for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
         Util.exec(new Sync<Object>() {
           @Override
           public Object perform() {
-            int[] converted = convertKey(codePoints[cur], false);
+            int[] converted = convertKey(codePoints.get(cur), false);
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
                 robot.keyRelease(converted[i]);
@@ -368,48 +380,57 @@ class Robot {
   void keysType(final CharSequence chars) {
     lock();
     try {
-      final int[] codePoints = chars.codePoints().toArray();
+      final int[] ints = chars.codePoints().toArray();
+      final Integer[] integers = new Integer[ints.length];
+      for (int i = 0; i < ints.length; i++) {
+        integers[i] = ints[i];
+      }
+      final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
       final boolean chord = isChord(chars);
       final List<Integer> toRelease = new ArrayList<Integer>();
-      for (int i = 0; i < codePoints.length; i++) {
+      for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
         Util.exec(new Sync<Object>() {
           @Override
           public Object perform() {
-            int[] converted = convertKey(codePoints[cur], !chord);
-            for (int i = 0; i < converted.length; i++) {
-              if (converted[i] != -1) {
-                robot.keyPress(converted[i]);
-              }
-            }
-            if (chord) {
+            synchronized (toRelease) {
+              int[] converted = convertKey(codePoints.get(cur), !chord);
               for (int i = 0; i < converted.length; i++) {
                 if (converted[i] != -1) {
-                  toRelease.add(converted[i]);
+                  robot.keyPress(converted[i]);
                 }
               }
-            } else {
-              for (int i = converted.length - 1; i > -1; i--) {
-                if (converted[i] != -1) {
-                  robot.keyRelease(converted[i]);
+              if (chord) {
+                for (int i = 0; i < converted.length; i++) {
+                  if (converted[i] != -1) {
+                    toRelease.add(converted[i]);
+                  }
+                }
+              } else {
+                for (int i = converted.length - 1; i > -1; i--) {
+                  if (converted[i] != -1) {
+                    robot.keyRelease(converted[i]);
+                  }
                 }
               }
+              return null;
             }
-            return null;
           }
         });
         pause();
       }
-      for (int i = toRelease.size() - 1; i > -1; i--) {
-        final int key = toRelease.get(i);
-        Util.exec(new Sync<Object>() {
-          @Override
-          public Object perform() {
-            robot.keyRelease(key);
-            return null;
-          }
-        });
-        pause();
+      synchronized (toRelease) {
+        for (int i = toRelease.size() - 1; i > -1; i--) {
+          final int key = toRelease.get(i);
+          Util.exec(new Sync<Object>() {
+            @Override
+            public Object perform() {
+              robot.keyRelease(key);
+              return null;
+            }
+          });
+          pause();
+        }
       }
     } finally {
       unlock();
@@ -422,8 +443,8 @@ class Robot {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          robot.mouseMove((int) Math.rint(pageX + stage.getX() + stage.getScene().getX()),
-              (int) Math.rint(pageY + stage.getY() + stage.getScene().getY()));
+          robot.mouseMove((int) Math.rint(pageX + stage.get().getX() + stage.get().getScene().getX()),
+              (int) Math.rint(pageY + stage.get().getY() + stage.get().getScene().getY()));
           return null;
         }
       });
