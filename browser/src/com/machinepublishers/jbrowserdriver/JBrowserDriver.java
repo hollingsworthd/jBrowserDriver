@@ -278,7 +278,7 @@ public class JBrowserDriver implements Browser {
   public void close() {
     SettingsManager._deregister(settings);
     keyboard.get().sendKeys(Keys.ESCAPE);
-    window.close();
+    window.get().close();
   }
 
   @Override
