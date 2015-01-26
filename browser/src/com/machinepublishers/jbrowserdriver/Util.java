@@ -79,30 +79,32 @@ public class Util {
       return action.perform();
     }
     final AtomicReference<T> ret = new AtomicReference<T>();
-    final AtomicBoolean lock = new AtomicBoolean();
-    Platform.runLater(new Runnable() {
-      @Override
-      public void run() {
-        T result = action.perform();
-        synchronized (lock) {
-          ret.set(result);
-          lock.set(true);
-          lock.notify();
+    final AtomicBoolean done = new AtomicBoolean();
+    synchronized (done) {
+      Platform.runLater(new Runnable() {
+        @Override
+        public void run() {
+          T result = action.perform();
+          synchronized (done) {
+            ret.set(result);
+            done.set(true);
+            done.notify();
+          }
         }
-      }
-    });
-    synchronized (lock) {
-      if (!lock.get()) {
+      });
+    }
+    synchronized (done) {
+      if (!done.get()) {
         try {
-          lock.wait(timeout);
+          done.wait(timeout);
         } catch (InterruptedException e) {
           Logs.exception(e);
         }
-        if (!lock.get()) {
+        if (!done.get()) {
           Logs.exception(new RuntimeException("Action never completed."));
         }
       }
+      return ret.get();
     }
-    return ret.get();
   }
 }

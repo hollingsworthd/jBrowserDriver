@@ -59,14 +59,14 @@ public class SettingsManager {
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
-  private static final Map<HttpURLConnection, Settings> connectionSettings =
-      new HashMap<HttpURLConnection, Settings>();
+  private static final Map<HttpURLConnection, AtomicReference<Settings>> connectionSettings =
+      new HashMap<HttpURLConnection, AtomicReference<Settings>>();
   private static final Object lock = new Object();
   static {
     StreamHandler.addInjector(new Injector() {
       @Override
       public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
-        Settings settings;
+        AtomicReference<Settings> settings;
         synchronized (lock) {
           settings = connectionSettings.get(connection);
         }
@@ -84,19 +84,19 @@ public class SettingsManager {
             String content = new String(inflatedContent, charset);
             Matcher matcher = head.matcher(content);
             if (matcher.find()) {
-              return matcher.replaceFirst(matcher.group(0) + settings.script()).getBytes(charset);
+              return matcher.replaceFirst(matcher.group(0) + settings.get().script()).getBytes(charset);
             }
             matcher = html.matcher(content);
             if (matcher.find()) {
               return matcher.replaceFirst(
-                  matcher.group(0) + "<head>" + settings.script() + "</head>").getBytes(charset);
+                  matcher.group(0) + "<head>" + settings.get().script() + "</head>").getBytes(charset);
             }
             matcher = body.matcher(content);
             if (matcher.find()) {
-              return ("<html><head>" + settings.script() + "</head>"
+              return ("<html><head>" + settings.get().script() + "</head>"
                   + content + "</html>").getBytes(charset);
             }
-            return ("<html><head>" + settings.script() + "</head><body>"
+            return ("<html><head>" + settings.get().script() + "</head><body>"
                 + content + "</body></html>").getBytes(charset);
           } catch (Throwable t) {}
         }
@@ -204,17 +204,19 @@ public class SettingsManager {
 
   static LinkedHashMap<String, String> processHeaders(
       LinkedHashMap<String, String> headers, HttpURLConnection conn, boolean https) {
-    final Settings settings;
+    final AtomicReference<Settings> settings;
     synchronized (lock) {
-      settings = registry.get(Long.parseLong(headers.get("User-Agent"))).get();
+      settings = registry.get(Long.parseLong(headers.get("User-Agent")));
       connectionSettings.put(conn, settings);
     }
     LinkedHashMap<String, String> headersIn = new LinkedHashMap<String, String>(headers);
     LinkedHashMap<String, String> headersOut = new LinkedHashMap<String, String>();
-    Collection<String> names = https ? settings.headers().namesHttps() : settings.headers().namesHttp();
+    Collection<String> names = https ? settings.get().headers().namesHttps()
+        : settings.get().headers().namesHttp();
     for (String name : names) {
       String valueIn = headersIn.remove(name);
-      String valueSettings = https ? settings.headers().headerHttps(name) : settings.headers().headerHttp(name);
+      String valueSettings = https ? settings.get().headers().headerHttps(name)
+          : settings.get().headers().headerHttp(name);
       if (valueSettings == RequestHeaders.DROP_HEADER) {
         continue;
       }

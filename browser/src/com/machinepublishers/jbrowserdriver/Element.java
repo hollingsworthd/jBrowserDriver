@@ -65,30 +65,28 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final AtomicReference<Node> node;
-  private final AtomicReference<JSObject> jsObject;
   private final AtomicReference<Robot> robot;
-  private final boolean isWindow;
   private final AtomicReference<Timeouts> timeouts;
+  private final boolean isWindow;
 
-  Element(AtomicReference<Node> node, AtomicReference<Robot> robot, AtomicReference<Timeouts> timeouts) {
-    this.isWindow = node instanceof Document;
+  Element(final AtomicReference<Node> node, final AtomicReference<Robot> robot,
+      final AtomicReference<Timeouts> timeouts) {
+    this.isWindow = node.get() instanceof Document;
     this.node = node;
-    this.jsObject = new AtomicReference<JSObject>((JSObject) this.node.get());
     this.robot = robot;
     this.timeouts = timeouts;
   }
 
-  Element(final WebEngine engine, AtomicReference<Robot> robot, AtomicReference<Timeouts> timeouts) {
-    this.isWindow = true;
-    this.node = new AtomicReference<Node>(Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Document>() {
-      @Override
-      public Document perform() {
-        return engine.getDocument();
-      }
-    }));
-    this.jsObject = new AtomicReference<JSObject>((JSObject) this.node.get());
-    this.robot = robot;
-    this.timeouts = timeouts;
+  static Element create(final AtomicReference<WebEngine> engine, final AtomicReference<Robot> robot,
+      final AtomicReference<Timeouts> timeouts) {
+    final AtomicReference<Node> doc = new AtomicReference<Node>(
+        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Document>() {
+          @Override
+          public Document perform() {
+            return engine.get().getDocument();
+          }
+        }));
+    return new Element(doc, robot, timeouts);
   }
 
   @Override
@@ -96,8 +94,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.get().call("scrollIntoView");
-        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
+        ((JSObject) node.get()).call("scrollIntoView");
+        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
         double y = Double.parseDouble(obj.getMember("top").toString());
         double x = Double.parseDouble(obj.getMember("left").toString());
         robot.get().mouseMove(x, y);
@@ -127,8 +125,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.get().call("scrollIntoView");
-        jsObject.get().call("focus");
+        ((JSObject) node.get()).call("scrollIntoView");
+        ((JSObject) node.get()).call("focus");
         robot.get().keysType(keys);
         return null;
       }
@@ -140,9 +138,9 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        jsObject.get().call("scrollIntoView");
-        jsObject.get().call("focus");
-        jsObject.get().call("setValue", "");
+        ((JSObject) node.get()).call("scrollIntoView");
+        ((JSObject) node.get()).call("focus");
+        ((JSObject) node.get()).call("setValue", "");
         return null;
       }
     });
@@ -153,7 +151,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        String val = (String) jsObject.get().getMember(attrName);
+        String val = (String) ((JSObject) node.get()).getMember(attrName);
         return val == null || val.equals("undefined") ? "" : val;
       }
     });
@@ -164,7 +162,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        return cleanUpCssVal((String) jsObject.get().eval("var me = this;"
+        return cleanUpCssVal((String) ((JSObject) node.get()).eval("var me = this;"
             + "(function(){"
             + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
             + "})();"));
@@ -188,7 +186,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
-        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
+        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
         return new Point(x, y);
@@ -201,7 +199,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
+        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
@@ -226,13 +224,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        JSObject obj = (JSObject) jsObject.get().call("getBoundingClientRect");
+        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
         int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
         return (Boolean)
-        jsObject.get().eval("var me = this;"
+        ((JSObject) node.get()).eval("var me = this;"
             + "        (function(){"
             + "          for(var i = " + x + "; i < " + (x2 + 1) + "; i++){"
             + "            for(var j = " + y + "; j < " + (y2 + 1) + "; j++){"
@@ -251,7 +249,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String val = jsObject.get().getMember("disabled").toString();
+        String val = ((JSObject) node.get()).getMember("disabled").toString();
         return val == null || "undefined".equals(val) || val.isEmpty();
       }
     });
@@ -262,8 +260,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String selected = jsObject.get().getMember("selected").toString();
-        String checked = jsObject.get().getMember("checked").toString();
+        String selected = ((JSObject) node.get()).getMember("selected").toString();
+        String checked = ((JSObject) node.get()).getMember("checked").toString();
         return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
             || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
       }
@@ -336,7 +334,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        JSObject result = (JSObject) jsObject.get().call("querySelector", expr);
+        JSObject result = (JSObject) ((JSObject) node.get()).call("querySelector", expr);
         if (result == null) {
           return null;
         }
@@ -351,7 +349,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
-        JSObject result = (JSObject) jsObject.get().call("querySelectorAll", expr);
+        JSObject result = (JSObject) ((JSObject) node.get()).call("querySelectorAll", expr);
         for (int i = 0;; i++) {
           Object cur = result.getSlot(i);
           if (cur instanceof Node) {
@@ -464,7 +462,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         Object result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
           @Override
           public Object perform() {
-            return jsObject.get().eval("(function(){return this.screenslicerCallbackVal;})();");
+            return ((JSObject) node.get()).eval("(function(){return this.screenslicerCallbackVal;})();");
           }
         });
         if (!(result instanceof String) || !"undefined".equals(result)) {
@@ -528,7 +526,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         tmp[i] = args[i];
       }
       args = tmp;
-      jsObject.get().eval("(function(){"
+      ((JSObject) this.node.get()).eval("(function(){"
           + "          this.screenslicerCallback = function(){"
           + "            this.screenslicerCallbackVal = arguments;"
           + "          }"
@@ -539,12 +537,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     } else {
-      jsObject.get().eval("this.screenslicerJS = function(){"
+      ((JSObject) this.node.get()).eval("this.screenslicerJS = function(){"
           + (isWindow ? "var window = this;" : "")
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     }
-    return parseScriptResult(jsObject.get().call("screenslicerJS", args));
+    return parseScriptResult(((JSObject) this.node.get()).call("screenslicerJS", args));
   }
 
   private Object parseScriptResult(Object obj) {
