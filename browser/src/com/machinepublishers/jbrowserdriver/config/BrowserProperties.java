@@ -37,7 +37,7 @@ public class BrowserProperties {
     this(null, null, null, null, null);
   }
 
-  public static final String AUTO_VALUE = "auto_value";
+  public static final String AUTO_SIZE = "auto_size";
 
   /**
    * Leave any parameter as null to accept the default value (which mimics Tor Browser).
@@ -47,13 +47,13 @@ public class BrowserProperties {
    * @param size
    *          Size of the screen, which is applied to some window and window.screen properties.
    * @param screen
-   *          Screen properties. Use BrowserProperties.AUTO_VALUE for map-value to automatically
-   *          apply given size parameter or existing native JS values. Note that String values
-   *          must be enclosed in single quotes to be recognized as strings in JavaScript
-   *          (otherwise they'll be interpreted as boolean, number, null, undefined, or function).
-   *          To set grandchildren properties (e.g., screen.someChild.someGrandchild) use a key
-   *          value with a dot (e.g., someChild.someGrandchild). To only set the child property,
-   *          the key value would be, e.g., someChild
+   *          Screen properties. Use BrowserProperties.AUTO_SIZE for map-value to automatically
+   *          apply given size parameter. Also, String values must be enclosed in single quotes
+   *          to be recognized as strings in JavaScript (otherwise they'll be interpreted as
+   *          boolean, number, null, undefined, or function). To set grandchildren properties
+   *          (e.g., screen.someChild.someGrandchild) use a key value with dots (e.g.,
+   *          someChild.someGrandchild). To only set the child property, the key value would be,
+   *          e.g., someChild
    * @param navigator
    *          Navigator properties. Used in the same manner as 'screen' parameter above.
    * @param supplementaryJS
@@ -143,18 +143,9 @@ public class BrowserProperties {
     navigator.put("registerContentHandler.toString", "function(){return 'function registerContentHandler() { [native code] }';}");
     navigator.put("taintEnabled", "function(){return false;}");
     navigator.put("taintEnabled.toString", "function(){return 'function taintEnabled() { [native code] }';}");
-    navigator.put("mimeTypes", "{item:function(){return new Object();},"
-        + "namedItem:function(){return new Object();},"
-        + "'@@iterator':function(){return new Object();},"
-        + "length:0,"
-        + "}");
+    navigator.put("mimeTypes", "navigator.mimeTypes");
     navigator.put("mimeTypes.toString", "function(){return '[object MimeTypeArray]';}");
-    navigator.put("plugins", "{item:function(){return new Object();},"
-        + "namedItem:function(){return new Object();},"
-        + "refresh:function(){return new Object();},"
-        + "'@@iterator':function(){return new Object();},"
-        + "length:0,"
-        + "}");
+    navigator.put("plugins", "navigator.plugins");
     navigator.put("plugins.toString", "function(){return '[object PluginArray]';}");
     navigator.put("doNotTrack", "'unspecified'");
     navigator.put("oscpu", "'Windows NT 6.1'");
@@ -218,7 +209,7 @@ public class BrowserProperties {
     builder.append("{value:{");
     for (Map.Entry<String, String> entry : screen.entrySet()) {
       boolean added = false;
-      if (entry.getValue() == AUTO_VALUE) {
+      if (entry.getValue() == AUTO_SIZE) {
         added = true;
         if (size != null
             && (entry.getKey().equals("width") || entry.getKey().equals("availWidth"))) {
@@ -256,16 +247,8 @@ public class BrowserProperties {
         int lastDot = entry.getKey().lastIndexOf(".");
         String parent = entry.getKey().substring(0, lastDot);
         String child = entry.getKey().substring(lastDot + 1);
-        lastDot = parent.lastIndexOf(".");
-        if (lastDot > -1) {
-          String grandparent = parent.substring(0, lastDot);
-          parent = parent.substring(lastDot + 1);
-          builder.append("Object.defineProperty(window.screen." + grandparent + ",'" + parent + "',");
-          builder.append("{value:{" + child + ": " + entry.getValue() + "}});");
-        } else {
-          builder.append("Object.defineProperty(window.screen,'" + parent + "',");
-          builder.append("{value:{" + child + ": " + entry.getValue() + "}});");
-        }
+        builder.append("Object.defineProperty(window.screen." + parent + ",'" + child + "',");
+        builder.append("{value:" + entry.getValue() + "});");
       }
     }
   }
@@ -287,16 +270,8 @@ public class BrowserProperties {
         int lastDot = entry.getKey().lastIndexOf(".");
         String parent = entry.getKey().substring(0, lastDot);
         String child = entry.getKey().substring(lastDot + 1);
-        lastDot = parent.lastIndexOf(".");
-        if (lastDot > -1) {
-          String grandparent = parent.substring(0, lastDot);
-          parent = parent.substring(lastDot + 1);
-          builder.append("Object.defineProperty(window.navigator." + grandparent + ",'" + parent + "',");
-          builder.append("{value:{" + child + ": " + entry.getValue() + "}});");
-        } else {
-          builder.append("Object.defineProperty(window.navigator,'" + parent + "',");
-          builder.append("{value:{" + child + ": " + entry.getValue() + "}});");
-        }
+        builder.append("Object.defineProperty(window.navigator." + parent + ",'" + child + "',");
+        builder.append("{value:" + entry.getValue() + "});");
       }
     }
   }
