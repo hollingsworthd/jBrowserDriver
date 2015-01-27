@@ -54,6 +54,7 @@ import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
 import com.machinepublishers.jbrowserdriver.Logs;
+import com.machinepublishers.jbrowserdriver.Util;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 class StreamConnection extends HttpURLConnection {
@@ -108,8 +109,8 @@ class StreamConnection extends HttpURLConnection {
             HttpURLConnection remotePemFile = StreamHandler.defaultConnection(location);
             remotePemFile.setRequestMethod("GET");
             remotePemFile.connect();
-            pemBlocks = StreamHandler.toString(remotePemFile.getInputStream(),
-                StreamHandler.charset(remotePemFile));
+            pemBlocks = Util.toString(remotePemFile.getInputStream(),
+                Util.charset(remotePemFile));
             cachedPemFile.delete();
             Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
           } else {
@@ -153,7 +154,7 @@ class StreamConnection extends HttpURLConnection {
     }
   }
 
-  public StreamConnection(HttpsURLConnectionImpl conn, boolean isJbd) throws IOException {
+  StreamConnection(HttpsURLConnectionImpl conn, boolean isJbd) throws IOException {
     super(dummy);
     this.conn = conn;
     this.isJbd = isJbd;
@@ -174,7 +175,7 @@ class StreamConnection extends HttpURLConnection {
     headerObjParent = headerObjParentTmp;
   }
 
-  public StreamConnection(sun.net.www.protocol.http.HttpURLConnection conn, boolean isJbd)
+  StreamConnection(sun.net.www.protocol.http.HttpURLConnection conn, boolean isJbd)
       throws IOException {
     super(dummy);
     this.conn = conn;
@@ -403,7 +404,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return isJbd ? StreamHandler.injectedStream(conn) : new ByteArrayInputStream(new byte[0]);
+    return isJbd ? StreamInjectors.injectedStream(conn) : new ByteArrayInputStream(new byte[0]);
   }
 
   @Override

@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,11 +34,11 @@ import sun.net.www.MessageHeader;
 
 import com.machinepublishers.jbrowserdriver.Logs;
 
-public class StreamHeader extends MessageHeader {
+class StreamHeader extends MessageHeader {
   private final HttpURLConnection conn;
   private final boolean https;
 
-  public StreamHeader(HttpURLConnection conn, MessageHeader existing, Object instProxyOwner, boolean https) {
+  StreamHeader(HttpURLConnection conn, MessageHeader existing, Object instProxyOwner, boolean https) {
     for (int i = 0;; i++) {
       String key = existing.getKey(i);
       String value = existing.getValue(i);
@@ -45,7 +46,7 @@ public class StreamHeader extends MessageHeader {
         break;
       }
       if ("User-Agent".equals(key)) {
-        AtomicReference<Settings> settings = SettingsManager.registry(value);
+        AtomicReference<Settings> settings = SettingsManager.get(value);
         if (settings != null && !settings.get().proxy().directConnection()) {
           try {
             Field instProxy = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("instProxy");
@@ -74,7 +75,7 @@ public class StreamHeader extends MessageHeader {
       }
       headers.put(key, value);
     }
-    headers = SettingsManager.processHeaders(headers, conn, https);
+    headers = StreamHeader.processHeaders(headers, conn, https);
     printStream.print(super.getKey(0)
         + (super.getValue(0) == null ? "" : ": " + super.getValue(0)) + "\r\n");
     for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -83,5 +84,35 @@ public class StreamHeader extends MessageHeader {
     }
     printStream.print("\r\n");
     printStream.flush();
+  }
+
+  private static LinkedHashMap<String, String> processHeaders(
+      LinkedHashMap<String, String> headers, HttpURLConnection conn, boolean https) {
+    final AtomicReference<Settings> settings = SettingsManager.store(headers.get("User-Agent"), conn);
+    LinkedHashMap<String, String> headersIn = new LinkedHashMap<String, String>(headers);
+    LinkedHashMap<String, String> headersOut = new LinkedHashMap<String, String>();
+    Collection<String> names = https ? settings.get().headers().namesHttps()
+        : settings.get().headers().namesHttp();
+    for (String name : names) {
+      String valueIn = headersIn.remove(name);
+      String valueSettings = https ? settings.get().headers().headerHttps(name)
+          : settings.get().headers().headerHttp(name);
+      if (valueSettings == RequestHeaders.DROP_HEADER) {
+        continue;
+      }
+      if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
+        if (valueIn != null && !valueIn.isEmpty()) {
+          headersOut.put(name, valueIn);
+        }
+      } else {
+        headersOut.put(name, valueSettings);
+      }
+    }
+    if ("no-cache".equals(headersIn.get("Cache-Control"))) {
+      //JavaFX initially sets Cache-Control to no-cache but real browsers don't 
+      headersIn.remove("Cache-Control");
+    }
+    headersOut.putAll(headersIn);
+    return headersOut;
   }
 }

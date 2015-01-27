@@ -23,10 +23,16 @@ package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Field;
 import java.net.CookieHandler;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.machinepublishers.jbrowserdriver.Util;
+import com.machinepublishers.jbrowserdriver.config.StreamInjectors.Injector;
 import com.sun.webkit.network.CookieManager;
 
 public class Settings {
@@ -63,7 +69,57 @@ public class Settings {
       }
     }
     CookieHandler.setDefault(new CookieManager());
+    final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+    final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+    final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+    final Pattern httpProtocol = Pattern.compile("\\bhttp://");
+    final Pattern httpsProtocol = Pattern.compile("\\bhttps://");
+    StreamInjectors.add(new Injector() {
+      @Override
+      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
+        AtomicReference<Settings> settings;
+        settings = SettingsManager.get(connection);
+        if (connection.getContentType() != null
+            && !"false".equals(System.getProperty("jbd.quickrender"))
+            && (connection.getContentType().startsWith("image/")
+                || connection.getContentType().startsWith("video/")
+                || connection.getContentType().startsWith("audio/")
+                || connection.getContentType().startsWith("model/"))) {
+          return new byte[0];
+        } else if (connection.getContentType() != null
+            && connection.getContentType().indexOf("text/html") > -1) {
+          String injected = null;
+          try {
+            String charset = Util.charset(connection);
+            String content = new String(inflatedContent, charset);
+            Matcher matcher = head.matcher(content);
+            if (matcher.find()) {
+              injected = matcher.replaceFirst(matcher.group(0) + settings.get().script());
+            } else {
+              matcher = html.matcher(content);
+              if (matcher.find()) {
+                injected = matcher.replaceFirst(
+                    matcher.group(0) + "<head>" + settings.get().script() + "</head>");
+              } else {
+                matcher = body.matcher(content);
+                if (matcher.find()) {
+                  injected = ("<html><head>" + settings.get().script() + "</head>"
+                      + content + "</html>");
+                } else {
+                  injected = ("<html><head>" + settings.get().script() + "</head><body>"
+                      + content + "</body></html>");
+                }
+              }
+            }
+            injected = httpProtocol.matcher(injected).replaceAll("jbd" + settings.get().id() + "://");
+            injected = httpsProtocol.matcher(injected).replaceAll("jbds" + settings.get().id() + "://");
+          } catch (Throwable t) {}
+        }
+        return null;
+      }
+    });
   }
+
   private static final Random rand = new Random();
   private final RequestHeaders requestHeaders;
   private final BrowserTimeZone browserTimeZone;

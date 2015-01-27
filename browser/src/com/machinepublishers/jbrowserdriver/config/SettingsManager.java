@@ -23,14 +23,10 @@ package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -45,7 +41,6 @@ import org.openqa.selenium.Dimension;
 import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.StreamHandler.Injector;
 import com.sun.glass.ui.Screen;
 import com.sun.glass.ui.monocle.NativePlatform;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
@@ -55,55 +50,11 @@ import com.sun.javafx.webkit.Accessor;
  * Internal use only
  */
 public class SettingsManager {
-  private static final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-  private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-  private static final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+
   private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
   private static final Map<HttpURLConnection, AtomicReference<Settings>> connectionSettings =
       new HashMap<HttpURLConnection, AtomicReference<Settings>>();
   private static final Object lock = new Object();
-  static {
-    StreamHandler.addInjector(new Injector() {
-      @Override
-      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
-        AtomicReference<Settings> settings;
-        synchronized (lock) {
-          settings = connectionSettings.get(connection);
-        }
-        if (connection.getContentType() != null
-            && !"false".equals(System.getProperty("jbd.quickrender"))
-            && (connection.getContentType().startsWith("image/")
-                || connection.getContentType().startsWith("video/")
-                || connection.getContentType().startsWith("audio/")
-                || connection.getContentType().startsWith("model/"))) {
-          return new byte[0];
-        } else if (connection.getContentType() != null
-            && connection.getContentType().indexOf("text/html") > -1) {
-          try {
-            String charset = StreamHandler.charset(connection);
-            String content = new String(inflatedContent, charset);
-            Matcher matcher = head.matcher(content);
-            if (matcher.find()) {
-              return matcher.replaceFirst(matcher.group(0) + settings.get().script()).getBytes(charset);
-            }
-            matcher = html.matcher(content);
-            if (matcher.find()) {
-              return matcher.replaceFirst(
-                  matcher.group(0) + "<head>" + settings.get().script() + "</head>").getBytes(charset);
-            }
-            matcher = body.matcher(content);
-            if (matcher.find()) {
-              return ("<html><head>" + settings.get().script() + "</head>"
-                  + content + "</html>").getBytes(charset);
-            }
-            return ("<html><head>" + settings.get().script() + "</head><body>"
-                + content + "</body></html>").getBytes(charset);
-          } catch (Throwable t) {}
-        }
-        return null;
-      }
-    });
-  }
 
   /**
    * Internal use only
@@ -159,9 +110,23 @@ public class SettingsManager {
     ProxyAuth.remove(settings.get().proxy());
   }
 
-  static AtomicReference<Settings> registry(String id) {
+  static AtomicReference<Settings> get(String settingsId) {
     synchronized (lock) {
-      return registry.get(Long.parseLong(id));
+      return registry.get(Long.parseLong(settingsId));
+    }
+  }
+
+  static AtomicReference<Settings> get(HttpURLConnection connection) {
+    synchronized (lock) {
+      return connectionSettings.get(connection);
+    }
+  }
+
+  static AtomicReference<Settings> store(String settingsId, HttpURLConnection conn) {
+    synchronized (lock) {
+      AtomicReference<Settings> settings = registry.get(Long.parseLong(settingsId));
+      connectionSettings.put(conn, settings);
+      return settings;
     }
   }
 
@@ -208,39 +173,5 @@ public class SettingsManager {
         });
       }
     });
-  }
-
-  static LinkedHashMap<String, String> processHeaders(
-      LinkedHashMap<String, String> headers, HttpURLConnection conn, boolean https) {
-    final AtomicReference<Settings> settings;
-    synchronized (lock) {
-      settings = registry.get(Long.parseLong(headers.get("User-Agent")));
-      connectionSettings.put(conn, settings);
-    }
-    LinkedHashMap<String, String> headersIn = new LinkedHashMap<String, String>(headers);
-    LinkedHashMap<String, String> headersOut = new LinkedHashMap<String, String>();
-    Collection<String> names = https ? settings.get().headers().namesHttps()
-        : settings.get().headers().namesHttp();
-    for (String name : names) {
-      String valueIn = headersIn.remove(name);
-      String valueSettings = https ? settings.get().headers().headerHttps(name)
-          : settings.get().headers().headerHttp(name);
-      if (valueSettings == RequestHeaders.DROP_HEADER) {
-        continue;
-      }
-      if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
-        if (valueIn != null && !valueIn.isEmpty()) {
-          headersOut.put(name, valueIn);
-        }
-      } else {
-        headersOut.put(name, valueSettings);
-      }
-    }
-    if ("no-cache".equals(headersIn.get("Cache-Control"))) {
-      //JavaFX initially sets Cache-Control to no-cache but real browsers don't 
-      headersIn.remove("Cache-Control");
-    }
-    headersOut.putAll(headersIn);
-    return headersOut;
   }
 }

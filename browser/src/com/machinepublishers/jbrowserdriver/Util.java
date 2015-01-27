@@ -21,10 +21,18 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -34,6 +42,8 @@ public class Util {
     //needed to initialize jfx
     new JFXPanel();
   }
+  private static final Pattern charsetPattern = Pattern.compile(
+      "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
 
   public static void close(Closeable closeable) {
     if (closeable != null) {
@@ -106,5 +116,43 @@ public class Util {
       }
       return ret.get();
     }
+  }
+
+  public static String toString(InputStream inputStream, String charset) {
+    try {
+      final char[] chars = new char[8192];
+      StringBuilder builder = new StringBuilder();
+      InputStreamReader reader = new InputStreamReader(inputStream, charset);
+      for (int len; -1 != (len = reader.read(chars));) {
+        builder.append(chars, 0, len);
+      }
+      return builder.toString();
+    } catch (Throwable t) {
+      Logs.exception(t);
+      return null;
+    }
+  }
+
+  public static byte[] toBytes(InputStream inputStream) throws IOException {
+    final byte[] bytes = new byte[8192];
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    for (int len = 0; -1 != (len = inputStream.read(bytes));) {
+      out.write(bytes, 0, len);
+    }
+    return out.toByteArray();
+  }
+
+  public static String charset(URLConnection conn) {
+    String charset = conn.getContentType();
+    if (charset != null) {
+      Matcher matcher = charsetPattern.matcher(charset);
+      if (matcher.find()) {
+        charset = matcher.group(1);
+        if (Charset.isSupported(charset)) {
+          return charset;
+        }
+      }
+    }
+    return "utf-8";
   }
 }
