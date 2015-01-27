@@ -141,6 +141,7 @@ public class SettingsManager {
         synchronized (lock) {
           registry.put(settings.get().id(), settings);
         }
+        ProxyAuth.add(settings.get().proxy());
         addTitleListener(view, stage);
         addPageLoader(view, statusCode);
         return null;
@@ -154,6 +155,13 @@ public class SettingsManager {
   public static void _deregister(AtomicReference<Settings> settings) {
     synchronized (lock) {
       registry.remove(settings.get().id());
+    }
+    ProxyAuth.remove(settings.get().proxy());
+  }
+
+  static AtomicReference<Settings> registry(String id) {
+    synchronized (lock) {
+      return registry.get(Long.parseLong(id));
     }
   }
 

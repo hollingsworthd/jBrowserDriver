@@ -26,8 +26,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -51,11 +49,12 @@ import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 
 class StreamHandler implements URLStreamHandlerFactory {
+  private static final Pattern jbdProtocol = Pattern.compile("jbds?[0-9]+://");
   private static final HttpHandler httpHandler = new HttpHandler();
   private static final HttpsHandler httpsHandler = new HttpsHandler();
   private static int monitors;
   private static final Object lock = new Object();
-  private static final Map<String, HttpURLConnection> connections = new HashMap<String, HttpURLConnection>();
+  private static final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Object injectorLock = new Object();
@@ -85,35 +84,19 @@ class StreamHandler implements URLStreamHandlerFactory {
 
   StreamHandler() {}
 
-  static void clearFields(Object obj) throws Throwable {
-    Class<?> cur = obj.getClass();
-    while (!cur.equals(Object.class)) {
-      Field[] fields = cur.getDeclaredFields();
-      for (int i = 0; i < fields.length; i++) {
-        try {
-          if (!Modifier.isStatic(fields[i].getModifiers())
-              && fields[i].getType() instanceof Object) {
-            fields[i].setAccessible(true);
-            fields[i].set(obj, null);
-          }
-        } catch (Throwable t) {}
-      }
-      cur = cur.getSuperclass();
-    }
-  }
-
   static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      sun.net.www.protocol.http.HttpURLConnection conn =
-          new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(url));
+      StreamConnection conn =
+          new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(
+              new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("http://"))));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
       return conn;
     }
 
-    public URLConnection defaultConnection(URL url) throws IOException {
+    private URLConnection defaultConnection(URL url) throws IOException {
       return super.openConnection(url);
     }
   }
@@ -121,15 +104,16 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpsHandler extends sun.net.www.protocol.https.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      HttpsURLConnectionImpl conn =
-          new StreamConnectionSSL((HttpsURLConnectionImpl) super.openConnection(url));
+      StreamConnection conn =
+          new StreamConnection((HttpsURLConnectionImpl) super.openConnection(
+              new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("https://"))));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
       return conn;
     }
 
-    public URLConnection defaultConnection(URL url) throws IOException {
+    private URLConnection defaultConnection(URL url) throws IOException {
       return super.openConnection(url);
     }
   }
@@ -148,7 +132,7 @@ class StreamHandler implements URLStreamHandlerFactory {
   public static void startStatusMonitor() {
     synchronized (lock) {
       if (monitors == 0) {
-        for (HttpURLConnection conn : connections.values()) {
+        for (StreamConnection conn : connections.values()) {
           Util.close(conn);
         }
         connections.clear();
@@ -178,11 +162,11 @@ class StreamHandler implements URLStreamHandlerFactory {
 
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
-    if ("http".equals(protocol)) {
-      return httpHandler;
-    }
-    if ("https".equals(protocol)) {
+    if (protocol.startsWith("jbds") || "https".equals(protocol)) {
       return httpsHandler;
+    }
+    if (protocol.startsWith("jbd") || "http".equals(protocol)) {
+      return httpHandler;
     }
     if ("file".equals(protocol)) {
       return new sun.net.www.protocol.file.Handler();

@@ -23,10 +23,11 @@ package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Field;
 import java.net.CookieHandler;
-import java.net.CookieManager;
 import java.net.URL;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.sun.webkit.network.CookieManager;
 
 public class Settings {
   private static final boolean headless;
