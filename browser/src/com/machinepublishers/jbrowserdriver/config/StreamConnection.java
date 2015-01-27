@@ -36,8 +36,12 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.Permission;
 import java.security.cert.CertificateFactory;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,12 +57,29 @@ import com.machinepublishers.jbrowserdriver.Logs;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 class StreamConnection extends HttpURLConnection {
+  private static final Pattern httpProtocol = Pattern.compile("^https?://");
   private static final Object lock = new Object();
   private static SSLSocketFactory socketFactory;
   private static long lastCertUpdate;
   //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
   private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpURLConnection conn;
+  private final boolean isJbd;
+  private final boolean isSsl;
+  private final Object headerObjParent;
+  private static final Field headerField;
+  private final AtomicReference<Map<String, List<String>>> jbdRedirectHeaders =
+      new AtomicReference<Map<String, List<String>>>();
+  static {
+    Field headerFieldTmp = null;
+    try {
+      headerFieldTmp = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
+      headerFieldTmp.setAccessible(true);
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    headerField = headerFieldTmp;
+  }
   private static final URL dummy;
   static {
     URL dummyTmp = null;
@@ -132,18 +153,34 @@ class StreamConnection extends HttpURLConnection {
     }
   }
 
-  public StreamConnection(HttpsURLConnectionImpl conn) throws IOException {
+  public StreamConnection(HttpsURLConnectionImpl conn, boolean isJbd) throws IOException {
     super(dummy);
     this.conn = conn;
+    this.isJbd = isJbd;
+    this.isSsl = true;
     SSLSocketFactory socketFactory = updatedSocketFactory();
     if (socketFactory != null) {
       conn.setSSLSocketFactory(socketFactory);
     }
+    Object headerObjParentTmp = null;
+    Field field = null;
+    try {
+      field = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
+      field.setAccessible(true);
+      headerObjParentTmp = field.get(conn);
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    headerObjParent = headerObjParentTmp;
   }
 
-  public StreamConnection(sun.net.www.protocol.http.HttpURLConnection conn) throws IOException {
+  public StreamConnection(sun.net.www.protocol.http.HttpURLConnection conn, boolean isJbd)
+      throws IOException {
     super(dummy);
     this.conn = conn;
+    this.isJbd = isJbd;
+    this.isSsl = false;
+    headerObjParent = conn;
   }
 
   @Override
@@ -208,7 +245,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public int getResponseCode() throws IOException {
-    return conn.getResponseCode();
+    return isJbd ? conn.getResponseCode() : 307;
   }
 
   @Override
@@ -248,27 +285,24 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public void connect() throws IOException {
-    if (conn instanceof HttpsURLConnectionImpl) {
+    if (isJbd) {
       try {
-        Field requests = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
-        requests.setAccessible(true);
-        Field delegate = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
-        delegate.setAccessible(true);
-        requests.set(delegate.get(conn), new StreamHeader(
-            conn, (MessageHeader) requests.get(delegate.get(conn)), delegate.get(conn), true));
+        headerField.set(headerObjParent, new StreamHeader(
+            conn, (MessageHeader) headerField.get(headerObjParent), headerObjParent, isSsl));
       } catch (Throwable t) {
         Logs.exception(t);
       }
+      conn.connect();
     } else {
-      try {
-        Field field = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
-        field.setAccessible(true);
-        field.set(conn, new StreamHeader(conn, (MessageHeader) field.get(conn), conn, false));
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
+      Map<String, List<String>> jbdRedirectHeadersTmp = new LinkedHashMap<String, List<String>>();
+      jbdRedirectHeadersTmp.put("Location", Arrays.asList(new String[] {
+          httpProtocol.matcher(conn.getURL().toExternalForm()).replaceFirst(
+              (isSsl ? "jbds" : "jbd") + conn.getRequestProperty("User-Agent") + "://") }));
+      jbdRedirectHeadersTmp.put("content-length", Arrays.asList(new String[] { "0" }));
+      jbdRedirectHeadersTmp.put("content-encoding", Arrays.asList(new String[] { "identity" }));
+      jbdRedirectHeadersTmp.put("content-type", Arrays.asList(new String[] { "text/html" }));
+      jbdRedirectHeaders.set(Collections.unmodifiableMap(jbdRedirectHeadersTmp));
     }
-    conn.connect();
   }
 
   @Override
@@ -293,22 +327,26 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public String getContentEncoding() {
-    return conn.getContentEncoding();
+    return isJbd ? conn.getContentEncoding()
+        : jbdRedirectHeaders.get().get("content-encoding").get(0);
   }
 
   @Override
   public int getContentLength() {
-    return conn.getContentLength();
+    return isJbd ? conn.getContentLength()
+        : Integer.parseInt(jbdRedirectHeaders.get().get("content-length").get(0));
   }
 
   @Override
   public long getContentLengthLong() {
-    return conn.getContentLengthLong();
+    return isJbd ? conn.getContentLengthLong()
+        : Long.parseLong(jbdRedirectHeaders.get().get("content-length").get(0));
   }
 
   @Override
   public String getContentType() {
-    return conn.getContentType();
+    return isJbd ? conn.getContentType()
+        : jbdRedirectHeaders.get().get("content-type").get(0);
   }
 
   @Override
@@ -337,8 +375,9 @@ class StreamConnection extends HttpURLConnection {
   }
 
   @Override
-  public String getHeaderField(String arg0) {
-    return conn.getHeaderField(arg0);
+  public String getHeaderField(String fieldName) {
+    return isJbd ? conn.getHeaderField(fieldName)
+        : jbdRedirectHeaders.get().get(fieldName).get(0);
   }
 
   @Override
@@ -353,7 +392,8 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public Map<String, List<String>> getHeaderFields() {
-    return conn.getHeaderFields();
+    return isJbd ? conn.getHeaderFields()
+        : jbdRedirectHeaders.get();
   }
 
   @Override
@@ -363,7 +403,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return StreamHandler.injectedStream(conn);
+    return isJbd ? StreamHandler.injectedStream(conn) : new ByteArrayInputStream(new byte[0]);
   }
 
   @Override

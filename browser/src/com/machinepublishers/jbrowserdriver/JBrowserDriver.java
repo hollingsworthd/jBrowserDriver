@@ -117,7 +117,7 @@ public class JBrowserDriver implements Browser {
                 private void trace(String label, int state, String url, String contentType, double progress, int errorCode) {
                   System.out.println(engine.get().getUserAgent()
                       + "-" + label + "-> " + url
-                      + " {state: " + state
+                      + " ** {state: " + state
                       + ", progress: " + progress
                       + ", error: " + errorCode
                       + ", contentType: "

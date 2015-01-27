@@ -49,7 +49,7 @@ import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 
 class StreamHandler implements URLStreamHandlerFactory {
-  private static final Pattern jbdProtocol = Pattern.compile("jbds?[0-9]+://");
+  private static final Pattern jbdProtocol = Pattern.compile("^jbds?[0-9]+://");
   private static final HttpHandler httpHandler = new HttpHandler();
   private static final HttpsHandler httpsHandler = new HttpsHandler();
   private static int monitors;
@@ -87,9 +87,10 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
+      URL newUrl = new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("http://"));
       StreamConnection conn =
           new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(
-              new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("http://"))));
+              newUrl), !newUrl.toExternalForm().equals(url.toExternalForm()));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
@@ -104,9 +105,10 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpsHandler extends sun.net.www.protocol.https.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
+      URL newUrl = new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("https://"));
       StreamConnection conn =
           new StreamConnection((HttpsURLConnectionImpl) super.openConnection(
-              new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("https://"))));
+              newUrl), !newUrl.toExternalForm().equals(url.toExternalForm()));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
