@@ -25,12 +25,13 @@ public class Proxy {
   private final Type type;
   private final String host;
   private final int port;
+  private final String hostAndPort;
   private final String user;
   private final String password;
 
   public static enum Type {
-    SOCKS_5, SOCKS_4, HTTP, SSL, ALL
-  };
+    SOCKS, HTTP
+  }
 
   /**
    * Creates a direct connection (no proxy).
@@ -39,6 +40,7 @@ public class Proxy {
     type = null;
     host = null;
     port = -1;
+    hostAndPort = null;
     user = null;
     password = null;
   }
@@ -47,33 +49,40 @@ public class Proxy {
     this.type = type;
     this.host = host;
     this.port = port;
+    this.hostAndPort = host + ":" + port;
     this.user = user;
     this.password = password;
   }
 
-  boolean hasProxy() {
-    return type != null
-        && host != null && !host.isEmpty()
-        && port > 0;
+  boolean directConnection() {
+    return type == null || host == null || host.isEmpty() || port == -1;
   }
 
-  Type proxyType() {
-    return type;
+  boolean credentials() {
+    return user != null && !user.isEmpty() && password != null;
   }
 
-  String proxyHost() {
+  java.net.Proxy.Type type() {
+    return type == Type.SOCKS ? java.net.Proxy.Type.SOCKS : java.net.Proxy.Type.HTTP;
+  }
+
+  String host() {
     return host;
   }
 
-  int proxyPort() {
+  int port() {
     return port;
   }
 
-  String proxyUser() {
+  String hostAndPort() {
+    return hostAndPort;
+  }
+
+  String user() {
     return user == null ? "" : user;
   }
 
-  String proxyPassword() {
+  String password() {
     return password == null ? "" : password;
   }
 }

@@ -22,18 +22,43 @@
 package com.machinepublishers.jbrowserdriver.config;
 
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import sun.net.www.MessageHeader;
 
-public class StreamHeader extends MessageHeader {
+import com.machinepublishers.jbrowserdriver.Logs;
 
+public class StreamHeader extends MessageHeader {
   private final HttpURLConnection conn;
   private final boolean https;
 
-  public StreamHeader(HttpURLConnection conn, boolean https) {
+  public StreamHeader(HttpURLConnection conn, MessageHeader existing, Object instProxyOwner, boolean https) {
+    for (int i = 0;; i++) {
+      String key = existing.getKey(i);
+      String value = existing.getValue(i);
+      if (key == null && value == null) {
+        break;
+      }
+      if ("User-Agent".equals(key)) {
+        AtomicReference<Settings> settings = SettingsManager.registry(value);
+        if (settings != null && !settings.get().proxy().directConnection()) {
+          try {
+            Field instProxy = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("instProxy");
+            instProxy.setAccessible(true);
+            instProxy.set(instProxyOwner, new java.net.Proxy(settings.get().proxy().type(),
+                new InetSocketAddress(settings.get().proxy().host(), settings.get().proxy().port())));
+          } catch (Throwable t) {
+            Logs.exception(t);
+          }
+        }
+      }
+      super.add(key, value);
+    }
     this.conn = conn;
     this.https = https;
   }

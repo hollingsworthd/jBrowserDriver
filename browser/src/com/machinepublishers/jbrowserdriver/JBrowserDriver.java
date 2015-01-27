@@ -52,6 +52,8 @@ import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.Settings;
 import com.machinepublishers.jbrowserdriver.config.SettingsManager;
+import com.sun.javafx.webkit.Accessor;
+import com.sun.webkit.LoadListenerClient;
 
 public class JBrowserDriver implements Browser {
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window =
@@ -74,7 +76,8 @@ public class JBrowserDriver implements Browser {
   private final AtomicInteger statusCode = new AtomicInteger();
   private final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   private final AtomicBoolean initialized = new AtomicBoolean();
-  private final Object lock = new Object();
+  private final Object initLock = new Object();
+  private final AtomicBoolean pageLoaded = new AtomicBoolean();
 
   public JBrowserDriver() {
     this(new Settings());
@@ -92,7 +95,7 @@ public class JBrowserDriver implements Browser {
     if (initialized.get()) {
       return;
     }
-    synchronized (lock) {
+    synchronized (initLock) {
       if (!initialized.get()) {
         SettingsManager._register(stage, view, this.settings, statusCode);
         engine.set(view.get().getEngine());
@@ -106,6 +109,49 @@ public class JBrowserDriver implements Browser {
         options.set(new com.machinepublishers.jbrowserdriver.Options(window, timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator());
         capabilities.set(new Capabilities());
+        Util.exec(new Sync<Object>() {
+          @Override
+          public Object perform() {
+            if ("true".equals(System.getProperty("jbd.trace"))) {
+              Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(new LoadListenerClient() {
+                private void trace(String label, int state, String url, String contentType, double progress, int errorCode) {
+                  System.out.println(engine.get().getUserAgent()
+                      + "-" + label + "-> " + url
+                      + " {state: " + state
+                      + ", progress: " + progress
+                      + ", error: " + errorCode
+                      + ", contentType: "
+                      + contentType + "}");
+                }
+
+                @Override
+                public void dispatchResourceLoadEvent(long frame, int state, String url, String contentType, double progress, int errorCode) {
+                  trace("Rsrc", state, url, contentType, progress, errorCode);
+                }
+
+                @Override
+                public void dispatchLoadEvent(long frame, int state, String url, String contentType, double progress, int errorCode) {
+                  trace("Page", state, url, contentType, progress, errorCode);
+                }
+              });
+            }
+            engine.get().getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
+              @Override
+              public void changed(ObservableValue<? extends Worker.State> observable,
+                  Worker.State oldValue, Worker.State newValue) {
+                if (Worker.State.SUCCEEDED.equals(newValue)
+                    || Worker.State.CANCELLED.equals(newValue)
+                    || Worker.State.FAILED.equals(newValue)) {
+                  synchronized (pageLoaded) {
+                    pageLoaded.set(true);
+                    pageLoaded.notify();
+                  }
+                }
+              }
+            });
+            return null;
+          }
+        });
         initialized.set(true);
       }
     }
@@ -151,18 +197,9 @@ public class JBrowserDriver implements Browser {
   @Override
   public void get(final String url) {
     init();
-    final ChangeListener<Worker.State> changeListener = new ChangeListener<Worker.State>() {
-      @Override
-      public void changed(ObservableValue<? extends Worker.State> observable,
-          Worker.State oldValue, Worker.State newValue) {
-        if (Worker.State.SUCCEEDED.equals(newValue)
-            || Worker.State.CANCELLED.equals(newValue)
-            || Worker.State.FAILED.equals(newValue)) {}
-      }
-    };
-    Util.exec(timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
+    pageLoaded.set(false);
+    Util.exec(new Sync<Object>() {
       public Object perform() {
-        view.get().getEngine().getLoadWorker().stateProperty().addListener(changeListener);
         String cleanUrl = url;
         try {
           cleanUrl = new URL(url).toExternalForm();
@@ -170,16 +207,26 @@ public class JBrowserDriver implements Browser {
           Logs.exception(t);
           cleanUrl = url.startsWith("http://") || url.startsWith("https://") ? url : "http://" + url;
         }
-        view.get().getEngine().load(cleanUrl);
+        engine.get().load(cleanUrl);
         return null;
       }
     });
-    Util.exec(new Sync<Object>() {
-      public Object perform() {
-        view.get().getEngine().getLoadWorker().stateProperty().removeListener(changeListener);
-        return null;
+    try {
+      synchronized (pageLoaded) {
+        pageLoaded.wait(timeouts.get().getPageLoadTimeoutMS());
       }
-    });
+    } catch (InterruptedException e) {
+      Logs.exception(e);
+    }
+    if (!pageLoaded.get()) {
+      Util.exec(new Sync<Object>() {
+        @Override
+        public Object perform() {
+          engine.get().getLoadWorker().cancel();
+          return null;
+        }
+      });
+    }
   }
 
   @Override
