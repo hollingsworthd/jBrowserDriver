@@ -34,25 +34,16 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.stage.Stage;
 
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.sun.glass.ui.Application;
 
 class Robot {
   private static final Random rand = new Random();
-  private static final com.sun.glass.ui.Robot robot;
-  static {
-    robot = Util.exec(new Sync<com.sun.glass.ui.Robot>() {
-      public com.sun.glass.ui.Robot perform() {
-        return Application.GetApplication().createRobot();
-      }
-    });
-  }
-  private static final AtomicLong latestThread = new AtomicLong();
-  private static final AtomicLong curThread = new AtomicLong();
   private static final Map<Keys, Integer> keyConvert = new HashMap<Keys, Integer>();
   static {
     keyConvert.put(Keys.ADD, KeyEvent.VK_ADD);
@@ -235,13 +226,23 @@ class Robot {
     }
   }
 
-  private final AtomicReference<Stage> stage;
+  private final AtomicReference<UtilDynamic> stage;
+  private final AtomicReference<UtilDynamic> robot = new AtomicReference<UtilDynamic>();
+  private final AtomicLong latestThread = new AtomicLong();
+  private final AtomicLong curThread = new AtomicLong();
+  private final long settingsId;
 
-  Robot(final AtomicReference<Stage> stage) {
+  Robot(final AtomicReference<UtilDynamic> stage, final long settingsId) {
     this.stage = stage;
+    robot.set(Util.exec(new Sync<UtilDynamic>() {
+      public UtilDynamic perform() {
+        return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
+      }
+    }, settingsId));
+    this.settingsId = settingsId;
   }
 
-  private static int[] convertKey(int codePoint, boolean pressAndRelease) {
+  private int[] convertKey(int codePoint, boolean pressAndRelease) {
     char[] chars = Character.toChars(codePoint);
     if (chars.length == 1) {
       Keys key = Keys.getKeyFromUnicode(chars[0]);
@@ -260,10 +261,10 @@ class Robot {
         : mapping;
   }
 
-  private static int[] toClipboard(String str) {
-    ClipboardContent content = new ClipboardContent();
-    content.putString(str);
-    Clipboard.getSystemClipboard().setContent(content);
+  private int[] toClipboard(String str) {
+    UtilDynamic content = JavaFx.getNew(ClipboardContent.class, settingsId);
+    content.call("putString", str);
+    JavaFx.getStatic(Clipboard.class, settingsId).call("getSystemClipboard").call("setContent", content);
     return new int[] { KeyEvent.VK_CONTROL, KeyEvent.VK_V };
   }
 
@@ -313,12 +314,12 @@ class Robot {
             int[] converted = convertKey(codePoints.get(cur), false);
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
-                robot.keyPress(converted[i]);
+                robot.get().call("keyPress", converted[i]);
               }
             }
             return null;
           }
-        });
+        }, settingsId);
         pause();
       }
     } finally {
@@ -343,12 +344,12 @@ class Robot {
             int[] converted = convertKey(codePoints.get(cur), false);
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
-                robot.keyRelease(converted[i]);
+                robot.get().call("keyRelease", converted[i]);
               }
             }
             return null;
           }
-        });
+        }, settingsId);
         pause();
       }
     } finally {
@@ -356,7 +357,7 @@ class Robot {
     }
   }
 
-  private static void pause() {
+  private void pause() {
     Util.exec(new Sync<Object>() {
       @Override
       public Object perform() {
@@ -365,7 +366,7 @@ class Robot {
         } catch (InterruptedException e) {}
         return null;
       }
-    });
+    }, settingsId);
   }
 
   void keysType(final CharSequence... charsList) {
@@ -397,7 +398,7 @@ class Robot {
               int[] converted = convertKey(codePoints.get(cur), !chord);
               for (int i = 0; i < converted.length; i++) {
                 if (converted[i] != -1) {
-                  robot.keyPress(converted[i]);
+                  robot.get().call("keyPress", converted[i]);
                 }
               }
               if (chord) {
@@ -409,14 +410,14 @@ class Robot {
               } else {
                 for (int i = converted.length - 1; i > -1; i--) {
                   if (converted[i] != -1) {
-                    robot.keyRelease(converted[i]);
+                    robot.get().call("keyRelease", converted[i]);
                   }
                 }
               }
               return null;
             }
           }
-        });
+        }, settingsId);
         pause();
       }
       synchronized (toRelease) {
@@ -425,10 +426,10 @@ class Robot {
           Util.exec(new Sync<Object>() {
             @Override
             public Object perform() {
-              robot.keyRelease(key);
+              robot.get().call("keyRelease", key);
               return null;
             }
-          });
+          }, settingsId);
           pause();
         }
       }
@@ -443,11 +444,16 @@ class Robot {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          robot.mouseMove((int) Math.rint(pageX + stage.get().getX() + stage.get().getScene().getX()),
-              (int) Math.rint(pageY + stage.get().getY() + stage.get().getScene().getY()));
+          robot.get().call("mouseMove",
+              (int) Math.rint(pageX
+                  + (Double) stage.get().call("getX").unwrap()
+                  + (Double) stage.get().call("getScene").call("getX").unwrap()),
+              (int) Math.rint(pageY
+                  + (Double) stage.get().call("getY").unwrap()
+                  + (Double) stage.get().call("getScene").call("getY").unwrap()));
           return null;
         }
-      });
+      }, settingsId);
       pause();
     } finally {
       unlock();
@@ -465,10 +471,10 @@ class Robot {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          robot.mousePress(button.getValue());
+          robot.get().call("mousePress", button.getValue());
           return null;
         }
-      });
+      }, settingsId);
       pause();
     } finally {
       unlock();
@@ -481,10 +487,10 @@ class Robot {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          robot.mouseRelease(button.getValue());
+          robot.get().call("mouseRelease", button.getValue());
           return null;
         }
-      });
+      }, settingsId);
       pause();
     } finally {
       unlock();
@@ -497,10 +503,10 @@ class Robot {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          robot.mouseWheel(wheelAmt);
+          robot.get().call("mouseWheel", wheelAmt);
           return null;
         }
-      });
+      }, settingsId);
       pause();
     } finally {
       unlock();

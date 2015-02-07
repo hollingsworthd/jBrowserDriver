@@ -35,13 +35,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
+
+import com.machinepublishers.jbrowserdriver.config.JavaFx;
 
 public class Util {
-  static {
-    //needed to initialize jfx
-    new JFXPanel();
-  }
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
 
@@ -80,28 +77,40 @@ public class Util {
     T perform();
   }
 
-  public static <T> T exec(final Sync<T> action) {
-    return exec(0, action);
+  public static <T> T exec(final Sync<T> action, final long id) {
+    return exec(0, action, id);
   }
 
-  public static <T> T exec(final long timeout, final Sync<T> action) {
-    if (Platform.isFxApplicationThread()) {
+  private static class Runner<T> implements Runnable {
+    private final Sync<T> action;
+    private final AtomicBoolean done;
+    private final AtomicReference<T> ret;
+
+    public Runner(Sync<T> action, AtomicBoolean done, AtomicReference<T> ret) {
+      this.action = action;
+      this.done = done;
+      this.ret = ret;
+    }
+
+    @Override
+    public void run() {
+      T result = action.perform();
+      synchronized (done) {
+        ret.set(result);
+        done.set(true);
+        done.notify();
+      }
+    }
+  }
+
+  public static <T> T exec(final long timeout, final Sync<T> action, final long id) {
+    if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
       return action.perform();
     }
     final AtomicReference<T> ret = new AtomicReference<T>();
     final AtomicBoolean done = new AtomicBoolean();
     synchronized (done) {
-      Platform.runLater(new Runnable() {
-        @Override
-        public void run() {
-          T result = action.perform();
-          synchronized (done) {
-            ret.set(result);
-            done.set(true);
-            done.notify();
-          }
-        }
-      });
+      JavaFx.getStatic(Platform.class, id).call("runLater", new Runner<T>(action, done, ret));
     }
     synchronized (done) {
       if (!done.get()) {

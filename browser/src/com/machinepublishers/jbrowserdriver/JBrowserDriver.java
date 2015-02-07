@@ -28,17 +28,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Worker;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
 
@@ -50,10 +45,11 @@ import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.Settings;
 import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 import com.sun.javafx.webkit.Accessor;
-import com.sun.webkit.LoadListenerClient;
 
 public class JBrowserDriver implements Browser {
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window =
@@ -66,9 +62,9 @@ public class JBrowserDriver implements Browser {
       new AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts>();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator> targetLocator =
       new AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator>();
-  private final AtomicReference<Stage> stage = new AtomicReference<Stage>();
-  private final AtomicReference<WebView> view = new AtomicReference<WebView>();
-  private final AtomicReference<WebEngine> engine = new AtomicReference<WebEngine>();
+  private final AtomicReference<UtilDynamic> stage = new AtomicReference<UtilDynamic>();
+  private final AtomicReference<UtilDynamic> view = new AtomicReference<UtilDynamic>();
+  private final AtomicReference<UtilDynamic> engine = new AtomicReference<UtilDynamic>();
   private final AtomicReference<Keyboard> keyboard = new AtomicReference<Keyboard>();
   private final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
   private final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
@@ -78,6 +74,7 @@ public class JBrowserDriver implements Browser {
   private final AtomicBoolean initialized = new AtomicBoolean();
   private final Object initLock = new Object();
   private final AtomicBoolean pageLoaded = new AtomicBoolean();
+  private final AtomicLong settingsId = new AtomicLong();
 
   public JBrowserDriver() {
     this(new Settings());
@@ -98,60 +95,31 @@ public class JBrowserDriver implements Browser {
     synchronized (initLock) {
       if (!initialized.get()) {
         SettingsManager._register(stage, view, this.settings, statusCode);
-        engine.set(view.get().getEngine());
-        robot.set(new Robot(stage));
-        window.set(new com.machinepublishers.jbrowserdriver.Window(stage));
+        engine.set(view.get().call("getEngine"));
+        settingsId.set(Long.parseLong(engine.get().call("getUserAgent").toString()));
+        robot.set(new Robot(stage, settingsId.get()));
+        window.set(new com.machinepublishers.jbrowserdriver.Window(stage, settingsId.get()));
         timeouts.set(new com.machinepublishers.jbrowserdriver.Timeouts());
         keyboard.set(new Keyboard(robot));
         mouse.set(new Mouse(robot));
         navigation.set(new com.machinepublishers.jbrowserdriver.Navigation(
-            new AtomicReference<JBrowserDriver>(this), view));
+            new AtomicReference<JBrowserDriver>(this), view, settingsId.get()));
         options.set(new com.machinepublishers.jbrowserdriver.Options(window, timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator());
         capabilities.set(new Capabilities());
+        final boolean trace = "true".equals(System.getProperty("jbd.trace"));
         Util.exec(new Sync<Object>() {
           @Override
           public Object perform() {
-            if ("true".equals(System.getProperty("jbd.trace"))) {
-              Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(new LoadListenerClient() {
-                private void trace(String label, int state, String url, String contentType, double progress, int errorCode) {
-                  System.out.println(engine.get().getUserAgent()
-                      + "-" + label + "-> " + url
-                      + " ** {state: " + state
-                      + ", progress: " + progress
-                      + ", error: " + errorCode
-                      + ", contentType: "
-                      + contentType + "}");
-                }
-
-                @Override
-                public void dispatchResourceLoadEvent(long frame, int state, String url, String contentType, double progress, int errorCode) {
-                  trace("Rsrc", state, url, contentType, progress, errorCode);
-                }
-
-                @Override
-                public void dispatchLoadEvent(long frame, int state, String url, String contentType, double progress, int errorCode) {
-                  trace("Page", state, url, contentType, progress, errorCode);
-                }
-              });
-            }
-            engine.get().getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
-              @Override
-              public void changed(ObservableValue<? extends Worker.State> observable,
-                  Worker.State oldValue, Worker.State newValue) {
-                if (Worker.State.SUCCEEDED.equals(newValue)
-                    || Worker.State.CANCELLED.equals(newValue)
-                    || Worker.State.FAILED.equals(newValue)) {
-                  synchronized (pageLoaded) {
-                    pageLoaded.set(true);
-                    pageLoaded.notify();
-                  }
-                }
-              }
-            });
+            JavaFx.getStatic(Accessor.class, settingsId.get()).
+                call("getPageFor", view.get().call("getEngine")).
+                call("addLoadListenerClient",
+                    JavaFx.getNew(DynamicHttpLog.class, settingsId.get(), trace, settingsId.get()));
+            engine.get().call("getLoadWorker").call("stateProperty").call("addListener",
+                JavaFx.getNew(DynamicStateListener.class, settingsId.get(), pageLoaded));
             return null;
           }
-        });
+        }, settingsId.get());
         initialized.set(true);
       }
     }
@@ -163,9 +131,10 @@ public class JBrowserDriver implements Browser {
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        return (String) view.get().getEngine().executeScript("document.documentElement.outerHTML");
+        return view.get().call("getEngine").
+            call("executeScript", "document.documentElement.outerHTML").toString();
       }
-    });
+    }, settingsId.get());
   }
 
   @Override
@@ -173,9 +142,9 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(new Sync<String>() {
       public String perform() {
-        return view.get().getEngine().getLocation();
+        return view.get().call("getEngine").call("getLocation").toString();
       }
-    });
+    }, settingsId.get());
   }
 
   @Override
@@ -189,9 +158,9 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(new Sync<String>() {
       public String perform() {
-        return view.get().getEngine().getTitle();
+        return view.get().call("getEngine").call("getTitle").toString();
       }
-    });
+    }, settingsId.get());
   }
 
   @Override
@@ -207,13 +176,15 @@ public class JBrowserDriver implements Browser {
           Logs.exception(t);
           cleanUrl = url.startsWith("http://") || url.startsWith("https://") ? url : "http://" + url;
         }
-        engine.get().load(cleanUrl);
+        engine.get().call("load", cleanUrl);
         return null;
       }
-    });
+    }, settingsId.get());
     try {
       synchronized (pageLoaded) {
-        pageLoaded.wait(timeouts.get().getPageLoadTimeoutMS());
+        if (!pageLoaded.get()) {
+          pageLoaded.wait(timeouts.get().getPageLoadTimeoutMS());
+        }
       }
     } catch (InterruptedException e) {
       Logs.exception(e);
@@ -222,10 +193,10 @@ public class JBrowserDriver implements Browser {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          engine.get().getLoadWorker().cancel();
+          engine.get().call("getLoadWorker").call("cancel");
           return null;
         }
-      });
+      }, settingsId.get());
     }
   }
 
@@ -436,11 +407,14 @@ public class JBrowserDriver implements Browser {
     init();
     BufferedImage image = Util.exec(new Sync<BufferedImage>() {
       public BufferedImage perform() {
-        return SwingFXUtils.fromFXImage(view.get().snapshot(new SnapshotParameters(),
-            new WritableImage((int) Math.rint(view.get().getWidth()), (int) Math.rint(view.get().getHeight()))),
-            null);
+        return (BufferedImage) JavaFx.getStatic(
+            SwingFXUtils.class, Long.parseLong(engine.get().call("getUserAgent").toString())).
+            call("fromFXImage", view.get().call("snapshot", new SnapshotParameters(),
+                new WritableImage((int) Math.rint((Double) view.get().call("getWidth").unwrap()),
+                    (int) Math.rint((Double) view.get().call("getHeight").unwrap()))),
+                null).unwrap();
       }
-    });
+    }, settingsId.get());
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();

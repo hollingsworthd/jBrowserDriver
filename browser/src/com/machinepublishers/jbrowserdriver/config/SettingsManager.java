@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebView;
@@ -51,7 +48,8 @@ import com.sun.javafx.webkit.Accessor;
  */
 public class SettingsManager {
 
-  private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
+  private static final Map<Long, AtomicReference<Settings>> registry =
+      new HashMap<Long, AtomicReference<Settings>>();
   private static final Map<HttpURLConnection, AtomicReference<Settings>> connectionSettings =
       new HashMap<HttpURLConnection, AtomicReference<Settings>>();
   private static final Object lock = new Object();
@@ -59,7 +57,7 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static void _register(final AtomicReference<Stage> stage, final AtomicReference<WebView> view,
+  public static void _register(final AtomicReference<UtilDynamic> stage, final AtomicReference<UtilDynamic> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
     Util.exec(new Sync<Object>() {
       public Object perform() {
@@ -67,37 +65,44 @@ public class SettingsManager {
           try {
             System.setProperty("headless.geometry", settings.get().browserProperties().size().getWidth()
                 + "x" + settings.get().browserProperties().size().getHeight());
-            NativePlatform nativePlatform = NativePlatformFactory.getNativePlatform();
-            Field field = NativePlatform.class.getDeclaredField("screen");
+            UtilDynamic nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
+                settings.get().id()).call("getNativePlatform");
+            Field field = ((Class) JavaFx.getStatic(NativePlatform.class,
+                settings.get().id()).unwrap()).getDeclaredField("screen");
             field.setAccessible(true);
-            field.set(nativePlatform, null);
-            Screen.notifySettingsChanged();
+            field.set(nativePlatform.unwrap(), null);
+            JavaFx.getStatic(Screen.class, settings.get().id()).call("notifySettingsChanged");
           } catch (Throwable t) {
             Logs.exception(t);
           }
         }
-        view.set(new WebView());
-        stage.set(new Stage());
-        final StackPane root = new StackPane();
+        view.set(JavaFx.getNew(WebView.class, settings.get().id()));
+        stage.set(JavaFx.getNew(Stage.class, settings.get().id()));
+        AtomicReference<UtilDynamic> root = new AtomicReference<UtilDynamic>();
+        root.set(JavaFx.getNew(StackPane.class, settings.get().id()));
         final Dimension size = settings.get().browserProperties().size();
-        view.get().getEngine().getHistory().setMaxSize(2);
-        view.get().getEngine().setUserAgent("" + settings.get().id());
-        root.getChildren().add(view.get());
-        root.setCache(false);
-        stage.get().setScene(new Scene(root, size.getWidth(), size.getHeight()));
-        Accessor.getPageFor(view.get().getEngine()).setDeveloperExtrasEnabled(false);
-        stage.get().sizeToScene();
-        stage.get().show();
+        view.get().call("getEngine").call("getHistory").call("setMaxSize", 2);
+        view.get().call("getEngine").call("setUserAgent", "" + settings.get().id());
+        root.get().call("getChildren").call("add", view.get());
+        root.get().call("setCache", false);
+        stage.get().call("setScene", JavaFx.getNew(Scene.class, settings.get().id(),
+            root.get().unwrap(), new Double(size.getWidth()), new Double(size.getHeight())));
+        JavaFx.getStatic(Accessor.class, settings.get().id()).
+            call("getPageFor", view.get().call("getEngine")).
+            call("setDeveloperExtrasEnabled", false);
+        stage.get().call("sizeToScene");
+        stage.get().call("show");
 
         synchronized (lock) {
           registry.put(settings.get().id(), settings);
         }
         ProxyAuth.add(settings.get().proxy());
-        addTitleListener(view, stage);
-        addPageLoader(view, statusCode);
+        addTitleListener(view, stage, settings.get().id());
+        addPageLoader(view, statusCode, settings.get().id());
         return null;
+
       }
-    });
+    }, settings.get().id());
   }
 
   /**
@@ -136,42 +141,17 @@ public class SettingsManager {
     }
   }
 
-  private static void addTitleListener(final AtomicReference<WebView> view, final AtomicReference<Stage> stage) {
-    view.get().getEngine().titleProperty().addListener(new ChangeListener<String>() {
-      @Override
-      public void changed(ObservableValue<? extends String> observable,
-          String oldValue, final String newValue) {
-        Util.exec(new Sync<Object>() {
-          public Object perform() {
-            stage.get().setTitle(newValue);
-            return null;
-          }
-        });
-      }
-    });
+  private static void addTitleListener(final AtomicReference<UtilDynamic> view,
+      final AtomicReference<UtilDynamic> stage, final long settingsId) {
+    view.get().call("getEngine").call("titleProperty").
+        call("addListener", JavaFx.getNew(
+            DynamicTitleListener.class, settingsId, stage.get().unwrap()));
   }
 
-  private static void addPageLoader(final AtomicReference<WebView> view, final AtomicInteger statusCode) {
-    view.get().getEngine().getLoadWorker().stateProperty().addListener(new ChangeListener<Worker.State>() {
-      @Override
-      public void changed(final ObservableValue<? extends Worker.State> observable,
-          final Worker.State oldValue, final Worker.State newValue) {
-        Util.exec(new Sync<Object>() {
-          public Object perform() {
-            if (Worker.State.SCHEDULED.equals(newValue)) {
-              view.get().setVisible(false);
-              StreamHandler.startStatusMonitor();
-            } else if (Worker.State.SUCCEEDED.equals(newValue)
-                || Worker.State.CANCELLED.equals(newValue)
-                || Worker.State.FAILED.equals(newValue)) {
-              int code = StreamHandler.stopStatusMonitor(view.get().getEngine().getLocation());
-              view.get().setVisible(true);
-              statusCode.set(Worker.State.SUCCEEDED.equals(newValue) ? code : 499);
-            }
-            return null;
-          }
-        });
-      }
-    });
+  private static void addPageLoader(final AtomicReference<UtilDynamic> view,
+      final AtomicInteger statusCode, final long settingsId) {
+    view.get().call("getEngine").call("getLoadWorker").call("stateProperty").
+        call("addListener", JavaFx.getNew(
+            DynamicPageLoadListener.class, settingsId, view.get().unwrap(), statusCode, settingsId));
   }
 }

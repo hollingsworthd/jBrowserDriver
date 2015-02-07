@@ -72,8 +72,6 @@ public class Settings {
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-    final Pattern httpProtocol = Pattern.compile("\\bhttp://");
-    final Pattern httpsProtocol = Pattern.compile("\\bhttps://");
     StreamInjectors.add(new Injector() {
       @Override
       public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
@@ -111,8 +109,7 @@ public class Settings {
                 }
               }
             }
-            injected = httpProtocol.matcher(injected).replaceAll("jbd" + settings.get().id() + "://");
-            injected = httpsProtocol.matcher(injected).replaceAll("jbds" + settings.get().id() + "://");
+            return injected.getBytes(charset);
           } catch (Throwable t) {}
         }
         return null;
