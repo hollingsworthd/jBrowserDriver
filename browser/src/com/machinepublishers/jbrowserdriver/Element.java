@@ -55,7 +55,7 @@ import org.w3c.dom.html.HTMLInputElement;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
 public class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath {
@@ -63,13 +63,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private static final AtomicLong curThread = new AtomicLong();
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
-  private final AtomicReference<UtilDynamic> node;
+  private final AtomicReference<JavaFxObject> node;
   private final AtomicReference<Robot> robot;
   private final AtomicReference<Timeouts> timeouts;
   private final boolean isWindow;
   private final long settingsId;
 
-  Element(final AtomicReference<UtilDynamic> node, final AtomicReference<Robot> robot,
+  Element(final AtomicReference<JavaFxObject> node, final AtomicReference<Robot> robot,
       final AtomicReference<Timeouts> timeouts, final long settingsId) {
     this.isWindow = node.get().is(Document.class);
     this.node = node;
@@ -78,13 +78,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     this.settingsId = settingsId;
   }
 
-  static Element create(final AtomicReference<UtilDynamic> engine, final AtomicReference<Robot> robot,
+  static Element create(final AtomicReference<JavaFxObject> engine, final AtomicReference<Robot> robot,
       final AtomicReference<Timeouts> timeouts) {
     final long settingsId = Long.parseLong(engine.get().call("getUserAgent").toString());
-    final AtomicReference<UtilDynamic> doc = new AtomicReference<UtilDynamic>(
-        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<UtilDynamic>() {
+    final AtomicReference<JavaFxObject> doc = new AtomicReference<JavaFxObject>(
+        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<JavaFxObject>() {
           @Override
-          public UtilDynamic perform() {
+          public JavaFxObject perform() {
             return engine.get().call("getDocument");
           }
         }, settingsId));
@@ -97,7 +97,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public Object perform() {
         node.get().call("scrollIntoView");
-        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());
         double x = Double.parseDouble(obj.call("getMember", "left").toString());
         robot.get().mouseMove(x, y);
@@ -188,7 +188,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
-        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
         return new Point(x, y);
@@ -201,7 +201,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
@@ -226,7 +226,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
@@ -288,8 +288,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         try {
           final XPath xPath = XPathFactory.newInstance().newXPath();
           return new Element(
-              new AtomicReference<UtilDynamic>(
-                  new UtilDynamic(xPath.evaluate(expr, node.get(), XPathConstants.NODE))), robot, timeouts, settingsId);
+              new AtomicReference<JavaFxObject>(
+                  new JavaFxObject(xPath.evaluate(expr, node.get(), XPathConstants.NODE))), robot, timeouts, settingsId);
         } catch (XPathExpressionException e) {
           throw new RuntimeException(e);
         }
@@ -307,7 +307,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           NodeList list = (NodeList) xPath.evaluate(expr, node.get(), XPathConstants.NODESET);
           List<WebElement> elements = new ArrayList<WebElement>();
           for (int i = 0; i < list.getLength(); i++) {
-            elements.add(new Element(new AtomicReference<UtilDynamic>(new UtilDynamic(list.item(i))), robot, timeouts, settingsId));
+            elements.add(new Element(new AtomicReference<JavaFxObject>(new JavaFxObject(list.item(i))), robot, timeouts, settingsId));
           }
           return elements;
         } catch (XPathExpressionException e) {
@@ -337,11 +337,11 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        UtilDynamic result = node.get().call("querySelector", expr);
+        JavaFxObject result = node.get().call("querySelector", expr);
         if (result == null) {
           return null;
         }
-        return new Element(new AtomicReference<UtilDynamic>(result), robot, timeouts, settingsId);
+        return new Element(new AtomicReference<JavaFxObject>(result), robot, timeouts, settingsId);
       }
     }, settingsId);
   }
@@ -352,11 +352,11 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
-        UtilDynamic result = node.get().call("querySelectorAll", expr);
+        JavaFxObject result = node.get().call("querySelectorAll", expr);
         for (int i = 0;; i++) {
-          UtilDynamic cur = result.call("getSlot", i);
+          JavaFxObject cur = result.call("getSlot", i);
           if (cur.is(Node.class)) {
-            elements.add(new Element(new AtomicReference<UtilDynamic>(cur), robot, timeouts, settingsId));
+            elements.add(new Element(new AtomicReference<JavaFxObject>(cur), robot, timeouts, settingsId));
           } else {
             break;
           }
@@ -462,14 +462,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        UtilDynamic result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<UtilDynamic>() {
+        JavaFxObject result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<JavaFxObject>() {
           @Override
-          public UtilDynamic perform() {
+          public JavaFxObject perform() {
             return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
           }
         }, settingsId);
         if (!result.is(String.class) || !"undefined".equals(result)) {
-          result = new UtilDynamic(parseScriptResult(result));
+          result = new JavaFxObject(parseScriptResult(result));
           if (result.is(List.class)) {
             if (((List) result).size() == 0) {
               return null;
@@ -548,17 +548,17 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return parseScriptResult(this.node.get().call("screenslicerJS", args));
   }
 
-  private Object parseScriptResult(UtilDynamic obj) {
+  private Object parseScriptResult(JavaFxObject obj) {
     if (obj == null || (obj.is(String.class) && "undefined".equals(obj))) {
       return null;
     }
     if (obj.is(Node.class)) {
-      return new Element(new AtomicReference<UtilDynamic>(obj), robot, timeouts, settingsId);
+      return new Element(new AtomicReference<JavaFxObject>(obj), robot, timeouts, settingsId);
     }
     if (obj.unwrap().getClass().getName().equals(JSObject.class.getName())) {
       List<Object> result = new ArrayList<Object>();
       for (int i = 0;; i++) {
-        UtilDynamic cur = obj.call("getSlot", i);
+        JavaFxObject cur = obj.call("getSlot", i);
         if (cur.is(String.class) && "undefined".equals(cur)) {
           break;
         }

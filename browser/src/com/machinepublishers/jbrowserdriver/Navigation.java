@@ -25,15 +25,15 @@ import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
 public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriver> driver;
-  private final AtomicReference<UtilDynamic> view;
+  private final AtomicReference<JavaFxObject> view;
   private final long settingsId;
 
   Navigation(final AtomicReference<JBrowserDriver> driver,
-      final AtomicReference<UtilDynamic> view, final long settingsId) {
+      final AtomicReference<JavaFxObject> view, final long settingsId) {
     this.driver = driver;
     this.view = view;
     this.settingsId = settingsId;

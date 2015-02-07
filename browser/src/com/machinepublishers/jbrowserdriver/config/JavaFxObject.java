@@ -23,14 +23,14 @@ package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Method;
 
-public class UtilDynamic {
+public class JavaFxObject {
   private final Object object;
 
-  public UtilDynamic(Object object) {
+  public JavaFxObject(Object object) {
     this.object = object;
   }
 
-  public UtilDynamic(Class<?> object) {
+  public JavaFxObject(Class<?> object) {
     this.object = object;
   }
 
@@ -49,7 +49,7 @@ public class UtilDynamic {
     return false;
   }
 
-  public UtilDynamic call(String methodName, Object... params) {
+  public JavaFxObject call(String methodName, Object... params) {
     Class[] paramTypes;
     if (params == null || params.length == 0) {
       params = null;
@@ -57,7 +57,7 @@ public class UtilDynamic {
     } else {
       paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
-        params[i] = params[i] instanceof UtilDynamic ? ((UtilDynamic) params[i]).unwrap() : params[i];
+        params[i] = params[i] instanceof JavaFxObject ? ((JavaFxObject) params[i]).unwrap() : params[i];
       }
       paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
@@ -73,7 +73,7 @@ public class UtilDynamic {
           Method method = curClass.getDeclaredMethod(methodName, paramTypes);
           method.setAccessible(true);
           Object ret = method.invoke(null, params);
-          return ret == null ? null : new UtilDynamic(ret);
+          return ret == null ? null : new JavaFxObject(ret);
         } catch (Throwable t) {
           firstError = firstError == null ? t : firstError;
         }
@@ -83,7 +83,7 @@ public class UtilDynamic {
             if (methods[i].getName().equals(methodName)) {
               methods[i].setAccessible(true);
               Object ret = methods[i].invoke(null, params);
-              return ret == null ? null : new UtilDynamic(ret);
+              return ret == null ? null : new JavaFxObject(ret);
             }
           } catch (Throwable t) {}
         }
@@ -96,7 +96,7 @@ public class UtilDynamic {
           Method method = curClass.getDeclaredMethod(methodName, paramTypes);
           method.setAccessible(true);
           Object ret = method.invoke(object, params);
-          return ret == null ? null : new UtilDynamic(ret);
+          return ret == null ? null : new JavaFxObject(ret);
         } catch (Throwable t) {
           firstError = firstError == null ? t : firstError;
         }
@@ -106,7 +106,7 @@ public class UtilDynamic {
             if (methods[i].getName().equals(methodName)) {
               methods[i].setAccessible(true);
               Object ret = methods[i].invoke(object, params);
-              return ret == null ? null : new UtilDynamic(ret);
+              return ret == null ? null : new JavaFxObject(ret);
             }
           } catch (Throwable t) {}
         }

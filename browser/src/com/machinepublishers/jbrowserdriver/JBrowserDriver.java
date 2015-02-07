@@ -45,7 +45,7 @@ import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.Settings;
 import com.machinepublishers.jbrowserdriver.config.SettingsManager;
@@ -62,9 +62,9 @@ public class JBrowserDriver implements Browser {
       new AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts>();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator> targetLocator =
       new AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator>();
-  private final AtomicReference<UtilDynamic> stage = new AtomicReference<UtilDynamic>();
-  private final AtomicReference<UtilDynamic> view = new AtomicReference<UtilDynamic>();
-  private final AtomicReference<UtilDynamic> engine = new AtomicReference<UtilDynamic>();
+  private final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
+  private final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
+  private final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
   private final AtomicReference<Keyboard> keyboard = new AtomicReference<Keyboard>();
   private final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
   private final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();

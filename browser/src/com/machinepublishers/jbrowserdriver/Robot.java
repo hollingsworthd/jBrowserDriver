@@ -38,7 +38,7 @@ import javafx.scene.input.ClipboardContent;
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.sun.glass.ui.Application;
 
@@ -226,16 +226,16 @@ class Robot {
     }
   }
 
-  private final AtomicReference<UtilDynamic> stage;
-  private final AtomicReference<UtilDynamic> robot = new AtomicReference<UtilDynamic>();
+  private final AtomicReference<JavaFxObject> stage;
+  private final AtomicReference<JavaFxObject> robot = new AtomicReference<JavaFxObject>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final long settingsId;
 
-  Robot(final AtomicReference<UtilDynamic> stage, final long settingsId) {
+  Robot(final AtomicReference<JavaFxObject> stage, final long settingsId) {
     this.stage = stage;
-    robot.set(Util.exec(new Sync<UtilDynamic>() {
-      public UtilDynamic perform() {
+    robot.set(Util.exec(new Sync<JavaFxObject>() {
+      public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
       }
     }, settingsId));
@@ -262,7 +262,7 @@ class Robot {
   }
 
   private int[] toClipboard(String str) {
-    UtilDynamic content = JavaFx.getNew(ClipboardContent.class, settingsId);
+    JavaFxObject content = JavaFx.getNew(ClipboardContent.class, settingsId);
     content.call("putString", str);
     JavaFx.getStatic(Clipboard.class, settingsId).call("getSystemClipboard").call("setContent", content);
     return new int[] { KeyEvent.VK_CONTROL, KeyEvent.VK_V };

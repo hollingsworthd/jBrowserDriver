@@ -57,7 +57,7 @@ public class SettingsManager {
   /**
    * Internal use only
    */
-  public static void _register(final AtomicReference<UtilDynamic> stage, final AtomicReference<UtilDynamic> view,
+  public static void _register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
     Util.exec(new Sync<Object>() {
       public Object perform() {
@@ -65,7 +65,7 @@ public class SettingsManager {
           try {
             System.setProperty("headless.geometry", settings.get().browserProperties().size().getWidth()
                 + "x" + settings.get().browserProperties().size().getHeight());
-            UtilDynamic nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
+            JavaFxObject nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
                 settings.get().id()).call("getNativePlatform");
             Field field = ((Class) JavaFx.getStatic(NativePlatform.class,
                 settings.get().id()).unwrap()).getDeclaredField("screen");
@@ -78,7 +78,7 @@ public class SettingsManager {
         }
         view.set(JavaFx.getNew(WebView.class, settings.get().id()));
         stage.set(JavaFx.getNew(Stage.class, settings.get().id()));
-        AtomicReference<UtilDynamic> root = new AtomicReference<UtilDynamic>();
+        AtomicReference<JavaFxObject> root = new AtomicReference<JavaFxObject>();
         root.set(JavaFx.getNew(StackPane.class, settings.get().id()));
         final Dimension size = settings.get().browserProperties().size();
         view.get().call("getEngine").call("getHistory").call("setMaxSize", 2);
@@ -141,14 +141,14 @@ public class SettingsManager {
     }
   }
 
-  private static void addTitleListener(final AtomicReference<UtilDynamic> view,
-      final AtomicReference<UtilDynamic> stage, final long settingsId) {
+  private static void addTitleListener(final AtomicReference<JavaFxObject> view,
+      final AtomicReference<JavaFxObject> stage, final long settingsId) {
     view.get().call("getEngine").call("titleProperty").
         call("addListener", JavaFx.getNew(
             DynamicTitleListener.class, settingsId, stage.get().unwrap()));
   }
 
-  private static void addPageLoader(final AtomicReference<UtilDynamic> view,
+  private static void addPageLoader(final AtomicReference<JavaFxObject> view,
       final AtomicInteger statusCode, final long settingsId) {
     view.get().call("getEngine").call("getLoadWorker").call("stateProperty").
         call("addListener", JavaFx.getNew(

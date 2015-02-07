@@ -27,13 +27,13 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
 public class Window implements org.openqa.selenium.WebDriver.Window {
-  private final AtomicReference<UtilDynamic> stage;
+  private final AtomicReference<JavaFxObject> stage;
   private final long settingsId;
 
-  Window(final AtomicReference<UtilDynamic> stage, final long settingsId) {
+  Window(final AtomicReference<JavaFxObject> stage, final long settingsId) {
     this.stage = stage;
     this.settingsId = settingsId;
   }

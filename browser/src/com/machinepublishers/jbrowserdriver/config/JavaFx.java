@@ -53,7 +53,7 @@ public class JavaFx {
 
   private static final Map<Long, JavaFxClassLoader> classLoaders = new HashMap<Long, JavaFxClassLoader>();
 
-  public static synchronized UtilDynamic getNew(Class<?> type, Long id, Object... params) {
+  public static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
     if (!classLoaders.containsKey(id)) {
       classLoaders.put(id, newClassLoader());
     }
@@ -61,21 +61,21 @@ public class JavaFx {
     try {
       Class loaded = classLoaders.get(id).loadClass(type.getName());
       if (params == null || params.length == 0) {
-        return new UtilDynamic(loaded.newInstance());
+        return new JavaFxObject(loaded.newInstance());
       }
       Class[] paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
         paramTypes[i] = params[i].getClass();
       }
-      UtilDynamic.unbox(paramTypes);
+      JavaFxObject.unbox(paramTypes);
       try {
-        return new UtilDynamic(loaded.getConstructor(paramTypes).newInstance(params));
+        return new JavaFxObject(loaded.getConstructor(paramTypes).newInstance(params));
       } catch (Throwable t) {
         firstError = firstError == null ? t : firstError;
         Constructor[] constructors = loaded.getConstructors();
         for (int i = 0; i < constructors.length; i++) {
           try {
-            return new UtilDynamic(constructors[i].newInstance(params));
+            return new JavaFxObject(constructors[i].newInstance(params));
           } catch (Throwable t2) {}
         }
       }
@@ -85,12 +85,12 @@ public class JavaFx {
     throw new IllegalStateException("Could not construct " + type.getName(), firstError);
   }
 
-  public static synchronized UtilDynamic getStatic(Class<?> type, Long id) {
+  public static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
     try {
       if (!classLoaders.containsKey(id)) {
         classLoaders.put(id, newClassLoader());
       }
-      return new UtilDynamic(classLoaders.get(id).loadClass(type.getName()));
+      return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
     } catch (Throwable t) {
       Logs.exception(t);
       return null;
