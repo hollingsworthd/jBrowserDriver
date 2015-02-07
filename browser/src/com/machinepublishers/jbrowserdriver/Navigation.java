@@ -24,17 +24,19 @@ package com.machinepublishers.jbrowserdriver;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.scene.web.WebView;
-
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
 
 public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriver> driver;
-  private final AtomicReference<WebView> view;
+  private final AtomicReference<UtilDynamic> view;
+  private final long settingsId;
 
-  Navigation(final AtomicReference<JBrowserDriver> driver, final AtomicReference<WebView> view) {
+  Navigation(final AtomicReference<JBrowserDriver> driver,
+      final AtomicReference<UtilDynamic> view, final long settingsId) {
     this.driver = driver;
     this.view = view;
+    this.settingsId = settingsId;
   }
 
   @Override
@@ -42,13 +44,13 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     Util.exec(new Sync<Object>() {
       public Object perform() {
         try {
-          view.get().getEngine().getHistory().go(-1);
+          view.get().call("getEngine").call("getHistory").call("go", -1);
         } catch (IndexOutOfBoundsException e) {
           Logs.exception(e);
         }
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -56,23 +58,23 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     Util.exec(new Sync<Object>() {
       public Object perform() {
         try {
-          view.get().getEngine().getHistory().go(1);
+          view.get().call("getEngine").call("getHistory").call("go", 1);
         } catch (IndexOutOfBoundsException e) {
           Logs.exception(e);
         }
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
   public void refresh() {
     Util.exec(new Sync<Object>() {
       public Object perform() {
-        view.get().getEngine().reload();
+        view.get().call("getEngine").call("reload");
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override

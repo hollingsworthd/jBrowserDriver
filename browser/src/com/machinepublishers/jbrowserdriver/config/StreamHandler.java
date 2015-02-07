@@ -29,15 +29,13 @@ import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
 import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 
-class StreamHandler implements URLStreamHandlerFactory {
-  private static final Pattern jbdProtocol = Pattern.compile("^jbds?[0-9]+://");
+public class StreamHandler implements URLStreamHandlerFactory {
   private static final HttpHandler httpHandler = new HttpHandler();
   private static final HttpsHandler httpsHandler = new HttpsHandler();
   private static int monitors;
@@ -49,10 +47,8 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      URL newUrl = new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("http://"));
       StreamConnection conn =
-          new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(
-              newUrl), !newUrl.toExternalForm().equals(url.toExternalForm()));
+          new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(url));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
@@ -67,10 +63,8 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpsHandler extends sun.net.www.protocol.https.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      URL newUrl = new URL(jbdProtocol.matcher(url.toExternalForm()).replaceFirst("https://"));
       StreamConnection conn =
-          new StreamConnection((HttpsURLConnectionImpl) super.openConnection(
-              newUrl), !newUrl.toExternalForm().equals(url.toExternalForm()));
+          new StreamConnection((HttpsURLConnectionImpl) super.openConnection(url));
       synchronized (lock) {
         connections.put(url.toExternalForm(), conn);
       }
@@ -93,7 +87,7 @@ class StreamHandler implements URLStreamHandlerFactory {
     return null;
   }
 
-  public static void startStatusMonitor() {
+  static void startStatusMonitor() {
     synchronized (lock) {
       if (monitors == 0) {
         for (StreamConnection conn : connections.values()) {
@@ -109,7 +103,7 @@ class StreamHandler implements URLStreamHandlerFactory {
     }
   }
 
-  public static int stopStatusMonitor(String url) {
+  static int stopStatusMonitor(String url) {
     synchronized (lock) {
       --monitors;
       int code = 0;
@@ -126,10 +120,10 @@ class StreamHandler implements URLStreamHandlerFactory {
 
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
-    if (protocol.startsWith("jbds") || "https".equals(protocol)) {
+    if ("https".equals(protocol)) {
       return httpsHandler;
     }
-    if (protocol.startsWith("jbd") || "http".equals(protocol)) {
+    if ("http".equals(protocol)) {
       return httpHandler;
     }
     if ("file".equals(protocol)) {

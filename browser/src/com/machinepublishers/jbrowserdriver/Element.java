@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javafx.scene.web.WebEngine;
-
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -57,6 +55,7 @@ import org.w3c.dom.html.HTMLInputElement;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.UtilDynamic;
 
 public class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath {
@@ -64,29 +63,32 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private static final AtomicLong curThread = new AtomicLong();
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
-  private final AtomicReference<Node> node;
+  private final AtomicReference<UtilDynamic> node;
   private final AtomicReference<Robot> robot;
   private final AtomicReference<Timeouts> timeouts;
   private final boolean isWindow;
+  private final long settingsId;
 
-  Element(final AtomicReference<Node> node, final AtomicReference<Robot> robot,
-      final AtomicReference<Timeouts> timeouts) {
-    this.isWindow = node.get() instanceof Document;
+  Element(final AtomicReference<UtilDynamic> node, final AtomicReference<Robot> robot,
+      final AtomicReference<Timeouts> timeouts, final long settingsId) {
+    this.isWindow = node.get().is(Document.class);
     this.node = node;
     this.robot = robot;
     this.timeouts = timeouts;
+    this.settingsId = settingsId;
   }
 
-  static Element create(final AtomicReference<WebEngine> engine, final AtomicReference<Robot> robot,
+  static Element create(final AtomicReference<UtilDynamic> engine, final AtomicReference<Robot> robot,
       final AtomicReference<Timeouts> timeouts) {
-    final AtomicReference<Node> doc = new AtomicReference<Node>(
-        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Document>() {
+    final long settingsId = Long.parseLong(engine.get().call("getUserAgent").toString());
+    final AtomicReference<UtilDynamic> doc = new AtomicReference<UtilDynamic>(
+        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<UtilDynamic>() {
           @Override
-          public Document perform() {
-            return engine.get().getDocument();
+          public UtilDynamic perform() {
+            return engine.get().call("getDocument");
           }
-        }));
-    return new Element(doc, robot, timeouts);
+        }, settingsId));
+    return new Element(doc, robot, timeouts, settingsId);
   }
 
   @Override
@@ -94,15 +96,15 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        ((JSObject) node.get()).call("scrollIntoView");
-        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
-        double y = Double.parseDouble(obj.getMember("top").toString());
-        double x = Double.parseDouble(obj.getMember("left").toString());
+        node.get().call("scrollIntoView");
+        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        double y = Double.parseDouble(obj.call("getMember", "top").toString());
+        double x = Double.parseDouble(obj.call("getMember", "left").toString());
         robot.get().mouseMove(x, y);
         robot.get().mouseClick(MouseButton.LEFT);
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -110,14 +112,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        if (node.get() instanceof HTMLInputElement) {
+        if (node.get().is(HTMLInputElement.class)) {
           ((HTMLInputElement) node.get()).getForm().submit();
-        } else if (node.get() instanceof HTMLFormElement) {
+        } else if (node.get().is(HTMLFormElement.class)) {
           ((HTMLFormElement) node.get()).submit();
         }
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -125,12 +127,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        ((JSObject) node.get()).call("scrollIntoView");
-        ((JSObject) node.get()).call("focus");
+        node.get().call("scrollIntoView");
+        node.get().call("focus");
         robot.get().keysType(keys);
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -138,12 +140,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        ((JSObject) node.get()).call("scrollIntoView");
-        ((JSObject) node.get()).call("focus");
-        ((JSObject) node.get()).call("setValue", "");
+        node.get().call("scrollIntoView");
+        node.get().call("focus");
+        node.get().call("setValue", "");
         return null;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -151,10 +153,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        String val = (String) ((JSObject) node.get()).getMember(attrName);
+        String val = (String) (node.get().call("getMember", attrName).unwrap());
         return val == null || val.equals("undefined") ? "" : val;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -162,12 +164,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        return cleanUpCssVal((String) ((JSObject) node.get()).eval("var me = this;"
+        return cleanUpCssVal((String) (node.get().call("eval", "var me = this;"
             + "(function(){"
             + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
-            + "})();"));
+            + "})();").unwrap()));
       }
-    });
+    }, settingsId);
   }
 
   private static String cleanUpCssVal(String rgbStr) {
@@ -186,12 +188,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
-        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
-        int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-        int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
+        int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
         return new Point(x, y);
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -199,14 +201,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
-        int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-        int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-        int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-        int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
+        int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
+        int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
+        int x2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "right").toString()));
         return new Dimension(x2 - x, y2 - y);
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -224,13 +226,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        JSObject obj = (JSObject) ((JSObject) node.get()).call("getBoundingClientRect");
-        int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-        int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-        int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-        int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+        UtilDynamic obj = node.get().call("getBoundingClientRect");
+        int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
+        int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
+        int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
+        int x2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "right").toString()));
         return (Boolean)
-        ((JSObject) node.get()).eval("var me = this;"
+        node.get().call("eval", "var me = this;"
             + "        (function(){"
             + "          for(var i = " + x + "; i < " + (x2 + 1) + "; i++){"
             + "            for(var j = " + y + "; j < " + (y2 + 1) + "; j++){"
@@ -239,9 +241,9 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
             + "              }"
             + "            }"
             + "          }"
-            + "          return false;})();");
+            + "          return false;})();").unwrap();
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -249,10 +251,10 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String val = ((JSObject) node.get()).getMember("disabled").toString();
+        String val = node.get().call("getMember", "disabled").toString();
         return val == null || "undefined".equals(val) || val.isEmpty();
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -260,12 +262,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        String selected = ((JSObject) node.get()).getMember("selected").toString();
-        String checked = ((JSObject) node.get()).getMember("checked").toString();
+        String selected = node.get().call("getMember", "selected").toString();
+        String checked = node.get().call("getMember", "checked").toString();
         return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
             || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -285,13 +287,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       public WebElement perform() {
         try {
           final XPath xPath = XPathFactory.newInstance().newXPath();
-          return new Element(new AtomicReference<Node>((Node) xPath.evaluate(
-              expr, node.get(), XPathConstants.NODE)), robot, timeouts);
+          return new Element(
+              new AtomicReference<UtilDynamic>(
+                  new UtilDynamic(xPath.evaluate(expr, node.get(), XPathConstants.NODE))), robot, timeouts, settingsId);
         } catch (XPathExpressionException e) {
           throw new RuntimeException(e);
         }
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -304,14 +307,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           NodeList list = (NodeList) xPath.evaluate(expr, node.get(), XPathConstants.NODESET);
           List<WebElement> elements = new ArrayList<WebElement>();
           for (int i = 0; i < list.getLength(); i++) {
-            elements.add(new Element(new AtomicReference<Node>(list.item(i)), robot, timeouts));
+            elements.add(new Element(new AtomicReference<UtilDynamic>(new UtilDynamic(list.item(i))), robot, timeouts, settingsId));
           }
           return elements;
         } catch (XPathExpressionException e) {
           throw new RuntimeException(e);
         }
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -334,13 +337,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        JSObject result = (JSObject) ((JSObject) node.get()).call("querySelector", expr);
+        UtilDynamic result = node.get().call("querySelector", expr);
         if (result == null) {
           return null;
         }
-        return new Element(new AtomicReference<Node>((Node) result), robot, timeouts);
+        return new Element(new AtomicReference<UtilDynamic>(result), robot, timeouts, settingsId);
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -349,18 +352,18 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
-        JSObject result = (JSObject) ((JSObject) node.get()).call("querySelectorAll", expr);
+        UtilDynamic result = node.get().call("querySelectorAll", expr);
         for (int i = 0;; i++) {
-          Object cur = result.getSlot(i);
-          if (cur instanceof Node) {
-            elements.add(new Element(new AtomicReference<Node>((Node) cur), robot, timeouts));
+          UtilDynamic cur = result.call("getSlot", i);
+          if (cur.is(Node.class)) {
+            elements.add(new Element(new AtomicReference<UtilDynamic>(cur), robot, timeouts, settingsId));
           } else {
             break;
           }
         }
         return elements;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -413,7 +416,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         }
         return elements;
       }
-    });
+    }, settingsId);
   }
 
   @Override
@@ -450,7 +453,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         public Object perform() {
           return script(true, script, args);
         }
-      });
+      }, settingsId);
       int sleep = 1;
       final int sleepBackoff = 2;
       final int sleepMax = 500;
@@ -459,23 +462,23 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        Object result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+        UtilDynamic result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<UtilDynamic>() {
           @Override
-          public Object perform() {
-            return ((JSObject) node.get()).eval("(function(){return this.screenslicerCallbackVal;})();");
+          public UtilDynamic perform() {
+            return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
           }
-        });
-        if (!(result instanceof String) || !"undefined".equals(result)) {
-          result = parseScriptResult(result);
-          if (result instanceof List) {
+        }, settingsId);
+        if (!result.is(String.class) || !"undefined".equals(result)) {
+          result = new UtilDynamic(parseScriptResult(result));
+          if (result.is(List.class)) {
             if (((List) result).size() == 0) {
               return null;
             }
             if (((List) result).size() == 1) {
-              return ((List) result).get(0);
+              return ((List) result.unwrap()).get(0);
             }
           }
-          return result;
+          return result.unwrap();
         }
       }
     } finally {
@@ -492,7 +495,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         public Object perform() {
           return script(false, script, args);
         }
-      });
+      }, settingsId);
     } finally {
       unlock();
     }
@@ -526,7 +529,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         tmp[i] = args[i];
       }
       args = tmp;
-      ((JSObject) this.node.get()).eval("(function(){"
+      this.node.get().call("eval", "(function(){"
           + "          this.screenslicerCallback = function(){"
           + "            this.screenslicerCallbackVal = arguments;"
           + "          }"
@@ -537,49 +540,47 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     } else {
-      ((JSObject) this.node.get()).eval("this.screenslicerJS = function(){"
+      this.node.get().call("eval", "this.screenslicerJS = function(){"
           + (isWindow ? "var window = this;" : "")
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     }
-    return parseScriptResult(((JSObject) this.node.get()).call("screenslicerJS", args));
+    return parseScriptResult(this.node.get().call("screenslicerJS", args));
   }
 
-  private Object parseScriptResult(Object obj) {
-    if (obj == null || (obj instanceof String && "undefined".equals(obj))) {
+  private Object parseScriptResult(UtilDynamic obj) {
+    if (obj == null || (obj.is(String.class) && "undefined".equals(obj))) {
       return null;
     }
-    if (obj instanceof Node) {
-      return new Element(new AtomicReference<Node>((Node) obj), robot, timeouts);
+    if (obj.is(Node.class)) {
+      return new Element(new AtomicReference<UtilDynamic>(obj), robot, timeouts, settingsId);
     }
-    if (obj instanceof JSObject) {
-      JSObject jsObj = (JSObject) obj;
+    if (obj.unwrap().getClass().getName().equals(JSObject.class.getName())) {
       List<Object> result = new ArrayList<Object>();
       for (int i = 0;; i++) {
-        Object cur = jsObj.getSlot(i);
-        if (cur instanceof String && "undefined".equals(cur)) {
+        UtilDynamic cur = obj.call("getSlot", i);
+        if (cur.is(String.class) && "undefined".equals(cur)) {
           break;
         }
         result.add(parseScriptResult(cur));
       }
       return result;
     }
-    if (obj instanceof Boolean) {
-      return obj;
+    if (obj.is(Boolean.class)) {
+      return obj.unwrap();
     }
-    if (obj instanceof Long) {
-      return obj;
+    if (obj.is(Long.class)) {
+      return obj.unwrap();
     }
-    if (obj instanceof Integer) {
-      return new Long((Integer) obj);
+    if (obj.is(Integer.class)) {
+      return new Long((Integer) obj.unwrap());
     }
-    if (obj instanceof Double) {
-      return obj;
+    if (obj.is(Double.class)) {
+      return obj.unwrap();
     }
-    if (obj instanceof Float) {
-      return new Double((Float) obj);
+    if (obj.is(Float.class)) {
+      return new Double((Double) obj.unwrap());
     }
     return obj.toString();
   }
-
 }
