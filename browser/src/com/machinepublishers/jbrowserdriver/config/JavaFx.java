@@ -168,10 +168,10 @@ public class JavaFx {
         try {
           Path tmpDir = Files.createTempDirectory("jbd");
           tmpDir.toFile().deleteOnExit();
+          File jarDir = new File(tmpDir.toFile(), "jars");
+          jarDir.mkdir();
           for (File file : files) {
             try {
-              File jarDir = new File(tmpDir.toFile(), "jars");
-              jarDir.mkdir();
               File tmpFile;
               if (file.getName().endsWith(".jar")) {
                 tmpFile = new File(jarDir, file.getName());
