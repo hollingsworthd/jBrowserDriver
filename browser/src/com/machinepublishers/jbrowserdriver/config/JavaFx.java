@@ -80,7 +80,7 @@ public class JavaFx {
         }
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      firstError = firstError == null ? t : firstError;
     }
     throw new IllegalStateException("Could not construct " + type.getName(), firstError);
   }
