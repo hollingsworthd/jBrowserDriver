@@ -21,7 +21,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.List;
@@ -45,8 +44,8 @@ import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.Settings;
 import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 import com.sun.javafx.webkit.Accessor;
@@ -405,20 +404,21 @@ public class JBrowserDriver implements Browser {
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     init();
-    BufferedImage image = Util.exec(new Sync<BufferedImage>() {
-      public BufferedImage perform() {
-        return (BufferedImage) JavaFx.getStatic(
+    JavaFxObject image = Util.exec(new Sync<JavaFxObject>() {
+      public JavaFxObject perform() {
+        return JavaFx.getStatic(
             SwingFXUtils.class, Long.parseLong(engine.get().call("getUserAgent").toString())).
-            call("fromFXImage", view.get().call("snapshot", new SnapshotParameters(),
-                new WritableImage((int) Math.rint((Double) view.get().call("getWidth").unwrap()),
-                    (int) Math.rint((Double) view.get().call("getHeight").unwrap()))),
-                null).unwrap();
+            call("fromFXImage", view.get().
+                call("snapshot", JavaFx.getNew(SnapshotParameters.class, settingsId.get()),
+                    JavaFx.getNew(WritableImage.class, settingsId.get(),
+                        (int) Math.rint((Double) view.get().call("getWidth").unwrap()),
+                        (int) Math.rint((Double) view.get().call("getHeight").unwrap()))), null);
       }
     }, settingsId.get());
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();
-      ImageIO.write(image, "png", out);
+      JavaFx.getStatic(ImageIO.class, settingsId.get()).call("write", image, "png", out);
       return outputType.convertFromPngBytes(out.toByteArray());
     } catch (Throwable t) {
       Logs.exception(t);
