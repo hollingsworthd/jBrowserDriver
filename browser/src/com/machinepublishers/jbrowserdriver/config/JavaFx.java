@@ -51,11 +51,11 @@ import com.sun.glass.ui.monocle.headless.HeadlessPlatform;
 public class JavaFx {
   private JavaFx() {}
 
-  private static final Map<Long, JavaFxClassLoader> classLoaders = new HashMap<Long, JavaFxClassLoader>();
+  private static final Map<Long, ClassLoader> classLoaders = new HashMap<Long, ClassLoader>();
 
   public static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
     if (!classLoaders.containsKey(id)) {
-      classLoaders.put(id, newClassLoader());
+      classLoaders.put(id, newClassLoader(id == 1l));
     }
     Throwable firstError = null;
     try {
@@ -88,7 +88,7 @@ public class JavaFx {
   public static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
     try {
       if (!classLoaders.containsKey(id)) {
-        classLoaders.put(id, newClassLoader());
+        classLoaders.put(id, newClassLoader(id == 1l));
       }
       return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
     } catch (Throwable t) {
@@ -97,9 +97,9 @@ public class JavaFx {
     }
   }
 
-  private static JavaFxClassLoader newClassLoader() {
+  private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
     try {
-      JavaFxClassLoader classLoader = new JavaFxClassLoader();
+      ClassLoader classLoader = useCurrentClassLoader ? JavaFx.class.getClassLoader() : new JavaFxClassLoader();
       initToolkit(classLoader);
       return classLoader;
     } catch (Throwable t) {

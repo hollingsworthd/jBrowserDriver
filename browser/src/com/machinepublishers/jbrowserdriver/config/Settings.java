@@ -77,12 +77,18 @@ public class Settings {
       public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
         AtomicReference<Settings> settings;
         settings = SettingsManager.get(connection);
-        if (connection.getContentType() != null
-            && !"false".equals(System.getProperty("jbd.quickrender"))
+        String url = connection.getURL().toExternalForm();
+        if (!"false".equals(System.getProperty("jbd.quickrender"))
+            && ((url.endsWith(".jpg")
+                || url.endsWith(".jpeg")
+                || url.endsWith(".png")
+                || url.endsWith(".gif")
+                || url.endsWith(".svg"))
+            || (connection.getContentType() != null
             && (connection.getContentType().startsWith("image/")
                 || connection.getContentType().startsWith("video/")
                 || connection.getContentType().startsWith("audio/")
-                || connection.getContentType().startsWith("model/"))) {
+                || connection.getContentType().startsWith("model/"))))) {
           return new byte[0];
         } else if (connection.getContentType() != null
             && connection.getContentType().indexOf("text/html") > -1) {
@@ -104,8 +110,7 @@ public class Settings {
                   injected = ("<html><head>" + settings.get().script() + "</head>"
                       + content + "</html>");
                 } else {
-                  injected = ("<html><head>" + settings.get().script() + "</head><body>"
-                      + content + "</body></html>");
+                  injected = content;
                 }
               }
             }
