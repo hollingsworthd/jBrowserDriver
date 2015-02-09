@@ -108,7 +108,7 @@ public class JavaFx {
     }
   }
 
-  public static void initToolkit(ClassLoader classLoader) {
+  static void initToolkit(ClassLoader classLoader) {
     try {
       if (Settings.headless()) {
         Class<?> platformFactory = classLoader.loadClass(PlatformFactory.class.getName());
