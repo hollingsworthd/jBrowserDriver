@@ -21,6 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class JavaFxObject {
@@ -47,6 +48,33 @@ public class JavaFxObject {
       thisType = thisType.getSuperclass();
     } while (thisType != null);
     return false;
+  }
+
+  public JavaFxObject field(String fieldName) {
+    Throwable firstError = null;
+    Class<?> curClass = ((Class) object);
+    while (curClass != null) {
+      try {
+        Field field = curClass.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Object ret = field.get(null);
+        return ret == null ? null : new JavaFxObject(ret);
+      } catch (Throwable t) {
+        firstError = firstError == null ? t : firstError;
+      }
+      Field[] fields = curClass.getDeclaredFields();
+      for (int i = 0; i < fields.length; i++) {
+        try {
+          if (fields[i].getName().equals(fieldName)) {
+            fields[i].setAccessible(true);
+            Object ret = fields[i].get(null);
+            return ret == null ? null : new JavaFxObject(ret);
+          }
+        } catch (Throwable t) {}
+      }
+      curClass = curClass.getSuperclass();
+    }
+    throw new IllegalStateException("Failed to get field: " + fieldName, firstError);
   }
 
   public JavaFxObject call(String methodName, Object... params) {

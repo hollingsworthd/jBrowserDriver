@@ -28,9 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import netscape.javascript.JSObject;
@@ -49,12 +47,12 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
 public class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
@@ -113,9 +111,9 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public Object perform() {
         if (node.get().is(HTMLInputElement.class)) {
-          ((HTMLInputElement) node.get()).getForm().submit();
+          node.get().call("getForm").call("submit");
         } else if (node.get().is(HTMLFormElement.class)) {
-          ((HTMLFormElement) node.get()).submit();
+          node.get().call("submit");
         }
         return null;
       }
@@ -285,14 +283,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        try {
-          final XPath xPath = XPathFactory.newInstance().newXPath();
-          return new Element(
-              new AtomicReference<JavaFxObject>(
-                  new JavaFxObject(xPath.evaluate(expr, node.get(), XPathConstants.NODE))), robot, timeouts, settingsId);
-        } catch (XPathExpressionException e) {
-          throw new RuntimeException(e);
-        }
+        final JavaFxObject xPath =
+            JavaFx.getStatic(XPathFactory.class, settingsId).call("newInstance").call("newXPath");
+        return new Element(
+            new AtomicReference<JavaFxObject>(
+                xPath.call("evaluate",
+                    expr, node.get(), JavaFx.getStatic(XPathConstants.class, settingsId).field("NODE"))),
+            robot, timeouts, settingsId);
       }
     }, settingsId);
   }
@@ -302,17 +299,17 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
-        try {
-          XPath xPath = XPathFactory.newInstance().newXPath();
-          NodeList list = (NodeList) xPath.evaluate(expr, node.get(), XPathConstants.NODESET);
-          List<WebElement> elements = new ArrayList<WebElement>();
-          for (int i = 0; i < list.getLength(); i++) {
-            elements.add(new Element(new AtomicReference<JavaFxObject>(new JavaFxObject(list.item(i))), robot, timeouts, settingsId));
-          }
-          return elements;
-        } catch (XPathExpressionException e) {
-          throw new RuntimeException(e);
+        JavaFxObject xPath = JavaFx.getStatic(
+            XPathFactory.class, settingsId).call("newInstance").call("newXPath");
+        JavaFxObject list = xPath.call(
+            "evaluate", expr, node.get(), JavaFx.getStatic(XPathConstants.class, settingsId).field("NODESET"));
+        List<WebElement> elements = new ArrayList<WebElement>();
+        int length = Integer.parseInt(list.call("getLength").toString());
+        for (int i = 0; i < length; i++) {
+          elements.add(new Element(new AtomicReference<JavaFxObject>(new JavaFxObject(list.call("item", i))),
+              robot, timeouts, settingsId));
         }
+        return elements;
       }
     }, settingsId);
   }
@@ -555,7 +552,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     if (obj.is(Node.class)) {
       return new Element(new AtomicReference<JavaFxObject>(obj), robot, timeouts, settingsId);
     }
-    if (obj.unwrap().getClass().getName().equals(JSObject.class.getName())) {
+    if (obj.is(JSObject.class)) {
       List<Object> result = new ArrayList<Object>();
       for (int i = 0;; i++) {
         JavaFxObject cur = obj.call("getSlot", i);
