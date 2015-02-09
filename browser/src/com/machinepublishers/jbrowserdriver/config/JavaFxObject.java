@@ -62,16 +62,6 @@ public class JavaFxObject {
       } catch (Throwable t) {
         firstError = firstError == null ? t : firstError;
       }
-      Field[] fields = curClass.getDeclaredFields();
-      for (int i = 0; i < fields.length; i++) {
-        try {
-          if (fields[i].getName().equals(fieldName)) {
-            fields[i].setAccessible(true);
-            Object ret = fields[i].get(null);
-            return ret == null ? null : new JavaFxObject(ret);
-          }
-        } catch (Throwable t) {}
-      }
       curClass = curClass.getSuperclass();
     }
     throw new IllegalStateException("Failed to get field: " + fieldName, firstError);
