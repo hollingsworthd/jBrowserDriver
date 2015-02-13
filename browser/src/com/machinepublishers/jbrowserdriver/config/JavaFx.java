@@ -124,7 +124,7 @@ public class JavaFx {
             HeadlessPlatform.class.getName()).newInstance());
       }
     } catch (Throwable t) {
-      //Later versions renamed these fields and also made setting them unnecessary, so ignore exception.
+      //Some versions renamed these fields or made setting them unnecessary, so ignore exception.
     }
     try {
       classLoader.loadClass(JFXPanel.class.getName()).newInstance();
