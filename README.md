@@ -3,7 +3,7 @@ A programmable embedded browser compatible with the WebDriver Selenium spec -- f
 
 Licensed under the GNU Affero General Public License version 3 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
-Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when commercial licensing or service are [purchased](https://screenslicer.com/pricing) from Machine Publishers, LLC. jBrowserDriver is available bundled with [ScreenSlicer](https://github.com/MachinePublishers/ScreenSlicer), a web scraping toolkit and service.
+Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when on-premise or hosted services are [purchased](https://screenslicer.com/pricing) from Machine Publishers, LLC. jBrowserDriver is available bundled with [ScreenSlicer](https://github.com/MachinePublishers/ScreenSlicer), a web scraper.
 
 ### Guide
 This project is in active development. The API is relatively stable given that it's tied to the Selenium WebDriver API, but it's not ready for heavy production use yet. For instance, proxy support is not yet implemented (aside from JRE-wide proxies), it's vulnerable to tracking, and currently it supports only a single window (no popups or _blank targets). These issues will be addressed within days as development is a top priority.
