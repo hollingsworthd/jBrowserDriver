@@ -306,15 +306,13 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getWindowHandle() {
     init();
-    // TODO Auto-generated method stub
-    return null;
+    return context.currentId();
   }
 
   @Override
   public Set<String> getWindowHandles() {
     init();
-    // TODO Auto-generated method stub
-    return null;
+    return context.ids();
   }
 
   @Override

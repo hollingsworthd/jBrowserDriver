@@ -22,18 +22,38 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class BrowserContext {
+  private static final Map<String, BrowserContextItem> itemIds = new HashMap<String, BrowserContextItem>();
+  private final Set<String> myItemIds = new HashSet<String>();
+
   private int current = 0;
   private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
 
   public BrowserContext() {
-    items.add(new BrowserContextItem());
+    BrowserContextItem newContext = new BrowserContextItem();
+    items.add(newContext);
+    myItemIds.add(newContext.windowHandle.get());
+    synchronized (itemIds) {
+      itemIds.put(newContext.windowHandle.get(), newContext);
+    }
   }
 
   public synchronized BrowserContextItem current() {
     return items.get(current);
+  }
+
+  public synchronized String currentId() {
+    return current().windowHandle.get();
+  }
+
+  public synchronized Set<String> ids() {
+    return new HashSet<String>(myItemIds);
   }
 
   public synchronized BrowserContextItem spawn(JBrowserDriver driver) {
@@ -42,11 +62,19 @@ class BrowserContext {
     newContext.settings.set(current().settings.get());
     newContext.init(driver, this);
     items.add(newContext);
+    myItemIds.add(newContext.windowHandle.get());
+    synchronized (itemIds) {
+      itemIds.put(newContext.windowHandle.get(), newContext);
+    }
     return newContext;
   }
 
   public synchronized void destroyCurrent() {
-    items.remove(current);
+    final String id = items.remove(current).windowHandle.get();
     current = 0;
+    myItemIds.remove(id);
+    synchronized (itemIds) {
+      itemIds.remove(id);
+    }
   }
 }

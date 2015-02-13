@@ -34,6 +34,8 @@ import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 import com.sun.javafx.webkit.Accessor;
 
 class BrowserContextItem {
+  private static final AtomicLong currentId = new AtomicLong();
+
   final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window =
       new AtomicReference<com.machinepublishers.jbrowserdriver.Window>();
   final AtomicReference<com.machinepublishers.jbrowserdriver.Navigation> navigation =
@@ -57,6 +59,11 @@ class BrowserContextItem {
   final Object initLock = new Object();
   final AtomicBoolean pageLoaded = new AtomicBoolean();
   final AtomicLong settingsId = new AtomicLong();
+  final AtomicReference<String> windowHandle = new AtomicReference<String>();
+
+  public BrowserContextItem() {
+    windowHandle.set(Long.toString(currentId.getAndIncrement()));
+  }
 
   public void init(final JBrowserDriver driver, final BrowserContext context) {
     if (initialized.get()) {
