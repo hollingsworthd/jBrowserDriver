@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 import com.machinepublishers.jbrowserdriver.config.StreamInjectors.Injector;
 import com.sun.webkit.network.CookieManager;
@@ -83,6 +84,9 @@ public class Settings {
                 || connection.getContentType().startsWith("video/")
                 || connection.getContentType().startsWith("audio/")
                 || connection.getContentType().startsWith("model/"))) {
+          if (Logs.TRACE) {
+            System.out.println("Media discarded: " + originalUrl);
+          }
           return new byte[0];
         } else if (connection.getContentType() != null
             && connection.getContentType().indexOf("text/html") > -1

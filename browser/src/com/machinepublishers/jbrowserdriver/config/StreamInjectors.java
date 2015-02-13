@@ -63,6 +63,9 @@ public class StreamInjectors {
   }
 
   static InputStream injectedStream(HttpURLConnection conn, String originalUrl) throws IOException {
+    if (conn.getURL() == StreamHandler.BLOCKED_URL) {
+      return new ByteArrayInputStream(new byte[0]);
+    }
     if (conn.getErrorStream() != null) {
       return conn.getInputStream();
     }

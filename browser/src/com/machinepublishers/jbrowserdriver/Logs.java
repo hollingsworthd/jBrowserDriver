@@ -33,6 +33,7 @@ import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
 public class Logs implements org.openqa.selenium.logging.Logs {
+  public static final boolean TRACE = "true".equals(System.getProperty("jbd.trace"));
   private static final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
   private static final int MAX_LOGS = 50;
   private static final Logs instance = new Logs();

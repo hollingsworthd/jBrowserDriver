@@ -24,11 +24,9 @@ package com.machinepublishers.jbrowserdriver;
 import com.sun.webkit.LoadListenerClient;
 
 public class DynamicHttpLog implements LoadListenerClient {
-  private final boolean trace;
   private final long settingsId;
 
-  public DynamicHttpLog(boolean trace, long settingsId) {
-    this.trace = trace;
+  public DynamicHttpLog(long settingsId) {
     this.settingsId = settingsId;
   }
 
@@ -48,7 +46,7 @@ public class DynamicHttpLog implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (trace) {
+    if (Logs.TRACE) {
       trace("Rsrc", frame, state, url, contentType, progress, errorCode);
     }
   }
@@ -56,7 +54,7 @@ public class DynamicHttpLog implements LoadListenerClient {
   @Override
   public void dispatchLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (trace) {
+    if (Logs.TRACE) {
       trace("Page", frame, state, url, contentType, progress, errorCode);
     }
   }

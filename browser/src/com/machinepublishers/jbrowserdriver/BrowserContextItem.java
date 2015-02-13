@@ -82,15 +82,13 @@ class BrowserContextItem {
             window, timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator());
         capabilities.set(new Capabilities());
-        final boolean trace = "true".equals(System.getProperty("jbd.trace"));
         Util.exec(new Sync<Object>() {
           @Override
           public Object perform() {
             JavaFx.getStatic(Accessor.class, settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient",
-                    JavaFx.getNew(DynamicHttpLog.class, settingsId.get(),
-                        trace, settingsId.get()));
+                    JavaFx.getNew(DynamicHttpLog.class, settingsId.get(), settingsId.get()));
             engine.get().call("getLoadWorker").call("stateProperty").call("addListener",
                 JavaFx.getNew(DynamicStateListener.class, settingsId.get(),
                     pageLoaded));
