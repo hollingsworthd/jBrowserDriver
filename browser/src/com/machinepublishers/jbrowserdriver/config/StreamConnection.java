@@ -61,6 +61,7 @@ class StreamConnection extends HttpURLConnection {
   private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpURLConnection conn;
   private final boolean isSsl;
+  private final String originalUrl;
   private final Object headerObjParent;
   private static final Field headerField;
   static {
@@ -150,6 +151,7 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = true;
+    this.originalUrl = conn.getURL().toExternalForm();
     SSLSocketFactory socketFactory = updatedSocketFactory();
     if (socketFactory != null) {
       conn.setSSLSocketFactory(socketFactory);
@@ -171,7 +173,12 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = false;
+    this.originalUrl = conn.getURL().toExternalForm();
     headerObjParent = conn;
+  }
+
+  public String originalUrl() {
+    return this.originalUrl;
   }
 
   @Override
@@ -377,7 +384,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return StreamInjectors.injectedStream(conn);
+    return StreamInjectors.injectedStream(conn, originalUrl);
   }
 
   @Override

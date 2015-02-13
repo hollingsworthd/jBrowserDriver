@@ -38,7 +38,7 @@ import com.machinepublishers.jbrowserdriver.Util;
 
 public class StreamInjectors {
   public static interface Injector {
-    byte[] inject(HttpURLConnection connection, byte[] inflatedContent);
+    byte[] inject(HttpURLConnection connection, String originalUrl, byte[] inflatedContent);
   }
 
   private static final Object lock = new Object();
@@ -62,7 +62,7 @@ public class StreamInjectors {
     }
   }
 
-  static InputStream injectedStream(HttpURLConnection conn) throws IOException {
+  static InputStream injectedStream(HttpURLConnection conn, String originalUrl) throws IOException {
     if (conn.getErrorStream() != null) {
       return conn.getInputStream();
     }
@@ -81,7 +81,7 @@ public class StreamInjectors {
         Util.close(in);
         synchronized (lock) {
           for (Injector injector : injectors) {
-            byte[] newContent = injector.inject(conn, content);
+            byte[] newContent = injector.inject(conn, originalUrl, content);
             if (newContent != null) {
               content = newContent;
             }

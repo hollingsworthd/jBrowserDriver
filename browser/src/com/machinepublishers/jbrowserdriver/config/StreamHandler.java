@@ -28,7 +28,9 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
@@ -41,6 +43,7 @@ public class StreamHandler implements URLStreamHandlerFactory {
   private static int monitors;
   private static final Object lock = new Object();
   private static final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
+  private static final Set<String> primaryDocuments = new HashSet<String>();
 
   StreamHandler() {}
 
@@ -87,13 +90,19 @@ public class StreamHandler implements URLStreamHandlerFactory {
     return null;
   }
 
-  static void startStatusMonitor() {
+  static boolean isPrimaryDocument(String url) {
+    return connections.containsKey(url);
+  }
+
+  static void startStatusMonitor(String url) {
     synchronized (lock) {
       if (monitors == 0) {
         for (StreamConnection conn : connections.values()) {
           Util.close(conn);
         }
         connections.clear();
+        primaryDocuments.clear();
+        primaryDocuments.add(url);
         SettingsManager.clearConnections();
         System.gc();
         System.runFinalization();

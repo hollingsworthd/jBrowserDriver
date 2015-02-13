@@ -74,24 +74,19 @@ public class Settings {
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     StreamInjectors.add(new Injector() {
       @Override
-      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent) {
+      public byte[] inject(HttpURLConnection connection, String originalUrl, byte[] inflatedContent) {
         AtomicReference<Settings> settings;
         settings = SettingsManager.get(connection);
-        String url = connection.getURL().toExternalForm();
         if (!"false".equals(System.getProperty("jbd.quickrender"))
-            && ((url.endsWith(".jpg")
-                || url.endsWith(".jpeg")
-                || url.endsWith(".png")
-                || url.endsWith(".gif")
-                || url.endsWith(".svg"))
-            || (connection.getContentType() != null
+            && connection.getContentType() != null
             && (connection.getContentType().startsWith("image/")
                 || connection.getContentType().startsWith("video/")
                 || connection.getContentType().startsWith("audio/")
-                || connection.getContentType().startsWith("model/"))))) {
+                || connection.getContentType().startsWith("model/"))) {
           return new byte[0];
         } else if (connection.getContentType() != null
-            && connection.getContentType().indexOf("text/html") > -1) {
+            && connection.getContentType().indexOf("text/html") > -1
+            && StreamHandler.isPrimaryDocument(originalUrl)) {
           String injected = null;
           try {
             String charset = Util.charset(connection);
@@ -109,12 +104,10 @@ public class Settings {
                 if (matcher.find()) {
                   injected = ("<html><head>" + settings.get().script() + "</head>"
                       + content + "</html>");
-                } else {
-                  injected = content;
                 }
               }
             }
-            return injected.getBytes(charset);
+            return injected == null ? null : injected.getBytes(charset);
           } catch (Throwable t) {}
         }
         return null;

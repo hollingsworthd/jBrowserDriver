@@ -44,7 +44,7 @@ public class DynamicPageLoadListener implements ChangeListener<Worker.State> {
       final Worker.State oldValue, final Worker.State newValue) {
     if (Worker.State.SCHEDULED.equals(newValue)) {
       view.setVisible(false);
-      JavaFx.getStatic(StreamHandler.class, settingsId).call("startStatusMonitor");
+      JavaFx.getStatic(StreamHandler.class, settingsId).call("startStatusMonitor", view.getEngine().getLocation());
     } else if (Worker.State.SUCCEEDED.equals(newValue)
         || Worker.State.CANCELLED.equals(newValue)
         || Worker.State.FAILED.equals(newValue)) {
