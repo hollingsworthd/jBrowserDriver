@@ -141,7 +141,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       public Object perform() {
         node.get().call("call", "scrollIntoView");
         node.get().call("call", "focus");
-        node.get().call("call", "setValue", "");
+        node.get().call("call", "setValue", new Object[] { "" });
         return null;
       }
     }, settingsId);
