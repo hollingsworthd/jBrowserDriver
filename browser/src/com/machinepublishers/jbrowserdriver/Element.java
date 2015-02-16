@@ -24,6 +24,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -52,6 +53,7 @@ import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
@@ -67,32 +69,34 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   private final AtomicReference<Timeouts> timeouts;
   private final boolean isWindow;
   private final long settingsId;
+  private final AtomicInteger statusCode;
 
-  Element(final AtomicReference<JavaFxObject> node, final AtomicReference<Robot> robot,
-      final AtomicReference<Timeouts> timeouts, final long settingsId) {
+  Element(final AtomicReference<JavaFxObject> node, final AtomicInteger statusCode,
+      final AtomicReference<Robot> robot, final AtomicReference<Timeouts> timeouts, final long settingsId) {
     this.isWindow = node.get().is(Document.class);
     this.node = node;
+    this.statusCode = statusCode;
     this.robot = robot;
     this.timeouts = timeouts;
     this.settingsId = settingsId;
   }
 
-  static Element create(final AtomicReference<JavaFxObject> engine, final AtomicReference<Robot> robot,
-      final AtomicReference<Timeouts> timeouts) {
-    final long settingsId = Long.parseLong(engine.get().call("getUserAgent").toString());
+  static Element create(final BrowserContext context) {
+    final long settingsId = Long.parseLong(context.item().engine.get().call("getUserAgent").toString());
     final AtomicReference<JavaFxObject> doc = new AtomicReference<JavaFxObject>(
-        Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<JavaFxObject>() {
-          @Override
-          public JavaFxObject perform() {
-            return engine.get().call("getDocument");
-          }
-        }, settingsId));
-    return new Element(doc, robot, timeouts, settingsId);
+        Util.exec(Pause.NONE, context.item().statusCode, context.item().timeouts.get().getScriptTimeoutMS(),
+            new Sync<JavaFxObject>() {
+              @Override
+              public JavaFxObject perform() {
+                return context.item().engine.get().call("getDocument");
+              }
+            }, settingsId));
+    return new Element(doc, context.item().statusCode, context.item().robot, context.item().timeouts, settingsId);
   }
 
   @Override
   public void click() {
-    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
         node.get().call("call", "scrollIntoView");
@@ -108,7 +112,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void submit() {
-    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
         if (node.get().is(HTMLInputElement.class)) {
@@ -123,7 +127,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void sendKeys(final CharSequence... keys) {
-    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
         node.get().call("call", "scrollIntoView");
@@ -136,7 +140,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public void clear() {
-    Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+    Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
         node.get().call("call", "scrollIntoView");
@@ -149,7 +153,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public String getAttribute(final String attrName) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
         String val = (String) (node.get().call("getMember", attrName).unwrap());
@@ -160,7 +164,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public String getCssValue(final String name) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
         return cleanUpCssVal((String) (node.get().call("eval", "var me = this;"
@@ -184,7 +188,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public Point getLocation() {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
@@ -197,7 +201,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public Dimension getSize() {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
@@ -222,7 +226,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isDisplayed() {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
@@ -247,7 +251,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isEnabled() {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
         String val = node.get().call("getMember", "disabled").toString();
@@ -258,7 +262,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public boolean isSelected() {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
         String selected = node.get().call("getMember", "selected").toString();
@@ -281,7 +285,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public WebElement findElementByXPath(final String expr) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
         final JavaFxObject xPath =
@@ -290,14 +294,14 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
             new AtomicReference<JavaFxObject>(
                 xPath.call("evaluate",
                     expr, node.get(), JavaFx.getStatic(XPathConstants.class, settingsId).field("NODE"))),
-            robot, timeouts, settingsId);
+            statusCode, robot, timeouts, settingsId);
       }
     }, settingsId);
   }
 
   @Override
   public List<WebElement> findElementsByXPath(final String expr) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         JavaFxObject xPath = JavaFx.getStatic(
@@ -308,7 +312,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         int length = Integer.parseInt(list.call("getLength").toString());
         for (int i = 0; i < length; i++) {
           elements.add(new Element(new AtomicReference<JavaFxObject>(new JavaFxObject(list.call("item", i))),
-              robot, timeouts, settingsId));
+              statusCode, robot, timeouts, settingsId));
         }
         return elements;
       }
@@ -332,21 +336,21 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   @Override
   public WebElement findElementByCssSelector(final String expr) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
         JavaFxObject result = node.get().call("call", "querySelector", new Object[] { expr });
         if (result == null) {
           return null;
         }
-        return new Element(new AtomicReference<JavaFxObject>(result), robot, timeouts, settingsId);
+        return new Element(new AtomicReference<JavaFxObject>(result), statusCode, robot, timeouts, settingsId);
       }
     }, settingsId);
   }
 
   @Override
   public List<WebElement> findElementsByCssSelector(final String expr) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
@@ -354,7 +358,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         for (int i = 0;; i++) {
           JavaFxObject cur = result.call("getSlot", i);
           if (cur.is(Node.class)) {
-            elements.add(new Element(new AtomicReference<JavaFxObject>(cur), robot, timeouts, settingsId));
+            elements.add(new Element(new AtomicReference<JavaFxObject>(cur), statusCode, robot, timeouts, settingsId));
           } else {
             break;
           }
@@ -398,7 +402,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
 
   private List<WebElement> byLinkText(final String text,
       final boolean multiple, final boolean partial) {
-    return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<List<WebElement>>() {
       @Override
       public List<WebElement> perform() {
         List<WebElement> nodes = (List<WebElement>) findElementsByTagName("a");
@@ -446,7 +450,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   public Object executeAsyncScript(final String script, final Object... args) {
     lock();
     try {
-      Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+      Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
         @Override
         public Object perform() {
           return script(true, script, args);
@@ -460,12 +464,13 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        JavaFxObject result = Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<JavaFxObject>() {
-          @Override
-          public JavaFxObject perform() {
-            return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
-          }
-        }, settingsId);
+        JavaFxObject result = Util.exec(Pause.NONE, statusCode, timeouts.get().getScriptTimeoutMS(),
+            new Sync<JavaFxObject>() {
+              @Override
+              public JavaFxObject perform() {
+                return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
+              }
+            }, settingsId);
         if (!result.is(String.class) || !"undefined".equals(result.toString())) {
           result = new JavaFxObject(parseScriptResult(result));
           if (result.is(List.class)) {
@@ -488,7 +493,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   public Object executeScript(final String script, final Object... args) {
     lock();
     try {
-      return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
+      return Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
         @Override
         public Object perform() {
           return script(false, script, args);
@@ -550,7 +555,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       return null;
     }
     if (obj.is(Node.class)) {
-      return new Element(new AtomicReference<JavaFxObject>(obj), robot, timeouts, settingsId);
+      return new Element(new AtomicReference<JavaFxObject>(obj), statusCode, robot, timeouts, settingsId);
     }
     if (obj.is(JSObject.class)) {
       List<Object> result = new ArrayList<Object>();

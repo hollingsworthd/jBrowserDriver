@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
@@ -39,7 +40,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
   }
 
   public void close() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().call("close");
@@ -50,7 +51,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
 
   @Override
   public Point getPosition() {
-    return Util.exec(new Sync<Point>() {
+    return Util.exec(Pause.NONE, new Sync<Point>() {
       @Override
       public Point perform() {
         return new Point((int) Math.rint((Double) stage.get().call("getX").unwrap()),
@@ -61,7 +62,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
 
   @Override
   public Dimension getSize() {
-    return Util.exec(new Sync<Dimension>() {
+    return Util.exec(Pause.NONE, new Sync<Dimension>() {
       @Override
       public Dimension perform() {
         return new Dimension((int) Math.rint((Double) stage.get().call("getWidth").unwrap()),
@@ -72,7 +73,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
 
   @Override
   public void maximize() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().call("setMaximized", true);
@@ -83,7 +84,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
 
   @Override
   public void setPosition(final Point point) {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().call("setMaximized", false);
@@ -96,7 +97,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
 
   @Override
   public void setSize(final Dimension dimension) {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().call("setMaximized", false);

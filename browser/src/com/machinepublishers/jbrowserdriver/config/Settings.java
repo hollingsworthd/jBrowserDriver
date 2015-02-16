@@ -76,23 +76,23 @@ public class Settings {
     StreamInjectors.add(new Injector() {
       @Override
       public byte[] inject(HttpURLConnection connection, String originalUrl, byte[] inflatedContent) {
-        AtomicReference<Settings> settings;
-        settings = SettingsManager.get(connection);
-        if (!"false".equals(System.getProperty("jbd.quickrender"))
-            && connection.getContentType() != null
-            && (connection.getContentType().startsWith("image/")
-                || connection.getContentType().startsWith("video/")
-                || connection.getContentType().startsWith("audio/")
-                || connection.getContentType().startsWith("model/"))) {
-          if (Logs.TRACE) {
-            System.out.println("Media discarded: " + originalUrl);
-          }
-          return new byte[0];
-        } else if (connection.getContentType() != null
-            && connection.getContentType().indexOf("text/html") > -1
-            && StreamHandler.isPrimaryDocument(originalUrl)) {
-          String injected = null;
-          try {
+        try {
+          AtomicReference<Settings> settings;
+          settings = SettingsManager.get(connection);
+          if (!"false".equals(System.getProperty("jbd.quickrender"))
+              && connection.getContentType() != null
+              && (connection.getContentType().startsWith("image/")
+                  || connection.getContentType().startsWith("video/")
+                  || connection.getContentType().startsWith("audio/")
+                  || connection.getContentType().startsWith("model/"))) {
+            if (Logs.TRACE) {
+              System.out.println("Media discarded: " + originalUrl);
+            }
+            return new byte[0];
+          } else if (connection.getContentType() != null
+              && connection.getContentType().indexOf("text/html") > -1
+              && StreamHandler.isPrimaryDocument(originalUrl)) {
+            String injected = null;
             String charset = Util.charset(connection);
             String content = new String(inflatedContent, charset);
             Matcher matcher = head.matcher(content);
@@ -112,8 +112,8 @@ public class Settings {
               }
             }
             return injected == null ? null : injected.getBytes(charset);
-          } catch (Throwable t) {}
-        }
+          }
+        } catch (Throwable t) {}
         return null;
       }
     });

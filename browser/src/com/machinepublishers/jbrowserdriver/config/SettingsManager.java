@@ -37,6 +37,7 @@ import org.openqa.selenium.Dimension;
 
 import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Screen;
 import com.sun.glass.ui.monocle.NativePlatform;
@@ -59,7 +60,7 @@ public class SettingsManager {
    */
   public static void _register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.NONE, new Sync<Object>() {
       public Object perform() {
         if (Settings.headless()) {
           try {
@@ -98,9 +99,7 @@ public class SettingsManager {
         }
         ProxyAuth.add(settings.get().proxy());
         addTitleListener(view, stage, settings.get().id());
-        addPageLoader(view, statusCode, settings.get().id());
         return null;
-
       }
     }, settings.get().id());
   }
@@ -146,12 +145,5 @@ public class SettingsManager {
     view.get().call("getEngine").call("titleProperty").
         call("addListener", JavaFx.getNew(
             DynamicTitleListener.class, settingsId, stage.get().unwrap()));
-  }
-
-  private static void addPageLoader(final AtomicReference<JavaFxObject> view,
-      final AtomicInteger statusCode, final long settingsId) {
-    view.get().call("getEngine").call("getLoadWorker").call("stateProperty").
-        call("addListener", JavaFx.getNew(
-            DynamicPageLoadListener.class, settingsId, view.get().unwrap(), statusCode, settingsId));
   }
 }

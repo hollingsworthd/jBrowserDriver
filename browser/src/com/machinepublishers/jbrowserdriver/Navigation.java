@@ -24,6 +24,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
@@ -41,7 +42,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void back() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         try {
           view.get().call("getEngine").call("getHistory").call("go", -1);
@@ -55,7 +56,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void forward() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         try {
           view.get().call("getEngine").call("getHistory").call("go", 1);
@@ -69,7 +70,7 @@ public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void refresh() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         view.get().call("getEngine").call("reload");
         return null;

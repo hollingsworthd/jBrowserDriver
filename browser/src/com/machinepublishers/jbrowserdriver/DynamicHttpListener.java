@@ -21,12 +21,22 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javafx.scene.web.WebView;
+
+import com.machinepublishers.jbrowserdriver.config.JavaFx;
+import com.machinepublishers.jbrowserdriver.config.StreamHandler;
 import com.sun.webkit.LoadListenerClient;
 
-public class DynamicHttpLog implements LoadListenerClient {
+public class DynamicHttpListener implements LoadListenerClient {
+  private final WebView view;
+  private final AtomicInteger statusCode;
   private final long settingsId;
 
-  public DynamicHttpLog(long settingsId) {
+  public DynamicHttpListener(WebView view, AtomicInteger statusCode, long settingsId) {
+    this.view = view;
+    this.statusCode = statusCode;
     this.settingsId = settingsId;
   }
 
@@ -54,6 +64,23 @@ public class DynamicHttpLog implements LoadListenerClient {
   @Override
   public void dispatchLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
+    if (state == LoadListenerClient.PAGE_STARTED) {
+      statusCode.set(0);
+      JavaFx.getStatic(StreamHandler.class, settingsId).call("startStatusMonitor", view.getEngine().getLocation());
+    } else if (state == LoadListenerClient.PAGE_FINISHED) {
+      int code = Integer.parseInt(JavaFx.getStatic(StreamHandler.class, settingsId).
+          call("stopStatusMonitor", view.getEngine().getLocation()).toString());
+      statusCode.set(code);
+      synchronized (statusCode) {
+        statusCode.notifyAll();
+      }
+    } else if (state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED) {
+      JavaFx.getStatic(StreamHandler.class, settingsId).call("stopStatusMonitor", view.getEngine().getLocation());
+      statusCode.set(499);
+      synchronized (statusCode) {
+        statusCode.notifyAll();
+      }
+    }
     if (Logs.TRACE) {
       trace("Page", frame, state, url, contentType, progress, errorCode);
     }

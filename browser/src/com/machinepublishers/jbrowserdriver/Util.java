@@ -29,7 +29,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +43,11 @@ import com.machinepublishers.jbrowserdriver.config.JavaFx;
 public class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
+  private static final Random rand = new Random();
+
+  public static enum Pause {
+    LONG, SHORT, NONE
+  }
 
   public static void close(Closeable closeable) {
     if (closeable != null) {
@@ -77,10 +84,6 @@ public class Util {
     T perform();
   }
 
-  public static <T> T exec(final Sync<T> action, final long id) {
-    return exec(0, action, id);
-  }
-
   private static class Runner<T> implements Runnable {
     private final Sync<T> action;
     private final AtomicBoolean done;
@@ -103,27 +106,70 @@ public class Util {
     }
   }
 
-  public static <T> T exec(final long timeout, final Sync<T> action, final long id) {
-    if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
-      return action.perform();
-    }
-    final AtomicReference<T> ret = new AtomicReference<T>();
-    final AtomicBoolean done = new AtomicBoolean();
-    synchronized (done) {
-      JavaFx.getStatic(Platform.class, id).call("runLater", new Runner<T>(action, done, ret));
-    }
-    synchronized (done) {
-      if (!done.get()) {
+  private static void pause(Pause pauseLength, final long settingsId) {
+    Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
+      @Override
+      public Object perform() {
         try {
-          done.wait(timeout);
-        } catch (InterruptedException e) {
-          Logs.exception(e);
-        }
-        if (!done.get()) {
-          Logs.exception(new RuntimeException("Action never completed."));
+          if (pauseLength == Pause.SHORT) {
+            Thread.sleep(0, 1);
+          } else if (pauseLength == Pause.LONG) {
+            Thread.sleep(70 + rand.nextInt(70));
+          }
+        } catch (Throwable t) {}
+        return null;
+      }
+    }, settingsId);
+  }
+
+  public static <T> T exec(Pause pauseAfterExec, final Sync<T> action, final long id) {
+    return exec(pauseAfterExec, new AtomicInteger(-1), 0, action, id);
+  }
+
+  public static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
+    return exec(pauseAfterExec, statusCode, 0, action, id);
+  }
+
+  public static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
+      final Sync<T> action, final long id) {
+    if (statusCode.get() != -1) {
+      synchronized (statusCode) {
+        if (statusCode.get() == 0) {
+          try {
+            statusCode.wait();
+          } catch (Throwable t) {}
         }
       }
-      return ret.get();
+      if (Logs.TRACE && statusCode.get() != 200) {
+        System.out.println("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+      }
+    }
+    try {
+      if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
+        return action.perform();
+      }
+      final AtomicReference<T> ret = new AtomicReference<T>();
+      final AtomicBoolean done = new AtomicBoolean();
+      synchronized (done) {
+        JavaFx.getStatic(Platform.class, id).call("runLater", new Runner<T>(action, done, ret));
+      }
+      synchronized (done) {
+        if (!done.get()) {
+          try {
+            done.wait(timeout);
+          } catch (InterruptedException e) {
+            Logs.exception(e);
+          }
+          if (!done.get()) {
+            Logs.exception(new RuntimeException("Action never completed."));
+          }
+        }
+        return ret.get();
+      }
+    } finally {
+      if (pauseAfterExec != Pause.NONE) {
+        pause(pauseAfterExec, id);
+      }
     }
   }
 

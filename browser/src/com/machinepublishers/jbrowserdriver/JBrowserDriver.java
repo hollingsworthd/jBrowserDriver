@@ -38,6 +38,7 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.browser.Browser;
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
@@ -65,19 +66,20 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getPageSource() {
     init();
-    return Util.exec(context.item().timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
-      @Override
-      public String perform() {
-        return context.item().view.get().call("getEngine").
-            call("executeScript", "document.documentElement.outerHTML").toString();
-      }
-    }, context.item().settingsId.get());
+    return Util.exec(Pause.NONE, context.item().statusCode, context.item().timeouts.get().getScriptTimeoutMS(),
+        new Sync<String>() {
+          @Override
+          public String perform() {
+            return context.item().view.get().call("getEngine").
+                call("executeScript", "document.documentElement.outerHTML").toString();
+          }
+        }, context.item().settingsId.get());
   }
 
   @Override
   public String getCurrentUrl() {
     init();
-    return Util.exec(new Sync<String>() {
+    return Util.exec(Pause.NONE, context.item().statusCode, new Sync<String>() {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getLocation").toString();
       }
@@ -93,7 +95,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getTitle() {
     init();
-    return Util.exec(new Sync<String>() {
+    return Util.exec(Pause.NONE, context.item().statusCode, new Sync<String>() {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getTitle").toString();
       }
@@ -104,7 +106,7 @@ public class JBrowserDriver implements Browser {
   public void get(final String url) {
     init();
     context.item().pageLoaded.set(false);
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         String cleanUrl = url;
         try {
@@ -127,7 +129,7 @@ public class JBrowserDriver implements Browser {
       Logs.exception(e);
     }
     if (!context.item().pageLoaded.get()) {
-      Util.exec(new Sync<Object>() {
+      Util.exec(Pause.SHORT, new Sync<Object>() {
         @Override
         public Object perform() {
           context.item().engine.get().call("getLoadWorker").call("cancel");
@@ -152,127 +154,109 @@ public class JBrowserDriver implements Browser {
   @Override
   public WebElement findElementById(String id) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementById(id);
+    return Element.create(context).findElementById(id);
   }
 
   @Override
   public List<WebElement> findElementsById(String id) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsById(id);
+    return Element.create(context).findElementsById(id);
   }
 
   @Override
   public WebElement findElementByXPath(String expr) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByXPath(expr);
+    return Element.create(context).findElementByXPath(expr);
   }
 
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByXPath(expr);
+    return Element.create(context).findElementsByXPath(expr);
   }
 
   @Override
   public WebElement findElementByLinkText(final String text) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByLinkText(text);
+    return Element.create(context).findElementByLinkText(text);
   }
 
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByPartialLinkText(text);
+    return Element.create(context).findElementByPartialLinkText(text);
   }
 
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByLinkText(text);
+    return Element.create(context).findElementsByLinkText(text);
   }
 
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByPartialLinkText(text);
+    return Element.create(context).findElementsByPartialLinkText(text);
   }
 
   @Override
   public WebElement findElementByClassName(String cssClass) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByClassName(cssClass);
+    return Element.create(context).findElementByClassName(cssClass);
   }
 
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByClassName(cssClass);
+    return Element.create(context).findElementsByClassName(cssClass);
   }
 
   @Override
   public WebElement findElementByName(String name) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByName(name);
+    return Element.create(context).findElementByName(name);
   }
 
   @Override
   public List<WebElement> findElementsByName(String name) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByName(name);
+    return Element.create(context).findElementsByName(name);
   }
 
   @Override
   public WebElement findElementByCssSelector(String expr) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByCssSelector(expr);
+    return Element.create(context).findElementByCssSelector(expr);
   }
 
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByCssSelector(expr);
+    return Element.create(context).findElementsByCssSelector(expr);
   }
 
   @Override
   public WebElement findElementByTagName(String tagName) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementByTagName(tagName);
+    return Element.create(context).findElementByTagName(tagName);
   }
 
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).findElementsByTagName(tagName);
+    return Element.create(context).findElementsByTagName(tagName);
   }
 
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).executeAsyncScript(script, args);
+    return Element.create(context).executeAsyncScript(script, args);
   }
 
   @Override
   public Object executeScript(String script, Object... args) {
     init();
-    return Element.create(context.item().engine,
-        context.item().robot, context.item().timeouts).executeScript(script, args);
+    return Element.create(context).executeScript(script, args);
   }
 
   @Override
@@ -356,7 +340,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     init();
-    JavaFxObject image = Util.exec(new Sync<JavaFxObject>() {
+    JavaFxObject image = Util.exec(Pause.NONE, context.item().statusCode, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(
             SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).

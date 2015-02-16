@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class BrowserContext {
@@ -69,17 +70,10 @@ class BrowserContext {
 
   public synchronized void setCurrent(String id) {
     current = items.indexOf(itemMap.get(id));
-    Util.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        item().stage.get().call("setFocused", true);
-        return null;
-      }
-    }, item().settingsId.get());
   }
 
   public synchronized void removeItem() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         item().stage.get().call("close");
@@ -93,7 +87,7 @@ class BrowserContext {
   }
 
   public synchronized void removeItem(final String itemId) {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         item(itemId).stage.get().call("close");
@@ -106,7 +100,7 @@ class BrowserContext {
   }
 
   public synchronized void removeItems() {
-    Util.exec(new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         for (BrowserContextItem curItem : items) {

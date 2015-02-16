@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -37,6 +38,7 @@ import javafx.scene.input.ClipboardContent;
 
 import org.openqa.selenium.Keys;
 
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
@@ -231,14 +233,16 @@ class Robot {
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final long settingsId;
+  private final AtomicInteger statusCode;
 
-  Robot(final AtomicReference<JavaFxObject> stage, final long settingsId) {
+  Robot(final AtomicReference<JavaFxObject> stage, final AtomicInteger statusCode, final long settingsId) {
     this.stage = stage;
-    robot.set(Util.exec(new Sync<JavaFxObject>() {
+    robot.set(Util.exec(Pause.NONE, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
       }
     }, settingsId));
+    this.statusCode = statusCode;
     this.settingsId = settingsId;
   }
 
@@ -308,7 +312,7 @@ class Robot {
       final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(new Sync<Object>() {
+        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur), false);
@@ -320,7 +324,6 @@ class Robot {
             return null;
           }
         }, settingsId);
-        pause();
       }
     } finally {
       unlock();
@@ -338,7 +341,7 @@ class Robot {
       final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(new Sync<Object>() {
+        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur), false);
@@ -350,23 +353,10 @@ class Robot {
             return null;
           }
         }, settingsId);
-        pause();
       }
     } finally {
       unlock();
     }
-  }
-
-  private void pause() {
-    Util.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        try {
-          Thread.sleep(30 + rand.nextInt(40));
-        } catch (InterruptedException e) {}
-        return null;
-      }
-    }, settingsId);
   }
 
   void keysType(final CharSequence... charsList) {
@@ -391,7 +381,7 @@ class Robot {
       final List<Integer> toRelease = new ArrayList<Integer>();
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(new Sync<Object>() {
+        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             synchronized (toRelease) {
@@ -418,19 +408,17 @@ class Robot {
             }
           }
         }, settingsId);
-        pause();
       }
       synchronized (toRelease) {
         for (int i = toRelease.size() - 1; i > -1; i--) {
           final int key = toRelease.get(i);
-          Util.exec(new Sync<Object>() {
+          Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               robot.get().call("keyRelease", key);
               return null;
             }
           }, settingsId);
-          pause();
         }
       }
     } finally {
@@ -441,7 +429,7 @@ class Robot {
   void mouseMove(final double pageX, final double pageY) {
     lock();
     try {
-      Util.exec(new Sync<Object>() {
+      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().call("mouseMove",
@@ -454,7 +442,6 @@ class Robot {
           return null;
         }
       }, settingsId);
-      pause();
     } finally {
       unlock();
     }
@@ -468,14 +455,13 @@ class Robot {
   void mousePress(final MouseButton button) {
     lock();
     try {
-      Util.exec(new Sync<Object>() {
+      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().call("mousePress", button.getValue());
           return null;
         }
       }, settingsId);
-      pause();
     } finally {
       unlock();
     }
@@ -484,14 +470,13 @@ class Robot {
   void mouseRelease(final MouseButton button) {
     lock();
     try {
-      Util.exec(new Sync<Object>() {
+      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().call("mouseRelease", button.getValue());
           return null;
         }
       }, settingsId);
-      pause();
     } finally {
       unlock();
     }
@@ -500,14 +485,13 @@ class Robot {
   void mouseWheel(final int wheelAmt) {
     lock();
     try {
-      Util.exec(new Sync<Object>() {
+      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().call("mouseWheel", wheelAmt);
           return null;
         }
       }, settingsId);
-      pause();
     } finally {
       unlock();
     }

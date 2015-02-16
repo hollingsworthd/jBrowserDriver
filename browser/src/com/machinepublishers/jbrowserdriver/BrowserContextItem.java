@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
@@ -76,7 +77,7 @@ class BrowserContextItem {
         engine.set(view.get().call("getEngine"));
         settingsId.set(Long.parseLong(
             engine.get().call("getUserAgent").toString()));
-        robot.set(new Robot(stage, settingsId.get()));
+        robot.set(new Robot(stage, statusCode, settingsId.get()));
         window.set(new com.machinepublishers.jbrowserdriver.Window(
             stage, settingsId.get()));
         timeouts.set(new com.machinepublishers.jbrowserdriver.Timeouts());
@@ -89,13 +90,13 @@ class BrowserContextItem {
             window, timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator(driver, context));
         capabilities.set(new Capabilities());
-        Util.exec(new Sync<Object>() {
+        Util.exec(Pause.NONE, new Sync<Object>() {
           @Override
           public Object perform() {
             JavaFx.getStatic(Accessor.class, settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient",
-                    JavaFx.getNew(DynamicHttpLog.class, settingsId.get(), settingsId.get()));
+                    JavaFx.getNew(DynamicHttpListener.class, settingsId.get(), view.get().unwrap(), statusCode, settingsId.get()));
             engine.get().call("getLoadWorker").call("stateProperty").call("addListener",
                 JavaFx.getNew(DynamicStateListener.class, settingsId.get(),
                     pageLoaded));
