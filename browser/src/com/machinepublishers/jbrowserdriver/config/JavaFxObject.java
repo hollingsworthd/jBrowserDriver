@@ -21,8 +21,10 @@
  */
 package com.machinepublishers.jbrowserdriver.config;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
 public class JavaFxObject {
   private final Object object;
@@ -44,6 +46,12 @@ public class JavaFxObject {
     do {
       if (thisType.getName().equals(type.getName())) {
         return true;
+      }
+      Class<?>[] interfaces = thisType.getInterfaces();
+      for (int i = 0; i < interfaces.length; i++) {
+        if (interfaces[i].getName().equals(type.getName())) {
+          return true;
+        }
       }
       thisType = thisType.getSuperclass();
     } while (thisType != null);
@@ -69,13 +77,17 @@ public class JavaFxObject {
 
   public JavaFxObject call(String methodName, Object... params) {
     Class[] paramTypes;
+    Object[] paramsAlt;
     if (params == null || params.length == 0) {
       params = null;
+      paramsAlt = new Object[1];
       paramTypes = null;
     } else {
+      paramsAlt = new Object[params.length + 1];
       paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
         params[i] = params[i] instanceof JavaFxObject ? ((JavaFxObject) params[i]).unwrap() : params[i];
+        paramsAlt[i] = params[i];
       }
       paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
@@ -97,13 +109,22 @@ public class JavaFxObject {
         }
         Method[] methods = curClass.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++) {
-          try {
-            if (methods[i].getName().equals(methodName)) {
+          if (methods[i].getName().equals(methodName)) {
+            try {
               methods[i].setAccessible(true);
               Object ret = methods[i].invoke(null, params);
               return ret == null ? null : new JavaFxObject(ret);
-            }
-          } catch (Throwable t) {}
+            } catch (Throwable t) {}
+            try {
+              Parameter[] declaredParams = methods[i].getParameters();
+              if (declaredParams.length == params.length + 1
+                  && declaredParams[params.length].isVarArgs()) {
+                paramsAlt[params.length] = Array.newInstance(declaredParams[params.length].getType(), 0);
+                Object ret = methods[i].invoke(null, paramsAlt);
+                return ret == null ? null : new JavaFxObject(ret);
+              }
+            } catch (Throwable t) {}
+          }
         }
         curClass = curClass.getSuperclass();
       }
@@ -120,13 +141,22 @@ public class JavaFxObject {
         }
         Method[] methods = curClass.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++) {
-          try {
-            if (methods[i].getName().equals(methodName)) {
+          if (methods[i].getName().equals(methodName)) {
+            try {
               methods[i].setAccessible(true);
               Object ret = methods[i].invoke(object, params);
               return ret == null ? null : new JavaFxObject(ret);
-            }
-          } catch (Throwable t) {}
+            } catch (Throwable t) {}
+            try {
+              Parameter[] declaredParams = methods[i].getParameters();
+              if (declaredParams.length == params.length + 1
+                  && declaredParams[params.length].isVarArgs()) {
+                paramsAlt[params.length] = Array.newInstance(declaredParams[params.length].getType(), 0);
+                Object ret = methods[i].invoke(object, paramsAlt);
+                return ret == null ? null : new JavaFxObject(ret);
+              }
+            } catch (Throwable t) {}
+          }
         }
         curClass = curClass.getSuperclass();
       }

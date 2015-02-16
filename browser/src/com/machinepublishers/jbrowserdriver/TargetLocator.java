@@ -26,8 +26,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 public class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
+  private final JBrowserDriver driver;
+  private final BrowserContext context;
 
-  TargetLocator() {}
+  TargetLocator(JBrowserDriver driver, BrowserContext context) {
+    this.driver = driver;
+    this.context = context;
+  }
 
   @Override
   public WebElement activeElement() {
@@ -72,9 +77,8 @@ public class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocato
   }
 
   @Override
-  public WebDriver window(String arg0) {
-    // TODO Auto-generated method stub
-    return null;
+  public WebDriver window(String windowHandle) {
+    context.setCurrent(windowHandle);
+    return driver;
   }
-
 }

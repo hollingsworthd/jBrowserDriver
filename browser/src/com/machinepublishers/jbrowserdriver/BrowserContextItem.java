@@ -34,7 +34,7 @@ import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 import com.sun.javafx.webkit.Accessor;
 
 class BrowserContextItem {
-  private static final AtomicLong currentId = new AtomicLong();
+  private static final AtomicLong currentItemId = new AtomicLong();
 
   final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window =
       new AtomicReference<com.machinepublishers.jbrowserdriver.Window>();
@@ -59,10 +59,10 @@ class BrowserContextItem {
   final Object initLock = new Object();
   final AtomicBoolean pageLoaded = new AtomicBoolean();
   final AtomicLong settingsId = new AtomicLong();
-  final AtomicReference<String> windowHandle = new AtomicReference<String>();
+  final AtomicReference<String> itemId = new AtomicReference<String>();
 
   public BrowserContextItem() {
-    windowHandle.set(Long.toString(currentId.getAndIncrement()));
+    itemId.set(Long.toString(currentItemId.getAndIncrement()));
   }
 
   public void init(final JBrowserDriver driver, final BrowserContext context) {
@@ -87,7 +87,7 @@ class BrowserContextItem {
             settingsId.get()));
         options.set(new com.machinepublishers.jbrowserdriver.Options(
             window, timeouts));
-        targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator());
+        targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator(driver, context));
         capabilities.set(new Capabilities());
         Util.exec(new Sync<Object>() {
           @Override
@@ -107,5 +107,9 @@ class BrowserContextItem {
         initialized.set(true);
       }
     }
+  }
+
+  public void close() {
+    SettingsManager._deregister(settings);
   }
 }

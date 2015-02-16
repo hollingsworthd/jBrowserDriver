@@ -22,6 +22,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -94,8 +95,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("scrollIntoView");
-        JavaFxObject obj = node.get().call("getBoundingClientRect");
+        node.get().call("call", "scrollIntoView");
+        JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());
         double x = Double.parseDouble(obj.call("getMember", "left").toString());
         robot.get().mouseMove(x, y);
@@ -125,8 +126,8 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("scrollIntoView");
-        node.get().call("focus");
+        node.get().call("call", "scrollIntoView");
+        node.get().call("call", "focus");
         robot.get().keysType(keys);
         return null;
       }
@@ -138,9 +139,9 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("scrollIntoView");
-        node.get().call("focus");
-        node.get().call("setValue", "");
+        node.get().call("call", "scrollIntoView");
+        node.get().call("call", "focus");
+        node.get().call("call", "setValue", "");
         return null;
       }
     }, settingsId);
@@ -186,7 +187,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
       @Override
       public Point perform() {
-        JavaFxObject obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
         return new Point(x, y);
@@ -199,7 +200,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        JavaFxObject obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
@@ -224,7 +225,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<Boolean>() {
       @Override
       public Boolean perform() {
-        JavaFxObject obj = node.get().call("getBoundingClientRect");
+        JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
         int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
         int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
@@ -334,7 +335,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
     return Util.exec(timeouts.get().getScriptTimeoutMS(), new Sync<WebElement>() {
       @Override
       public WebElement perform() {
-        JavaFxObject result = node.get().call("querySelector", expr);
+        JavaFxObject result = node.get().call("call", "querySelector", new Object[] { expr });
         if (result == null) {
           return null;
         }
@@ -349,7 +350,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       @Override
       public List<WebElement> perform() {
         List<WebElement> elements = new ArrayList<WebElement>();
-        JavaFxObject result = node.get().call("querySelectorAll", expr);
+        JavaFxObject result = node.get().call("call", "querySelectorAll", new Object[] { expr });
         for (int i = 0;; i++) {
           JavaFxObject cur = result.call("getSlot", i);
           if (cur.is(Node.class)) {
@@ -465,7 +466,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
             return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
           }
         }, settingsId);
-        if (!result.is(String.class) || !"undefined".equals(result)) {
+        if (!result.is(String.class) || !"undefined".equals(result.toString())) {
           result = new JavaFxObject(parseScriptResult(result));
           if (result.is(List.class)) {
             if (((List) result).size() == 0) {
@@ -519,13 +520,12 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
   }
 
   private Object script(boolean callback, String script, Object[] args) {
-    args = args == null ? new Object[0] : args;
+    List<Object> argList = new ArrayList<Object>();
+    if (args != null) {
+      argList.addAll(Arrays.asList(args));
+    }
     if (callback) {
-      Object[] tmp = new Object[args.length + 1];
-      for (int i = 0; i < args.length; i++) {
-        tmp[i] = args[i];
-      }
-      args = tmp;
+      argList.add(null);
       this.node.get().call("eval", "(function(){"
           + "          this.screenslicerCallback = function(){"
           + "            this.screenslicerCallbackVal = arguments;"
@@ -542,11 +542,11 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     }
-    return parseScriptResult(this.node.get().call("screenslicerJS", args));
+    return parseScriptResult(this.node.get().call("call", "screenslicerJS", argList.toArray(new Object[0])));
   }
 
   private Object parseScriptResult(JavaFxObject obj) {
-    if (obj == null || (obj.is(String.class) && "undefined".equals(obj))) {
+    if (obj == null || (obj.is(String.class) && "undefined".equals(obj.toString()))) {
       return null;
     }
     if (obj.is(Node.class)) {
@@ -556,7 +556,7 @@ public class Element implements WebElement, JavascriptExecutor, FindsById, Finds
       List<Object> result = new ArrayList<Object>();
       for (int i = 0;; i++) {
         JavaFxObject cur = obj.call("getSlot", i);
-        if (cur.is(String.class) && "undefined".equals(cur)) {
+        if (cur.is(String.class) && "undefined".equals(cur.toString())) {
           break;
         }
         result.add(parseScriptResult(cur));

@@ -33,7 +33,6 @@ import javafx.scene.image.WritableImage;
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -43,7 +42,6 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
 import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.Settings;
-import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 
 public class JBrowserDriver implements Browser {
   private final BrowserContext context = new BrowserContext();
@@ -53,7 +51,7 @@ public class JBrowserDriver implements Browser {
   }
 
   public JBrowserDriver(final Settings settings) {
-    context.current().settings.set(settings);
+    context.item().settings.set(settings);
   }
 
   /**
@@ -61,19 +59,19 @@ public class JBrowserDriver implements Browser {
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
   public void init() {
-    context.current().init(this, context);
+    context.item().init(this, context);
   }
 
   @Override
   public String getPageSource() {
     init();
-    return Util.exec(context.current().timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
+    return Util.exec(context.item().timeouts.get().getScriptTimeoutMS(), new Sync<String>() {
       @Override
       public String perform() {
-        return context.current().view.get().call("getEngine").
+        return context.item().view.get().call("getEngine").
             call("executeScript", "document.documentElement.outerHTML").toString();
       }
-    }, context.current().settingsId.get());
+    }, context.item().settingsId.get());
   }
 
   @Override
@@ -81,15 +79,15 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(new Sync<String>() {
       public String perform() {
-        return context.current().view.get().call("getEngine").call("getLocation").toString();
+        return context.item().view.get().call("getEngine").call("getLocation").toString();
       }
-    }, context.current().settingsId.get());
+    }, context.item().settingsId.get());
   }
 
   @Override
   public int getStatusCode() {
     init();
-    return context.current().statusCode.get();
+    return context.item().statusCode.get();
   }
 
   @Override
@@ -97,15 +95,15 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(new Sync<String>() {
       public String perform() {
-        return context.current().view.get().call("getEngine").call("getTitle").toString();
+        return context.item().view.get().call("getEngine").call("getTitle").toString();
       }
-    }, context.current().settingsId.get());
+    }, context.item().settingsId.get());
   }
 
   @Override
   public void get(final String url) {
     init();
-    context.current().pageLoaded.set(false);
+    context.item().pageLoaded.set(false);
     Util.exec(new Sync<Object>() {
       public Object perform() {
         String cleanUrl = url;
@@ -115,27 +113,27 @@ public class JBrowserDriver implements Browser {
           Logs.exception(t);
           cleanUrl = url.startsWith("http://") || url.startsWith("https://") ? url : "http://" + url;
         }
-        context.current().engine.get().call("load", cleanUrl);
+        context.item().engine.get().call("load", cleanUrl);
         return null;
       }
-    }, context.current().settingsId.get());
+    }, context.item().settingsId.get());
     try {
-      synchronized (context.current().pageLoaded) {
-        if (!context.current().pageLoaded.get()) {
-          context.current().pageLoaded.wait(context.current().timeouts.get().getPageLoadTimeoutMS());
+      synchronized (context.item().pageLoaded) {
+        if (!context.item().pageLoaded.get()) {
+          context.item().pageLoaded.wait(context.item().timeouts.get().getPageLoadTimeoutMS());
         }
       }
     } catch (InterruptedException e) {
       Logs.exception(e);
     }
-    if (!context.current().pageLoaded.get()) {
+    if (!context.item().pageLoaded.get()) {
       Util.exec(new Sync<Object>() {
         @Override
         public Object perform() {
-          context.current().engine.get().call("getLoadWorker").call("cancel");
+          context.item().engine.get().call("getLoadWorker").call("cancel");
           return null;
         }
-      }, context.current().settingsId.get());
+      }, context.item().settingsId.get());
     }
   }
 
@@ -154,195 +152,193 @@ public class JBrowserDriver implements Browser {
   @Override
   public WebElement findElementById(String id) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementById(id);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementById(id);
   }
 
   @Override
   public List<WebElement> findElementsById(String id) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsById(id);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsById(id);
   }
 
   @Override
   public WebElement findElementByXPath(String expr) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByXPath(expr);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByXPath(expr);
   }
 
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByXPath(expr);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByXPath(expr);
   }
 
   @Override
   public WebElement findElementByLinkText(final String text) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByLinkText(text);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByLinkText(text);
   }
 
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByPartialLinkText(text);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByPartialLinkText(text);
   }
 
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByLinkText(text);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByLinkText(text);
   }
 
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByPartialLinkText(text);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByPartialLinkText(text);
   }
 
   @Override
   public WebElement findElementByClassName(String cssClass) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByClassName(cssClass);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByClassName(cssClass);
   }
 
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByClassName(cssClass);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByClassName(cssClass);
   }
 
   @Override
   public WebElement findElementByName(String name) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByName(name);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByName(name);
   }
 
   @Override
   public List<WebElement> findElementsByName(String name) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByName(name);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByName(name);
   }
 
   @Override
   public WebElement findElementByCssSelector(String expr) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByCssSelector(expr);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByCssSelector(expr);
   }
 
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByCssSelector(expr);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByCssSelector(expr);
   }
 
   @Override
   public WebElement findElementByTagName(String tagName) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementByTagName(tagName);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementByTagName(tagName);
   }
 
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).findElementsByTagName(tagName);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).findElementsByTagName(tagName);
   }
 
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).executeAsyncScript(script, args);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).executeAsyncScript(script, args);
   }
 
   @Override
   public Object executeScript(String script, Object... args) {
     init();
-    return Element.create(context.current().engine,
-        context.current().robot, context.current().timeouts).executeScript(script, args);
+    return Element.create(context.item().engine,
+        context.item().robot, context.item().timeouts).executeScript(script, args);
   }
 
   @Override
   public Keyboard getKeyboard() {
     init();
-    return context.current().keyboard.get();
+    return context.item().keyboard.get();
   }
 
   @Override
   public Mouse getMouse() {
     init();
-    return context.current().mouse.get();
+    return context.item().mouse.get();
   }
 
   @Override
   public Capabilities getCapabilities() {
     init();
-    return context.current().capabilities.get();
+    return context.item().capabilities.get();
   }
 
   @Override
   public void close() {
     init();
-    SettingsManager._deregister(context.current().settings);
-    context.current().keyboard.get().sendKeys(Keys.ESCAPE);
-    context.current().window.get().close();
+    context.removeItem();
   }
 
   @Override
   public String getWindowHandle() {
     init();
-    return context.currentId();
+    return context.itemId();
   }
 
   @Override
   public Set<String> getWindowHandles() {
     init();
-    return context.ids();
+    return context.itemIds();
   }
 
   @Override
   public Options manage() {
     init();
-    return context.current().options.get();
+    return context.item().options.get();
   }
 
   @Override
   public Navigation navigate() {
     init();
-    return context.current().navigation.get();
+    return context.item().navigation.get();
   }
 
   @Override
   public void quit() {
     init();
-    close();
+    context.removeItems();
   }
 
   @Override
   public TargetLocator switchTo() {
     init();
-    return context.current().targetLocator.get();
+    return context.item().targetLocator.get();
   }
 
   @Override
   public void kill() {
     init();
-    close();
+    context.removeItems();
   }
 
   @Override
@@ -363,18 +359,18 @@ public class JBrowserDriver implements Browser {
     JavaFxObject image = Util.exec(new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(
-            SwingFXUtils.class, Long.parseLong(context.current().engine.get().call("getUserAgent").toString())).
-            call("fromFXImage", context.current().view.get().
-                call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.current().settingsId.get()),
-                    JavaFx.getNew(WritableImage.class, context.current().settingsId.get(),
-                        (int) Math.rint((Double) context.current().view.get().call("getWidth").unwrap()),
-                        (int) Math.rint((Double) context.current().view.get().call("getHeight").unwrap()))), null);
+            SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
+            call("fromFXImage", context.item().view.get().
+                call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.item().settingsId.get()),
+                    JavaFx.getNew(WritableImage.class, context.item().settingsId.get(),
+                        (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
+                        (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
       }
-    }, context.current().settingsId.get());
+    }, context.item().settingsId.get());
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();
-      JavaFx.getStatic(ImageIO.class, context.current().settingsId.get()).call("write", image, "png", out);
+      JavaFx.getStatic(ImageIO.class, context.item().settingsId.get()).call("write", image, "png", out);
       return outputType.convertFromPngBytes(out.toByteArray());
     } catch (Throwable t) {
       Logs.exception(t);

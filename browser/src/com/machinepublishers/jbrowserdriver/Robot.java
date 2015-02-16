@@ -38,8 +38,8 @@ import javafx.scene.input.ClipboardContent;
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.machinepublishers.jbrowserdriver.config.JavaFx;
+import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 import com.sun.glass.ui.Application;
 
 class Robot {

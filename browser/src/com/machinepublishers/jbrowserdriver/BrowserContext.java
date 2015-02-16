@@ -22,59 +22,102 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class BrowserContext {
-  private static final Map<String, BrowserContextItem> itemIds = new HashMap<String, BrowserContextItem>();
-  private final Set<String> myItemIds = new HashSet<String>();
+import com.machinepublishers.jbrowserdriver.Util.Sync;
 
-  private int current = 0;
+class BrowserContext {
+  private final Map<String, BrowserContextItem> itemMap = new LinkedHashMap<String, BrowserContextItem>();
   private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
+  private int current = 0;
 
   public BrowserContext() {
     BrowserContextItem newContext = new BrowserContextItem();
     items.add(newContext);
-    myItemIds.add(newContext.windowHandle.get());
-    synchronized (itemIds) {
-      itemIds.put(newContext.windowHandle.get(), newContext);
-    }
+    itemMap.put(newContext.itemId.get(), newContext);
   }
 
-  public synchronized BrowserContextItem current() {
+  public synchronized BrowserContextItem item() {
     return items.get(current);
   }
 
-  public synchronized String currentId() {
-    return current().windowHandle.get();
+  public synchronized BrowserContextItem item(String handle) {
+    return itemMap.get(handle);
   }
 
-  public synchronized Set<String> ids() {
-    return new HashSet<String>(myItemIds);
+  public synchronized String itemId() {
+    return item().itemId.get();
+  }
+
+  public synchronized Set<String> itemIds() {
+    return new HashSet<String>(itemMap.keySet());
   }
 
   public synchronized BrowserContextItem spawn(JBrowserDriver driver) {
     BrowserContextItem newContext = new BrowserContextItem();
-    newContext.timeouts.set(current().timeouts.get());
-    newContext.settings.set(current().settings.get());
+    newContext.timeouts.set(item().timeouts.get());
+    newContext.settings.set(item().settings.get());
     newContext.init(driver, this);
     items.add(newContext);
-    myItemIds.add(newContext.windowHandle.get());
-    synchronized (itemIds) {
-      itemIds.put(newContext.windowHandle.get(), newContext);
-    }
+    itemMap.put(newContext.itemId.get(), newContext);
     return newContext;
   }
 
-  public synchronized void destroyCurrent() {
-    final String id = items.remove(current).windowHandle.get();
+  public synchronized void setCurrent(String id) {
+    current = items.indexOf(itemMap.get(id));
+    Util.exec(new Sync<Object>() {
+      @Override
+      public Object perform() {
+        item().stage.get().call("setFocused", true);
+        return null;
+      }
+    }, item().settingsId.get());
+  }
+
+  public synchronized void removeItem() {
+    Util.exec(new Sync<Object>() {
+      @Override
+      public Object perform() {
+        item().stage.get().call("close");
+        return null;
+      }
+    }, item().settingsId.get());
+    item().close();
+    final String itemId = items.remove(current).itemId.get();
     current = 0;
-    myItemIds.remove(id);
-    synchronized (itemIds) {
-      itemIds.remove(id);
-    }
+    itemMap.remove(itemId);
+  }
+
+  public synchronized void removeItem(final String itemId) {
+    Util.exec(new Sync<Object>() {
+      @Override
+      public Object perform() {
+        item(itemId).stage.get().call("close");
+        return null;
+      }
+    }, item(itemId).settingsId.get());
+    item(itemId).close();
+    current = 0;
+    items.remove(itemMap.remove(itemId));
+  }
+
+  public synchronized void removeItems() {
+    Util.exec(new Sync<Object>() {
+      @Override
+      public Object perform() {
+        for (BrowserContextItem curItem : items) {
+          curItem.stage.get().call("close");
+          curItem.close();
+        }
+        return null;
+      }
+    }, item().settingsId.get());
+    items.clear();
+    itemMap.clear();
+    current = 0;
   }
 }
