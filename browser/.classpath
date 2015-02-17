@@ -4,6 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/selenium-java-2.44.0.jar"/>
 	<classpathentry kind="lib" path="lib/jcl-core-2.5.jar"/>
-	<classpathentry kind="lib" path="src/com/machinepublishers/jbrowserdriver/config/openjfx-monocle-1.8.0_20.jar"/>
+	<classpathentry kind="lib" path="src/com/machinepublishers/jbrowserdriver/openjfx-monocle-1.8.0_20.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -23,7 +23,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import org.openqa.selenium.security.Credentials;
 
-public class Alert implements org.openqa.selenium.Alert {
+class Alert implements org.openqa.selenium.Alert {
 
   Alert() {}
 

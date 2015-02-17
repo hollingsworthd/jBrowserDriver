@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,18 +42,17 @@ import javafx.embed.swing.JFXPanel;
 import org.xeustechnologies.jcl.JarClassLoader;
 import org.xeustechnologies.jcl.ProxyClassLoader;
 
-import com.machinepublishers.jbrowserdriver.Logs;
 import com.sun.glass.ui.PlatformFactory;
 import com.sun.glass.ui.monocle.MonoclePlatformFactory;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
 import com.sun.glass.ui.monocle.headless.HeadlessPlatform;
 
-public class JavaFx {
+class JavaFx {
   private JavaFx() {}
 
   private static final Map<Long, ClassLoader> classLoaders = new HashMap<Long, ClassLoader>();
 
-  public static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
+  static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
     if (!classLoaders.containsKey(id)) {
       classLoaders.put(id, newClassLoader(id == 1l));
     }
@@ -61,7 +60,9 @@ public class JavaFx {
     try {
       Class loaded = classLoaders.get(id).loadClass(type.getName());
       if (params == null || params.length == 0) {
-        return new JavaFxObject(loaded.newInstance());
+        Constructor constructor = loaded.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return new JavaFxObject(constructor.newInstance());
       }
       Class[] paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
@@ -69,12 +70,15 @@ public class JavaFx {
       }
       JavaFxObject.unbox(paramTypes);
       try {
-        return new JavaFxObject(loaded.getConstructor(paramTypes).newInstance(params));
+        Constructor constructor = loaded.getDeclaredConstructor(paramTypes);
+        constructor.setAccessible(true);
+        return new JavaFxObject(constructor.newInstance(params));
       } catch (Throwable t) {
         firstError = firstError == null ? t : firstError;
-        Constructor[] constructors = loaded.getConstructors();
+        Constructor[] constructors = loaded.getDeclaredConstructors();
         for (int i = 0; i < constructors.length; i++) {
           try {
+            constructors[i].setAccessible(true);
             return new JavaFxObject(constructors[i].newInstance(params));
           } catch (Throwable t2) {}
         }
@@ -85,7 +89,7 @@ public class JavaFx {
     throw new IllegalStateException("Could not construct " + type.getName(), firstError);
   }
 
-  public static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
+  static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
     try {
       if (!classLoaders.containsKey(id)) {
         classLoaders.put(id, newClassLoader(id == 1l));
@@ -134,7 +138,7 @@ public class JavaFx {
   }
 
   private static class JavaFxClassLoader extends JarClassLoader {
-    public JavaFxClassLoader() {
+    JavaFxClassLoader() {
       if (Settings.headless()) {
         super.add(JavaFx.class.getResource("/"));
 

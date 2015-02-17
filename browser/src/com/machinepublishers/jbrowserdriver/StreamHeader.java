@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import sun.net.www.MessageHeader;
-
-import com.machinepublishers.jbrowserdriver.Logs;
 
 class StreamHeader extends MessageHeader {
   private final StreamConnection conn;

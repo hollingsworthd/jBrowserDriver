@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.openqa.selenium.Platform;
 
-public class Capabilities implements org.openqa.selenium.Capabilities {
+class Capabilities implements org.openqa.selenium.Capabilities {
 
   Capabilities() {}
 

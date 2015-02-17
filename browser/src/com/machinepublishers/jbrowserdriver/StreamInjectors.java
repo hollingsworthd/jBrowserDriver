@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,9 +32,6 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
-
-import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Util;
 
 class StreamInjectors {
   public static interface Injector {

@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,8 +35,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
-
-import com.machinepublishers.jbrowserdriver.Logs;
 
 class StreamHandler implements URLStreamHandlerFactory {
   private static final HttpHandler httpHandler = new HttpHandler();

@@ -24,7 +24,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.Arrays;
 import java.util.List;
 
-public class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
+class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
 
   ImeHandler() {}
 

@@ -26,9 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
-public class Navigation implements org.openqa.selenium.WebDriver.Navigation {
+class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriver> driver;
   private final AtomicReference<JavaFxObject> view;
   private final long settingsId;

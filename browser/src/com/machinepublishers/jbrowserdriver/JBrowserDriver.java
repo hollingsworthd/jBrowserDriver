@@ -40,9 +40,6 @@ import org.openqa.selenium.WebElement;
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFx;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
-import com.machinepublishers.jbrowserdriver.config.Settings;
 
 public class JBrowserDriver implements Browser {
   private final BrowserContext context = new BrowserContext();

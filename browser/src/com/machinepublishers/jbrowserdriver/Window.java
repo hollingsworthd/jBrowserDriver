@@ -28,9 +28,8 @@ import org.openqa.selenium.Point;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
-public class Window implements org.openqa.selenium.WebDriver.Window {
+class Window implements org.openqa.selenium.WebDriver.Window {
   private final AtomicReference<JavaFxObject> stage;
   private final long settingsId;
 
@@ -39,7 +38,7 @@ public class Window implements org.openqa.selenium.WebDriver.Window {
     this.settingsId = settingsId;
   }
 
-  public void close() {
+  void close() {
     Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {

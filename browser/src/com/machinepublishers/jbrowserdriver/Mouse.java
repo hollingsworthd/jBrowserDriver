@@ -27,7 +27,7 @@ import org.openqa.selenium.interactions.internal.Coordinates;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
-public class Mouse implements org.openqa.selenium.interactions.Mouse {
+class Mouse implements org.openqa.selenium.interactions.Mouse {
   private final AtomicReference<Robot> robot;
 
   Mouse(final AtomicReference<Robot> robot) {

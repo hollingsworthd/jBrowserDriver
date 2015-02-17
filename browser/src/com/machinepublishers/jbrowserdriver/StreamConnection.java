@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -50,8 +50,6 @@ import javax.net.ssl.TrustManagerFactory;
 import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Util;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 class StreamConnection extends HttpURLConnection {

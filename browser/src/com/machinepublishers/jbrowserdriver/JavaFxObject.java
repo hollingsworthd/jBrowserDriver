@@ -19,29 +19,29 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-public class JavaFxObject {
+class JavaFxObject {
   private final Object object;
 
-  public JavaFxObject(Object object) {
+  JavaFxObject(Object object) {
     this.object = object;
   }
 
-  public JavaFxObject(Class<?> object) {
+  JavaFxObject(Class<?> object) {
     this.object = object;
   }
 
-  public Object unwrap() {
+  Object unwrap() {
     return this.object;
   }
 
-  public boolean is(Class<?> type) {
+  boolean is(Class<?> type) {
     Class<?> thisType = object.getClass();
     do {
       if (thisType.getName().equals(type.getName())) {
@@ -58,7 +58,7 @@ public class JavaFxObject {
     return false;
   }
 
-  public JavaFxObject field(String fieldName) {
+  JavaFxObject field(String fieldName) {
     Throwable firstError = null;
     Class<?> curClass = ((Class) object);
     while (curClass != null) {
@@ -75,7 +75,7 @@ public class JavaFxObject {
     throw new IllegalStateException("Failed to get field: " + fieldName, firstError);
   }
 
-  public JavaFxObject call(String methodName, Object... params) {
+  JavaFxObject call(String methodName, Object... params) {
     Class[] paramTypes;
     Object[] paramsAlt;
     if (params == null || params.length == 0) {

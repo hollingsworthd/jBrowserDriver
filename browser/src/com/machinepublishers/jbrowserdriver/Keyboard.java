@@ -23,7 +23,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Keyboard implements org.openqa.selenium.interactions.Keyboard {
+class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final AtomicReference<Robot> robot;
 

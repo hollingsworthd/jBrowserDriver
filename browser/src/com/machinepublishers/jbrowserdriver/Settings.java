@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
 import java.net.CookieHandler;
@@ -31,9 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Util;
-import com.machinepublishers.jbrowserdriver.config.StreamInjectors.Injector;
+import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 import com.sun.webkit.network.CookieManager;
 
 public class Settings {

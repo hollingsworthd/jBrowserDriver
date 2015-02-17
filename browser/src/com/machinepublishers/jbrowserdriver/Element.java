@@ -55,10 +55,8 @@ import org.w3c.dom.html.HTMLInputElement;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFx;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
 
-public class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
+class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath {
   private static final AtomicLong latestThread = new AtomicLong();
   private static final AtomicLong curThread = new AtomicLong();

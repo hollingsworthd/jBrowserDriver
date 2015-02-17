@@ -19,16 +19,16 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.stage.Stage;
 
-public class DynamicTitleListener implements ChangeListener<String> {
+class DynamicTitleListener implements ChangeListener<String> {
   private final Stage stage;
 
-  public DynamicTitleListener(Stage stage) {
+  DynamicTitleListener(Stage stage) {
     this.stage = stage;
   }
 

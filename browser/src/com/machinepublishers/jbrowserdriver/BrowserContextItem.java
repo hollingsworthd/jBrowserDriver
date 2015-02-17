@@ -28,10 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.machinepublishers.jbrowserdriver.config.JavaFx;
-import com.machinepublishers.jbrowserdriver.config.JavaFxObject;
-import com.machinepublishers.jbrowserdriver.config.Settings;
-import com.machinepublishers.jbrowserdriver.config.SettingsManager;
 import com.sun.javafx.webkit.Accessor;
 
 class BrowserContextItem {
@@ -61,17 +57,17 @@ class BrowserContextItem {
   final AtomicLong settingsId = new AtomicLong();
   final AtomicReference<String> itemId = new AtomicReference<String>();
 
-  public BrowserContextItem() {
+  BrowserContextItem() {
     itemId.set(Long.toString(currentItemId.getAndIncrement()));
   }
 
-  public void init(final JBrowserDriver driver, final BrowserContext context) {
+  void init(final JBrowserDriver driver, final BrowserContext context) {
     if (initialized.get()) {
       return;
     }
     synchronized (initLock) {
       if (!initialized.get()) {
-        SettingsManager._register(stage, view,
+        SettingsManager.register(stage, view,
             settings, statusCode);
         engine.set(view.get().call("getEngine"));
         settingsId.set(Long.parseLong(
@@ -106,7 +102,7 @@ class BrowserContextItem {
     }
   }
 
-  public void close() {
-    SettingsManager._deregister(settings);
+  void close() {
+    SettingsManager.deregister(settings);
   }
 }

@@ -19,15 +19,13 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-
-public class StatusMonitor {
+class StatusMonitor {
   private final static Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
@@ -36,14 +34,14 @@ public class StatusMonitor {
 
   private StatusMonitor() {}
 
-  public static synchronized StatusMonitor get(long settingsId) {
+  static synchronized StatusMonitor get(long settingsId) {
     if (!instances.containsKey(settingsId)) {
       instances.put(settingsId, new StatusMonitor());
     }
     return instances.get(settingsId);
   }
 
-  public static synchronized void remove(long settingsId) {
+  static synchronized void remove(long settingsId) {
     instances.remove(settingsId);
   }
 
@@ -53,7 +51,7 @@ public class StatusMonitor {
     }
   }
 
-  public void resetStatusMonitor(String url) {
+  void resetStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = true;
       primaryDocument = url;
@@ -68,7 +66,7 @@ public class StatusMonitor {
     }
   }
 
-  public int stopStatusMonitor(String url) {
+  int stopStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = false;
       int code = 0;

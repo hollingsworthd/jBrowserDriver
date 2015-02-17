@@ -37,7 +37,7 @@ import org.openqa.selenium.WebDriver.Timeouts;
 import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.logging.Logs;
 
-public class Options implements org.openqa.selenium.WebDriver.Options {
+class Options implements org.openqa.selenium.WebDriver.Options {
   private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
   private final Logs logs = com.machinepublishers.jbrowserdriver.Logs.instance();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;

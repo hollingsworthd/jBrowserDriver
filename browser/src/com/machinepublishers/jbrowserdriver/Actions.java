@@ -23,9 +23,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import org.openqa.selenium.WebDriver;
 
-public class Actions extends org.openqa.selenium.interactions.Actions {
+class Actions extends org.openqa.selenium.interactions.Actions {
 
-  public Actions(WebDriver driver) {
+  Actions(WebDriver driver) {
     super(driver);
   }
 }

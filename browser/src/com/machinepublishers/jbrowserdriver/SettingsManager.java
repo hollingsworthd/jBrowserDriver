@@ -19,7 +19,7 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License version 3
  * for more details.
  */
-package com.machinepublishers.jbrowserdriver.config;
+package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -34,8 +34,6 @@ import javafx.stage.Stage;
 
 import org.openqa.selenium.Dimension;
 
-import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Util;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Screen;
@@ -43,18 +41,12 @@ import com.sun.glass.ui.monocle.NativePlatform;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
 import com.sun.javafx.webkit.Accessor;
 
-/**
- * Internal use only
- */
-public class SettingsManager {
+class SettingsManager {
 
   private static final Map<Long, AtomicReference<Settings>> registry =
       new HashMap<Long, AtomicReference<Settings>>();
 
-  /**
-   * Internal use only
-   */
-  public static void _register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
+  static void register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
     Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
@@ -100,10 +92,7 @@ public class SettingsManager {
     }, settings.get().id());
   }
 
-  /**
-   * Internal use only
-   */
-  public static void _deregister(AtomicReference<Settings> settings) {
+  static void deregister(AtomicReference<Settings> settings) {
     synchronized (registry) {
       registry.remove(settings.get().id());
     }

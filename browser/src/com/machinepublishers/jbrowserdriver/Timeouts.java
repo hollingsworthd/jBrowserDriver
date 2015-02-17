@@ -24,7 +24,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
+class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   private AtomicLong implicit = new AtomicLong();
   private AtomicLong load = new AtomicLong();
   private AtomicLong script = new AtomicLong();

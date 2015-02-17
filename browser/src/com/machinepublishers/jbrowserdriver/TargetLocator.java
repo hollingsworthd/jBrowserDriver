@@ -25,7 +25,7 @@ import org.openqa.selenium.Alert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-public class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
+class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final JBrowserDriver driver;
   private final BrowserContext context;
 

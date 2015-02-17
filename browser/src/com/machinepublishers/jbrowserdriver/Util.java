@@ -38,18 +38,16 @@ import java.util.regex.Pattern;
 
 import javafx.application.Platform;
 
-import com.machinepublishers.jbrowserdriver.config.JavaFx;
-
-public class Util {
+class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Random rand = new Random();
 
-  public static enum Pause {
+  static enum Pause {
     LONG, SHORT, NONE
   }
 
-  public static void close(Closeable closeable) {
+  static void close(Closeable closeable) {
     if (closeable != null) {
       try {
         closeable.close();
@@ -59,7 +57,7 @@ public class Util {
     }
   }
 
-  public static void close(HttpURLConnection conn) {
+  static void close(HttpURLConnection conn) {
     /*
      * Don't log exceptions here: we assume that we're being overly cautious,
      * trying to close streams that don't exist or are already closed.
@@ -80,7 +78,7 @@ public class Util {
     }
   }
 
-  public static interface Sync<T> {
+  static interface Sync<T> {
     T perform();
   }
 
@@ -122,15 +120,15 @@ public class Util {
     }, settingsId);
   }
 
-  public static <T> T exec(Pause pauseAfterExec, final Sync<T> action, final long id) {
+  static <T> T exec(Pause pauseAfterExec, final Sync<T> action, final long id) {
     return exec(pauseAfterExec, new AtomicInteger(-1), 0, action, id);
   }
 
-  public static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
+  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
     return exec(pauseAfterExec, statusCode, 0, action, id);
   }
 
-  public static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
+  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action, final long id) {
     if (statusCode.get() != -1) {
       synchronized (statusCode) {
@@ -173,7 +171,7 @@ public class Util {
     }
   }
 
-  public static String toString(InputStream inputStream, String charset) {
+  static String toString(InputStream inputStream, String charset) {
     try {
       final char[] chars = new char[8192];
       StringBuilder builder = new StringBuilder();
@@ -188,7 +186,7 @@ public class Util {
     }
   }
 
-  public static byte[] toBytes(InputStream inputStream) throws IOException {
+  static byte[] toBytes(InputStream inputStream) throws IOException {
     final byte[] bytes = new byte[8192];
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     for (int len = 0; -1 != (len = inputStream.read(bytes));) {
@@ -197,7 +195,7 @@ public class Util {
     return out.toByteArray();
   }
 
-  public static String charset(URLConnection conn) {
+  static String charset(URLConnection conn) {
     String charset = conn.getContentType();
     if (charset != null) {
       Matcher matcher = charsetPattern.matcher(charset);

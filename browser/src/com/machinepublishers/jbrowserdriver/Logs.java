@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
-public class Logs implements org.openqa.selenium.logging.Logs {
+class Logs implements org.openqa.selenium.logging.Logs {
   public static final boolean TRACE = "true".equals(System.getProperty("jbd.trace"));
   private static final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
   private static final int MAX_LOGS = 50;
@@ -42,11 +42,11 @@ public class Logs implements org.openqa.selenium.logging.Logs {
 
   }
 
-  public static Logs instance() {
+  static Logs instance() {
     return instance;
   }
 
-  public static void warn(String message) {
+  static void warn(String message) {
     final LogEntry entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
@@ -59,7 +59,7 @@ public class Logs implements org.openqa.selenium.logging.Logs {
     }
   }
 
-  public static void exception(Throwable t) {
+  static void exception(Throwable t) {
     final LogEntry entry;
     StringWriter writer = null;
     try {
