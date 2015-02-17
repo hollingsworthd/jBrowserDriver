@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -43,7 +42,6 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Application;
 
 class Robot {
-  private static final Random rand = new Random();
   private static final Map<Keys, Integer> keyConvert = new HashMap<Keys, Integer>();
   static {
     keyConvert.put(Keys.ADD, KeyEvent.VK_ADD);
