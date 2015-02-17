@@ -22,7 +22,6 @@
 package com.machinepublishers.jbrowserdriver.config;
 
 import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,16 +50,13 @@ public class SettingsManager {
 
   private static final Map<Long, AtomicReference<Settings>> registry =
       new HashMap<Long, AtomicReference<Settings>>();
-  private static final Map<HttpURLConnection, AtomicReference<Settings>> connectionSettings =
-      new HashMap<HttpURLConnection, AtomicReference<Settings>>();
-  private static final Object lock = new Object();
 
   /**
    * Internal use only
    */
   public static void _register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
-    Util.exec(Pause.NONE, new Sync<Object>() {
+    Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         if (Settings.headless()) {
           try {
@@ -94,7 +90,7 @@ public class SettingsManager {
         stage.get().call("sizeToScene");
         stage.get().call("show");
 
-        synchronized (lock) {
+        synchronized (registry) {
           registry.put(settings.get().id(), settings);
         }
         ProxyAuth.add(settings.get().proxy());
@@ -108,35 +104,16 @@ public class SettingsManager {
    * Internal use only
    */
   public static void _deregister(AtomicReference<Settings> settings) {
-    synchronized (lock) {
+    synchronized (registry) {
       registry.remove(settings.get().id());
     }
     ProxyAuth.remove(settings.get().proxy());
+    StatusMonitor.remove(settings.get().id());
   }
 
-  static AtomicReference<Settings> get(String settingsId) {
-    synchronized (lock) {
-      return registry.get(Long.parseLong(settingsId));
-    }
-  }
-
-  static AtomicReference<Settings> get(HttpURLConnection connection) {
-    synchronized (lock) {
-      return connectionSettings.get(connection);
-    }
-  }
-
-  static AtomicReference<Settings> store(String settingsId, HttpURLConnection conn) {
-    synchronized (lock) {
-      AtomicReference<Settings> settings = registry.get(Long.parseLong(settingsId));
-      connectionSettings.put(conn, settings);
-      return settings;
-    }
-  }
-
-  static void clearConnections() {
-    synchronized (lock) {
-      connectionSettings.clear();
+  static AtomicReference<Settings> get(long settingsId) {
+    synchronized (registry) {
+      return registry.get(settingsId);
     }
   }
 

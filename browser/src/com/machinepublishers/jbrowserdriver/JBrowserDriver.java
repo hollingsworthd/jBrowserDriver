@@ -105,7 +105,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public void get(final String url) {
     init();
-    context.item().pageLoaded.set(false);
+    context.item().statusCode.set(0);
     Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         String cleanUrl = url;
@@ -120,15 +120,15 @@ public class JBrowserDriver implements Browser {
       }
     }, context.item().settingsId.get());
     try {
-      synchronized (context.item().pageLoaded) {
-        if (!context.item().pageLoaded.get()) {
-          context.item().pageLoaded.wait(context.item().timeouts.get().getPageLoadTimeoutMS());
+      synchronized (context.item().statusCode) {
+        if (context.item().statusCode.get() == 0) {
+          context.item().statusCode.wait(context.item().timeouts.get().getPageLoadTimeoutMS());
         }
       }
     } catch (InterruptedException e) {
       Logs.exception(e);
     }
-    if (!context.item().pageLoaded.get()) {
+    if (context.item().statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new Sync<Object>() {
         @Override
         public Object perform() {

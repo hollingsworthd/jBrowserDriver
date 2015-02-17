@@ -31,23 +31,17 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
 
 import com.machinepublishers.jbrowserdriver.Logs;
-import com.machinepublishers.jbrowserdriver.Util;
 
-public class StreamHandler implements URLStreamHandlerFactory {
+class StreamHandler implements URLStreamHandlerFactory {
   private static final HttpHandler httpHandler = new HttpHandler();
   private static final HttpsHandler httpsHandler = new HttpsHandler();
-  private static int monitors;
-  private static final Object lock = new Object();
-  private static final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
-  private static final Set<String> primaryDocuments = new HashSet<String>();
+
   private static final Set<String> adHosts = new HashSet<String>();
   public static final URL BLOCKED_URL;
   static {
@@ -75,9 +69,6 @@ public class StreamHandler implements URLStreamHandlerFactory {
       url = isBlocked(url.getHost()) ? BLOCKED_URL : url;
       StreamConnection conn =
           new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(url));
-      synchronized (lock) {
-        connections.put(url.toExternalForm(), conn);
-      }
       return conn;
     }
 
@@ -92,9 +83,6 @@ public class StreamHandler implements URLStreamHandlerFactory {
       url = isBlocked(url.getHost()) ? BLOCKED_URL : url;
       StreamConnection conn =
           new StreamConnection((HttpsURLConnectionImpl) super.openConnection(url));
-      synchronized (lock) {
-        connections.put(url.toExternalForm(), conn);
-      }
       return conn;
     }
 
@@ -134,43 +122,6 @@ public class StreamHandler implements URLStreamHandlerFactory {
     return null;
   }
 
-  static boolean isPrimaryDocument(String url) {
-    return connections.containsKey(url);
-  }
-
-  static void startStatusMonitor(String url) {
-    synchronized (lock) {
-      if (monitors == 0) {
-        for (StreamConnection conn : connections.values()) {
-          Util.close(conn);
-        }
-        connections.clear();
-        primaryDocuments.clear();
-        primaryDocuments.add(url);
-        SettingsManager.clearConnections();
-        System.gc();
-        System.runFinalization();
-        System.gc();
-      }
-      ++monitors;
-    }
-  }
-
-  static int stopStatusMonitor(String url) {
-    synchronized (lock) {
-      --monitors;
-      int code = 0;
-      try {
-        if (connections.containsKey(url)) {
-          code = connections.get(url).getResponseCode();
-        }
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
-      return code;
-    }
-  }
-
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
     if ("https".equals(protocol)) {
@@ -178,6 +129,12 @@ public class StreamHandler implements URLStreamHandlerFactory {
     }
     if ("http".equals(protocol)) {
       return httpHandler;
+    }
+    if ("about".equals(protocol)) {
+      return new com.sun.webkit.network.about.Handler();
+    }
+    if ("data".equals(protocol)) {
+      return new com.sun.webkit.network.data.Handler();
     }
     if ("file".equals(protocol)) {
       return new sun.net.www.protocol.file.Handler();

@@ -237,7 +237,7 @@ class Robot {
 
   Robot(final AtomicReference<JavaFxObject> stage, final AtomicInteger statusCode, final long settingsId) {
     this.stage = stage;
-    robot.set(Util.exec(Pause.NONE, new Sync<JavaFxObject>() {
+    robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
       }

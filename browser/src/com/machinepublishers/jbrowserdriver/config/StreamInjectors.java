@@ -36,33 +36,33 @@ import java.util.zip.InflaterInputStream;
 import com.machinepublishers.jbrowserdriver.Logs;
 import com.machinepublishers.jbrowserdriver.Util;
 
-public class StreamInjectors {
+class StreamInjectors {
   public static interface Injector {
-    byte[] inject(HttpURLConnection connection, String originalUrl, byte[] inflatedContent);
+    byte[] inject(HttpURLConnection connection, byte[] inflatedContent, long settingsId);
   }
 
   private static final Object lock = new Object();
   private static final List<Injector> injectors = new ArrayList<Injector>();
 
-  public static void add(Injector injector) {
+  static void add(Injector injector) {
     synchronized (lock) {
       injectors.add(injector);
     }
   }
 
-  public static void remove(Injector injector) {
+  static void remove(Injector injector) {
     synchronized (lock) {
       injectors.remove(injector);
     }
   }
 
-  public static void removeAll() {
+  static void removeAll() {
     synchronized (lock) {
       injectors.clear();
     }
   }
 
-  static InputStream injectedStream(HttpURLConnection conn, String originalUrl) throws IOException {
+  static InputStream injectedStream(HttpURLConnection conn, String originalUrl, long settingsId) throws IOException {
     if (conn.getURL() == StreamHandler.BLOCKED_URL) {
       return new ByteArrayInputStream(new byte[0]);
     }
@@ -84,7 +84,7 @@ public class StreamInjectors {
         Util.close(in);
         synchronized (lock) {
           for (Injector injector : injectors) {
-            byte[] newContent = injector.inject(conn, originalUrl, content);
+            byte[] newContent = injector.inject(conn, content, settingsId);
             if (newContent != null) {
               content = newContent;
             }

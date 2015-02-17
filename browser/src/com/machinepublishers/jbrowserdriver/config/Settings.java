@@ -75,10 +75,10 @@ public class Settings {
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     StreamInjectors.add(new Injector() {
       @Override
-      public byte[] inject(HttpURLConnection connection, String originalUrl, byte[] inflatedContent) {
+      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent, long settingsId) {
         try {
           AtomicReference<Settings> settings;
-          settings = SettingsManager.get(connection);
+          settings = SettingsManager.get(settingsId);
           if (!"false".equals(System.getProperty("jbd.quickrender"))
               && connection.getContentType() != null
               && (connection.getContentType().startsWith("image/")
@@ -86,12 +86,12 @@ public class Settings {
                   || connection.getContentType().startsWith("audio/")
                   || connection.getContentType().startsWith("model/"))) {
             if (Logs.TRACE) {
-              System.out.println("Media discarded: " + originalUrl);
+              System.out.println("Media discarded: " + connection.getURL().toExternalForm());
             }
             return new byte[0];
           } else if (connection.getContentType() != null
               && connection.getContentType().indexOf("text/html") > -1
-              && StreamHandler.isPrimaryDocument(originalUrl)) {
+              && StatusMonitor.get(settingsId).isPrimaryDocument(connection.getURL().toExternalForm())) {
             String injected = null;
             String charset = Util.charset(connection);
             String content = new String(inflatedContent, charset);

@@ -38,6 +38,7 @@ import java.security.Permission;
 import java.security.cert.CertificateFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,6 +65,7 @@ class StreamConnection extends HttpURLConnection {
   private final String originalUrl;
   private final Object headerObjParent;
   private static final Field headerField;
+  private static final AtomicLong settingsId = new AtomicLong();
   static {
     Field headerFieldTmp = null;
     try {
@@ -284,8 +286,10 @@ class StreamConnection extends HttpURLConnection {
   @Override
   public void connect() throws IOException {
     try {
-      headerField.set(headerObjParent, new StreamHeader(
-          conn, (MessageHeader) headerField.get(headerObjParent), headerObjParent, isSsl));
+      StreamHeader header =
+          new StreamHeader(this, (MessageHeader) headerField.get(headerObjParent), headerObjParent, isSsl);
+      headerField.set(headerObjParent, header);
+      settingsId.set(header.settingsId().get());
     } catch (Throwable t) {
       Logs.exception(t);
     }
@@ -384,7 +388,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return StreamInjectors.injectedStream(conn, originalUrl);
+    return StreamInjectors.injectedStream(conn, originalUrl, settingsId.get());
   }
 
   @Override

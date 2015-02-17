@@ -106,7 +106,7 @@ public class Util {
     }
   }
 
-  private static void pause(Pause pauseLength, final long settingsId) {
+  private static void pause(final Pause pauseLength, final long settingsId) {
     Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {

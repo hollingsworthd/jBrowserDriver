@@ -58,7 +58,6 @@ class BrowserContextItem {
   final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
-  final AtomicBoolean pageLoaded = new AtomicBoolean();
   final AtomicLong settingsId = new AtomicLong();
   final AtomicReference<String> itemId = new AtomicReference<String>();
 
@@ -90,16 +89,13 @@ class BrowserContextItem {
             window, timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator(driver, context));
         capabilities.set(new Capabilities());
-        Util.exec(Pause.NONE, new Sync<Object>() {
+        Util.exec(Pause.SHORT, new Sync<Object>() {
           @Override
           public Object perform() {
             JavaFx.getStatic(Accessor.class, settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient",
                     JavaFx.getNew(DynamicHttpListener.class, settingsId.get(), view.get().unwrap(), statusCode, settingsId.get()));
-            engine.get().call("getLoadWorker").call("stateProperty").call("addListener",
-                JavaFx.getNew(DynamicStateListener.class, settingsId.get(),
-                    pageLoaded));
             engine.get().call("setCreatePopupHandler",
                 JavaFx.getNew(DynamicPopupHandler.class, settingsId.get(), driver, context));
             return null;
