@@ -25,43 +25,47 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javafx.scene.web.WebView;
-
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
-  private final WebView view;
   private final AtomicInteger statusCode;
   private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
+  private final Object statusMonitor;
   private static final boolean TRACE = "true".equals(System.getProperty("jbd.trace"));
   private static final Method getStatusMonitor;
-  private static final Method resetStatusMonitor;
+  private static final Method startStatusMonitor;
   private static final Method stopStatusMonitor;
   static {
     Method getStatusMonitorTmp = null;
-    Method resetStatusMonitorTmp = null;
+    Method startStatusMonitorTmp = null;
     Method stopStatusMonitorTmp = null;
     try {
-      Class statusMonitor = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
-      getStatusMonitorTmp = statusMonitor.getDeclaredMethod("get", long.class);
+      Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
+      getStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("get", long.class);
       getStatusMonitorTmp.setAccessible(true);
-      resetStatusMonitorTmp = statusMonitor.getDeclaredMethod("resetStatusMonitor", String.class);
-      resetStatusMonitorTmp.setAccessible(true);
-      stopStatusMonitorTmp = statusMonitor.getDeclaredMethod("stopStatusMonitor", String.class);
+      startStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("startStatusMonitor", String.class);
+      startStatusMonitorTmp.setAccessible(true);
+      stopStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("stopStatusMonitor", String.class);
       stopStatusMonitorTmp.setAccessible(true);
     } catch (Throwable t) {
       t.printStackTrace();
     }
     getStatusMonitor = getStatusMonitorTmp;
-    resetStatusMonitor = resetStatusMonitorTmp;
+    startStatusMonitor = startStatusMonitorTmp;
     stopStatusMonitor = stopStatusMonitorTmp;
   }
 
-  DynamicHttpListener(WebView view, AtomicInteger statusCode, long settingsId) {
-    this.view = view;
+  DynamicHttpListener(AtomicInteger statusCode, long settingsId) {
     this.statusCode = statusCode;
     this.settingsId = settingsId;
+    Object statusMonitorTmp = null;
+    try {
+      statusMonitorTmp = getStatusMonitor.invoke(null, settingsId);
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+    statusMonitor = statusMonitorTmp;
   }
 
   private void trace(String label, long frame, int state, String url,
@@ -89,18 +93,17 @@ class DynamicHttpListener implements LoadListenerClient {
   public void dispatchLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
     try {
-      if ((this.frame.get() == 0 || this.frame.get() == frame)
-          && (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED)) {
-        statusCode.set(0);
-        this.frame.set(frame);
-        Object obj = getStatusMonitor.invoke(null, settingsId);
-        resetStatusMonitor.invoke(obj, view.getEngine().getLocation());
+      if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED) {
+        if (this.frame.get() == 0 || this.frame.get() == frame) {
+          statusCode.set(0);
+          this.frame.set(frame);
+        }
+        startStatusMonitor.invoke(statusMonitor, url);
       } else if ((this.frame.get() == 0 || this.frame.get() == frame)
           && (state == LoadListenerClient.PAGE_FINISHED
               || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
         this.frame.set(0);
-        Object obj = getStatusMonitor.invoke(null, settingsId);
-        int code = (Integer) stopStatusMonitor.invoke(obj, view.getEngine().getLocation());
+        int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
         statusCode.set(state == LoadListenerClient.PAGE_FINISHED ? code : 499);
         synchronized (statusCode) {
           statusCode.notifyAll();

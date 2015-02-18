@@ -48,7 +48,7 @@ class StreamHeader extends MessageHeader {
       if ("User-Agent".equals(key)) {
         settingsId.set(Long.parseLong(value));
         settings.set(SettingsManager.get(settingsId.get()).get());
-        StatusMonitor.get(settingsId.get()).startStatusMonitor(conn.getURL(), conn);
+        StatusMonitor.get(settingsId.get()).addStatusMonitor(conn.getURL(), conn);
         if (settings != null && !settings.get().proxy().directConnection()) {
           try {
             Field instProxy = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("instProxy");

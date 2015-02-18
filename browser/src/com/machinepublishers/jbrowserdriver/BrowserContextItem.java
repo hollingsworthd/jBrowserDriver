@@ -91,7 +91,7 @@ class BrowserContextItem {
             JavaFx.getStatic(Accessor.class, settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient",
-                    JavaFx.getNew(DynamicHttpListener.class, settingsId.get(), view.get().unwrap(), statusCode, settingsId.get()));
+                    JavaFx.getNew(DynamicHttpListener.class, settingsId.get(), statusCode, settingsId.get()));
             engine.get().call("setCreatePopupHandler",
                 JavaFx.getNew(DynamicPopupHandler.class, settingsId.get(), driver, context));
             return null;

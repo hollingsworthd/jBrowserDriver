@@ -21,10 +21,12 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
@@ -36,8 +38,11 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.Permission;
 import java.security.cert.CertificateFactory;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,10 +65,12 @@ class StreamConnection extends HttpURLConnection {
   private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpURLConnection conn;
   private final boolean isSsl;
-  private final String originalUrl;
+  private final AtomicBoolean skip = new AtomicBoolean();
   private final Object headerObjParent;
   private static final Field headerField;
   private static final AtomicLong settingsId = new AtomicLong();
+  private static final Set<String> adHosts = new HashSet<String>();
+  private static final URL dummy;
   static {
     Field headerFieldTmp = null;
     try {
@@ -73,9 +80,20 @@ class StreamConnection extends HttpURLConnection {
       Logs.exception(t);
     }
     headerField = headerFieldTmp;
-  }
-  private static final URL dummy;
-  static {
+
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(
+          new InputStreamReader(StreamConnection.class.getResourceAsStream("./ad-hosts.txt")));
+      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+        adHosts.add(line);
+      }
+    } catch (Throwable t) {
+      Logs.exception(t);
+    } finally {
+      Util.close(reader);
+    }
+
     URL dummyTmp = null;
     try {
       URI.create("about:blank").toURL();
@@ -147,11 +165,26 @@ class StreamConnection extends HttpURLConnection {
     }
   }
 
+  private static boolean isBlocked(String host) {
+    host = host.toLowerCase();
+    while (host.contains(".")) {
+      if (adHosts.contains(host)) {
+        if (Logs.TRACE) {
+          System.out.println("Ad blocked: " + host);
+        }
+        host = null;
+        return true;
+      }
+      host = host.substring(host.indexOf('.') + 1);
+    }
+    host = null;
+    return false;
+  }
+
   StreamConnection(HttpsURLConnectionImpl conn) throws IOException {
     super(dummy);
     this.conn = conn;
     this.isSsl = true;
-    this.originalUrl = conn.getURL().toExternalForm();
     SSLSocketFactory socketFactory = updatedSocketFactory();
     if (socketFactory != null) {
       conn.setSSLSocketFactory(socketFactory);
@@ -173,12 +206,7 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = false;
-    this.originalUrl = conn.getURL().toExternalForm();
     headerObjParent = conn;
-  }
-
-  public String originalUrl() {
-    return this.originalUrl;
   }
 
   @Override
@@ -243,7 +271,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public int getResponseCode() throws IOException {
-    return conn.getResponseCode();
+    return skip.get() ? 204 : conn.getResponseCode();
   }
 
   @Override
@@ -291,7 +319,13 @@ class StreamConnection extends HttpURLConnection {
     } catch (Throwable t) {
       Logs.exception(t);
     }
-    conn.connect();
+    if (StatusMonitor.get(settingsId.get()).isDiscarded(conn.getURL().toExternalForm())
+        || isBlocked(conn.getURL().getHost())) {
+      conn.setDoInput(false);
+      skip.set(true);
+    } else {
+      conn.connect();
+    }
   }
 
   @Override
@@ -386,7 +420,8 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return StreamInjectors.injectedStream(conn, originalUrl, settingsId.get());
+    return skip.get() ? new ByteArrayInputStream(new byte[0])
+        : StreamInjectors.injectedStream(conn, settingsId.get());
   }
 
   @Override

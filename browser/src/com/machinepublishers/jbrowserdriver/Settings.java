@@ -86,9 +86,10 @@ public class Settings {
             if (Logs.TRACE) {
               System.out.println("Media discarded: " + connection.getURL().toExternalForm());
             }
+            StatusMonitor.get(settingsId).addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
-          } else if (connection.getContentType() != null
-              && connection.getContentType().indexOf("text/html") > -1
+          } else if (
+          (connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
               && StatusMonitor.get(settingsId).isPrimaryDocument(connection.getURL().toExternalForm())) {
             String injected = null;
             String charset = Util.charset(connection);

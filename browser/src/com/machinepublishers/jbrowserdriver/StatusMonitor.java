@@ -23,13 +23,16 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 class StatusMonitor {
   private final static Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
-  private String primaryDocument = null;
+  private final Set<String> primaryDocuments = new HashSet<String>();
+  private final Set<String> discarded = new HashSet<String>();
   private boolean monitoring = false;
 
   private StatusMonitor() {}
@@ -47,22 +50,34 @@ class StatusMonitor {
 
   boolean isPrimaryDocument(String url) {
     synchronized (lock) {
-      return url.equalsIgnoreCase(primaryDocument);
+      return primaryDocuments.contains(url);
     }
   }
 
-  void resetStatusMonitor(String url) {
+  boolean isDiscarded(String url) {
+    synchronized (lock) {
+      return discarded.contains(url);
+    }
+  }
+
+  void startStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = true;
-      primaryDocument = url;
+      primaryDocuments.add(url);
     }
   }
 
-  void startStatusMonitor(URL url, StreamConnection conn) {
+  void addStatusMonitor(URL url, StreamConnection conn) {
     synchronized (lock) {
       if (monitoring) {
         connections.put(url.toExternalForm(), conn);
       }
+    }
+  }
+
+  void addDiscarded(String url) {
+    synchronized (lock) {
+      discarded.add(url);
     }
   }
 
@@ -78,6 +93,8 @@ class StatusMonitor {
         }
       }
       connections.clear();
+      primaryDocuments.clear();
+      discarded.clear();
       return code;
     }
   }
