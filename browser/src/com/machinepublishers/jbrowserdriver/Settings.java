@@ -122,7 +122,7 @@ public class Settings {
   private final RequestHeaders requestHeaders;
   private final BrowserTimeZone browserTimeZone;
   private final BrowserProperties browserProperties;
-  private final Proxy proxy;
+  private final ProxyConfig proxy;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
@@ -138,12 +138,12 @@ public class Settings {
    * Pass null for any parameter which you want left as default.
    */
   public Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
-      final BrowserProperties browserProperties, final Proxy proxy) {
+      final BrowserProperties browserProperties, final ProxyConfig proxy) {
     mySettingsId = settingsId.incrementAndGet();
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
     this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
-    this.proxy = proxy == null ? new Proxy() : proxy;
+    this.proxy = proxy == null ? new ProxyConfig() : proxy;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -174,7 +174,7 @@ public class Settings {
     return browserProperties;
   }
 
-  Proxy proxy() {
+  ProxyConfig proxy() {
     return proxy;
   }
 

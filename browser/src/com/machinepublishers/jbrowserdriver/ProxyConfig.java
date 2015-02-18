@@ -21,7 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-public class Proxy {
+public class ProxyConfig {
   private final Type type;
   private final String host;
   private final int port;
@@ -36,7 +36,7 @@ public class Proxy {
   /**
    * Creates a direct connection (no proxy).
    */
-  public Proxy() {
+  public ProxyConfig() {
     type = null;
     host = null;
     port = -1;
@@ -45,7 +45,7 @@ public class Proxy {
     password = null;
   }
 
-  public Proxy(Type type, String host, int port, String user, String password) {
+  public ProxyConfig(Type type, String host, int port, String user, String password) {
     this.type = type;
     this.host = host;
     this.port = port;
