@@ -97,6 +97,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
+        node.get().call("eval", "this.addEventListener('click', function(){if(event && event.shiftKey){this.target='_blank';}});");
         node.get().call("call", "scrollIntoView");
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());

@@ -175,6 +175,10 @@ public class BrowserProperties {
     builder.append("{value:function(){return 'function IsSearchProviderInstalled() { [native code] }';}});");
     builder.append("Object.defineProperty(window.external.addSearchEngine, 'toString', ");
     builder.append("{value:function(){return 'function addSearchEngine() { [native code] }';}});");
+    builder.append("(function(){");
+    builder.append("var windowOpen = window.open;Object.defineProperty(window,'open',");
+    builder.append("{value:function(url, target, props){if(event && event.shiftKey){windowOpen(url);}else{windowOpen(url,'_self');}}}");
+    builder.append(")})();");
     return builder.toString();
   }
 
