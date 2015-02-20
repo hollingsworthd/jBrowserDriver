@@ -21,7 +21,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -41,11 +40,14 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
   private final Logs logs = com.machinepublishers.jbrowserdriver.Logs.instance();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;
+  private final CookieManager cookieManager;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts;
 
   Options(final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window,
+      final CookieManager cookieManager,
       final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts) {
     this.window = window;
+    this.cookieManager = cookieManager;
     this.timeouts = timeouts;
   }
 
@@ -73,17 +75,16 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public void addCookie(Cookie cookie) {
-    ((CookieManager) CookieHandler.getDefault()).getCookieStore().add(null, convert(cookie));
+    cookieManager.getCookieStore().add(null, convert(cookie));
   }
 
   @Override
   public void deleteAllCookies() {
-    ((CookieManager) CookieHandler.getDefault()).getCookieStore().removeAll();
+    cookieManager.getCookieStore().removeAll();
   }
 
   @Override
   public void deleteCookie(Cookie cookie) {
-    CookieManager cookieManager = (CookieManager) CookieHandler.getDefault();
     List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
     String toDelete = cookie.getDomain().toLowerCase()
         + "\n" + cookie.getName().toLowerCase()
@@ -106,7 +107,6 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public void deleteCookieNamed(String name) {
-    CookieManager cookieManager = (CookieManager) CookieHandler.getDefault();
     for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
       if (cur.getName().equals(name)) {
         cookieManager.getCookieStore().remove(null, cur);
@@ -119,7 +119,6 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public Cookie getCookieNamed(String name) {
-    CookieManager cookieManager = (CookieManager) CookieHandler.getDefault();
     for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
       if (cur.getName().equals(name)) {
         return convert(cur);
@@ -130,7 +129,6 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public Set<Cookie> getCookies() {
-    CookieManager cookieManager = (CookieManager) CookieHandler.getDefault();
     Set<Cookie> cookies = new LinkedHashSet<Cookie>();
     for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
       cookies.add(convert(cur));

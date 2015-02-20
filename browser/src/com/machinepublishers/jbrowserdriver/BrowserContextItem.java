@@ -82,7 +82,7 @@ class BrowserContextItem {
             new AtomicReference<JBrowserDriver>(driver), view,
             settingsId.get()));
         options.set(new com.machinepublishers.jbrowserdriver.Options(
-            window, timeouts));
+            window, settings.get().cookieManager(), timeouts));
         targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator(driver, context));
         capabilities.set(new Capabilities());
         Util.exec(Pause.SHORT, new Sync<Object>() {

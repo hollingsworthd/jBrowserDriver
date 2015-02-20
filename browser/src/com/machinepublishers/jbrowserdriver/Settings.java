@@ -22,7 +22,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
-import java.net.CookieHandler;
+import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
@@ -32,7 +32,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
-import com.sun.webkit.network.CookieManager;
 
 public class Settings {
   private static final boolean headless;
@@ -67,7 +66,6 @@ public class Settings {
         } catch (Throwable t3) {}
       }
     }
-    CookieHandler.setDefault(new CookieManager());
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -126,6 +124,7 @@ public class Settings {
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
+  private CookieManager cookieManager = new CookieManager();
 
   /**
    * Create default settings.
@@ -180,6 +179,10 @@ public class Settings {
 
   String script() {
     return script;
+  }
+
+  CookieManager cookieManager() {
+    return cookieManager;
   }
 
   static boolean headless() {

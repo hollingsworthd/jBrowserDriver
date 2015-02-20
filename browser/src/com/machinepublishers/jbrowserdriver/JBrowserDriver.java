@@ -43,12 +43,14 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class JBrowserDriver implements Browser {
   private final BrowserContext context = new BrowserContext();
+  private final Settings settings;
 
   public JBrowserDriver() {
     this(new Settings());
   }
 
   public JBrowserDriver(final Settings settings) {
+    this.settings = settings;
     context.item().settings.set(settings);
   }
 
@@ -308,6 +310,7 @@ public class JBrowserDriver implements Browser {
   public void quit() {
     init();
     context.removeItems();
+    settings.cookieManager().getCookieStore().removeAll();
   }
 
   @Override
@@ -320,6 +323,7 @@ public class JBrowserDriver implements Browser {
   public void kill() {
     init();
     context.removeItems();
+    settings.cookieManager().getCookieStore().removeAll();
   }
 
   @Override

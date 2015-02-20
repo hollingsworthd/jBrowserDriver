@@ -66,8 +66,9 @@ class StreamConnection extends HttpURLConnection {
   private final HttpURLConnection conn;
   private final boolean isSsl;
   private final AtomicBoolean skip = new AtomicBoolean();
-  private final Object headerObjParent;
+  private final Object connObjDelegate;
   private static final Field headerField;
+  private static final Field cookieHandlerField;
   private static final AtomicLong settingsId = new AtomicLong();
   private static final Set<String> adHosts = new HashSet<String>();
   private static final URL dummy;
@@ -80,6 +81,15 @@ class StreamConnection extends HttpURLConnection {
       Logs.exception(t);
     }
     headerField = headerFieldTmp;
+
+    Field cookieHandlerFieldTmp = null;
+    try {
+      cookieHandlerFieldTmp = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("cookieHandler");
+      cookieHandlerFieldTmp.setAccessible(true);
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    cookieHandlerField = cookieHandlerFieldTmp;
 
     BufferedReader reader = null;
     try {
@@ -189,16 +199,16 @@ class StreamConnection extends HttpURLConnection {
     if (socketFactory != null) {
       conn.setSSLSocketFactory(socketFactory);
     }
-    Object headerObjParentTmp = null;
+    Object connObjDelegateTmp = null;
     Field field = null;
     try {
       field = HttpsURLConnectionImpl.class.getDeclaredField("delegate");
       field.setAccessible(true);
-      headerObjParentTmp = field.get(conn);
+      connObjDelegateTmp = field.get(conn);
     } catch (Throwable t) {
       Logs.exception(t);
     }
-    headerObjParent = headerObjParentTmp;
+    connObjDelegate = connObjDelegateTmp;
   }
 
   StreamConnection(sun.net.www.protocol.http.HttpURLConnection conn)
@@ -206,7 +216,7 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = false;
-    headerObjParent = conn;
+    connObjDelegate = conn;
   }
 
   @Override
@@ -313,9 +323,10 @@ class StreamConnection extends HttpURLConnection {
   public void connect() throws IOException {
     try {
       StreamHeader header =
-          new StreamHeader(this, (MessageHeader) headerField.get(headerObjParent), headerObjParent, isSsl);
-      headerField.set(headerObjParent, header);
+          new StreamHeader(this, (MessageHeader) headerField.get(connObjDelegate), connObjDelegate, isSsl);
+      headerField.set(connObjDelegate, header);
       settingsId.set(header.settingsId().get());
+      cookieHandlerField.set(connObjDelegate, SettingsManager.get(settingsId.get()).get().cookieManager());
     } catch (Throwable t) {
       Logs.exception(t);
     }
