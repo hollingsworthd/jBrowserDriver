@@ -124,7 +124,7 @@ public class Settings {
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
-  private CookieManager cookieManager = new CookieManager();
+  private final CookieManager cookieManager = new CookieManager();
 
   /**
    * Create default settings.
