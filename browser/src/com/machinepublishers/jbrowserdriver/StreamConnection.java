@@ -66,6 +66,9 @@ class StreamConnection extends HttpURLConnection {
   private final HttpURLConnection conn;
   private final boolean isSsl;
   private final AtomicBoolean skip = new AtomicBoolean();
+  private static final File downloadDir;
+  private static final Pattern downloadHeader = Pattern.compile(
+      "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private final Object connObjDelegate;
   private static final Field headerField;
   private static final Field cookieHandlerField;
@@ -73,6 +76,22 @@ class StreamConnection extends HttpURLConnection {
   private static final Set<String> adHosts = new HashSet<String>();
   private static final URL dummy;
   static {
+    File downloadDirTmp = null;
+    try {
+      downloadDirTmp = new File("./download_cache");
+      if (downloadDirTmp.exists()) {
+        File[] files = downloadDirTmp.listFiles();
+        for (int i = 0; i < files.length; i++) {
+          files[i].delete();
+        }
+      }
+      downloadDirTmp.mkdir();
+      downloadDirTmp.deleteOnExit();
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    downloadDir = downloadDirTmp;
+
     Field headerFieldTmp = null;
     try {
       headerFieldTmp = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
@@ -431,6 +450,19 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public InputStream getInputStream() throws IOException {
+    String header = getHeaderField("Content-Disposition");
+    if (header != null && !header.isEmpty()) {
+      Matcher matcher = downloadHeader.matcher(header);
+      if (matcher.matches()) {
+        File downloadFile = new File(downloadDir,
+            matcher.group(1) == null || matcher.group(1).isEmpty()
+                ? Long.toString(System.nanoTime()) : matcher.group(1));
+        downloadFile.deleteOnExit();
+        Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
+        Util.close(conn.getInputStream());
+        skip.set(true);
+      }
+    }
     return skip.get() ? new ByteArrayInputStream(new byte[0])
         : StreamInjectors.injectedStream(conn, settingsId.get());
   }
