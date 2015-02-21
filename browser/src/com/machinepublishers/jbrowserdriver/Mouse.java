@@ -28,9 +28,11 @@ import org.openqa.selenium.interactions.internal.Coordinates;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
 class Mouse implements org.openqa.selenium.interactions.Mouse {
+  private final JBrowserDriver driver;
   private final AtomicReference<Robot> robot;
 
-  Mouse(final AtomicReference<Robot> robot) {
+  Mouse(final JBrowserDriver driver, final AtomicReference<Robot> robot) {
+    this.driver = driver;
     this.robot = robot;
   }
 
@@ -74,7 +76,11 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
 
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
-    robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
+    if (coords == null || coords.onPage() == null) {
+      robot.get().mouseMoveBy(xOffset, yOffset);
+    } else {
+      robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
+    }
   }
 
   @Override

@@ -443,6 +443,25 @@ class Robot {
     }
   }
 
+  void mouseMoveBy(final double pageX, final double pageY) {
+    lock();
+    try {
+      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+        @Override
+        public Object perform() {
+          robot.get().call("mouseMove",
+              (int) Math.rint(pageX
+                  + new Double((Integer) robot.get().call("getMouseX").unwrap())),
+              (int) Math.rint(pageY
+                  + new Double((Integer) robot.get().call("getMouseY").unwrap())));
+          return null;
+        }
+      }, settingsId);
+    } finally {
+      unlock();
+    }
+  }
+
   void mouseClick(final MouseButton button) {
     mousePress(button);
     mouseRelease(button);

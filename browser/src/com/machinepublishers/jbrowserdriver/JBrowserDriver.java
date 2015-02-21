@@ -327,18 +327,6 @@ public class JBrowserDriver implements Browser {
   }
 
   @Override
-  public void reset() {
-    init();
-    // do nothing
-  }
-
-  @Override
-  public Actions actions() {
-    init();
-    return new Actions(this);
-  }
-
-  @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     init();
     JavaFxObject image = Util.exec(Pause.NONE, context.item().statusCode, new Sync<JavaFxObject>() {

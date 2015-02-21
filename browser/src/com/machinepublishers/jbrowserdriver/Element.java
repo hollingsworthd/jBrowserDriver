@@ -40,6 +40,7 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.internal.Coordinates;
 import org.openqa.selenium.internal.FindsByClassName;
 import org.openqa.selenium.internal.FindsByCssSelector;
 import org.openqa.selenium.internal.FindsById;
@@ -47,6 +48,7 @@ import org.openqa.selenium.internal.FindsByLinkText;
 import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
+import org.openqa.selenium.internal.Locatable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
@@ -57,7 +59,7 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
-    FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath {
+    FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
   private static final AtomicLong latestThread = new AtomicLong();
   private static final AtomicLong curThread = new AtomicLong();
   private static final Pattern rgb = Pattern.compile(
@@ -97,8 +99,21 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("eval", "this.addEventListener('click', function(){if(event && event.shiftKey){this.target='_blank';}});");
-        node.get().call("call", "scrollIntoView");
+        node.get().call("eval",
+            "this.origOnclick = this.onclick;"
+                + "this.onclick=function(event){"
+                + "  if(event && event.shiftKey){"
+                + "    this.target='_blank';"
+                + "    if(event.stopPropagation){"
+                + "      event.stopPropagation();"
+                + "    }"
+                + "  }"
+                + "  if(this.origOnclick){"
+                + "    this.origOnclick(event? event: null);"
+                + "  }"
+                + "  this.onclick = this.origOnclick;"
+                + "};");
+        node.get().call("call", "focus");
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());
         double x = Double.parseDouble(obj.call("getMember", "left").toString());
@@ -129,7 +144,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("call", "scrollIntoView");
         node.get().call("call", "focus");
         robot.get().keysType(keys);
         return null;
@@ -142,7 +156,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
-        node.get().call("call", "scrollIntoView");
         node.get().call("call", "focus");
         node.get().call("call", "setValue", new Object[] { "" });
         return null;
@@ -583,5 +596,40 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return new Double((Double) obj.unwrap());
     }
     return obj.toString();
+  }
+
+  @Override
+  public Coordinates getCoordinates() {
+    return new Coordinates() {
+
+      @Override
+      public Point onScreen() {
+        return null;
+      }
+
+      @Override
+      public Point onPage() {
+        return Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Point>() {
+          @Override
+          public Point perform() {
+            node.get().call("call", "focus");
+            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
+            double y = Double.parseDouble(obj.call("getMember", "top").toString());
+            double x = Double.parseDouble(obj.call("getMember", "left").toString());
+            return new Point((int) Math.rint(x), (int) Math.rint(y));
+          }
+        }, settingsId);
+      }
+
+      @Override
+      public Point inViewPort() {
+        return null;
+      }
+
+      @Override
+      public Object getAuxiliary() {
+        return null;
+      }
+    };
   }
 }

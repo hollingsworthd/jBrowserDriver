@@ -77,7 +77,7 @@ class BrowserContextItem {
             stage, settingsId.get()));
         timeouts.set(new com.machinepublishers.jbrowserdriver.Timeouts());
         keyboard.set(new Keyboard(robot));
-        mouse.set(new Mouse(robot));
+        mouse.set(new Mouse(driver, robot));
         navigation.set(new com.machinepublishers.jbrowserdriver.Navigation(
             new AtomicReference<JBrowserDriver>(driver), view,
             settingsId.get()));

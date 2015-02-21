@@ -85,6 +85,7 @@ class BrowserContext {
       newContext.timeouts.set(item().timeouts.get());
       newContext.settings.set(item().settings.get());
       newContext.init(driver, this);
+      newContext.stage.get().call("toBack");
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
       return newContext;
@@ -98,6 +99,7 @@ class BrowserContext {
           public Object perform() {
             synchronized (lock) {
               current = items.indexOf(itemMap.get(id));
+              item().stage.get().call("toFront");
               return null;
             }
           }
