@@ -239,6 +239,50 @@ class StreamConnection extends HttpURLConnection {
   }
 
   @Override
+  public void connect() throws IOException {
+    try {
+      StreamHeader header =
+          new StreamHeader(this, (MessageHeader) headerField.get(connObjDelegate), connObjDelegate, isSsl);
+      headerField.set(connObjDelegate, header);
+      settingsId.set(header.settingsId().get());
+      cookieHandlerField.set(connObjDelegate, SettingsManager.get(settingsId.get()).get().cookieManager());
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    if (StatusMonitor.get(settingsId.get()).isDiscarded(conn.getURL().toExternalForm())
+        || isBlocked(conn.getURL().getHost())) {
+      conn.setDoInput(false);
+      skip.set(true);
+    } else {
+      conn.connect();
+    }
+  }
+
+  @Override
+  public InputStream getInputStream() throws IOException {
+    String header = getHeaderField("Content-Disposition");
+    if (header != null && !header.isEmpty()) {
+      Matcher matcher = downloadHeader.matcher(header);
+      if (matcher.matches()) {
+        File downloadFile = new File(downloadDir,
+            matcher.group(1) == null || matcher.group(1).isEmpty()
+                ? Long.toString(System.nanoTime()) : matcher.group(1));
+        downloadFile.deleteOnExit();
+        Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
+        Util.close(conn.getInputStream());
+        skip.set(true);
+      }
+    }
+    return skip.get() ? new ByteArrayInputStream(new byte[0])
+        : StreamInjectors.injectedStream(conn, settingsId.get());
+  }
+
+  @Override
+  public int getResponseCode() throws IOException {
+    return skip.get() ? 204 : conn.getResponseCode();
+  }
+
+  @Override
   public void setRequestProperty(String arg0, String arg1) {
     conn.setRequestProperty(arg0, arg1);
   }
@@ -299,11 +343,6 @@ class StreamConnection extends HttpURLConnection {
   }
 
   @Override
-  public int getResponseCode() throws IOException {
-    return skip.get() ? 204 : conn.getResponseCode();
-  }
-
-  @Override
   public String getResponseMessage() throws IOException {
     return conn.getResponseMessage();
   }
@@ -336,26 +375,6 @@ class StreamConnection extends HttpURLConnection {
   @Override
   public boolean usingProxy() {
     return conn.usingProxy();
-  }
-
-  @Override
-  public void connect() throws IOException {
-    try {
-      StreamHeader header =
-          new StreamHeader(this, (MessageHeader) headerField.get(connObjDelegate), connObjDelegate, isSsl);
-      headerField.set(connObjDelegate, header);
-      settingsId.set(header.settingsId().get());
-      cookieHandlerField.set(connObjDelegate, SettingsManager.get(settingsId.get()).get().cookieManager());
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-    if (StatusMonitor.get(settingsId.get()).isDiscarded(conn.getURL().toExternalForm())
-        || isBlocked(conn.getURL().getHost())) {
-      conn.setDoInput(false);
-      skip.set(true);
-    } else {
-      conn.connect();
-    }
   }
 
   @Override
@@ -446,25 +465,6 @@ class StreamConnection extends HttpURLConnection {
   @Override
   public long getIfModifiedSince() {
     return conn.getIfModifiedSince();
-  }
-
-  @Override
-  public InputStream getInputStream() throws IOException {
-    String header = getHeaderField("Content-Disposition");
-    if (header != null && !header.isEmpty()) {
-      Matcher matcher = downloadHeader.matcher(header);
-      if (matcher.matches()) {
-        File downloadFile = new File(downloadDir,
-            matcher.group(1) == null || matcher.group(1).isEmpty()
-                ? Long.toString(System.nanoTime()) : matcher.group(1));
-        downloadFile.deleteOnExit();
-        Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
-        Util.close(conn.getInputStream());
-        skip.set(true);
-      }
-    }
-    return skip.get() ? new ByteArrayInputStream(new byte[0])
-        : StreamInjectors.injectedStream(conn, settingsId.get());
   }
 
   @Override
