@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
@@ -43,15 +44,15 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class JBrowserDriver implements Browser {
   private final BrowserContext context = new BrowserContext();
-  private final Settings settings;
+  private final AtomicReference<Settings> settings = new AtomicReference<Settings>();
 
   public JBrowserDriver() {
     this(new Settings());
   }
 
   public JBrowserDriver(final Settings settings) {
-    this.settings = settings;
-    context.item().settings.set(settings);
+    this.settings.set(new Settings(settings));
+    context.item().settings.set(this.settings.get());
   }
 
   /**
@@ -59,7 +60,7 @@ public class JBrowserDriver implements Browser {
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
   public void init() {
-    context.item().init(this, context);
+    context.init(this);
   }
 
   @Override
@@ -310,7 +311,8 @@ public class JBrowserDriver implements Browser {
   public void quit() {
     init();
     context.removeItems();
-    settings.cookieManager().getCookieStore().removeAll();
+    SettingsManager.deregister(settings);
+    settings.get().cookieManager().getCookieStore().removeAll();
   }
 
   @Override
@@ -321,9 +323,7 @@ public class JBrowserDriver implements Browser {
 
   @Override
   public void kill() {
-    init();
-    context.removeItems();
-    settings.cookieManager().getCookieStore().removeAll();
+    quit();
   }
 
   @Override

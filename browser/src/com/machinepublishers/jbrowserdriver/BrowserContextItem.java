@@ -101,8 +101,4 @@ class BrowserContextItem {
       }
     }
   }
-
-  void close() {
-    SettingsManager.deregister(settings);
-  }
 }

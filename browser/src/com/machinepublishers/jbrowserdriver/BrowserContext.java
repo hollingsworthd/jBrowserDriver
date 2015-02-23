@@ -34,6 +34,9 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 class BrowserContext {
   private final Map<String, BrowserContextItem> itemMap = new LinkedHashMap<String, BrowserContextItem>();
   private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
+  private static final Object lastWindowLock = new Object();
+  private static JavaFxObject lastWindow;
+  private static long lastSettingsId;
   private int current = 0;
   private final Object lock = new Object();
 
@@ -41,6 +44,37 @@ class BrowserContext {
     BrowserContextItem newContext = new BrowserContextItem();
     items.add(newContext);
     itemMap.put(newContext.itemId.get(), newContext);
+  }
+
+  private static void closeLastWindow() {
+    if (!Settings.headless()) {
+      final long settingsId;
+      final JavaFxObject window;
+      synchronized (lastWindowLock) {
+        if (lastWindow != null) {
+          window = lastWindow;
+          lastWindow = null;
+          settingsId = lastSettingsId;
+        } else {
+          window = null;
+          settingsId = 0l;
+        }
+      }
+      if (window != null) {
+        Util.exec(Pause.SHORT, new Sync<Object>() {
+          @Override
+          public Object perform() {
+            window.call("close");
+            return null;
+          }
+        }, settingsId);
+      }
+    }
+  }
+
+  void init(JBrowserDriver driver) {
+    item().init(driver, this);
+    closeLastWindow();
   }
 
   BrowserContextItem item() {
@@ -106,18 +140,34 @@ class BrowserContext {
         }, item().settingsId.get());
   }
 
+  private static void close(JavaFxObject stage, boolean isLastWindow, long settingsId) {
+    boolean close = true;
+    if (!Settings.headless() && isLastWindow) {
+      synchronized (lastWindowLock) {
+        if (lastWindow == null) {
+          lastWindow = stage;
+          lastSettingsId = settingsId;
+          close = false;
+        }
+      }
+    }
+    if (close) {
+      stage.call("close");
+    }
+  }
+
   void removeItem() {
+    final long settingsId = item().settingsId.get();
     Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
-          item().stage.get().call("close");
+          close(item().stage.get(), items.size() == 1, settingsId);
           return null;
         }
       }
-    }, item().settingsId.get());
+    }, settingsId);
     synchronized (lock) {
-      item().close();
       final String itemId = items.remove(current).itemId.get();
       current = 0;
       itemMap.remove(itemId);
@@ -125,35 +175,35 @@ class BrowserContext {
   }
 
   void removeItem(final String itemId) {
+    final long settingsId = item(itemId).settingsId.get();
     Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
-          item(itemId).stage.get().call("close");
+          close(item(itemId).stage.get(), items.size() == 1, settingsId);
           return null;
         }
       }
-    }, item(itemId).settingsId.get());
+    }, settingsId);
     synchronized (lock) {
-      item(itemId).close();
       current = 0;
       items.remove(itemMap.remove(itemId));
     }
   }
 
   void removeItems() {
+    final long settingsId = item().settingsId.get();
     Util.exec(Pause.SHORT, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
           for (BrowserContextItem curItem : items) {
-            curItem.stage.get().call("close");
-            curItem.close();
+            close(curItem.stage.get(), true, settingsId);
           }
           return null;
         }
       }
-    }, item().settingsId.get());
+    }, settingsId);
     synchronized (lock) {
       items.clear();
       itemMap.clear();

@@ -138,7 +138,7 @@ public class Settings {
    */
   public Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
       final BrowserProperties browserProperties, final ProxyConfig proxy) {
-    mySettingsId = settingsId.incrementAndGet();
+    mySettingsId = -1;
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
     this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
@@ -155,6 +155,15 @@ public class Settings {
         + "document.getElementById('" + scriptId + "'));");
     scriptBuilder.append("</script>");
     script = scriptBuilder.toString();
+  }
+
+  Settings(Settings original) {
+    requestHeaders = original.requestHeaders;
+    browserTimeZone = original.browserTimeZone;
+    browserProperties = original.browserProperties;
+    proxy = original.proxy;
+    mySettingsId = settingsId.incrementAndGet();
+    script = original.script;
   }
 
   long id() {

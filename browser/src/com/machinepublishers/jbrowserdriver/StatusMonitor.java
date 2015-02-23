@@ -84,7 +84,7 @@ class StatusMonitor {
   int stopStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = false;
-      int code = 0;
+      int code = 499;
       if (connections.containsKey(url)) {
         try {
           code = connections.get(url).getResponseCode();
