@@ -103,7 +103,8 @@ class JavaFx {
 
   private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
     try {
-      ClassLoader classLoader = useCurrentClassLoader ? JavaFx.class.getClassLoader() : new JavaFxClassLoader();
+      ClassLoader classLoader = useCurrentClassLoader || !Settings.headless()
+          ? JavaFx.class.getClassLoader() : new JavaFxClassLoader();
       initToolkit(classLoader);
       return classLoader;
     } catch (Throwable t) {
@@ -139,61 +140,58 @@ class JavaFx {
 
   private static class JavaFxClassLoader extends JarClassLoader {
     JavaFxClassLoader() {
-      if (Settings.headless()) {
-        super.add(JavaFx.class.getResource("/"));
-
-        Set<File> files = new HashSet<File>();
-        files.add(new File(System.getProperty("java.home")));
-        for (boolean found = true; found;) {
-          Set<File> filesTmp = new HashSet<File>(files);
-          found = false;
-          for (File file : filesTmp) {
-            if (file.isDirectory()) {
-              found = true;
-              files.remove(file);
-              File[] curFiles = file.listFiles();
-              for (int i = 0; i < curFiles.length; i++) {
-                String name = curFiles[i].getName();
-                if (curFiles[i].isDirectory()
-                    || ((name.endsWith(".so")
-                        || name.endsWith(".a")
-                        || name.endsWith(".dll")
-                        || name.endsWith(".jar"))
-                    && (name.contains("jfx")
-                        || name.contains("java")
-                        || name.contains("prism")
-                        || name.contains("webkit")))) {
-                  files.add(curFiles[i]);
-                }
+      super.add(JavaFx.class.getResource("/"));
+      Set<File> files = new HashSet<File>();
+      files.add(new File(System.getProperty("java.home")));
+      for (boolean found = true; found;) {
+        Set<File> filesTmp = new HashSet<File>(files);
+        found = false;
+        for (File file : filesTmp) {
+          if (file.isDirectory()) {
+            found = true;
+            files.remove(file);
+            File[] curFiles = file.listFiles();
+            for (int i = 0; i < curFiles.length; i++) {
+              String name = curFiles[i].getName();
+              if (curFiles[i].isDirectory()
+                  || ((name.endsWith(".so")
+                      || name.endsWith(".a")
+                      || name.endsWith(".dll")
+                      || name.endsWith(".jar"))
+                  && (name.contains("jfx")
+                      || name.contains("java")
+                      || name.contains("prism")
+                      || name.contains("webkit")))) {
+                files.add(curFiles[i]);
               }
             }
           }
         }
-        try {
-          Path tmpDir = Files.createTempDirectory("jbd");
-          tmpDir.toFile().deleteOnExit();
-          File jarDir = new File(tmpDir.toFile(), "jars");
-          jarDir.mkdir();
-          for (File file : files) {
-            try {
-              File tmpFile;
-              if (file.getName().endsWith(".jar")) {
-                tmpFile = new File(jarDir, file.getName());
-                Files.copy(file.toPath(), tmpFile.toPath());
-              } else {
-                File libDir = new File(tmpDir.toString(), file.getParentFile().getName());
-                libDir.mkdir();
-                tmpFile = new File(libDir, file.getName());
-                Files.copy(file.toPath(), tmpFile.toPath());
-              }
-              super.add(tmpFile.toURI().toURL());
-            } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
-              Logs.exception(t);
+      }
+      try {
+        Path tmpDir = Files.createTempDirectory("jbd");
+        tmpDir.toFile().deleteOnExit();
+        File jarDir = new File(tmpDir.toFile(), "jars");
+        jarDir.mkdir();
+        for (File file : files) {
+          try {
+            File tmpFile;
+            if (file.getName().endsWith(".jar")) {
+              tmpFile = new File(jarDir, file.getName());
+              Files.copy(file.toPath(), tmpFile.toPath());
+            } else {
+              File libDir = new File(tmpDir.toString(), file.getParentFile().getName());
+              libDir.mkdir();
+              tmpFile = new File(libDir, file.getName());
+              Files.copy(file.toPath(), tmpFile.toPath());
             }
+            super.add(tmpFile.toURI().toURL());
+          } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
+            Logs.exception(t);
           }
-        } catch (Throwable t) {
-          Logs.exception(t);
         }
+      } catch (Throwable t) {
+        Logs.exception(t);
       }
     }
 
