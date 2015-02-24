@@ -95,7 +95,7 @@ class DynamicHttpListener implements LoadListenerClient {
     try {
       if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-        if (this.frame.get() == 0 || this.frame.get() == frame) {
+        if (this.frame.get() == 0 || this.frame.get() == frame || statusCode.get() == 0) {
           if (url.startsWith("http://") || url.startsWith("https://")) {
             statusCode.set(0);
           }
@@ -105,7 +105,6 @@ class DynamicHttpListener implements LoadListenerClient {
       } else if ((this.frame.get() == 0 || this.frame.get() == frame)
           && (state == LoadListenerClient.PAGE_FINISHED
               || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
-        this.frame.set(0);
         int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
         if (statusCode.get() == 0 || url.startsWith("http://") || url.startsWith("https://")) {
           statusCode.set(state == LoadListenerClient.PAGE_FINISHED ? code : 499);
