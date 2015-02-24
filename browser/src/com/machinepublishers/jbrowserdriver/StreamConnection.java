@@ -23,6 +23,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -399,17 +400,17 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public String getContentEncoding() {
-    return conn.getContentEncoding();
+    return skip.get() ? null : conn.getContentEncoding();
   }
 
   @Override
   public int getContentLength() {
-    return conn.getContentLength();
+    return skip.get() ? 0 : conn.getContentLength();
   }
 
   @Override
   public long getContentLengthLong() {
-    return conn.getContentLengthLong();
+    return skip.get() ? 0l : conn.getContentLengthLong();
   }
 
   @Override
@@ -474,7 +475,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public OutputStream getOutputStream() throws IOException {
-    return conn.getOutputStream();
+    return skip.get() ? new ByteArrayOutputStream() : conn.getOutputStream();
   }
 
   @Override
