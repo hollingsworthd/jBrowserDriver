@@ -284,6 +284,26 @@ class StreamConnection extends HttpURLConnection {
   }
 
   @Override
+  public String getContentEncoding() {
+    return skip.get() ? null : conn.getContentEncoding();
+  }
+
+  @Override
+  public int getContentLength() {
+    return skip.get() ? 0 : conn.getContentLength();
+  }
+
+  @Override
+  public long getContentLengthLong() {
+    return skip.get() ? 0l : conn.getContentLengthLong();
+  }
+
+  @Override
+  public OutputStream getOutputStream() throws IOException {
+    return skip.get() ? new ByteArrayOutputStream() : conn.getOutputStream();
+  }
+
+  @Override
   public void setRequestProperty(String arg0, String arg1) {
     conn.setRequestProperty(arg0, arg1);
   }
@@ -399,21 +419,6 @@ class StreamConnection extends HttpURLConnection {
   }
 
   @Override
-  public String getContentEncoding() {
-    return skip.get() ? null : conn.getContentEncoding();
-  }
-
-  @Override
-  public int getContentLength() {
-    return skip.get() ? 0 : conn.getContentLength();
-  }
-
-  @Override
-  public long getContentLengthLong() {
-    return skip.get() ? 0l : conn.getContentLengthLong();
-  }
-
-  @Override
   public String getContentType() {
     return conn.getContentType();
   }
@@ -471,11 +476,6 @@ class StreamConnection extends HttpURLConnection {
   @Override
   public long getLastModified() {
     return conn.getLastModified();
-  }
-
-  @Override
-  public OutputStream getOutputStream() throws IOException {
-    return skip.get() ? new ByteArrayOutputStream() : conn.getOutputStream();
   }
 
   @Override
