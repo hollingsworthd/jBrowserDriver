@@ -54,7 +54,7 @@ class JavaFx {
 
   static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
     if (!classLoaders.containsKey(id)) {
-      classLoaders.put(id, newClassLoader());
+      classLoaders.put(id, newClassLoader(id == 1l));
     }
     Throwable firstError = null;
     try {
@@ -92,7 +92,7 @@ class JavaFx {
   static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
     try {
       if (!classLoaders.containsKey(id)) {
-        classLoaders.put(id, newClassLoader());
+        classLoaders.put(id, newClassLoader(id == 1l));
       }
       return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
     } catch (Throwable t) {
@@ -101,9 +101,9 @@ class JavaFx {
     }
   }
 
-  private static ClassLoader newClassLoader() {
+  private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
     try {
-      ClassLoader classLoader = Settings.headless()
+      ClassLoader classLoader = !useCurrentClassLoader && Settings.headless()
           ? new JavaFxClassLoader() : JavaFx.class.getClassLoader();
       initToolkit(classLoader);
       return classLoader;

@@ -50,7 +50,7 @@ class BrowserContextItem {
   final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
   final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
-  final AtomicInteger statusCode = new AtomicInteger();
+  final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();

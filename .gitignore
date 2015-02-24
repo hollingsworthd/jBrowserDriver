@@ -7,4 +7,4 @@
 screenslicer*.zip
 ScreenSlicer*.zip
 **/*.log.*
-browser/pemfile_cached
+**/pemfile_cached
