@@ -176,7 +176,7 @@ class JavaFx {
 
     private static URL[] urls() {
       List<URL> urlList = new ArrayList<URL>();
-      urlList.add(JavaFx.class.getResource("./openjfx-monocle.jar"));
+      urlList.add(JavaFx.class.getResource("/openjfx-monocle.jar"));
       Set<File> files = new HashSet<File>();
       files.add(new File(System.getProperty("java.home")));
       for (boolean found = true; found;) {
