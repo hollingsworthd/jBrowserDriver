@@ -23,7 +23,7 @@ Use this library like any other Selenium WebDriver. You can optionally pass a [S
 
 #### Global Properties
 The following Java system properties can be set:
-* `jbd.trace=[true|false]` Log details of every request to standard out. Defaults to `false`.
+* `jbd.trace` Log details of every request to standard out. Defaults to `false`.
 * `jbd.standarderror` Mirror log output to standard out. Otherwise logs are only available through the Selenium APIs. Defaults to `false`.
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
 * `jbd.quickrender` Discard web page image data. Recommended because Java is very inefficient (memory-wise) in handling images. Defaults to `true`.
