@@ -5,6 +5,12 @@ Licensed under the GNU Affero General Public License version 3 ([details](https:
 
 Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when on-premise or cloud-based services are [purchased](https://screenslicer.com/pricing) from Machine Publishers, LLC. jBrowserDriver is available bundled with [ScreenSlicer](https://github.com/MachinePublishers/ScreenSlicer), a web scraper.
 
+- - -
+
+[Download](https://github.com/MachinePublishers/jBrowserDriver/releases/latest)
+
+- - -
+
 ### Guide
 This project is in active development and no stable release is ready.
 
