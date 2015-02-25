@@ -22,6 +22,8 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -30,6 +32,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,8 +108,12 @@ class JavaFx {
 
   private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
     try {
-      ClassLoader classLoader = !useCurrentClassLoader && Settings.headless()
-          ? new JavaFxClassLoader() : JavaFx.class.getClassLoader();
+      final ClassLoader classLoader;
+      if (!useCurrentClassLoader && Settings.headless()) {
+        classLoader = new JavaFxClassLoader();
+      } else {
+        classLoader = JavaFx.class.getClassLoader();
+      }
       initToolkit(classLoader);
       return classLoader;
     } catch (Throwable t) {
@@ -141,9 +148,8 @@ class JavaFx {
   }
 
   private static class JavaFxClassLoader extends URLClassLoader {
-    private static final URL[] urls;
-    private static Map<String, byte[]> classes = new HashMap<String, byte[]>();
-    private static ClassLoader defaultClassLoader = JavaFx.class.getClassLoader();
+    private static final Map<String, byte[]> classes = new HashMap<String, byte[]>();
+    private static final ClassLoader defaultClassLoader = JavaFx.class.getClassLoader();
     static {
       try {
         byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
@@ -166,6 +172,9 @@ class JavaFx {
       } catch (Throwable t) {
         Logs.exception(t);
       }
+    }
+
+    private static URL[] urls() {
       List<URL> urlList = new ArrayList<URL>();
       urlList.add(JavaFx.class.getResource("./openjfx-monocle.jar"));
       Set<File> files = new HashSet<File>();
@@ -220,11 +229,11 @@ class JavaFx {
       } catch (Throwable t) {
         Logs.exception(t);
       }
-      urls = urlList.toArray(new URL[0]);
+      return urlList.toArray(new URL[0]);
     }
 
     JavaFxClassLoader() {
-      super(urls, null);
+      super(urls(), null);
     }
 
     @Override
@@ -243,5 +252,61 @@ class JavaFx {
       }
       return c;
     }
+
+    @Override
+    public synchronized void close() throws IOException {
+      super.close();
+    }
+
+    @Override
+    public synchronized URL findResource(String name) {
+      return super.findResource(name);
+    }
+
+    @Override
+    public synchronized Enumeration<URL> findResources(String name) throws IOException {
+      return super.findResources(name);
+    }
+
+    @Override
+    public synchronized InputStream getResourceAsStream(String name) {
+      return super.getResourceAsStream(name);
+    }
+
+    @Override
+    public synchronized URL[] getURLs() {
+      return super.getURLs();
+    }
+
+    @Override
+    public synchronized void clearAssertionStatus() {
+      super.clearAssertionStatus();
+    }
+
+    @Override
+    public synchronized URL getResource(String name) {
+      return super.getResource(name);
+    }
+
+    @Override
+    public synchronized Enumeration<URL> getResources(String name) throws IOException {
+      return super.getResources(name);
+    }
+
+    @Override
+    public synchronized void setClassAssertionStatus(String className, boolean enabled) {
+      super.setClassAssertionStatus(className, enabled);
+    }
+
+    @Override
+    public synchronized void setDefaultAssertionStatus(boolean enabled) {
+      super.setDefaultAssertionStatus(enabled);
+    }
+
+    @Override
+    public synchronized void setPackageAssertionStatus(String packageName, boolean enabled) {
+      super.setPackageAssertionStatus(packageName, enabled);
+    }
+
   }
 }
