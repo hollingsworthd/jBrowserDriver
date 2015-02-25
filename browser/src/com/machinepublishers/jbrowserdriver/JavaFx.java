@@ -22,15 +22,14 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Enumeration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,9 +37,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javafx.embed.swing.JFXPanel;
-
-import org.xeustechnologies.jcl.JarClassLoader;
-import org.xeustechnologies.jcl.ProxyClassLoader;
 
 import com.sun.glass.ui.PlatformFactory;
 import com.sun.glass.ui.monocle.MonoclePlatformFactory;
@@ -101,6 +97,12 @@ class JavaFx {
     }
   }
 
+  static synchronized void close(Long id) {
+    if (classLoaders.get(id) instanceof JavaFxClassLoader) {
+      Util.close((JavaFxClassLoader) classLoaders.get(id));
+    }
+  }
+
   private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
     try {
       ClassLoader classLoader = !useCurrentClassLoader && Settings.headless()
@@ -138,9 +140,34 @@ class JavaFx {
     }
   }
 
-  private static class JavaFxClassLoader extends JarClassLoader {
-    JavaFxClassLoader() {
-      super.add(JavaFx.class.getResource("/"));
+  private static class JavaFxClassLoader extends URLClassLoader {
+    private static final URL[] urls;
+    private static Map<String, byte[]> classes = new HashMap<String, byte[]>();
+    private static ClassLoader defaultClassLoader = JavaFx.class.getClassLoader();
+    static {
+      try {
+        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
+            + DynamicHttpListener.class.getName().replace('.', '/') + ".class").openStream());
+        classes.put(DynamicHttpListener.class.getName(), classTmp);
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+      try {
+        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
+            + DynamicPopupHandler.class.getName().replace('.', '/') + ".class").openStream());
+        classes.put(DynamicPopupHandler.class.getName(), classTmp);
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+      try {
+        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
+            + DynamicTitleListener.class.getName().replace('.', '/') + ".class").openStream());
+        classes.put(DynamicTitleListener.class.getName(), classTmp);
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+      List<URL> urlList = new ArrayList<URL>();
+      urlList.add(JavaFx.class.getResource("./openjfx-monocle.jar"));
       Set<File> files = new HashSet<File>();
       files.add(new File(System.getProperty("java.home")));
       for (boolean found = true; found;) {
@@ -185,7 +212,7 @@ class JavaFx {
               tmpFile = new File(libDir, file.getName());
               Files.copy(file.toPath(), tmpFile.toPath());
             }
-            super.add(tmpFile.toURI().toURL());
+            urlList.add(tmpFile.toURI().toURL());
           } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
             Logs.exception(t);
           }
@@ -193,165 +220,28 @@ class JavaFx {
       } catch (Throwable t) {
         Logs.exception(t);
       }
+      urls = urlList.toArray(new URL[0]);
+    }
+
+    JavaFxClassLoader() {
+      super(urls, null);
     }
 
     @Override
-    public synchronized Class loadClass(String className, boolean resolveIt) throws ClassNotFoundException {
-      if (!className.startsWith("com.machinepublishers.")
-          || className.contains(".Dynamic")) {
-        return super.loadClass(className, resolveIt);
+    public synchronized Class loadClass(String className) throws ClassNotFoundException {
+      Class c = super.findLoadedClass(className);
+      if (c == null) {
+        if (classes.containsKey(className)) {
+          c = defineClass(className, classes.get(className), 0, classes.get(className).length);
+        } else {
+          try {
+            c = super.loadClass(className);
+          } catch (Throwable t) {
+            c = defaultClassLoader.loadClass(className);
+          }
+        }
       }
-      return super.getParent().loadClass(className);
-    }
-
-    @Override
-    public synchronized void initialize() {
-      super.initialize();
-    }
-
-    @Override
-    public synchronized void addAll(Object[] sources) {
-      super.addAll(sources);
-    }
-
-    @Override
-    public synchronized void addAll(List sources) {
-      super.addAll(sources);
-    }
-
-    @Override
-    public synchronized void add(Object source) {
-      super.add(source);
-    }
-
-    @Override
-    public synchronized void add(String resourceName) {
-      super.add(resourceName);
-    }
-
-    @Override
-    public synchronized void add(InputStream jarStream) {
-      super.add(jarStream);
-    }
-
-    @Override
-    public synchronized void add(URL url) {
-      super.add(url);
-    }
-
-    @Override
-    public synchronized void unloadClass(String className) {
-      super.unloadClass(className);
-    }
-
-    @Override
-    public synchronized char getClassNameReplacementChar() {
-      return super.getClassNameReplacementChar();
-    }
-
-    @Override
-    public synchronized void setClassNameReplacementChar(char classNameReplacementChar) {
-      super.setClassNameReplacementChar(classNameReplacementChar);
-    }
-
-    @Override
-    public synchronized Map<String, byte[]> getLoadedResources() {
-      return super.getLoadedResources();
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getLocalLoader() {
-      return super.getLocalLoader();
-    }
-
-    @Override
-    public synchronized Map<String, Class> getLoadedClasses() {
-      return super.getLoadedClasses();
-    }
-
-    @Override
-    public synchronized void addLoader(ProxyClassLoader loader) {
-      super.addLoader(loader);
-    }
-
-    @Override
-    public synchronized URL getResource(String name) {
-      return super.getResource(name);
-    }
-
-    @Override
-    public synchronized InputStream getResourceAsStream(String name) {
-      return super.getResourceAsStream(name);
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getSystemLoader() {
-      return super.getSystemLoader();
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getParentLoader() {
-      return super.getParentLoader();
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getCurrentLoader() {
-      return super.getCurrentLoader();
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getThreadLoader() {
-      return super.getThreadLoader();
-    }
-
-    @Override
-    public synchronized ProxyClassLoader getOsgiBootLoader() {
-      return super.getOsgiBootLoader();
-    }
-
-    @Override
-    public synchronized void clearAssertionStatus() {
-      super.clearAssertionStatus();
-    }
-
-    @Override
-    public synchronized Enumeration<URL> getResources(String arg0) throws IOException {
-      return super.getResources(arg0);
-    }
-
-    @Override
-    public synchronized void setClassAssertionStatus(String arg0, boolean arg1) {
-      super.setClassAssertionStatus(arg0, arg1);
-    }
-
-    @Override
-    public synchronized void setDefaultAssertionStatus(boolean arg0) {
-      super.setDefaultAssertionStatus(arg0);
-    }
-
-    @Override
-    public synchronized void setPackageAssertionStatus(String arg0, boolean arg1) {
-      super.setPackageAssertionStatus(arg0, arg1);
-    }
-
-    @Override
-    public synchronized boolean equals(Object obj) {
-      return super.equals(obj);
-    }
-
-    @Override
-    public synchronized int hashCode() {
-      return super.hashCode();
-    }
-
-    @Override
-    public synchronized String toString() {
-      return super.toString();
-    }
-
-    @Override
-    public synchronized Class loadClass(String name) throws ClassNotFoundException {
-      return super.loadClass(name);
+      return c;
     }
   }
 }

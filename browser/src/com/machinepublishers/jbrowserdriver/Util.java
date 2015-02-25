@@ -187,12 +187,16 @@ class Util {
   }
 
   static byte[] toBytes(InputStream inputStream) throws IOException {
-    final byte[] bytes = new byte[8192];
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    for (int len = 0; -1 != (len = inputStream.read(bytes));) {
-      out.write(bytes, 0, len);
+    try {
+      final byte[] bytes = new byte[8192];
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      for (int len = 0; -1 != (len = inputStream.read(bytes));) {
+        out.write(bytes, 0, len);
+      }
+      return out.toByteArray();
+    } finally {
+      close(inputStream);
     }
-    return out.toByteArray();
   }
 
   static String charset(URLConnection conn) {

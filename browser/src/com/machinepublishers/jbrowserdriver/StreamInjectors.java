@@ -64,7 +64,6 @@ class StreamInjectors {
       return conn.getInputStream();
     }
     byte[] connBytes = Util.toBytes(conn.getInputStream());
-    Util.close(conn.getInputStream());
     if (connBytes.length > 0) {
       try {
         String encoding = conn.getContentEncoding();
@@ -75,7 +74,6 @@ class StreamInjectors {
           in = new InflaterInputStream(in);
         }
         byte[] content = Util.toBytes(in);
-        Util.close(in);
         synchronized (lock) {
           for (Injector injector : injectors) {
             byte[] newContent = injector.inject(conn, content, settingsId);

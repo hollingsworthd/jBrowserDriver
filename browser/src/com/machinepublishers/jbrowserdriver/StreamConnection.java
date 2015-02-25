@@ -270,7 +270,6 @@ class StreamConnection extends HttpURLConnection {
                 ? Long.toString(System.nanoTime()) : matcher.group(1));
         downloadFile.deleteOnExit();
         Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
-        Util.close(conn.getInputStream());
         skip.set(true);
       }
     }

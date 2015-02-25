@@ -98,6 +98,7 @@ class SettingsManager {
     }
     ProxyAuth.remove(settings.get().proxy());
     StatusMonitor.remove(settings.get().id());
+    JavaFx.close(settings.get().id());
   }
 
   static AtomicReference<Settings> get(long settingsId) {
