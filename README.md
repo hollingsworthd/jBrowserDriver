@@ -1,5 +1,5 @@
 # jBrowserDriver
-A programmable embedded browser compatible with the WebDriver Selenium spec -- fast, headless, 100% pure Java, and no browser dependencies
+A programmable embedded browser compatible with the WebDriver Selenium spec -- fast, headless, WebKit-based, 100% pure Java, and no browser dependencies
 
 Licensed under the GNU Affero General Public License version 3 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
