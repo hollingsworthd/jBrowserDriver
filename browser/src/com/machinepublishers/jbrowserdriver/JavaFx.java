@@ -102,7 +102,7 @@ class JavaFx {
 
   static synchronized void close(Long id) {
     if (classLoaders.get(id) instanceof JavaFxClassLoader) {
-      Util.close((JavaFxClassLoader) classLoaders.get(id));
+      Util.close((JavaFxClassLoader) classLoaders.remove(id));
     }
   }
 
