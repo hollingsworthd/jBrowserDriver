@@ -33,7 +33,7 @@ The following Java system properties can be set:
 No build scripts yet exist, but Eclipse project files are part of this source tree.
 
 #### To-do
-iFrames and alert dialogs are not yet handled. Stay tuned.
+Iframes and alert dialogs are not yet handled. Stay tuned.
 
 - - -
 
