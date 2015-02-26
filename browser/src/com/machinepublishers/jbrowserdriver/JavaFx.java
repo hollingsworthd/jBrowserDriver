@@ -243,9 +243,12 @@ class JavaFx {
         if (classes.containsKey(className)) {
           c = defineClass(className, classes.get(className), 0, classes.get(className).length);
         } else {
-          try {
-            c = super.loadClass(className);
-          } catch (Throwable t) {
+          if (!className.startsWith("com.machinepublishers.")) {
+            try {
+              c = super.loadClass(className);
+            } catch (Throwable t) {}
+          }
+          if (c == null) {
             c = defaultClassLoader.loadClass(className);
           }
         }
