@@ -126,7 +126,7 @@ class BrowserContext {
     }
   }
 
-  void setCurrent(String id) {
+  void setCurrent(final String id) {
     Util.exec(Pause.SHORT, item().statusCode, item().timeouts.get().getPageLoadTimeoutMS(),
         new Sync<Object>() {
           @Override
