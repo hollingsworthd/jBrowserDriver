@@ -114,7 +114,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                 + "  this.onclick = this.origOnclick;"
                 + "};");
         node.get().call("call", "scrollIntoView");
-        node.get().call("call", "focus");
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());
         double x = Double.parseDouble(obj.call("getMember", "left").toString());
@@ -616,7 +615,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           @Override
           public Point perform() {
             node.get().call("call", "scrollIntoView");
-            node.get().call("call", "focus");
             JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
             double y = Double.parseDouble(obj.call("getMember", "top").toString());
             double x = Double.parseDouble(obj.call("getMember", "left").toString());
