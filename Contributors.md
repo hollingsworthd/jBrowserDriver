@@ -70,7 +70,9 @@ The undersigned agree to the terms and conditions contained herein and declare t
 authorized and able to make this agreement and sign this declaration. To sign this declaration use
 the following format:
 
+[Full Name] [GitHub profile URL] [YYYY-MM-DD]
+
+
 Ilya Buziuk https://github.com/ibuziuk 2015-02-27
 
-[Full Name] [GitHub profile URL] [YYYY-MM-DD]
 
