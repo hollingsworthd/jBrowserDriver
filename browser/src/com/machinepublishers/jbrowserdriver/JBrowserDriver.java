@@ -70,7 +70,7 @@ public class JBrowserDriver implements Browser {
             return context.item().view.get().call("getEngine").
                 call("executeScript", "document.documentElement.outerHTML").toString();
           }
-        }, context.item().settingsId.get());
+        }, context.settingsId.get());
   }
 
   @Override
@@ -80,7 +80,7 @@ public class JBrowserDriver implements Browser {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getLocation").toString();
       }
-    }, context.item().settingsId.get());
+    }, context.settingsId.get());
   }
 
   @Override
@@ -96,7 +96,7 @@ public class JBrowserDriver implements Browser {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getTitle").toString();
       }
-    }, context.item().settingsId.get());
+    }, context.settingsId.get());
   }
 
   @Override
@@ -115,7 +115,7 @@ public class JBrowserDriver implements Browser {
         context.item().engine.get().call("load", cleanUrl);
         return null;
       }
-    }, context.item().settingsId.get());
+    }, context.settingsId.get());
     try {
       synchronized (context.statusCode) {
         if (context.statusCode.get() == 0) {
@@ -132,7 +132,7 @@ public class JBrowserDriver implements Browser {
           context.item().engine.get().call("getLoadWorker").call("cancel");
           return null;
         }
-      }, context.item().settingsId.get());
+      }, context.settingsId.get());
     }
   }
 
@@ -331,16 +331,16 @@ public class JBrowserDriver implements Browser {
         return JavaFx.getStatic(
             SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
             call("fromFXImage", context.item().view.get().
-                call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.item().settingsId.get()),
-                    JavaFx.getNew(WritableImage.class, context.item().settingsId.get(),
+                call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.settingsId.get()),
+                    JavaFx.getNew(WritableImage.class, context.settingsId.get(),
                         (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
                         (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
       }
-    }, context.item().settingsId.get());
+    }, context.settingsId.get());
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();
-      JavaFx.getStatic(ImageIO.class, context.item().settingsId.get()).call("write", image, "png", out);
+      JavaFx.getStatic(ImageIO.class, context.settingsId.get()).call("write", image, "png", out);
       return outputType.convertFromPngBytes(out.toByteArray());
     } catch (Throwable t) {
       Logs.exception(t);
