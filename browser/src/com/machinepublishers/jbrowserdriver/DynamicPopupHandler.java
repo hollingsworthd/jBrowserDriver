@@ -21,21 +21,60 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
+
 import javafx.scene.web.PopupFeatures;
 import javafx.scene.web.WebEngine;
 import javafx.util.Callback;
 
 class DynamicPopupHandler implements Callback<PopupFeatures, WebEngine> {
   private final JBrowserDriver driver;
-  private final BrowserContext context;
+  private final Object browserContext;
+  private static final Method spawn;
+  private static final Field contextItemEngine;
+  private static final Method unwrap;
+  static {
+    Method spawnTmp = null;
+    Field contextItemEngineTmp = null;
+    Method unwrapTmp = null;
+    try {
+      Class browserContext = DynamicPopupHandler.class.getClassLoader().loadClass(
+          "com.machinepublishers.jbrowserdriver.BrowserContext");
+      spawnTmp = browserContext.getDeclaredMethod("spawn", JBrowserDriver.class);
+      spawnTmp.setAccessible(true);
 
-  DynamicPopupHandler(final JBrowserDriver driver, final BrowserContext context) {
+      Class browserContextItemClass = DynamicPopupHandler.class.getClassLoader().loadClass(
+          "com.machinepublishers.jbrowserdriver.BrowserContextItem");
+      contextItemEngineTmp = browserContextItemClass.getDeclaredField("engine");
+      contextItemEngineTmp.setAccessible(true);
+
+      Class javaFxObjectClass = DynamicPopupHandler.class.getClassLoader().loadClass(
+          "com.machinepublishers.jbrowserdriver.JavaFxObject");
+      unwrapTmp = javaFxObjectClass.getDeclaredMethod("unwrap");
+      unwrapTmp.setAccessible(true);
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+    spawn = spawnTmp;
+    contextItemEngine = contextItemEngineTmp;
+    unwrap = unwrapTmp;
+  }
+
+  DynamicPopupHandler(final JBrowserDriver driver, final Object browserContext) {
     this.driver = driver;
-    this.context = context;
+    this.browserContext = browserContext;
   }
 
   @Override
   public WebEngine call(PopupFeatures features) {
-    return (WebEngine) context.spawn(driver).engine.get().unwrap();
+    try {
+      return (WebEngine) unwrap.invoke(
+          ((AtomicReference) contextItemEngine.get(spawn.invoke(browserContext, driver))).get());
+    } catch (Throwable t) {
+      t.printStackTrace();
+      return null;
+    }
   }
 }
