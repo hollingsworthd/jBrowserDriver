@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
+  private final AtomicInteger resourceCount = new AtomicInteger();
   private final AtomicInteger statusCode;
   private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
@@ -84,13 +85,19 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
+    if (state == LoadListenerClient.RESOURCE_STARTED) {
+      resourceCount.incrementAndGet();
+    } else if (state == LoadListenerClient.RESOURCE_FINISHED
+        || state == LoadListenerClient.RESOURCE_FAILED) {
+      resourceCount.decrementAndGet();
+    }
     if (TRACE) {
       trace("Rsrc", frame, state, url, contentType, progress, errorCode);
     }
   }
 
   @Override
-  public void dispatchLoadEvent(long frame, int state, String url,
+  public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     try {
       if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
@@ -99,6 +106,7 @@ class DynamicHttpListener implements LoadListenerClient {
           if (url.startsWith("http://") || url.startsWith("https://")) {
             statusCode.set(0);
           }
+          resourceCount.set(0);
           this.frame.set(frame);
         }
         startStatusMonitor.invoke(statusMonitor, url);
@@ -106,12 +114,13 @@ class DynamicHttpListener implements LoadListenerClient {
           && (state == LoadListenerClient.PAGE_FINISHED
               || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
         int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
+        final int newStatusCode;
         if (statusCode.get() == 0 || url.startsWith("http://") || url.startsWith("https://")) {
-          statusCode.set(state == LoadListenerClient.PAGE_FINISHED ? code : 499);
+          newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
+        } else {
+          newStatusCode = -1;
         }
-        synchronized (statusCode) {
-          statusCode.notifyAll();
-        }
+        new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode, resourceCount)).start();
       }
     } catch (Throwable t) {
       t.printStackTrace();
@@ -120,4 +129,5 @@ class DynamicHttpListener implements LoadListenerClient {
       trace("Page", frame, state, url, contentType, progress, errorCode);
     }
   }
+
 }

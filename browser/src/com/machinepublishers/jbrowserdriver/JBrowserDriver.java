@@ -25,7 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
@@ -44,15 +43,13 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class JBrowserDriver implements Browser {
   private final BrowserContext context = new BrowserContext();
-  private final AtomicReference<Settings> settings = new AtomicReference<Settings>();
 
   public JBrowserDriver() {
     this(new Settings());
   }
 
   public JBrowserDriver(final Settings settings) {
-    this.settings.set(new Settings(settings));
-    context.item().settings.set(this.settings.get());
+    context.settings.set(new Settings(settings));
   }
 
   /**
@@ -66,7 +63,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getPageSource() {
     init();
-    return Util.exec(Pause.NONE, context.item().statusCode, context.item().timeouts.get().getScriptTimeoutMS(),
+    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<String>() {
           @Override
           public String perform() {
@@ -79,7 +76,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getCurrentUrl() {
     init();
-    return Util.exec(Pause.NONE, context.item().statusCode, new Sync<String>() {
+    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getLocation").toString();
       }
@@ -89,13 +86,13 @@ public class JBrowserDriver implements Browser {
   @Override
   public int getStatusCode() {
     init();
-    return context.item().statusCode.get();
+    return context.statusCode.get();
   }
 
   @Override
   public String getTitle() {
     init();
-    return Util.exec(Pause.NONE, context.item().statusCode, new Sync<String>() {
+    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
       public String perform() {
         return context.item().view.get().call("getEngine").call("getTitle").toString();
       }
@@ -105,7 +102,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public void get(final String url) {
     init();
-    context.item().statusCode.set(0);
+    context.statusCode.set(0);
     Util.exec(Pause.SHORT, new Sync<Object>() {
       public Object perform() {
         String cleanUrl = url;
@@ -120,15 +117,15 @@ public class JBrowserDriver implements Browser {
       }
     }, context.item().settingsId.get());
     try {
-      synchronized (context.item().statusCode) {
-        if (context.item().statusCode.get() == 0) {
-          context.item().statusCode.wait(context.item().timeouts.get().getPageLoadTimeoutMS());
+      synchronized (context.statusCode) {
+        if (context.statusCode.get() == 0) {
+          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
         }
       }
     } catch (InterruptedException e) {
       Logs.exception(e);
     }
-    if (context.item().statusCode.get() == 0) {
+    if (context.statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new Sync<Object>() {
         @Override
         public Object perform() {
@@ -311,14 +308,14 @@ public class JBrowserDriver implements Browser {
   public void quit() {
     init();
     context.removeItems();
-    SettingsManager.deregister(settings);
-    settings.get().cookieManager().getCookieStore().removeAll();
+    SettingsManager.deregister(context.settings);
+    context.settings.get().cookieManager().getCookieStore().removeAll();
   }
 
   @Override
   public TargetLocator switchTo() {
     init();
-    return context.item().targetLocator.get();
+    return context.targetLocator.get();
   }
 
   @Override
@@ -329,7 +326,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     init();
-    JavaFxObject image = Util.exec(Pause.NONE, context.item().statusCode, new Sync<JavaFxObject>() {
+    JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(
             SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).

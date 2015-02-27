@@ -84,14 +84,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   static Element create(final BrowserContext context) {
     final long settingsId = Long.parseLong(context.item().engine.get().call("getUserAgent").toString());
     final AtomicReference<JavaFxObject> doc = new AtomicReference<JavaFxObject>(
-        Util.exec(Pause.SHORT, context.item().statusCode, context.item().timeouts.get().getScriptTimeoutMS(),
+        Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<JavaFxObject>() {
               @Override
               public JavaFxObject perform() {
                 return context.item().engine.get().call("getDocument");
               }
             }, settingsId));
-    return new Element(doc, context.item().statusCode, context.item().robot, context.item().timeouts, settingsId);
+    return new Element(doc, context.statusCode, context.item().robot, context.timeouts, settingsId);
   }
 
   @Override

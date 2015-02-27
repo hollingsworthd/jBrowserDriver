@@ -153,6 +153,13 @@ class JavaFx {
     static {
       try {
         byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
+            + DynamicAjaxListener.class.getName().replace('.', '/') + ".class").openStream());
+        classes.put(DynamicAjaxListener.class.getName(), classTmp);
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+      try {
+        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
             + DynamicHttpListener.class.getName().replace('.', '/') + ".class").openStream());
         classes.put(DynamicHttpListener.class.getName(), classTmp);
       } catch (Throwable t) {

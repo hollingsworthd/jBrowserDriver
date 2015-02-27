@@ -27,11 +27,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class BrowserContext {
+  final AtomicReference<Timeouts> timeouts = new AtomicReference<Timeouts>(new Timeouts());
+  final AtomicReference<TargetLocator> targetLocator = new AtomicReference<TargetLocator>();
+  final AtomicInteger statusCode = new AtomicInteger(-1);
+  final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   private final Map<String, BrowserContextItem> itemMap = new LinkedHashMap<String, BrowserContextItem>();
   private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
   private static final Object lastWindowLock = new Object();
@@ -73,6 +79,7 @@ class BrowserContext {
   }
 
   void init(JBrowserDriver driver) {
+    targetLocator.set(new TargetLocator(driver, this));
     item().init(driver, this);
     closeLastWindow();
   }
@@ -90,7 +97,7 @@ class BrowserContext {
   }
 
   String itemId() {
-    return Util.exec(Pause.NONE, item().statusCode, item().timeouts.get().getPageLoadTimeoutMS(),
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getPageLoadTimeoutMS(),
         new Sync<String>() {
           @Override
           public String perform() {
@@ -102,7 +109,7 @@ class BrowserContext {
   }
 
   Set<String> itemIds() {
-    return Util.exec(Pause.NONE, item().statusCode, item().timeouts.get().getPageLoadTimeoutMS(),
+    return Util.exec(Pause.NONE, statusCode, timeouts.get().getPageLoadTimeoutMS(),
         new Sync<Set<String>>() {
           @Override
           public Set<String> perform() {
@@ -116,8 +123,6 @@ class BrowserContext {
   BrowserContextItem spawn(JBrowserDriver driver) {
     synchronized (lock) {
       BrowserContextItem newContext = new BrowserContextItem();
-      newContext.timeouts.set(item().timeouts.get());
-      newContext.settings.set(item().settings.get());
       newContext.init(driver, this);
       newContext.stage.get().call("toBack");
       items.add(newContext);
@@ -127,7 +132,7 @@ class BrowserContext {
   }
 
   void setCurrent(final String id) {
-    Util.exec(Pause.SHORT, item().statusCode, item().timeouts.get().getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, timeouts.get().getPageLoadTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {

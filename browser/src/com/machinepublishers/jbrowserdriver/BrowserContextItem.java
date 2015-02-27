@@ -22,7 +22,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,16 +32,9 @@ import com.sun.javafx.webkit.Accessor;
 class BrowserContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
 
-  final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window =
-      new AtomicReference<com.machinepublishers.jbrowserdriver.Window>();
-  final AtomicReference<com.machinepublishers.jbrowserdriver.Navigation> navigation =
-      new AtomicReference<com.machinepublishers.jbrowserdriver.Navigation>();
-  final AtomicReference<com.machinepublishers.jbrowserdriver.Options> options =
-      new AtomicReference<com.machinepublishers.jbrowserdriver.Options>();
-  final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts =
-      new AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts>();
-  final AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator> targetLocator =
-      new AtomicReference<com.machinepublishers.jbrowserdriver.TargetLocator>();
+  final AtomicReference<Window> window = new AtomicReference<Window>();
+  final AtomicReference<Navigation> navigation = new AtomicReference<Navigation>();
+  final AtomicReference<Options> options = new AtomicReference<Options>();
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
@@ -50,8 +42,6 @@ class BrowserContextItem {
   final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
   final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
-  final AtomicInteger statusCode = new AtomicInteger(-1);
-  final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
   final AtomicLong settingsId = new AtomicLong();
@@ -68,22 +58,18 @@ class BrowserContextItem {
     synchronized (initLock) {
       if (!initialized.get()) {
         SettingsManager.register(stage, view,
-            settings, statusCode);
+            context.settings, context.statusCode);
         engine.set(view.get().call("getEngine"));
         settingsId.set(Long.parseLong(
             engine.get().call("getUserAgent").toString()));
-        robot.set(new Robot(stage, statusCode, settingsId.get()));
-        window.set(new com.machinepublishers.jbrowserdriver.Window(
-            stage, settingsId.get()));
-        timeouts.set(new com.machinepublishers.jbrowserdriver.Timeouts());
+        robot.set(new Robot(stage, context.statusCode, settingsId.get()));
+        window.set(new Window(stage, settingsId.get()));
         keyboard.set(new Keyboard(robot));
         mouse.set(new Mouse(robot));
-        navigation.set(new com.machinepublishers.jbrowserdriver.Navigation(
-            new AtomicReference<JBrowserDriver>(driver), view,
-            settingsId.get()));
-        options.set(new com.machinepublishers.jbrowserdriver.Options(
-            window, settings.get().cookieManager(), timeouts));
-        targetLocator.set(new com.machinepublishers.jbrowserdriver.TargetLocator(driver, context));
+        navigation.set(new Navigation(
+            new AtomicReference<JBrowserDriver>(driver), view, settingsId.get()));
+        options.set(new Options(
+            window, context.settings.get().cookieManager(), context.timeouts));
         capabilities.set(new Capabilities());
         Util.exec(Pause.SHORT, new Sync<Object>() {
           @Override
@@ -91,7 +77,8 @@ class BrowserContextItem {
             JavaFx.getStatic(Accessor.class, settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient",
-                    JavaFx.getNew(DynamicHttpListener.class, settingsId.get(), statusCode, settingsId.get()));
+                    JavaFx.getNew(DynamicHttpListener.class, settingsId.get(),
+                        context.statusCode, settingsId.get()));
             engine.get().call("setCreatePopupHandler",
                 JavaFx.getNew(DynamicPopupHandler.class, settingsId.get(), driver, context));
             return null;
