@@ -69,5 +69,6 @@ aware that would make these representations inaccurate in any respect.
 The undersigned agree to the terms and conditions herein and declare that they are authorized and
 able to make this agreement and sign this declaration. To sign this declaration use the following
 format:
+
 [Full Name] [GitHub profile URL] [YYYY-MM-DD]
 
