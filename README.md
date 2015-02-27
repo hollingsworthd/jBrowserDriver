@@ -11,7 +11,7 @@ Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when o
 [Latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest)
 
 #### Pre-requisites
-There's no need to install any web browser and this works fine on a server (headless). Java 8 is required. Note to Linux users: JavaFX is needed and it's part of Oracle's standard JRE, but numerous Linux repositories have separated JavaFX in error. In Ubuntu, add the Utopic repo (`deb http://cz.archive.ubuntu.com/ubuntu utopic main universe`) and run `apt-get install openjdk-8-jdk openjfx`
+There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required. Note to Linux users: JavaFX is needed and it's part of Oracle's standard JRE, but numerous Linux repositories have separated JavaFX in error. In Ubuntu, add the Utopic repo (`deb http://cz.archive.ubuntu.com/ubuntu utopic main universe`) and run `apt-get install openjdk-8-jdk openjfx`
 
 #### Usage
 Use this library like any other Selenium WebDriver. You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/Settings.java) object to the constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser. Note that resources from ad servers are blocked. Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be isolated from each other.
