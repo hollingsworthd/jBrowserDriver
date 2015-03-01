@@ -99,6 +99,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     Util.exec(Pause.SHORT, statusCode, timeouts.get().getScriptTimeoutMS(), new Sync<Object>() {
       @Override
       public Object perform() {
+        node.get().call("call", "scrollIntoView");
         node.get().call("eval",
             "this.origOnclick = this.onclick;"
                 + "this.onclick=function(event){"
@@ -113,7 +114,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                 + "  }"
                 + "  this.onclick = this.origOnclick;"
                 + "};");
-        node.get().call("call", "scrollIntoView");
         JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
         double y = Double.parseDouble(obj.call("getMember", "top").toString());
         double x = Double.parseDouble(obj.call("getMember", "left").toString());
