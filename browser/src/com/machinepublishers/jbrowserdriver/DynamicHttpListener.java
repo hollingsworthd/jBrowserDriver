@@ -37,10 +37,12 @@ class DynamicHttpListener implements LoadListenerClient {
   private static final Method getStatusMonitor;
   private static final Method startStatusMonitor;
   private static final Method stopStatusMonitor;
+  private static final Method clearStatusMonitor;
   static {
     Method getStatusMonitorTmp = null;
     Method startStatusMonitorTmp = null;
     Method stopStatusMonitorTmp = null;
+    Method clearStatusMonitorTmp = null;
     try {
       Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
       getStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("get", long.class);
@@ -49,12 +51,15 @@ class DynamicHttpListener implements LoadListenerClient {
       startStatusMonitorTmp.setAccessible(true);
       stopStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("stopStatusMonitor", String.class);
       stopStatusMonitorTmp.setAccessible(true);
+      clearStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("clearStatusMonitor");
+      clearStatusMonitorTmp.setAccessible(true);
     } catch (Throwable t) {
       t.printStackTrace();
     }
     getStatusMonitor = getStatusMonitorTmp;
     startStatusMonitor = startStatusMonitorTmp;
     stopStatusMonitor = stopStatusMonitorTmp;
+    clearStatusMonitor = clearStatusMonitorTmp;
   }
 
   DynamicHttpListener(AtomicInteger statusCode, long settingsId) {
@@ -100,17 +105,17 @@ class DynamicHttpListener implements LoadListenerClient {
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     try {
+      this.frame.compareAndSet(0l, frame);
       if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-        if (this.frame.get() == 0 || this.frame.get() == frame || statusCode.get() == 0) {
+        if (this.frame.get() == frame || statusCode.get() == 0) {
           if (url.startsWith("http://") || url.startsWith("https://")) {
             statusCode.set(0);
           }
           resourceCount.set(0);
-          this.frame.set(frame);
         }
         startStatusMonitor.invoke(statusMonitor, url);
-      } else if ((this.frame.get() == 0 || this.frame.get() == frame)
+      } else if ((this.frame.get() == frame)
           && (state == LoadListenerClient.PAGE_FINISHED
               || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
         int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
@@ -120,7 +125,8 @@ class DynamicHttpListener implements LoadListenerClient {
         } else {
           newStatusCode = -1;
         }
-        new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode, resourceCount)).start();
+        new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode,
+            statusMonitor, clearStatusMonitor, resourceCount)).start();
       }
     } catch (Throwable t) {
       t.printStackTrace();

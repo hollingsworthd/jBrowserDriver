@@ -21,6 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.sun.webkit.LoadListenerClient;
@@ -31,13 +32,17 @@ class DynamicAjaxListener implements Runnable {
   private final int state;
   private final int newStatusCode;
   private final AtomicInteger statusCode;
+  private final Object statusMonitor;
+  private final Method clearStatusMonitor;
   private final AtomicInteger resourceCount;
 
-  DynamicAjaxListener(final int state, final int newStatusCode,
-      final AtomicInteger statusCode, final AtomicInteger resourceCount) {
+  DynamicAjaxListener(final int state, final int newStatusCode, final AtomicInteger statusCode,
+      final Object statusMonitor, final Method clearStatusMonitor, final AtomicInteger resourceCount) {
     this.state = state;
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
+    this.statusMonitor = statusMonitor;
+    this.clearStatusMonitor = clearStatusMonitor;
     this.resourceCount = resourceCount;
   }
 
@@ -56,6 +61,11 @@ class DynamicAjaxListener implements Runnable {
     synchronized (statusCode) {
       if (newStatusCode > -1) {
         statusCode.set(newStatusCode);
+      }
+      try {
+        clearStatusMonitor.invoke(statusMonitor);
+      } catch (Throwable t) {
+        t.printStackTrace();
       }
       statusCode.notifyAll();
     }

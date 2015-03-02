@@ -92,10 +92,15 @@ class StatusMonitor {
           Logs.exception(t);
         }
       }
+      return code;
+    }
+  }
+
+  void clearStatusMonitor() {
+    synchronized (lock) {
       connections.clear();
       primaryDocuments.clear();
       discarded.clear();
-      return code;
     }
   }
 }
