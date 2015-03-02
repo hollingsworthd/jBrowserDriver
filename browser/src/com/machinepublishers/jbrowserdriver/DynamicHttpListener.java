@@ -115,7 +115,7 @@ class DynamicHttpListener implements LoadListenerClient {
           resourceCount.set(0);
         }
         startStatusMonitor.invoke(statusMonitor, url);
-      } else if ((this.frame.get() == frame)
+      } else if (this.frame.get() == frame
           && (state == LoadListenerClient.PAGE_FINISHED
               || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
         int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
