@@ -93,20 +93,22 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           @Override
           public Object perform() {
             node.get().call("call", "scrollIntoView");
-            node.get().call("eval",
-                "this.origOnclick = this.onclick;"
-                    + "this.onclick=function(event){"
-                    + "  if(event && event.shiftKey){"
-                    + "    this.target='_blank';"
-                    + "    if(event.stopPropagation){"
-                    + "      event.stopPropagation();"
-                    + "    }"
-                    + "  }"
-                    + "  if(this.origOnclick){"
-                    + "    this.origOnclick(event? event: null);"
-                    + "  }"
-                    + "  this.onclick = this.origOnclick;"
-                    + "};");
+            if (context.keyboard.get().isShiftPressed()) {
+              node.get().call("eval",
+                  "this.origOnclick = this.onclick;"
+                      + "this.onclick=function(event){"
+                      + "  this.target='_blank';"
+                      + "  if(event){"
+                      + "    if(event.stopPropagation){"
+                      + "      event.stopPropagation();"
+                      + "    }"
+                      + "  }"
+                      + "  if(this.origOnclick){"
+                      + "    this.origOnclick(event? event: null);"
+                      + "  }"
+                      + "  this.onclick = this.origOnclick;"
+                      + "};");
+            }
             JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
             double y = Double.parseDouble(obj.call("getMember", "top").toString());
             double x = Double.parseDouble(obj.call("getMember", "left").toString());

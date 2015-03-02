@@ -165,6 +165,7 @@ public class BrowserProperties {
     return navigator;
   }
 
+  //TODO handle shift key event in case of headless browser
   private static String defaultSupplementaryJS() {
     StringBuilder builder = new StringBuilder();
     builder.append("Object.defineProperty(window, 'external', ");

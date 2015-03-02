@@ -23,9 +23,13 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.openqa.selenium.Keys;
+
 class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final AtomicReference<Robot> robot;
+  private boolean shiftPressed;
+  private final Object lock = new Object();
 
   Keyboard(final AtomicReference<Robot> robot) {
     this.robot = robot;
@@ -33,11 +37,21 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   @Override
   public void pressKey(CharSequence key) {
+    synchronized (lock) {
+      if (!shiftPressed) {
+        shiftPressed = Keys.SHIFT.equals(key) || Keys.LEFT_SHIFT.equals(key);
+      }
+    }
     robot.get().keysPress(key);
   }
 
   @Override
   public void releaseKey(CharSequence key) {
+    synchronized (lock) {
+      if (shiftPressed) {
+        shiftPressed = !Keys.SHIFT.equals(key) && !Keys.LEFT_SHIFT.equals(key);
+      }
+    }
     robot.get().keysRelease(key);
   }
 
@@ -46,4 +60,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     robot.get().keysType(keys);
   }
 
+  boolean isShiftPressed() {
+    synchronized (lock) {
+      return shiftPressed;
+    }
+  }
 }
