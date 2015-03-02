@@ -37,6 +37,11 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 class BrowserContext {
   final AtomicReference<Timeouts> timeouts = new AtomicReference<Timeouts>(new Timeouts());
   final AtomicReference<TargetLocator> targetLocator = new AtomicReference<TargetLocator>();
+  final AtomicReference<Options> options = new AtomicReference<Options>();
+  final AtomicReference<Keyboard> keyboard = new AtomicReference<Keyboard>();
+  final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
+  final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
+  final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   final AtomicLong settingsId = new AtomicLong();
@@ -91,9 +96,15 @@ class BrowserContext {
   }
 
   BrowserContextItem item() {
-    synchronized (lock) {
-      return items.get(current);
-    }
+    return Util.exec(Pause.NONE, new AtomicInteger(-1),
+        new Sync<BrowserContextItem>() {
+          @Override
+          public BrowserContextItem perform() {
+            synchronized (lock) {
+              return items.get(current);
+            }
+          }
+        }, settingsId.get());
   }
 
   String itemId() {

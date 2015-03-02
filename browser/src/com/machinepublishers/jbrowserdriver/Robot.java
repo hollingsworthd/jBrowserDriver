@@ -224,15 +224,13 @@ class Robot {
     }
   }
 
-  private final AtomicReference<JavaFxObject> stage;
   private final AtomicReference<JavaFxObject> robot = new AtomicReference<JavaFxObject>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final long settingsId;
   private final AtomicInteger statusCode;
 
-  Robot(final AtomicReference<JavaFxObject> stage, final AtomicInteger statusCode, final long settingsId) {
-    this.stage = stage;
+  Robot(final AtomicInteger statusCode, final long settingsId) {
     robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
@@ -422,7 +420,7 @@ class Robot {
     }
   }
 
-  void mouseMove(final double pageX, final double pageY) {
+  void mouseMove(final double pageX, final double pageY, AtomicReference<JavaFxObject> stage) {
     lock();
     try {
       Util.exec(Pause.LONG, statusCode, new Sync<Object>() {

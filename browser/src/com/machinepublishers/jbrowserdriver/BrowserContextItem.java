@@ -34,14 +34,9 @@ class BrowserContextItem {
 
   final AtomicReference<Window> window = new AtomicReference<Window>();
   final AtomicReference<Navigation> navigation = new AtomicReference<Navigation>();
-  final AtomicReference<Options> options = new AtomicReference<Options>();
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
-  final AtomicReference<Keyboard> keyboard = new AtomicReference<Keyboard>();
-  final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
-  final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
-  final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
   final AtomicReference<String> itemId = new AtomicReference<String>();
@@ -61,15 +56,15 @@ class BrowserContextItem {
         engine.set(view.get().call("getEngine"));
         context.settingsId.set(Long.parseLong(
             engine.get().call("getUserAgent").toString()));
-        robot.set(new Robot(stage, context.statusCode, context.settingsId.get()));
+        context.robot.set(new Robot(context.statusCode, context.settingsId.get()));
         window.set(new Window(stage, context.settingsId.get()));
-        keyboard.set(new Keyboard(robot));
-        mouse.set(new Mouse(robot));
+        context.keyboard.set(new Keyboard(context.robot));
+        context.mouse.set(new Mouse(context.robot, context));
         navigation.set(new Navigation(
             new AtomicReference<JBrowserDriver>(driver), view, context.settingsId.get()));
-        options.set(new Options(
+        context.options.set(new Options(
             window, context.settings.get().cookieManager(), context.timeouts));
-        capabilities.set(new Capabilities());
+        context.capabilities.set(new Capabilities());
         Util.exec(Pause.SHORT, new Sync<Object>() {
           @Override
           public Object perform() {

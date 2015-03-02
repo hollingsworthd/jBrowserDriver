@@ -259,19 +259,19 @@ public class JBrowserDriver implements Browser {
   @Override
   public Keyboard getKeyboard() {
     init();
-    return context.item().keyboard.get();
+    return context.keyboard.get();
   }
 
   @Override
   public Mouse getMouse() {
     init();
-    return context.item().mouse.get();
+    return context.mouse.get();
   }
 
   @Override
   public Capabilities getCapabilities() {
     init();
-    return context.item().capabilities.get();
+    return context.capabilities.get();
   }
 
   @Override
@@ -295,7 +295,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public Options manage() {
     init();
-    return context.item().options.get();
+    return context.options.get();
   }
 
   @Override
