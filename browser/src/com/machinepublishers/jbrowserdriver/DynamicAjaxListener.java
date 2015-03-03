@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicAjaxListener implements Runnable {
-  private static final int WAIT = 150;
+  private static final int WAIT = 500;
   private static final int MAX_WAIT = 15000;
   private final int state;
   private final int newStatusCode;
