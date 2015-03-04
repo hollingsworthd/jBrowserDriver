@@ -67,32 +67,15 @@ class StreamConnection extends HttpURLConnection {
   private final HttpURLConnection conn;
   private final boolean isSsl;
   private final AtomicBoolean skip = new AtomicBoolean();
-  private static final File downloadDir;
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private final Object connObjDelegate;
+  private final AtomicLong settingsId = new AtomicLong();
   private static final Field headerField;
   private static final Field cookieHandlerField;
-  private static final AtomicLong settingsId = new AtomicLong();
   private static final Set<String> adHosts = new HashSet<String>();
   private static final URL dummy;
   static {
-    File downloadDirTmp = null;
-    try {
-      downloadDirTmp = new File("./download_cache");
-      if (downloadDirTmp.exists()) {
-        File[] files = downloadDirTmp.listFiles();
-        for (int i = 0; i < files.length; i++) {
-          files[i].delete();
-        }
-      }
-      downloadDirTmp.mkdir();
-      downloadDirTmp.deleteOnExit();
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-    downloadDir = downloadDirTmp;
-
     Field headerFieldTmp = null;
     try {
       headerFieldTmp = sun.net.www.protocol.http.HttpURLConnection.class.getDeclaredField("requests");
@@ -265,7 +248,7 @@ class StreamConnection extends HttpURLConnection {
     if (header != null && !header.isEmpty()) {
       Matcher matcher = downloadHeader.matcher(header);
       if (matcher.matches()) {
-        File downloadFile = new File(downloadDir,
+        File downloadFile = new File(SettingsManager.get(settingsId.get()).get().downloadDir(),
             matcher.group(1) == null || matcher.group(1).isEmpty()
                 ? Long.toString(System.nanoTime()) : matcher.group(1));
         downloadFile.deleteOnExit();

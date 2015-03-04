@@ -21,6 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
@@ -121,6 +122,7 @@ public class Settings {
   private final BrowserTimeZone browserTimeZone;
   private final BrowserProperties browserProperties;
   private final ProxyConfig proxy;
+  private final File downloadDir;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
@@ -130,19 +132,20 @@ public class Settings {
    * Create default settings.
    */
   public Settings() {
-    this(null, null, null, null);
+    this(null, null, null, null, null);
   }
 
   /**
    * Pass null for any parameter which you want left as default.
    */
   public Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
-      final BrowserProperties browserProperties, final ProxyConfig proxy) {
+      final BrowserProperties browserProperties, final ProxyConfig proxy, final File downloadDir) {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
     this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
     this.proxy = proxy == null ? new ProxyConfig() : proxy;
+    this.downloadDir = downloadDir == null ? new File("./download_cache") : downloadDir;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -162,6 +165,7 @@ public class Settings {
     browserTimeZone = original.browserTimeZone;
     browserProperties = original.browserProperties;
     proxy = original.proxy;
+    downloadDir = original.downloadDir;
     mySettingsId = settingsId.incrementAndGet();
     script = original.script;
   }
@@ -184,6 +188,10 @@ public class Settings {
 
   ProxyConfig proxy() {
     return proxy;
+  }
+
+  File downloadDir() {
+    return downloadDir;
   }
 
   String script() {

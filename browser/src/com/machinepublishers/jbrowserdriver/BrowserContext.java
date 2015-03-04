@@ -76,7 +76,7 @@ class BrowserContext {
         }
       }
       if (window != null) {
-        Util.exec(Pause.SHORT, new Sync<Object>() {
+        Util.exec(Pause.NONE, new Sync<Object>() {
           @Override
           public Object perform() {
             window.call("close");
@@ -181,7 +181,7 @@ class BrowserContext {
   }
 
   void removeItem() {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
+    Util.exec(Pause.NONE, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -196,7 +196,7 @@ class BrowserContext {
   }
 
   void removeItem(final String itemId) {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
+    Util.exec(Pause.NONE, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -210,7 +210,7 @@ class BrowserContext {
   }
 
   void removeItems() {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
+    Util.exec(Pause.NONE, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
