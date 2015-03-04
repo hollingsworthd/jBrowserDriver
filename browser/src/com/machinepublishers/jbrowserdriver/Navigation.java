@@ -41,40 +41,43 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void back() {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
-      public Object perform() {
-        try {
-          view.get().call("getEngine").call("getHistory").call("go", -1);
-        } catch (IndexOutOfBoundsException e) {
-          Logs.exception(e);
-        }
-        return null;
-      }
-    }, settingsId);
+    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+        new Sync<Object>() {
+          public Object perform() {
+            try {
+              view.get().call("getEngine").call("getHistory").call("go", -1);
+            } catch (IndexOutOfBoundsException e) {
+              Logs.exception(e);
+            }
+            return null;
+          }
+        }, settingsId);
   }
 
   @Override
   public void forward() {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
-      public Object perform() {
-        try {
-          view.get().call("getEngine").call("getHistory").call("go", 1);
-        } catch (IndexOutOfBoundsException e) {
-          Logs.exception(e);
-        }
-        return null;
-      }
-    }, settingsId);
+    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+        new Sync<Object>() {
+          public Object perform() {
+            try {
+              view.get().call("getEngine").call("getHistory").call("go", 1);
+            } catch (IndexOutOfBoundsException e) {
+              Logs.exception(e);
+            }
+            return null;
+          }
+        }, settingsId);
   }
 
   @Override
   public void refresh() {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
-      public Object perform() {
-        view.get().call("getEngine").call("reload");
-        return null;
-      }
-    }, settingsId);
+    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+        new Sync<Object>() {
+          public Object perform() {
+            view.get().call("getEngine").call("reload");
+            return null;
+          }
+        }, settingsId);
   }
 
   @Override

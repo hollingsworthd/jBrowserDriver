@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import com.machinepublishers.browser.Browser.Fatal;
+
 class JavaFxObject {
   private final Object object;
 
@@ -72,7 +74,7 @@ class JavaFxObject {
       }
       curClass = curClass.getSuperclass();
     }
-    throw new IllegalStateException("Failed to get field: " + fieldName, firstError);
+    throw new Fatal("Failed to get field: " + fieldName, firstError);
   }
 
   JavaFxObject call(String methodName, Object... params) {
@@ -161,7 +163,7 @@ class JavaFxObject {
         curClass = curClass.getSuperclass();
       }
     }
-    throw new IllegalStateException("Method call failed: " + methodName, firstError);
+    throw new Fatal("Method call failed: " + methodName, firstError);
   }
 
   static void unbox(Class[] classes) {

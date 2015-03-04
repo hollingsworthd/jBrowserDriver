@@ -41,6 +41,7 @@ import java.util.Set;
 
 import javafx.embed.swing.JFXPanel;
 
+import com.machinepublishers.browser.Browser.Fatal;
 import com.sun.glass.ui.PlatformFactory;
 import com.sun.glass.ui.monocle.MonoclePlatformFactory;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
@@ -85,7 +86,7 @@ class JavaFx {
     } catch (Throwable t) {
       firstError = firstError == null ? t : firstError;
     }
-    throw new IllegalStateException("Could not construct " + type.getName(), firstError);
+    throw new Fatal("Could not construct " + type.getName(), firstError);
   }
 
   static synchronized JavaFxObject getStatic(Class<?> type, Long id) {

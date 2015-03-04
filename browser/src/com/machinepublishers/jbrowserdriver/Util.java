@@ -124,6 +124,10 @@ class Util {
     return exec(pauseAfterExec, new AtomicInteger(-1), 0, action, id);
   }
 
+  static <T> T exec(Pause pauseAfterExec, final long timeout, final Sync<T> action, final long id) {
+    return exec(pauseAfterExec, new AtomicInteger(-1), timeout, action, id);
+  }
+
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
     return exec(pauseAfterExec, statusCode, 0, action, id);
   }

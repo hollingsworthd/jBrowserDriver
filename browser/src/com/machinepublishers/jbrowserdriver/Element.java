@@ -24,7 +24,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,8 +58,7 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
-  private static final AtomicLong latestThread = new AtomicLong();
-  private static final AtomicLong curThread = new AtomicLong();
+
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final AtomicReference<JavaFxObject> node;
@@ -534,11 +532,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   private void lock() {
-    long myThread = latestThread.incrementAndGet();
-    synchronized (curThread) {
-      while (myThread != curThread.get() + 1) {
+    long myThread = context.latestThread.incrementAndGet();
+    synchronized (context.curThread) {
+      while (myThread != context.curThread.get() + 1) {
         try {
-          curThread.wait();
+          context.curThread.wait();
         } catch (Exception e) {
           Logs.exception(e);
         }
@@ -547,9 +545,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   private void unlock() {
-    curThread.incrementAndGet();
-    synchronized (curThread) {
-      curThread.notifyAll();
+    context.curThread.incrementAndGet();
+    synchronized (context.curThread) {
+      context.curThread.notifyAll();
     }
   }
 

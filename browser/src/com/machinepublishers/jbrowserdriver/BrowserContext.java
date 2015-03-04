@@ -45,6 +45,8 @@ class BrowserContext {
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicReference<Settings> settings = new AtomicReference<Settings>();
   final AtomicLong settingsId = new AtomicLong();
+  final AtomicLong latestThread = new AtomicLong();
+  final AtomicLong curThread = new AtomicLong();
   private final Map<String, BrowserContextItem> itemMap = new LinkedHashMap<String, BrowserContextItem>();
   private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
   private static final Object lastWindowLock = new Object();

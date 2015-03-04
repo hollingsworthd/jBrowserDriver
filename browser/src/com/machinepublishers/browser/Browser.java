@@ -68,6 +68,10 @@ public interface Browser extends WebDriver, JavascriptExecutor, FindsById,
     public Fatal(String message) {
       super(message);
     }
+
+    public Fatal(String message, Throwable nested) {
+      super(message, nested);
+    }
   }
 
   int getStatusCode();
