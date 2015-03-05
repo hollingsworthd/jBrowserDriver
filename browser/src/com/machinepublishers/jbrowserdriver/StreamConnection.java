@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -248,11 +249,14 @@ class StreamConnection extends HttpURLConnection {
     if (header != null && !header.isEmpty()) {
       Matcher matcher = downloadHeader.matcher(header);
       if (matcher.matches()) {
-        File downloadFile = new File(SettingsManager.get(settingsId.get()).get().downloadDir(),
-            matcher.group(1) == null || matcher.group(1).isEmpty()
-                ? Long.toString(System.nanoTime()) : matcher.group(1));
-        downloadFile.deleteOnExit();
-        Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
+        AtomicReference<Settings> settings = SettingsManager.get(settingsId.get());
+        if (settings != null) {
+          File downloadFile = new File(settings.get().downloadDir(),
+              matcher.group(1) == null || matcher.group(1).isEmpty()
+                  ? Long.toString(System.nanoTime()) : matcher.group(1));
+          downloadFile.deleteOnExit();
+          Files.write(downloadFile.toPath(), Util.toBytes(conn.getInputStream()));
+        }
         skip.set(true);
       }
     }
