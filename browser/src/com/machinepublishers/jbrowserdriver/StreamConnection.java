@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.Permission;
 import java.security.cert.CertificateFactory;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,8 +57,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import sun.net.www.MessageHeader;
 import sun.net.www.protocol.https.HttpsURLConnectionImpl;
-
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 class StreamConnection extends HttpURLConnection {
   private static final Object lock = new Object();
@@ -151,7 +150,7 @@ class StreamConnection extends HttpURLConnection {
           boolean found = false;
           while (matcher.find()) {
             String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.decode(pemBlock));
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
             java.security.cert.X509Certificate cert =
                 (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
             String alias = cert.getSubjectX500Principal().getName("RFC2253");
