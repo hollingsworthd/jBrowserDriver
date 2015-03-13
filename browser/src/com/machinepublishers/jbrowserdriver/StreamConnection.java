@@ -95,17 +95,19 @@ class StreamConnection extends HttpURLConnection {
     }
     cookieHandlerField = cookieHandlerFieldTmp;
 
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(
-          new InputStreamReader(StreamConnection.class.getResourceAsStream("./ad-hosts.txt")));
-      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-        adHosts.add(line);
+    if (!"false".equals(System.getProperty("jbd.blockads"))) {
+      BufferedReader reader = null;
+      try {
+        reader = new BufferedReader(
+            new InputStreamReader(StreamConnection.class.getResourceAsStream("./ad-hosts.txt")));
+        for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+          adHosts.add(line);
+        }
+      } catch (Throwable t) {
+        Logs.exception(t);
+      } finally {
+        Util.close(reader);
       }
-    } catch (Throwable t) {
-      Logs.exception(t);
-    } finally {
-      Util.close(reader);
     }
 
     URL dummyTmp = null;
@@ -180,18 +182,20 @@ class StreamConnection extends HttpURLConnection {
   }
 
   private static boolean isBlocked(String host) {
-    host = host.toLowerCase();
-    while (host.contains(".")) {
-      if (adHosts.contains(host)) {
-        if (Logs.TRACE) {
-          System.out.println("Ad blocked: " + host);
+    if (!adHosts.isEmpty()) {
+      host = host.toLowerCase();
+      while (host.contains(".")) {
+        if (adHosts.contains(host)) {
+          if (Logs.TRACE) {
+            System.out.println("Ad blocked: " + host);
+          }
+          host = null;
+          return true;
         }
-        host = null;
-        return true;
+        host = host.substring(host.indexOf('.') + 1);
       }
-      host = host.substring(host.indexOf('.') + 1);
+      host = null;
     }
-    host = null;
     return false;
   }
 
