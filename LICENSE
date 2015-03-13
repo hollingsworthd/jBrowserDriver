@@ -690,7 +690,7 @@ For more information on this, and how to apply and follow the GNU AGPL, see
 This Program includes software developed by third parties. Their notices and
 licenses are as follows.
 
-  • Selenium -- selenium-java-2.44.0.jar:
+  • Selenium -- selenium-api-2.44.0.jar:
                                       Apache License
                                 Version 2.0, January 2004
                              http://www.apache.org/licenses/
