@@ -70,7 +70,6 @@ class DynamicAjaxListener implements Runnable {
       synchronized (started) {
         if (!started.get()) {
           try {
-            System.out.println("start");
             started.wait(START_WAIT);
           } catch (InterruptedException e) {}
         }
