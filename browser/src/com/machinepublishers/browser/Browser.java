@@ -38,7 +38,11 @@ import org.openqa.selenium.internal.Killable;
 public interface Browser extends WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
-  public static class Retry extends RuntimeException {
+  /**
+   * A problem occurred, but it's likely temporary,
+   * so the original operation should simply be retried.
+   */
+  static class Retry extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public Retry() {
@@ -54,7 +58,10 @@ public interface Browser extends WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
-  public static class Fatal extends RuntimeException {
+  /**
+   * A fatal error occurred and merely retrying the operation will likely fail.
+   */
+  static class Fatal extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public Fatal() {
@@ -74,5 +81,10 @@ public interface Browser extends WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * Blocks until an HTTP status code is obtained.
+   * 
+   * @return HTTP status code
+   */
   int getStatusCode();
 }

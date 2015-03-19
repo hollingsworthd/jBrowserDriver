@@ -29,17 +29,15 @@ import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
 class Mouse implements org.openqa.selenium.interactions.Mouse {
   private final AtomicReference<Robot> robot;
-  private final BrowserContext context;
 
-  Mouse(final AtomicReference<Robot> robot, final BrowserContext context) {
+  Mouse(final AtomicReference<Robot> robot) {
     this.robot = robot;
-    this.context = context;
   }
 
   @Override
   public void click(Coordinates coords) {
     if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseClick(MouseButton.LEFT);
   }
@@ -47,7 +45,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void contextClick(Coordinates coords) {
     if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseClick(MouseButton.RIGHT);
   }
@@ -55,7 +53,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void doubleClick(Coordinates coords) {
     if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseClick(MouseButton.LEFT);
     robot.get().mouseClick(MouseButton.LEFT);
@@ -64,14 +62,14 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void mouseDown(Coordinates coords) {
     if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mousePress(MouseButton.LEFT);
   }
 
   @Override
   public void mouseMove(Coordinates coords) {
-    robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+    robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
   }
 
   @Override
@@ -79,14 +77,14 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     if (coords == null || coords.onPage() == null) {
       robot.get().mouseMoveBy(xOffset, yOffset);
     } else {
-      robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
     }
   }
 
   @Override
   public void mouseUp(Coordinates coords) {
     if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y, context.item().stage);
+      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseRelease(MouseButton.LEFT);
   }

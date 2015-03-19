@@ -120,7 +120,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             double x = Double.parseDouble(obj.call("getMember", "left").toString());
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
-            context.robot.get().mouseMove(x, y, context.item().stage);
+            context.robot.get().mouseMove(x, y);
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }
@@ -133,6 +133,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
+            context.item().httpListener.get().call("resetStatusCode");
             if (node.get().is(HTMLInputElement.class)) {
               node.get().call("getForm").call("submit");
             } else if (node.get().is(HTMLFormElement.class)) {

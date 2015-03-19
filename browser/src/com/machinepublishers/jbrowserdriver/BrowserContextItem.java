@@ -37,6 +37,7 @@ class BrowserContextItem {
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
+  final AtomicReference<JavaFxObject> httpListener = new AtomicReference<JavaFxObject>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
   final AtomicReference<String> itemId = new AtomicReference<String>();
@@ -56,10 +57,10 @@ class BrowserContextItem {
         engine.set(view.get().call("getEngine"));
         context.settingsId.set(Long.parseLong(
             engine.get().call("getUserAgent").toString()));
-        context.robot.set(new Robot(context.statusCode, context.settingsId.get()));
+        context.robot.set(new Robot(context));
         window.set(new Window(stage, context.settingsId.get()));
         context.keyboard.set(new Keyboard(context.robot));
-        context.mouse.set(new Mouse(context.robot, context));
+        context.mouse.set(new Mouse(context.robot));
         navigation.set(new Navigation(
             new AtomicReference<JBrowserDriver>(driver), view, context.settingsId.get()));
         context.options.set(new Options(
@@ -68,11 +69,11 @@ class BrowserContextItem {
         Util.exec(Pause.SHORT, new Sync<Object>() {
           @Override
           public Object perform() {
+            httpListener.set(JavaFx.getNew(DynamicHttpListener.class, context.settingsId.get(),
+                context.statusCode, context.settingsId.get()));
             JavaFx.getStatic(Accessor.class, context.settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
-                call("addLoadListenerClient",
-                    JavaFx.getNew(DynamicHttpListener.class, context.settingsId.get(),
-                        context.statusCode, context.settingsId.get()));
+                call("addLoadListenerClient", httpListener.get());
             engine.get().call("setCreatePopupHandler",
                 JavaFx.getNew(DynamicPopupHandler.class, context.settingsId.get(), driver, context));
             return null;

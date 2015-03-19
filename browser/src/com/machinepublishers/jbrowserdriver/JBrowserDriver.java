@@ -105,6 +105,15 @@ public class JBrowserDriver implements Browser {
   @Override
   public int getStatusCode() {
     init();
+    try {
+      synchronized (context.statusCode) {
+        if (context.statusCode.get() <= 0) {
+          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
+        }
+      }
+    } catch (InterruptedException e) {
+      Logs.exception(e);
+    }
     return context.statusCode.get();
   }
 

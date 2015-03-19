@@ -227,17 +227,19 @@ class Robot {
   private final AtomicReference<JavaFxObject> robot = new AtomicReference<JavaFxObject>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
+  private final BrowserContext context;
   private final long settingsId;
   private final AtomicInteger statusCode;
 
-  Robot(final AtomicInteger statusCode, final long settingsId) {
+  Robot(final BrowserContext context) {
     robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
       }
-    }, settingsId));
-    this.statusCode = statusCode;
-    this.settingsId = settingsId;
+    }, context.settingsId.get()));
+    this.context = context;
+    this.statusCode = context.statusCode;
+    this.settingsId = context.settingsId.get();
   }
 
   private int[] convertKey(int codePoint, boolean pressAndRelease) {
@@ -364,7 +366,11 @@ class Robot {
 
   void keysType(final CharSequence chars) {
     lock();
-    final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
+    String string = chars.toString();
+    final boolean delay = !string.equals(JBrowserDriver.KEYBOARD_DELETE);
+    if (string.contains("\n") || string.contains(Keys.ENTER)) {
+      context.item().httpListener.get().call("resetStatusCode");
+    }
     try {
       final int[] ints = chars.codePoints().toArray();
       final Integer[] integers = new Integer[ints.length];
@@ -421,19 +427,20 @@ class Robot {
     }
   }
 
-  void mouseMove(final double pageX, final double pageY, AtomicReference<JavaFxObject> stage) {
+  void mouseMove(final double pageX, final double pageY) {
     lock();
     try {
       Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
+          JavaFxObject stage = context.item().stage.get();
           robot.get().call("mouseMove",
               (int) Math.rint(pageX
-                  + (Double) stage.get().call("getX").unwrap()
-                  + (Double) stage.get().call("getScene").call("getX").unwrap()),
+                  + (Double) stage.call("getX").unwrap()
+                  + (Double) stage.call("getScene").call("getX").unwrap()),
               (int) Math.rint(pageY
-                  + (Double) stage.get().call("getY").unwrap()
-                  + (Double) stage.get().call("getScene").call("getY").unwrap()));
+                  + (Double) stage.call("getY").unwrap()
+                  + (Double) stage.call("getScene").call("getY").unwrap()));
           return null;
         }
       }, settingsId);
@@ -468,6 +475,9 @@ class Robot {
 
   void mousePress(final MouseButton button) {
     lock();
+    if (button == MouseButton.LEFT) {
+      context.item().httpListener.get().call("resetStatusCode");
+    }
     try {
       Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override

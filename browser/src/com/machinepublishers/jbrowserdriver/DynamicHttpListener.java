@@ -22,12 +22,18 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
+  private final List<Thread> threadsFromReset = new ArrayList<Thread>();
+  private final AtomicBoolean started = new AtomicBoolean();
+  private final AtomicBoolean stop = new AtomicBoolean();
   private final AtomicInteger resourceCount = new AtomicInteger();
   private final AtomicInteger statusCode;
   private final long settingsId;
@@ -90,6 +96,12 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
+    if (!this.started.get()) {
+      synchronized (this.started) {
+        this.started.set(true);
+        this.started.notifyAll();
+      }
+    }
     if (state == LoadListenerClient.RESOURCE_STARTED) {
       resourceCount.incrementAndGet();
     } else if (state == LoadListenerClient.RESOURCE_FINISHED
@@ -101,18 +113,47 @@ class DynamicHttpListener implements LoadListenerClient {
     }
   }
 
+  public void resetStatusCode() {
+    synchronized (threadsFromReset) {
+      for (Thread thread : threadsFromReset) {
+        thread.interrupt();
+      }
+      threadsFromReset.clear();
+      started.set(false);
+      stop.set(false);
+      statusCode.set(-1);
+      resourceCount.set(0);
+      Thread thread = new Thread(new DynamicAjaxListener(statusCode, resourceCount, started, stop));
+      threadsFromReset.add(thread);
+      thread.start();
+    }
+  }
+
   @Override
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     try {
+      if (!this.started.get()) {
+        synchronized (this.started) {
+          this.started.set(true);
+          this.started.notifyAll();
+        }
+      }
       this.frame.compareAndSet(0l, frame);
       if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
         if (this.frame.get() == frame || statusCode.get() == 0) {
           if (url.startsWith("http://") || url.startsWith("https://")) {
+            stop.set(true);
             statusCode.set(0);
+            if (this.frame.get() == frame) {
+              resourceCount.set(1);
+            } else {
+              resourceCount.set(0);
+            }
+          } else {
+            resourceCount.set(0);
           }
-          resourceCount.set(0);
         }
         startStatusMonitor.invoke(statusMonitor, url);
       } else if (this.frame.get() == frame
@@ -122,6 +163,9 @@ class DynamicHttpListener implements LoadListenerClient {
         final int newStatusCode;
         if (statusCode.get() == 0 || url.startsWith("http://") || url.startsWith("https://")) {
           newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
+          if (statusCode.get() == 0 && (url.startsWith("http://") || url.startsWith("https://"))) {
+            resourceCount.decrementAndGet();
+          }
         } else {
           newStatusCode = -1;
         }

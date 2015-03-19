@@ -99,7 +99,7 @@ class Util {
       synchronized (done) {
         ret.set(result);
         done.set(true);
-        done.notify();
+        done.notifyAll();
       }
     }
   }
