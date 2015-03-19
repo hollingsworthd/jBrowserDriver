@@ -43,12 +43,12 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class JBrowserDriver implements Browser {
-  private static final int CHARS_TO_DELETE = 60;
   /**
    * Use this string on sendKeys functions to delete text.
    */
   public static final String KEYBOARD_DELETE;
   static {
+    final int CHARS_TO_DELETE = 60;
     StringBuilder builder = new StringBuilder();
     String key = Keys.BACK_SPACE.toString();
     for (int i = 0; i < CHARS_TO_DELETE; i++) {
