@@ -363,8 +363,8 @@ class Robot {
   }
 
   void keysType(final CharSequence chars) {
-    final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
     lock();
+    final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
     try {
       final int[] ints = chars.codePoints().toArray();
       final Integer[] integers = new Integer[ints.length];
