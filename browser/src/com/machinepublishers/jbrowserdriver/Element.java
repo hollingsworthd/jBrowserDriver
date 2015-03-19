@@ -118,9 +118,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
             double y = Double.parseDouble(obj.call("getMember", "top").toString());
             double x = Double.parseDouble(obj.call("getMember", "left").toString());
-            y = y < 0d ? 1d : y + 1;
-            x = x < 0d ? 1d : x + 1;
-            context.robot.get().mouseMove(x, y);
+            y = y < 0d ? 0d : y;
+            x = x < 0d ? 0d : x;
+            context.robot.get().mouseMove(x + 1, y + 1);
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }
@@ -218,7 +218,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
             int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
             int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
-            return new Point(x, y);
+            return new Point(x + 1, y + 1);
           }
         }, context.settingsId.get());
   }
@@ -650,9 +650,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                 JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
                 double y = Double.parseDouble(obj.call("getMember", "top").toString());
                 double x = Double.parseDouble(obj.call("getMember", "left").toString());
-                y = y < 0d ? 1d : y + 1;
-                x = x < 0d ? 1d : x + 1;
-                return new Point((int) Math.rint(x), (int) Math.rint(y));
+                y = y < 0d ? 0d : y;
+                x = x < 0d ? 0d : x;
+                return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
               }
             }, context.settingsId.get());
       }
