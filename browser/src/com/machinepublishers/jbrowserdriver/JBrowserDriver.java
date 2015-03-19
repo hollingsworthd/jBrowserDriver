@@ -33,6 +33,7 @@ import javafx.scene.image.WritableImage;
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -42,6 +43,24 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 public class JBrowserDriver implements Browser {
+  private static final int CHARS_TO_DELETE = 60;
+  /**
+   * Use this string on sendKeys functions to delete text.
+   */
+  public static final String KEYBOARD_DELETE;
+  static {
+    StringBuilder builder = new StringBuilder();
+    String key = Keys.BACK_SPACE.toString();
+    for (int i = 0; i < CHARS_TO_DELETE; i++) {
+      builder.append(key);
+    }
+    key = Keys.DELETE.toString();
+    for (int i = 0; i < CHARS_TO_DELETE; i++) {
+      builder.append(key);
+    }
+    KEYBOARD_DELETE = builder.toString();
+  }
+
   private final BrowserContext context = new BrowserContext();
 
   public JBrowserDriver() {

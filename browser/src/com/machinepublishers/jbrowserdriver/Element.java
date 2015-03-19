@@ -107,9 +107,19 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                       + "  this.onclick = this.origOnclick;"
                       + "};");
             }
+            return null;
+          }
+        }, context.settingsId.get());
+
+    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
             JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
             double y = Double.parseDouble(obj.call("getMember", "top").toString());
             double x = Double.parseDouble(obj.call("getMember", "left").toString());
+            y = y < 0d ? 0d : y;
+            x = x < 0d ? 0d : x;
             context.robot.get().mouseMove(x, y, context.item().stage);
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
@@ -141,10 +151,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           public Object perform() {
             node.get().call("call", "scrollIntoView");
             node.get().call("call", "focus");
-            context.robot.get().keysType(keys);
             return null;
           }
         }, context.settingsId.get());
+    context.robot.get().keysType(keys);
   }
 
   @Override
@@ -624,14 +634,23 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
       @Override
       public Point onPage() {
+        Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+            new Sync<Object>() {
+              @Override
+              public Point perform() {
+                node.get().call("call", "scrollIntoView");
+                return null;
+              }
+            }, context.settingsId.get());
         return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<Point>() {
               @Override
               public Point perform() {
-                node.get().call("call", "scrollIntoView");
                 JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
                 double y = Double.parseDouble(obj.call("getMember", "top").toString());
                 double x = Double.parseDouble(obj.call("getMember", "left").toString());
+                y = y < 0d ? 0d : y;
+                x = x < 0d ? 0d : x;
                 return new Point((int) Math.rint(x), (int) Math.rint(y));
               }
             }, context.settingsId.get());

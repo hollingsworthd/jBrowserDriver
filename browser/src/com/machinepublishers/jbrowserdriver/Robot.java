@@ -363,6 +363,7 @@ class Robot {
   }
 
   void keysType(final CharSequence chars) {
+    final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
     lock();
     try {
       final int[] ints = chars.codePoints().toArray();
@@ -375,7 +376,7 @@ class Robot {
       final List<Integer> toRelease = new ArrayList<Integer>();
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+        Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             synchronized (toRelease) {
@@ -406,7 +407,7 @@ class Robot {
       synchronized (toRelease) {
         for (int i = toRelease.size() - 1; i > -1; i--) {
           final int key = toRelease.get(i);
-          Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+          Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               robot.get().call("keyRelease", key);
