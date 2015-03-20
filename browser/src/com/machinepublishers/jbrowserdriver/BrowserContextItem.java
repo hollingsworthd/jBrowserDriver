@@ -70,7 +70,8 @@ class BrowserContextItem {
           @Override
           public Object perform() {
             httpListener.set(JavaFx.getNew(DynamicHttpListener.class, context.settingsId.get(),
-                context.statusCode, context.settingsId.get()));
+                context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
+                context.settingsId.get()));
             JavaFx.getStatic(Accessor.class, context.settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient", httpListener.get());

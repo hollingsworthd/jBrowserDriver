@@ -28,9 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicAjaxListener implements Runnable {
-  private static final int WAIT = 1000;
-  private static final int MAX_WAIT = 15000;
-  private static final int START_WAIT = 1000;
+  private static final long WAIT_INTERVAL = 1000;
+  private static final long MAX_WAIT_DEFAULT = 15000;
   private final int state;
   private final int newStatusCode;
   private final AtomicInteger statusCode;
@@ -38,26 +37,30 @@ class DynamicAjaxListener implements Runnable {
   private final Method clearStatusMonitor;
   private final AtomicInteger resourceCount;
   private final AtomicBoolean started;
-  private final AtomicBoolean stop;
+  private final AtomicBoolean superseded;
+  private final long timeoutMS;
 
-  DynamicAjaxListener(final int state, final int newStatusCode, final AtomicInteger statusCode,
-      final Object statusMonitor, final Method clearStatusMonitor, final AtomicInteger resourceCount) {
+  DynamicAjaxListener(final int state, final int newStatusCode,
+      final AtomicInteger statusCode, final Object statusMonitor,
+      final Method clearStatusMonitor, final AtomicInteger resourceCount, final long timeoutMS) {
     this.state = state;
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
     this.statusMonitor = statusMonitor;
     this.clearStatusMonitor = clearStatusMonitor;
     this.resourceCount = resourceCount;
+    this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.started = null;
-    this.stop = new AtomicBoolean();
+    this.superseded = new AtomicBoolean();
   }
 
   DynamicAjaxListener(final AtomicInteger statusCode, final AtomicInteger resourceCount,
-      final AtomicBoolean started, final AtomicBoolean stop) {
+      final AtomicBoolean started, final AtomicBoolean superseded, final long timeoutMS) {
     this.statusCode = statusCode;
     this.resourceCount = resourceCount;
     this.started = started;
-    this.stop = stop;
+    this.superseded = superseded;
+    this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.state = -1;
     this.newStatusCode = -1;
     this.statusMonitor = null;
@@ -66,32 +69,25 @@ class DynamicAjaxListener implements Runnable {
 
   @Override
   public void run() {
-    if (started != null) {
-      synchronized (started) {
-        if (!started.get()) {
-          try {
-            started.wait(START_WAIT);
-          } catch (InterruptedException e) {}
-        }
-      }
-    }
     if (Thread.interrupted()) {
       return;
     }
-    if ((started == null && state == LoadListenerClient.PAGE_FINISHED)
-        || (started != null && started.get())) {
+    if (started != null || state == LoadListenerClient.PAGE_FINISHED) {
       int totalWait = 0;
       do {
         try {
-          Thread.sleep(WAIT);
+          Thread.sleep(WAIT_INTERVAL);
         } catch (InterruptedException e) {}
-        totalWait += WAIT;
         if (Thread.interrupted()) {
           return;
         }
-      } while (resourceCount.get() > 0 && totalWait < MAX_WAIT);
+        if (started != null && totalWait == 0 && !started.get()) {
+          break;
+        }
+        totalWait += WAIT_INTERVAL;
+      } while (resourceCount.get() > 0 && totalWait < timeoutMS);
     }
-    if (!stop.get()) {
+    if (!superseded.get()) {
       if (Thread.interrupted()) {
         return;
       }
@@ -108,14 +104,14 @@ class DynamicAjaxListener implements Runnable {
           t.printStackTrace();
         }
       } else {
-        if (!stop.get()) {
+        if (!superseded.get()) {
           if (Thread.interrupted()) {
             return;
           }
           statusCode.set(200);
         }
       }
-      if (!stop.get()) {
+      if (!superseded.get()) {
         if (Thread.interrupted()) {
           return;
         }

@@ -61,4 +61,16 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     return script.get();
   }
 
+  AtomicLong getImplicitlyWaitObjMS() {
+    return implicit;
+  }
+
+  AtomicLong getPageLoadTimeoutObjMS() {
+    return load;
+  }
+
+  AtomicLong getScriptTimeoutObjMS() {
+    return script;
+  }
+
 }
