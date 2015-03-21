@@ -32,7 +32,6 @@ import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
-  private final AtomicBoolean started = new AtomicBoolean();
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final AtomicInteger resourceCount = new AtomicInteger();
   private final AtomicInteger statusCode;
@@ -99,12 +98,6 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (!this.started.get()) {
-      synchronized (this.started) {
-        this.started.set(true);
-        this.started.notifyAll();
-      }
-    }
     if (state == LoadListenerClient.RESOURCE_STARTED) {
       resourceCount.incrementAndGet();
     } else if (state == LoadListenerClient.RESOURCE_FINISHED
@@ -122,12 +115,13 @@ class DynamicHttpListener implements LoadListenerClient {
         thread.interrupt();
       }
       threadsFromReset.clear();
-      started.set(false);
-      superseded.set(false);
-      statusCode.set(-1);
-      resourceCount.set(0);
+      synchronized (superseded) {
+        superseded.set(false);
+        statusCode.set(-1);
+        resourceCount.set(0);
+      }
       Thread thread = new Thread(new DynamicAjaxListener(
-          statusCode, resourceCount, started, superseded, timeoutMS.get()));
+          statusCode, resourceCount, superseded, timeoutMS.get()));
       threadsFromReset.add(thread);
       thread.start();
     }
@@ -137,26 +131,24 @@ class DynamicHttpListener implements LoadListenerClient {
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     try {
-      if (!this.started.get()) {
-        synchronized (this.started) {
-          this.started.set(true);
-          this.started.notifyAll();
-        }
-      }
       this.frame.compareAndSet(0l, frame);
       if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
         if (this.frame.get() == frame || statusCode.get() == 0) {
-          if (url.startsWith("http://") || url.startsWith("https://")) {
-            superseded.set(true);
-            statusCode.set(0);
-            if (this.frame.get() == frame) {
-              resourceCount.set(1);
+          final boolean validUrl = url.startsWith("http://") || url.startsWith("https://");
+          final boolean sameFrame = this.frame.get() == frame;
+          synchronized (superseded) {
+            if (validUrl) {
+              superseded.set(true);
+              statusCode.set(0);
+              if (sameFrame) {
+                resourceCount.set(1);
+              } else {
+                resourceCount.set(0);
+              }
             } else {
               resourceCount.set(0);
             }
-          } else {
-            resourceCount.set(0);
           }
         }
         startStatusMonitor.invoke(statusMonitor, url);

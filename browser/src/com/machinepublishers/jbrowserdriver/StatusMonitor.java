@@ -88,6 +88,7 @@ class StatusMonitor {
       if (connections.containsKey(url)) {
         try {
           code = connections.get(url).getResponseCode();
+          code = code <= 0 ? 499 : code;
         } catch (Throwable t) {
           Logs.exception(t);
         }

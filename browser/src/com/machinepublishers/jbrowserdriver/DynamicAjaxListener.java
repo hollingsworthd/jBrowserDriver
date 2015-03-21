@@ -31,12 +31,11 @@ class DynamicAjaxListener implements Runnable {
   private static final long WAIT_INTERVAL = 1000;
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final int state;
-  private final int newStatusCode;
+  private final Integer newStatusCode;
   private final AtomicInteger statusCode;
   private final Object statusMonitor;
   private final Method clearStatusMonitor;
   private final AtomicInteger resourceCount;
-  private final AtomicBoolean started;
   private final AtomicBoolean superseded;
   private final long timeoutMS;
 
@@ -50,19 +49,17 @@ class DynamicAjaxListener implements Runnable {
     this.clearStatusMonitor = clearStatusMonitor;
     this.resourceCount = resourceCount;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
-    this.started = null;
     this.superseded = new AtomicBoolean();
   }
 
   DynamicAjaxListener(final AtomicInteger statusCode, final AtomicInteger resourceCount,
-      final AtomicBoolean started, final AtomicBoolean superseded, final long timeoutMS) {
+      final AtomicBoolean superseded, final long timeoutMS) {
     this.statusCode = statusCode;
     this.resourceCount = resourceCount;
-    this.started = started;
     this.superseded = superseded;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.state = -1;
-    this.newStatusCode = -1;
+    this.newStatusCode = null;
     this.statusMonitor = null;
     this.clearStatusMonitor = null;
   }
@@ -72,7 +69,7 @@ class DynamicAjaxListener implements Runnable {
     if (Thread.interrupted()) {
       return;
     }
-    if (started != null || state == LoadListenerClient.PAGE_FINISHED) {
+    if (newStatusCode == null || state == LoadListenerClient.PAGE_FINISHED) {
       int totalWait = 0;
       do {
         try {
@@ -81,39 +78,29 @@ class DynamicAjaxListener implements Runnable {
         if (Thread.interrupted()) {
           return;
         }
-        if (started != null && totalWait == 0 && !started.get()) {
-          break;
-        }
         totalWait += WAIT_INTERVAL;
       } while (resourceCount.get() > 0 && totalWait < timeoutMS);
     }
-    if (!superseded.get()) {
-      if (Thread.interrupted()) {
-        return;
-      }
-      resourceCount.set(0);
-    }
     synchronized (statusCode) {
-      if (started == null) {
+      if (newStatusCode == null) {
+        synchronized (superseded) {
+          if (!superseded.get() && !Thread.interrupted()) {
+            resourceCount.set(0);
+            statusCode.set(200);
+            statusCode.notifyAll();
+          }
+        }
+      } else {
+        resourceCount.set(0);
         if (newStatusCode > -1) {
           statusCode.set(newStatusCode);
+        } else if (statusCode.get() == 0) {
+          statusCode.set(499);
         }
         try {
           clearStatusMonitor.invoke(statusMonitor);
         } catch (Throwable t) {
           t.printStackTrace();
-        }
-      } else {
-        if (!superseded.get()) {
-          if (Thread.interrupted()) {
-            return;
-          }
-          statusCode.set(200);
-        }
-      }
-      if (!superseded.get()) {
-        if (Thread.interrupted()) {
-          return;
         }
         statusCode.notifyAll();
       }
