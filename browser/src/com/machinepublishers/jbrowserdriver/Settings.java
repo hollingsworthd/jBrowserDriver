@@ -146,6 +146,7 @@ public class Settings {
     this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
     this.proxy = proxy == null ? new ProxyConfig() : proxy;
     this.downloadDir = downloadDir == null ? new File("./download_cache") : downloadDir;
+    this.downloadDir.mkdirs();
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
