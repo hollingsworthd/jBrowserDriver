@@ -98,11 +98,13 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (state == LoadListenerClient.RESOURCE_STARTED) {
-      resourceCount.incrementAndGet();
-    } else if (state == LoadListenerClient.RESOURCE_FINISHED
-        || state == LoadListenerClient.RESOURCE_FAILED) {
-      resourceCount.decrementAndGet();
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      if (state == LoadListenerClient.RESOURCE_STARTED) {
+        resourceCount.incrementAndGet();
+      } else if (state == LoadListenerClient.RESOURCE_FINISHED
+          || state == LoadListenerClient.RESOURCE_FAILED) {
+        resourceCount.decrementAndGet();
+      }
     }
     if (TRACE) {
       trace("Rsrc", frame, state, url, contentType, progress, errorCode);
@@ -132,41 +134,25 @@ class DynamicHttpListener implements LoadListenerClient {
       String contentType, double progress, int errorCode) {
     try {
       this.frame.compareAndSet(0l, frame);
-      if (state == LoadListenerClient.PAGE_STARTED || state == LoadListenerClient.PAGE_REDIRECTED
-          || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-        if (this.frame.get() == frame || statusCode.get() == 0) {
-          final boolean validUrl = url.startsWith("http://") || url.startsWith("https://");
-          final boolean sameFrame = this.frame.get() == frame;
+      if (this.frame.get() == frame
+          && statusCode.get() == 0
+          && (url.startsWith("http://") || url.startsWith("https://"))) {
+        if (state == LoadListenerClient.PAGE_STARTED
+            || state == LoadListenerClient.PAGE_REDIRECTED) {
           synchronized (superseded) {
-            if (validUrl) {
-              superseded.set(true);
-              statusCode.set(0);
-              if (sameFrame) {
-                resourceCount.set(1);
-              } else {
-                resourceCount.set(0);
-              }
-            } else {
-              resourceCount.set(0);
-            }
+            superseded.set(true);
+            resourceCount.set(1);
           }
+          startStatusMonitor.invoke(statusMonitor, url);
+        } else if (state == LoadListenerClient.PAGE_FINISHED
+            || state == LoadListenerClient.LOAD_FAILED
+            || state == LoadListenerClient.LOAD_STOPPED) {
+          final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
+          final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
+          resourceCount.decrementAndGet();
+          new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode,
+              statusMonitor, clearStatusMonitor, resourceCount, timeoutMS.get())).start();
         }
-        startStatusMonitor.invoke(statusMonitor, url);
-      } else if (this.frame.get() == frame
-          && (state == LoadListenerClient.PAGE_FINISHED
-              || state == LoadListenerClient.LOAD_FAILED || state == LoadListenerClient.LOAD_STOPPED)) {
-        int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
-        final int newStatusCode;
-        if (statusCode.get() == 0 || url.startsWith("http://") || url.startsWith("https://")) {
-          newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
-          if (statusCode.get() == 0 && (url.startsWith("http://") || url.startsWith("https://"))) {
-            resourceCount.decrementAndGet();
-          }
-        } else {
-          newStatusCode = -1;
-        }
-        new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode,
-            statusMonitor, clearStatusMonitor, resourceCount, timeoutMS.get())).start();
       }
     } catch (Throwable t) {
       t.printStackTrace();
