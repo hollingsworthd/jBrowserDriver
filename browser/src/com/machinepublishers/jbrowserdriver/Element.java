@@ -52,6 +52,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
+import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
@@ -66,9 +67,13 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   private final BrowserContext context;
 
   Element(final AtomicReference<JavaFxObject> node, final BrowserContext context) {
-    this.isWindow = node.get().is(Document.class);
-    this.node = node;
-    this.context = context;
+    try {
+      this.isWindow = node.get().is(Document.class);
+      this.node = node;
+      this.context = context;
+    } catch (Throwable t) {
+      throw new Browser.Retry(t);
+    }
   }
 
   static Element create(final BrowserContext context) {
