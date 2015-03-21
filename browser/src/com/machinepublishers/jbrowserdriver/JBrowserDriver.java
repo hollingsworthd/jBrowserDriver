@@ -107,7 +107,7 @@ public class JBrowserDriver implements Browser {
     init();
     try {
       synchronized (context.statusCode) {
-        if (context.statusCode.get() <= 0) {
+        if (context.statusCode.get() == 0) {
           context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
         }
       }

@@ -117,7 +117,7 @@ class DynamicHttpListener implements LoadListenerClient {
       threadsFromReset.clear();
       synchronized (superseded) {
         superseded.set(false);
-        statusCode.set(-1);
+        statusCode.set(0);
         resourceCount.set(0);
       }
       Thread thread = new Thread(new DynamicAjaxListener(

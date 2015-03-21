@@ -94,7 +94,7 @@ class DynamicAjaxListener implements Runnable {
         resourceCount.set(0);
         if (newStatusCode > -1) {
           statusCode.set(newStatusCode);
-        } else if (statusCode.get() == 0) {
+        } else if (statusCode.get() <= 0) {
           statusCode.set(499);
         }
         try {
