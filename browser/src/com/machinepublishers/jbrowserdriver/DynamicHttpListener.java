@@ -23,7 +23,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,7 +35,7 @@ import com.sun.webkit.LoadListenerClient;
 class DynamicHttpListener implements LoadListenerClient {
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
-  private final AtomicInteger resourceCount = new AtomicInteger();
+  private final Set<String> resources = new HashSet<String>();
   private final AtomicInteger statusCode;
   private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
@@ -44,11 +46,13 @@ class DynamicHttpListener implements LoadListenerClient {
   private static final Method startStatusMonitor;
   private static final Method stopStatusMonitor;
   private static final Method clearStatusMonitor;
+  private static final Method originalFromRedirect;
   static {
     Method getStatusMonitorTmp = null;
     Method startStatusMonitorTmp = null;
     Method stopStatusMonitorTmp = null;
     Method clearStatusMonitorTmp = null;
+    Method originalFromRedirectTmp = null;
     try {
       Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().
           loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
@@ -60,6 +64,8 @@ class DynamicHttpListener implements LoadListenerClient {
       stopStatusMonitorTmp.setAccessible(true);
       clearStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("clearStatusMonitor");
       clearStatusMonitorTmp.setAccessible(true);
+      originalFromRedirectTmp = statusMonitorClass.getDeclaredMethod("originalFromRedirect", String.class);
+      originalFromRedirectTmp.setAccessible(true);
     } catch (Throwable t) {
       t.printStackTrace();
     }
@@ -67,6 +73,7 @@ class DynamicHttpListener implements LoadListenerClient {
     startStatusMonitor = startStatusMonitorTmp;
     stopStatusMonitor = stopStatusMonitorTmp;
     clearStatusMonitor = clearStatusMonitorTmp;
+    originalFromRedirect = originalFromRedirectTmp;
   }
 
   DynamicHttpListener(AtomicInteger statusCode, AtomicLong timeoutMS, long settingsId) {
@@ -100,10 +107,23 @@ class DynamicHttpListener implements LoadListenerClient {
       String contentType, double progress, int errorCode) {
     if (url.startsWith("http://") || url.startsWith("https://")) {
       if (state == LoadListenerClient.RESOURCE_STARTED) {
-        resourceCount.incrementAndGet();
+        synchronized (resources) {
+          resources.add(frame + url);
+        }
       } else if (state == LoadListenerClient.RESOURCE_FINISHED
           || state == LoadListenerClient.RESOURCE_FAILED) {
-        resourceCount.decrementAndGet();
+        String original = null;
+        try {
+          original = (String) originalFromRedirect.invoke(statusMonitor, url);
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
+        synchronized (resources) {
+          resources.remove(frame + url);
+          if (original != null) {
+            resources.remove(frame + original);
+          }
+        }
       }
     }
     if (TRACE) {
@@ -120,10 +140,12 @@ class DynamicHttpListener implements LoadListenerClient {
       synchronized (superseded) {
         superseded.set(false);
         statusCode.set(0);
-        resourceCount.set(0);
+        synchronized (resources) {
+          resources.clear();
+        }
       }
       Thread thread = new Thread(new DynamicAjaxListener(
-          statusCode, resourceCount, superseded, timeoutMS.get()));
+          statusCode, resources, superseded, timeoutMS.get()));
       threadsFromReset.add(thread);
       thread.start();
     }
@@ -135,23 +157,28 @@ class DynamicHttpListener implements LoadListenerClient {
     try {
       this.frame.compareAndSet(0l, frame);
       if (this.frame.get() == frame
-          && statusCode.get() == 0
           && (url.startsWith("http://") || url.startsWith("https://"))) {
         if (state == LoadListenerClient.PAGE_STARTED
             || state == LoadListenerClient.PAGE_REDIRECTED) {
           synchronized (superseded) {
+            statusCode.set(0);
             superseded.set(true);
-            resourceCount.set(1);
+            synchronized (resources) {
+              resources.clear();
+              resources.add(frame + url);
+            }
           }
           startStatusMonitor.invoke(statusMonitor, url);
-        } else if (state == LoadListenerClient.PAGE_FINISHED
-            || state == LoadListenerClient.LOAD_FAILED
-            || state == LoadListenerClient.LOAD_STOPPED) {
+        } else if (statusCode.get() == 0
+            && (state == LoadListenerClient.PAGE_FINISHED
+            || state == LoadListenerClient.LOAD_FAILED)) {
           final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
           final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
-          resourceCount.decrementAndGet();
+          synchronized (resources) {
+            resources.remove(frame + url);
+          }
           new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode,
-              statusMonitor, clearStatusMonitor, resourceCount, timeoutMS.get())).start();
+              statusMonitor, clearStatusMonitor, resources, timeoutMS.get())).start();
         }
       }
     } catch (Throwable t) {

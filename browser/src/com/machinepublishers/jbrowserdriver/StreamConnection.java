@@ -66,6 +66,7 @@ class StreamConnection extends HttpURLConnection {
   private static final String pemFile = System.getProperty("jbd.pemfile");
   private final HttpURLConnection conn;
   private final boolean isSsl;
+  private final String originalUrl;
   private final AtomicBoolean skip = new AtomicBoolean();
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
@@ -202,6 +203,7 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = true;
+    this.originalUrl = conn.getURL().toExternalForm();
     SSLSocketFactory socketFactory = updatedSocketFactory();
     if (socketFactory != null) {
       conn.setSSLSocketFactory(socketFactory);
@@ -223,6 +225,7 @@ class StreamConnection extends HttpURLConnection {
     super(dummy);
     this.conn = conn;
     this.isSsl = false;
+    this.originalUrl = conn.getURL().toExternalForm();
     connObjDelegate = conn;
   }
 
@@ -269,6 +272,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public int getResponseCode() throws IOException {
+    StatusMonitor.get(settingsId.get()).addRedirect(originalUrl, conn.getURL().toExternalForm());
     return skip.get() ? 204 : conn.getResponseCode();
   }
 

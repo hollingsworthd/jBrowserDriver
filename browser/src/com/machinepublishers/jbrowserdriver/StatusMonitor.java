@@ -33,6 +33,7 @@ class StatusMonitor {
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
+  private final Map<String, String> redirects = new HashMap<String, String>();
   private boolean monitoring = false;
 
   private StatusMonitor() {}
@@ -57,6 +58,20 @@ class StatusMonitor {
   boolean isDiscarded(String url) {
     synchronized (lock) {
       return discarded.contains(url);
+    }
+  }
+
+  void addRedirect(String original, String redirected) {
+    if (!original.equals(redirected)) {
+      synchronized (lock) {
+        redirects.put(redirected, original);
+      }
+    }
+  }
+
+  String originalFromRedirect(String redirected) {
+    synchronized (lock) {
+      return redirects.get(redirected);
     }
   }
 
@@ -102,6 +117,7 @@ class StatusMonitor {
       connections.clear();
       primaryDocuments.clear();
       discarded.clear();
+      redirects.clear();
     }
   }
 }
