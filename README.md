@@ -24,7 +24,7 @@ Example:
 
     WebDriver driver = new JBrowserDriver();
     driver.get("http://example.com"); //This will block for page load and associated AJAX requests.
-    System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! And it handles AJAX fine too.
+    System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
     System.out.println(driver.getPageSource());
 
 #### Global Properties
