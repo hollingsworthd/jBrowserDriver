@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicAjaxListener implements Runnable {
-  private static final long WAIT_INTERVAL = 100;
+  private static final long WAIT_INTERVAL = 120;
   private static final int WAIT_COUNT = 5;
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final int state;
@@ -77,7 +77,7 @@ class DynamicAjaxListener implements Runnable {
       int size = 0;
       boolean idle = false;
       waitCount.set(0);
-      do {
+      while (!idle && totalWait < timeoutMS) {
         try {
           Thread.sleep(WAIT_INTERVAL);
         } catch (InterruptedException e) {}
@@ -97,7 +97,7 @@ class DynamicAjaxListener implements Runnable {
           idle = false;
           waitCount.incrementAndGet();
         }
-      } while (!idle && totalWait < timeoutMS);
+      }
     }
     synchronized (statusCode) {
       if (newStatusCode == null) {
