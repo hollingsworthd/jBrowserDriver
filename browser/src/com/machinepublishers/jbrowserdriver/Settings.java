@@ -26,6 +26,8 @@ import java.lang.reflect.Field;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,16 +74,22 @@ public class Settings {
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     StreamInjectors.add(new Injector() {
       @Override
-      public byte[] inject(HttpURLConnection connection, byte[] inflatedContent, long settingsId) {
+      public byte[] inject(HttpURLConnection connection,
+          byte[] inflatedContent, String originalUrl, long settingsId) {
+        AtomicReference<Settings> settings = SettingsManager.get(settingsId);
         try {
-          AtomicReference<Settings> settings;
-          settings = SettingsManager.get(settingsId);
+          if (settings.get().downloadImages()
+              && StreamConnection.isMedia(connection.getContentType())) {
+            File file = new File(settings.get().downloadDir,
+                Base64.getEncoder().encodeToString(
+                    originalUrl.replaceFirst("^https?://", "").getBytes("utf-8")));
+            file.deleteOnExit();
+            Files.write(file.toPath(), inflatedContent);
+          }
+        } catch (Throwable t) {}
+        try {
           if (!"false".equals(System.getProperty("jbd.quickrender"))
-              && connection.getContentType() != null
-              && (connection.getContentType().startsWith("image/")
-                  || connection.getContentType().startsWith("video/")
-                  || connection.getContentType().startsWith("audio/")
-                  || connection.getContentType().startsWith("model/"))) {
+              && StreamConnection.isMedia(connection.getContentType())) {
             if (Logs.TRACE) {
               System.out.println("Media discarded: " + connection.getURL().toExternalForm());
             }
@@ -117,12 +125,96 @@ public class Settings {
     });
   }
 
+  /**
+   * Helps build the Settings object.
+   */
+  public static class Builder {
+    private RequestHeaders requestHeaders;
+    private BrowserTimeZone browserTimeZone;
+    private BrowserProperties browserProperties;
+    private ProxyConfig proxy;
+    private File downloadDir;
+    private boolean downloadImages;
+
+    /**
+     * @param requestHeaders
+     *          Headers to be sent on each request
+     * @return this Builder
+     */
+    public Builder requestHeaders(RequestHeaders requestHeaders) {
+      this.requestHeaders = requestHeaders;
+      return this;
+    }
+
+    /**
+     * @param browserTimeZone
+     *          Timezone of the browser
+     * @return this Builder
+     */
+    public Builder browserTimeZone(BrowserTimeZone browserTimeZone) {
+      this.browserTimeZone = browserTimeZone;
+      return this;
+    }
+
+    /**
+     * @param browserProperties
+     *          Various DOM and JavaScript properties
+     * @return this Builder
+     */
+    public Builder browserProperties(BrowserProperties browserProperties) {
+      this.browserProperties = browserProperties;
+      return this;
+    }
+
+    /**
+     * @param proxy
+     *          Proxy server to be used
+     * @return this Builder
+     */
+    public Builder proxy(ProxyConfig proxy) {
+      this.proxy = proxy;
+      return this;
+    }
+
+    /**
+     * @param downloadDir
+     *          Where to save downloaded files
+     * @return this Builder
+     */
+    public Builder downloadDir(File downloadDir) {
+      this.downloadDir = downloadDir;
+      return this;
+    }
+
+    /**
+     * @param downloadImages
+     *          Whether to download images.
+     *          If so, they're saved in the downloadDir
+     *          and the image filename is its base64-encoded URL
+     *          with the leading "http://" or "https://" stripped.
+     * @return this Builder
+     */
+    public Builder downloadImages(boolean downloadImages) {
+      this.downloadImages = downloadImages;
+      return this;
+    }
+
+    /**
+     * @return A Settings object created from this builder.
+     *         Equivalent to calling new Settings(Settings.Builder).
+     */
+    public Settings build() {
+      return new Settings(this);
+    }
+  }
+
   private static final Random rand = new Random();
   private final RequestHeaders requestHeaders;
   private final BrowserTimeZone browserTimeZone;
   private final BrowserProperties browserProperties;
   private final ProxyConfig proxy;
   private final File downloadDir;
+  private final boolean downloadImages;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
@@ -132,21 +224,32 @@ public class Settings {
    * Create default settings.
    */
   public Settings() {
-    this(null, null, null, null, null);
+    this(null, null, null, null, null, false);
   }
 
   /**
-   * Pass null for any parameter which you want left as default.
+   * Create default settings from the Settings.Builder helper.
+   * Equivalent to calling Settings.Builder.build().
    */
-  public Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
-      final BrowserProperties browserProperties, final ProxyConfig proxy, final File downloadDir) {
+  public Settings(Builder builder) {
+    this(builder.requestHeaders, builder.browserTimeZone, builder.browserProperties,
+        builder.proxy, builder.downloadDir, builder.downloadImages);
+  }
+
+  Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
+      final BrowserProperties browserProperties, final ProxyConfig proxy,
+      final File downloadDir, final boolean downloadImages) {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
     this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
     this.proxy = proxy == null ? new ProxyConfig() : proxy;
     this.downloadDir = downloadDir == null ? new File("./download_cache") : downloadDir;
-    this.downloadDir.mkdirs();
+    if (!this.downloadDir.exists()) {
+      this.downloadDir.mkdirs();
+      this.downloadDir.deleteOnExit();
+    }
+    this.downloadImages = downloadImages;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -167,6 +270,7 @@ public class Settings {
     browserProperties = original.browserProperties;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
+    downloadImages = original.downloadImages;
     mySettingsId = settingsId.incrementAndGet();
     script = original.script;
   }
@@ -193,6 +297,10 @@ public class Settings {
 
   File downloadDir() {
     return downloadDir;
+  }
+
+  boolean downloadImages() {
+    return downloadImages;
   }
 
   String script() {

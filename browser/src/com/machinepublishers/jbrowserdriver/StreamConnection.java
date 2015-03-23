@@ -267,7 +267,15 @@ class StreamConnection extends HttpURLConnection {
       }
     }
     return skip.get() ? new ByteArrayInputStream(new byte[0])
-        : StreamInjectors.injectedStream(conn, settingsId.get());
+        : StreamInjectors.injectedStream(conn, originalUrl, settingsId.get());
+  }
+
+  static boolean isMedia(String contentType) {
+    return contentType != null
+        && (contentType.startsWith("image/")
+            || contentType.startsWith("video/")
+            || contentType.startsWith("audio/")
+            || contentType.startsWith("model/"));
   }
 
   @Override

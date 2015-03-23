@@ -35,7 +35,7 @@ import java.util.zip.InflaterInputStream;
 
 class StreamInjectors {
   public static interface Injector {
-    byte[] inject(HttpURLConnection connection, byte[] inflatedContent, long settingsId);
+    byte[] inject(HttpURLConnection connection, byte[] inflatedContent, String originalUrl, long settingsId);
   }
 
   private static final Object lock = new Object();
@@ -59,7 +59,8 @@ class StreamInjectors {
     }
   }
 
-  static InputStream injectedStream(HttpURLConnection conn, long settingsId) throws IOException {
+  static InputStream injectedStream(HttpURLConnection conn,
+      String originalUrl, long settingsId) throws IOException {
     if (conn.getErrorStream() != null) {
       return conn.getInputStream();
     }
@@ -76,7 +77,7 @@ class StreamInjectors {
         byte[] content = Util.toBytes(in);
         synchronized (lock) {
           for (Injector injector : injectors) {
-            byte[] newContent = injector.inject(conn, content, settingsId);
+            byte[] newContent = injector.inject(conn, content, originalUrl, settingsId);
             if (newContent != null) {
               content = newContent;
             }
