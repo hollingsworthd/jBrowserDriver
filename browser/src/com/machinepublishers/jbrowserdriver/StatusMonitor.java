@@ -97,19 +97,21 @@ class StatusMonitor {
   }
 
   int stopStatusMonitor(String url) {
+    StreamConnection conn = null;
     synchronized (lock) {
       monitoring = false;
-      int code = 499;
-      if (connections.containsKey(url)) {
-        try {
-          code = connections.get(url).getResponseCode();
-          code = code <= 0 ? 499 : code;
-        } catch (Throwable t) {
-          Logs.exception(t);
-        }
-      }
-      return code;
+      conn = connections.get(url);
     }
+    int code = 499;
+    if (conn != null) {
+      try {
+        code = conn.getResponseCode();
+        code = code <= 0 ? 499 : code;
+      } catch (Throwable t) {
+        Logs.exception(t);
+      }
+    }
+    return code;
   }
 
   void clearStatusMonitor() {
