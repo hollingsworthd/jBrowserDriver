@@ -78,7 +78,7 @@ public class Settings {
           byte[] inflatedContent, String originalUrl, long settingsId) {
         AtomicReference<Settings> settings = SettingsManager.get(settingsId);
         try {
-          if (settings.get().downloadImages()
+          if (settings.get().downloadMedia()
               && StreamConnection.isMedia(connection.getContentType())) {
             File file = new File(settings.get().downloadDir,
                 Base64.getEncoder().encodeToString(
@@ -134,7 +134,7 @@ public class Settings {
     private BrowserProperties browserProperties;
     private ProxyConfig proxy;
     private File downloadDir;
-    private boolean downloadImages;
+    private boolean downloadMedia;
 
     /**
      * @param requestHeaders
@@ -187,15 +187,15 @@ public class Settings {
     }
 
     /**
-     * @param downloadImages
-     *          Whether to download images.
+     * @param downloadMedia
+     *          Whether to download media (e.g., images).
      *          If so, they're saved in the downloadDir
-     *          and the image filename is its base64-encoded URL
+     *          and the filename is its base64-encoded URL
      *          with the leading "http://" or "https://" stripped.
      * @return this Builder
      */
-    public Builder downloadImages(boolean downloadImages) {
-      this.downloadImages = downloadImages;
+    public Builder downloadMedia(boolean downloadMedia) {
+      this.downloadMedia = downloadMedia;
       return this;
     }
 
@@ -214,7 +214,7 @@ public class Settings {
   private final BrowserProperties browserProperties;
   private final ProxyConfig proxy;
   private final File downloadDir;
-  private final boolean downloadImages;
+  private final boolean downloadMedia;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
@@ -233,12 +233,12 @@ public class Settings {
    */
   public Settings(Builder builder) {
     this(builder.requestHeaders, builder.browserTimeZone, builder.browserProperties,
-        builder.proxy, builder.downloadDir, builder.downloadImages);
+        builder.proxy, builder.downloadDir, builder.downloadMedia);
   }
 
   Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
       final BrowserProperties browserProperties, final ProxyConfig proxy,
-      final File downloadDir, final boolean downloadImages) {
+      final File downloadDir, final boolean downloadMedia) {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
@@ -249,7 +249,7 @@ public class Settings {
       this.downloadDir.mkdirs();
       this.downloadDir.deleteOnExit();
     }
-    this.downloadImages = downloadImages;
+    this.downloadMedia = downloadMedia;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -270,7 +270,7 @@ public class Settings {
     browserProperties = original.browserProperties;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
-    downloadImages = original.downloadImages;
+    downloadMedia = original.downloadMedia;
     mySettingsId = settingsId.incrementAndGet();
     script = original.script;
   }
@@ -299,8 +299,8 @@ public class Settings {
     return downloadDir;
   }
 
-  boolean downloadImages() {
-    return downloadImages;
+  boolean downloadMedia() {
+    return downloadMedia;
   }
 
   String script() {
