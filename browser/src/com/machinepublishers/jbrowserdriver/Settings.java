@@ -78,9 +78,9 @@ public class Settings {
           byte[] inflatedContent, String originalUrl, long settingsId) {
         AtomicReference<Settings> settings = SettingsManager.get(settingsId);
         try {
-          if (settings.get().downloadMedia()
+          if (settings.get().saveMedia()
               && StreamConnection.isMedia(connection.getContentType())) {
-            File file = new File(settings.get().downloadDir,
+            File file = new File(settings.get().mediaDir(),
                 Base64.getEncoder().encodeToString(
                     originalUrl.replaceFirst("^https?://", "").getBytes("utf-8")));
             file.deleteOnExit();
@@ -134,7 +134,9 @@ public class Settings {
     private BrowserProperties browserProperties;
     private ProxyConfig proxy;
     private File downloadDir;
-    private boolean downloadMedia;
+    private File mediaDir;
+    private boolean saveMedia;
+    private boolean saveMediaInit;
 
     /**
      * @param requestHeaders
@@ -187,15 +189,29 @@ public class Settings {
     }
 
     /**
-     * @param downloadMedia
+     * @param mediaDir
+     *          Where to save media files
+     * @return this Builder
+     */
+    public Builder mediaDir(File mediaDir) {
+      this.mediaDir = mediaDir;
+      if (mediaDir != null && !saveMediaInit) {
+        this.saveMedia = true;
+      }
+      return this;
+    }
+
+    /**
+     * @param saveMedia
      *          Whether to download media (e.g., images).
      *          If so, they're saved in the downloadDir
      *          and the filename is its base64-encoded URL
      *          with the leading "http://" or "https://" stripped.
      * @return this Builder
      */
-    public Builder downloadMedia(boolean downloadMedia) {
-      this.downloadMedia = downloadMedia;
+    public Builder saveMedia(boolean saveMedia) {
+      this.saveMedia = saveMedia;
+      this.saveMediaInit = true;
       return this;
     }
 
@@ -214,7 +230,8 @@ public class Settings {
   private final BrowserProperties browserProperties;
   private final ProxyConfig proxy;
   private final File downloadDir;
-  private final boolean downloadMedia;
+  private final File mediaDir;
+  private final boolean saveMedia;
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
@@ -224,7 +241,7 @@ public class Settings {
    * Create default settings.
    */
   public Settings() {
-    this(null, null, null, null, null, false);
+    this(null, null, null, null, null, null, false);
   }
 
   /**
@@ -233,12 +250,12 @@ public class Settings {
    */
   public Settings(Builder builder) {
     this(builder.requestHeaders, builder.browserTimeZone, builder.browserProperties,
-        builder.proxy, builder.downloadDir, builder.downloadMedia);
+        builder.proxy, builder.downloadDir, builder.mediaDir, builder.saveMedia);
   }
 
   Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
       final BrowserProperties browserProperties, final ProxyConfig proxy,
-      final File downloadDir, final boolean downloadMedia) {
+      final File downloadDir, final File mediaDir, final boolean saveMedia) {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
     this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
@@ -249,7 +266,12 @@ public class Settings {
       this.downloadDir.mkdirs();
       this.downloadDir.deleteOnExit();
     }
-    this.downloadMedia = downloadMedia;
+    this.mediaDir = mediaDir == null ? new File("./media_cache") : mediaDir;
+    if (!this.mediaDir.exists()) {
+      this.mediaDir.mkdirs();
+      this.mediaDir.deleteOnExit();
+    }
+    this.saveMedia = saveMedia;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -270,7 +292,8 @@ public class Settings {
     browserProperties = original.browserProperties;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
-    downloadMedia = original.downloadMedia;
+    mediaDir = original.mediaDir;
+    saveMedia = original.saveMedia;
     mySettingsId = settingsId.incrementAndGet();
     script = original.script;
   }
@@ -299,8 +322,12 @@ public class Settings {
     return downloadDir;
   }
 
-  boolean downloadMedia() {
-    return downloadMedia;
+  File mediaDir() {
+    return mediaDir;
+  }
+
+  boolean saveMedia() {
+    return saveMedia;
   }
 
   String script() {
