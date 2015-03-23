@@ -26,15 +26,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class StatusMonitor {
-  private final static Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
+  private static final Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
+  private static final int MAX_STORAGE = 1000;
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
-  private boolean monitoring = false;
+  private final AtomicInteger monitors = new AtomicInteger();
 
   private StatusMonitor() {}
 
@@ -77,14 +79,14 @@ class StatusMonitor {
 
   void startStatusMonitor(String url) {
     synchronized (lock) {
-      monitoring = true;
+      monitors.incrementAndGet();
       primaryDocuments.add(url);
     }
   }
 
   void addStatusMonitor(URL url, StreamConnection conn) {
     synchronized (lock) {
-      if (monitoring) {
+      if (monitors.get() > 0) {
         connections.put(url.toExternalForm(), conn);
       }
     }
@@ -99,7 +101,7 @@ class StatusMonitor {
   int stopStatusMonitor(String url) {
     StreamConnection conn = null;
     synchronized (lock) {
-      monitoring = false;
+      monitors.decrementAndGet();
       conn = connections.get(url);
     }
     int code = 499;
@@ -116,10 +118,15 @@ class StatusMonitor {
 
   void clearStatusMonitor() {
     synchronized (lock) {
-      connections.clear();
-      primaryDocuments.clear();
-      discarded.clear();
-      redirects.clear();
+      if (monitors.get() == 0 || primaryDocuments.size() >= MAX_STORAGE) {
+        if (primaryDocuments.size() >= MAX_STORAGE) {
+          monitors.set(0);
+        }
+        connections.clear();
+        primaryDocuments.clear();
+        discarded.clear();
+        redirects.clear();
+      }
     }
   }
 }
