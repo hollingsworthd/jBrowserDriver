@@ -90,6 +90,7 @@ class DynamicAjaxListener implements Runnable {
         }
         if (size > 0) {
           idle = false;
+          waitCount.set(0);
         } else if (waitCount.get() == WAIT_COUNT) {
           idle = true;
         } else {
