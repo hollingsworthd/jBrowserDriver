@@ -17,7 +17,7 @@ There's no need to install any web browser and this works fine on a server (head
 Use this library like any other Selenium WebDriver. You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/Settings.java) object to the constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser. Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be isolated from each other.
 
     WebDriver driver = new JBrowserDriver();
-    driver.get("http://example.com");
+    driver.get("http://example.com"); //The method will block for page load and associated AJAX requests.
     System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! And it handles AJAX fine too.
     System.out.println(driver.getPageSource());
 
