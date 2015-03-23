@@ -33,8 +33,8 @@ The following Java system properties can be set:
 * `jbd.standarderror` Mirror log output to standard error (the console). Otherwise logs are only available through the Selenium APIs. Defaults to `false`.
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
 * `jbd.quickrender` Discard web page image data. Recommended because Java is very inefficient (memory-wise) in handling images. Defaults to `true`.
-* `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 * `jbd.blockads` Whether requests to ad/spam servers should be blocked. Defaults to `true`.
+* `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 
 #### Building
 No build scripts yet exist, but Eclipse project files are part of this source tree.
