@@ -217,10 +217,10 @@ public class Settings {
 
     /**
      * @return A Settings object created from this builder.
-     *         Equivalent to calling new Settings(Settings.Builder).
      */
     public Settings build() {
-      return new Settings(this);
+      return new Settings(this.requestHeaders, this.browserTimeZone, this.browserProperties,
+          this.proxy, this.downloadDir, this.mediaDir, this.saveMedia);
     }
   }
 
@@ -237,23 +237,11 @@ public class Settings {
   private final String script;
   private final CookieManager cookieManager = new CookieManager();
 
-  /**
-   * Create default settings.
-   */
-  public Settings() {
+  Settings() {
     this(null, null, null, null, null, null, false);
   }
 
-  /**
-   * Create default settings from the Settings.Builder helper.
-   * Equivalent to calling Settings.Builder.build().
-   */
-  public Settings(Builder builder) {
-    this(builder.requestHeaders, builder.browserTimeZone, builder.browserProperties,
-        builder.proxy, builder.downloadDir, builder.mediaDir, builder.saveMedia);
-  }
-
-  Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
+  private Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
       final BrowserProperties browserProperties, final ProxyConfig proxy,
       final File downloadDir, final File mediaDir, final boolean saveMedia) {
     mySettingsId = -1;

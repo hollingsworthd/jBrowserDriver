@@ -67,6 +67,11 @@ public class JBrowserDriver implements Browser {
     this(new Settings());
   }
 
+  /**
+   * Use Settings.Builder to create settings to pass to this constructor.
+   * 
+   * @param settings
+   */
   public JBrowserDriver(final Settings settings) {
     context.settings.set(new Settings(settings));
   }
