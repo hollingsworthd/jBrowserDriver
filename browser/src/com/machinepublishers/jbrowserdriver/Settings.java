@@ -27,7 +27,6 @@ import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,6 +36,7 @@ import java.util.regex.Pattern;
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
 public class Settings {
+  private static final Random rand = new Random();
   private static final boolean headless;
   static {
     if (!"true".equals(System.getProperty("jbd.browsergui"))) {
@@ -80,11 +80,19 @@ public class Settings {
         try {
           if (settings.get().saveMedia()
               && StreamConnection.isMedia(connection.getContentType())) {
-            File file = new File(settings.get().mediaDir(),
-                Base64.getEncoder().encodeToString(
-                    originalUrl.replaceFirst("^https?://", "").getBytes("utf-8")));
-            file.deleteOnExit();
-            Files.write(file.toPath(), inflatedContent);
+            String filename = Long.toString(System.nanoTime());
+            File contentFile = new File(settings.get().mediaDir(), filename + ".content");
+            File metaFile = new File(settings.get().mediaDir(), filename + ".metadata");
+            while (contentFile.exists() || metaFile.exists()) {
+              filename = Long.toString(Math.abs(rand.nextLong()));
+              contentFile = new File(settings.get().mediaDir(), filename + ".content");
+              metaFile = new File(settings.get().mediaDir(), filename + ".metadata");
+            }
+            contentFile.deleteOnExit();
+            metaFile.deleteOnExit();
+            Files.write(contentFile.toPath(), inflatedContent);
+            Files.write(metaFile.toPath(),
+                (originalUrl + "\n" + connection.getContentType()).getBytes("utf-8"));
           }
         } catch (Throwable t) {}
         try {
@@ -224,7 +232,6 @@ public class Settings {
     }
   }
 
-  private static final Random rand = new Random();
   private final RequestHeaders requestHeaders;
   private final BrowserTimeZone browserTimeZone;
   private final BrowserProperties browserProperties;
