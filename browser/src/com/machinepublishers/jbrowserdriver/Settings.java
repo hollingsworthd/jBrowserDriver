@@ -187,9 +187,9 @@ public class Settings {
     }
 
     /**
-     * Specifies the directory to save downloaded files. If not specified
-     * then ./download_cache is created and used. Downloaded files are deleted after the JVM exits, so copy
-     * them to a different location to persist them permanently.
+     * Specifies the directory to save downloaded files. If not specified then
+     * ./download_cache is created and used. Downloaded files are deleted when the
+     * JVM exits, so copy them to a different location to persist them permanently.
      * 
      * @param downloadDir
      *          Where to save downloaded files
@@ -205,14 +205,15 @@ public class Settings {
      * File implicitly calls Builder.saveMedia(true) unless you've already called
      * Builder.saveMedia(false). If you do not set a directory here and you've called
      * Builder.saveMedia(true) then the directory ./media_cache is created and used.
-     * 
-     * Media is saved as two files in the mediaDir:
-     * &lt;identifier&gt;.content (which has the binary content)
-     * and &lt;identifier&gt;.metadata (the first line of this file is the original
-     * URL of the request for this media, and the second line is the mime type).
-     * 
-     * Saved media files are deleted after the JVM exits, so copy
-     * them to a different location to persist them permanently.
+     * <p>
+     * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
+     * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
+     * file is the original URL of the request for this media, and the second line is
+     * the mime type).
+     * <p>
+     * Saved media files are deleted when the JVM exits, so copy them to a different
+     * location to persist them permanently.
+     * <p>
      * 
      * @param mediaDir
      *          Where to save media files.
@@ -230,14 +231,15 @@ public class Settings {
      * Whether to save media (e.g., images) to disk. Defaults to false but calls to
      * Builder.mediaDir(File) implicitly call Builder.saveMedia(true) unless
      * the File is null or Builder.saveMedia(false) was previously called by you.
-     * 
-     * Media is saved as two files in the mediaDir:
-     * &lt;identifier&gt;.content (which has the binary content)
-     * and &lt;identifier&gt;.metadata (the first line of this file is the original
-     * URL of the request for this media, and the second line is the mime type).
-     * 
-     * Saved media files are deleted after the JVM exits, so copy
-     * them to a different location to persist them permanently.
+     * <p>
+     * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
+     * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
+     * file is the original URL of the request for this media, and the second line is
+     * the mime type).
+     * <p>
+     * Saved media files are deleted when the JVM exits, so copy them to a different
+     * location to persist them permanently.
+     * <p>
      * 
      * @param saveMedia
      *          Whether to save media (e.g., images) to disk.
