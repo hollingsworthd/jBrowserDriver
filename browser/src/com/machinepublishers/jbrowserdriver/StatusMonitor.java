@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class StatusMonitor {
   private static final Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
@@ -36,7 +35,7 @@ class StatusMonitor {
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
-  private final AtomicInteger monitors = new AtomicInteger();
+  private boolean monitoring;
 
   private StatusMonitor() {}
 
@@ -79,14 +78,14 @@ class StatusMonitor {
 
   void startStatusMonitor(String url) {
     synchronized (lock) {
-      monitors.incrementAndGet();
+      monitoring = true;
       primaryDocuments.add(url);
     }
   }
 
   void addStatusMonitor(URL url, StreamConnection conn) {
     synchronized (lock) {
-      if (monitors.get() > 0) {
+      if (monitoring) {
         connections.put(url.toExternalForm(), conn);
       }
     }
@@ -101,7 +100,7 @@ class StatusMonitor {
   int stopStatusMonitor(String url) {
     StreamConnection conn = null;
     synchronized (lock) {
-      monitors.decrementAndGet();
+      monitoring = false;
       conn = connections.get(url);
     }
     int code = 499;
@@ -118,10 +117,7 @@ class StatusMonitor {
 
   void clearStatusMonitor() {
     synchronized (lock) {
-      if (monitors.get() == 0 || primaryDocuments.size() >= MAX_STORAGE) {
-        if (primaryDocuments.size() >= MAX_STORAGE) {
-          monitors.set(0);
-        }
+      if (!monitoring) {
         connections.clear();
         primaryDocuments.clear();
         discarded.clear();

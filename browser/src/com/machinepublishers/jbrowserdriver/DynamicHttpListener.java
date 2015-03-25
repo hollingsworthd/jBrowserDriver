@@ -156,10 +156,10 @@ class DynamicHttpListener implements LoadListenerClient {
       String contentType, double progress, int errorCode) {
     try {
       this.frame.compareAndSet(0l, frame);
-      if (this.frame.get() == frame
-          && (url.startsWith("http://") || url.startsWith("https://"))) {
+      if (this.frame.get() == frame) {
         if (state == LoadListenerClient.PAGE_STARTED
-            || state == LoadListenerClient.PAGE_REDIRECTED) {
+            || state == LoadListenerClient.PAGE_REDIRECTED
+            || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
           synchronized (superseded) {
             statusCode.set(0);
             superseded.set(true);
