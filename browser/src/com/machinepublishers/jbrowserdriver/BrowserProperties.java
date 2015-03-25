@@ -26,6 +26,9 @@ import java.util.Map;
 
 import org.openqa.selenium.Dimension;
 
+/**
+ * Specifies various DOM and JavaScript properties (i.e., browser fingerprint).
+ */
 public class BrowserProperties {
   private final String script;
   private final Dimension size;

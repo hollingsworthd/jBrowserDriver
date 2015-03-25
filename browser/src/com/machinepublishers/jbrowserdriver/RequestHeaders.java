@@ -26,6 +26,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * Customizes headers sent on each request.
+ */
 public class RequestHeaders {
 
   private final Map<String, String> headersHttp;

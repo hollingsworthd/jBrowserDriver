@@ -42,6 +42,27 @@ import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
+/**
+ * Use this library like any other Selenium WebDriver or RemoteWebDriver
+ * (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot,
+ * Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
+ * FindsByCssSelector, FindsByTagName, and FindsByXPath).
+ * <p>
+ * You can optionally pass a Settings object to the constructor to specify a proxy,
+ * request headers, time zone, user agent, or navigator details. By default, the
+ * browser mimics the fingerprint of Tor Browser.
+ * <p>
+ * Also, you can run as many instances of JBrowserDriver as you want (it's thread safe),
+ * and the browser sessions will be isolated from each other.
+ * <p>
+ * Example:
+ * <pre>
+ * WebDriver driver = new JBrowserDriver();
+ * driver.get("http://example.com"); //This will block for page load and associated AJAX requests.
+ * System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
+ * System.out.println(driver.getPageSource());
+ * </pre>
+ */
 public class JBrowserDriver implements Browser {
   /**
    * Use this string on sendKeys functions to delete text.
@@ -63,6 +84,9 @@ public class JBrowserDriver implements Browser {
 
   private final BrowserContext context = new BrowserContext();
 
+  /**
+   * Constructs a browser with default settings, UTC timezone, and no proxy.
+   */
   public JBrowserDriver() {
     this(new Settings());
   }

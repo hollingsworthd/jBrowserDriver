@@ -21,6 +21,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+/**
+ * Proxy server settings.
+ */
 public class ProxyConfig {
   private final Type type;
   private final String host;
@@ -29,8 +32,18 @@ public class ProxyConfig {
   private final String user;
   private final String password;
 
+  /**
+   * The proxy type.
+   */
   public static enum Type {
-    SOCKS, HTTP
+    /**
+     * SOCKS proxy.
+     */
+    SOCKS,
+    /**
+     * HTTP/HTTPS proxy.
+     */
+    HTTP
   }
 
   /**
@@ -45,6 +58,15 @@ public class ProxyConfig {
     password = null;
   }
 
+  /**
+   * Creates a proxy.
+   * 
+   * @param type
+   * @param host
+   * @param port
+   * @param user
+   * @param password
+   */
   public ProxyConfig(Type type, String host, int port, String user, String password) {
     this.type = type;
     this.host = host;
