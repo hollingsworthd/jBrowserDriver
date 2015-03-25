@@ -51,14 +51,18 @@ class JavaFx {
   private JavaFx() {}
 
   private static final Map<Long, ClassLoader> classLoaders = new HashMap<Long, ClassLoader>();
+  private static final Object lock = new Object();
 
-  static synchronized JavaFxObject getNew(Class<?> type, Long id, Object... params) {
-    if (!classLoaders.containsKey(id)) {
-      classLoaders.put(id, newClassLoader(id == 1l));
-    }
+  static JavaFxObject getNew(Class<?> type, Long id, Object... params) {
     Throwable firstError = null;
     try {
-      Class loaded = classLoaders.get(id).loadClass(type.getName());
+      Class loaded;
+      synchronized (lock) {
+        if (!classLoaders.containsKey(id)) {
+          classLoaders.put(id, newClassLoader(id == 1l));
+        }
+        loaded = classLoaders.get(id).loadClass(type.getName());
+      }
       if (params == null || params.length == 0) {
         Constructor constructor = loaded.getDeclaredConstructor();
         constructor.setAccessible(true);
@@ -89,21 +93,25 @@ class JavaFx {
     throw new Fatal("Could not construct " + type.getName(), firstError);
   }
 
-  static synchronized JavaFxObject getStatic(Class<?> type, Long id) {
+  static JavaFxObject getStatic(Class<?> type, Long id) {
     try {
-      if (!classLoaders.containsKey(id)) {
-        classLoaders.put(id, newClassLoader(id == 1l));
+      synchronized (lock) {
+        if (!classLoaders.containsKey(id)) {
+          classLoaders.put(id, newClassLoader(id == 1l));
+        }
+        return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
       }
-      return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
     } catch (Throwable t) {
       Logs.exception(t);
       return null;
     }
   }
 
-  static synchronized void close(Long id) {
-    if (classLoaders.get(id) instanceof JavaFxClassLoader) {
-      Util.close((JavaFxClassLoader) classLoaders.remove(id));
+  static void close(Long id) {
+    synchronized (lock) {
+      if (classLoaders.get(id) instanceof JavaFxClassLoader) {
+        Util.close((JavaFxClassLoader) classLoaders.remove(id));
+      }
     }
   }
 
@@ -152,33 +160,19 @@ class JavaFx {
     private static final Map<String, byte[]> classes = new HashMap<String, byte[]>();
     private static final ClassLoader defaultClassLoader = JavaFx.class.getClassLoader();
     static {
-      try {
-        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
-            + DynamicAjaxListener.class.getName().replace('.', '/') + ".class").openStream());
-        classes.put(DynamicAjaxListener.class.getName(), classTmp);
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
-      try {
-        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
-            + DynamicHttpListener.class.getName().replace('.', '/') + ".class").openStream());
-        classes.put(DynamicHttpListener.class.getName(), classTmp);
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
-      try {
-        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
-            + DynamicPopupHandler.class.getName().replace('.', '/') + ".class").openStream());
-        classes.put(DynamicPopupHandler.class.getName(), classTmp);
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
-      try {
-        byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
-            + DynamicTitleListener.class.getName().replace('.', '/') + ".class").openStream());
-        classes.put(DynamicTitleListener.class.getName(), classTmp);
-      } catch (Throwable t) {
-        Logs.exception(t);
+      Class<?>[] resources = new Class<?>[] {
+          DynamicAjaxListener.class,
+          DynamicHttpListener.class,
+          DynamicPopupHandler.class,
+          DynamicTitleListener.class };
+      for (int i = 0; i < resources.length; i++) {
+        try {
+          byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
+              + resources[i].getName().replace('.', '/') + ".class").openStream());
+          classes.put(resources[i].getName(), classTmp);
+        } catch (Throwable t) {
+          Logs.exception(t);
+        }
       }
     }
 
