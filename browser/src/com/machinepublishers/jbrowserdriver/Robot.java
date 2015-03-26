@@ -234,7 +234,7 @@ class Robot {
   Robot(final BrowserContext context) {
     robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
-        return JavaFx.getStatic(Application.class, settingsId).call("GetApplication").call("createRobot");
+        return JavaFx.getStatic(Application.class, context.settingsId.get()).call("GetApplication").call("createRobot");
       }
     }, context.settingsId.get()));
     this.context = context;
