@@ -22,18 +22,13 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
-
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 
 import org.openqa.selenium.Keys;
 
@@ -230,6 +225,8 @@ class Robot {
   private final BrowserContext context;
   private final long settingsId;
   private final AtomicInteger statusCode;
+  private final Object keyTyped;
+  private final Object keyUndefined;
 
   Robot(final BrowserContext context) {
     robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
@@ -240,9 +237,13 @@ class Robot {
     this.context = context;
     this.statusCode = context.statusCode;
     this.settingsId = context.settingsId.get();
+    this.keyTyped = JavaFx.getStatic(javafx.scene.input.KeyEvent.class, settingsId).
+        field("KEY_TYPED").unwrap();
+    this.keyUndefined = JavaFx.getStatic(javafx.scene.input.KeyCode.class, settingsId).
+        field("UNDEFINED").unwrap();
   }
 
-  private int[] convertKey(int codePoint, boolean pressAndRelease) {
+  private int[] convertKey(int codePoint) {
     char[] chars = Character.toChars(codePoint);
     if (chars.length == 1) {
       Keys key = Keys.getKeyFromUnicode(chars[0]);
@@ -256,16 +257,8 @@ class Robot {
     String str = new String(new int[] { codePoint }, 0, 1);
     int[] mapping = keyMap.get(str);
     return mapping == null ?
-        (pressAndRelease ? toClipboard(str)
-            : new int[] { KeyEvent.getExtendedKeyCodeForChar(codePoint) })
+        new int[] { KeyEvent.getExtendedKeyCodeForChar(codePoint) }
         : mapping;
-  }
-
-  private int[] toClipboard(String str) {
-    JavaFxObject content = JavaFx.getNew(ClipboardContent.class, settingsId);
-    content.call("putString", str);
-    JavaFx.getStatic(Clipboard.class, settingsId).call("getSystemClipboard").call("setContent", content);
-    return new int[] { KeyEvent.VK_CONTROL, KeyEvent.VK_V };
   }
 
   private static boolean isChord(CharSequence charSequence) {
@@ -311,7 +304,7 @@ class Robot {
         Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
-            int[] converted = convertKey(codePoints.get(cur), false);
+            int[] converted = convertKey(codePoints.get(cur));
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
                 robot.get().call("keyPress", converted[i]);
@@ -340,7 +333,7 @@ class Robot {
         Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
-            int[] converted = convertKey(codePoints.get(cur), false);
+            int[] converted = convertKey(codePoints.get(cur));
             for (int i = 0; i < converted.length; i++) {
               if (converted[i] != -1) {
                 robot.get().call("keyRelease", converted[i]);
@@ -365,65 +358,41 @@ class Robot {
   }
 
   void keysType(final CharSequence chars) {
-    lock();
-    String string = chars.toString();
-    final boolean delay = !string.equals(JBrowserDriver.KEYBOARD_DELETE);
-    if (string.contains("\n") || string.contains(Keys.ENTER)) {
-      context.item().httpListener.get().call("resetStatusCode");
-    }
-    try {
-      final int[] ints = chars.codePoints().toArray();
-      final Integer[] integers = new Integer[ints.length];
-      for (int i = 0; i < ints.length; i++) {
-        integers[i] = ints[i];
-      }
-      final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
-      final boolean chord = isChord(chars);
-      final List<Integer> toRelease = new ArrayList<Integer>();
-      for (int i = 0; i < codePoints.length(); i++) {
-        final int cur = i;
-        Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
-          @Override
-          public Object perform() {
-            synchronized (toRelease) {
-              int[] converted = convertKey(codePoints.get(cur), !chord);
-              for (int i = 0; i < converted.length; i++) {
-                if (converted[i] != -1) {
-                  robot.get().call("keyPress", converted[i]);
-                }
-              }
-              if (chord) {
-                for (int i = 0; i < converted.length; i++) {
-                  if (converted[i] != -1) {
-                    toRelease.add(converted[i]);
-                  }
-                }
-              } else {
-                for (int i = converted.length - 1; i > -1; i--) {
-                  if (converted[i] != -1) {
-                    robot.get().call("keyRelease", converted[i]);
-                  }
-                }
-              }
-              return null;
-            }
-          }
-        }, settingsId);
-      }
-      synchronized (toRelease) {
-        for (int i = toRelease.size() - 1; i > -1; i--) {
-          final int key = toRelease.get(i);
+    final boolean chord = isChord(chars);
+    if (chord) {
+      //TODO fix thread safety
+      keysPress(chars);
+      keysRelease(new StringBuilder(chars).reverse());
+    } else {
+      lock();
+      try {
+        final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
+        int[] ints = chars.codePoints().toArray();
+        for (int i = 0; i < ints.length; i++) {
+          final String curChar = new String(new int[] { ints[i] }, 0, 1);
           Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
-              robot.get().call("keyRelease", key);
+              final String myCurChar;
+              if (curChar.equals("\n") || curChar.equals("\r")) {
+                //replace formfeeds with carriage returns due to idiosyncrasy of WebView
+                myCurChar = "\r";
+                context.item().httpListener.get().call("resetStatusCode");
+              } else {
+                myCurChar = curChar;
+              }
+              context.item().view.get().call("fireEvent",
+                  JavaFx.getNew(javafx.scene.input.KeyEvent.class, settingsId,
+                      keyTyped, myCurChar, "", keyUndefined,
+                      //TODO track meta keys
+                      false, false, false, false));
               return null;
             }
           }, settingsId);
         }
+      } finally {
+        unlock();
       }
-    } finally {
-      unlock();
     }
   }
 
@@ -469,6 +438,7 @@ class Robot {
   }
 
   void mouseClick(final MouseButton button) {
+    //TODO fix thread safety
     mousePress(button);
     mouseRelease(button);
   }
