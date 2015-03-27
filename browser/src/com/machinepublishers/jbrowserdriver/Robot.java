@@ -219,6 +219,8 @@ class Robot {
     }
   }
 
+  private static final int FORM_FEED = "\n".codePointAt(0);
+  private static final int CARRIAGE_RETURN = "\r".codePointAt(0);
   private final AtomicReference<JavaFxObject> robot = new AtomicReference<JavaFxObject>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
@@ -256,9 +258,14 @@ class Robot {
     }
     String str = new String(new int[] { codePoint }, 0, 1);
     int[] mapping = keyMap.get(str);
-    return mapping == null ?
-        new int[] { KeyEvent.getExtendedKeyCodeForChar(codePoint) }
-        : mapping;
+    if (mapping != null) {
+      return mapping;
+    }
+    int keyCode = KeyEvent.getExtendedKeyCodeForChar(codePoint);
+    if (keyCode != KeyEvent.VK_UNDEFINED) {
+      return new int[] { keyCode };
+    }
+    return null;
   }
 
   private static boolean isChord(CharSequence charSequence) {
@@ -291,7 +298,13 @@ class Robot {
   }
 
   void keysPress(final CharSequence chars) {
-    lock();
+    keysPress(chars, true);
+  }
+
+  private void keysPress(final CharSequence chars, boolean doLocking) {
+    if (doLocking) {
+      lock();
+    }
     try {
       final int[] ints = chars.codePoints().toArray();
       final Integer[] integers = new Integer[ints.length];
@@ -305,7 +318,7 @@ class Robot {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur));
-            for (int i = 0; i < converted.length; i++) {
+            for (int i = 0; converted != null && i < converted.length; i++) {
               if (converted[i] != -1) {
                 robot.get().call("keyPress", converted[i]);
               }
@@ -315,12 +328,20 @@ class Robot {
         }, settingsId);
       }
     } finally {
-      unlock();
+      if (doLocking) {
+        unlock();
+      }
     }
   }
 
   void keysRelease(final CharSequence chars) {
-    lock();
+    keysRelease(chars, true);
+  }
+
+  private void keysRelease(final CharSequence chars, boolean doLocking) {
+    if (doLocking) {
+      lock();
+    }
     try {
       final int[] ints = chars.codePoints().toArray();
       final Integer[] integers = new Integer[ints.length];
@@ -334,9 +355,11 @@ class Robot {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur));
-            for (int i = 0; i < converted.length; i++) {
-              if (converted[i] != -1) {
-                robot.get().call("keyRelease", converted[i]);
+            if (converted != null) {
+              for (int i = converted.length - 1; i > -1; i--) {
+                if (converted[i] != -1) {
+                  robot.get().call("keyRelease", converted[i]);
+                }
               }
             }
             return null;
@@ -344,7 +367,9 @@ class Robot {
         }, settingsId);
       }
     } finally {
-      unlock();
+      if (doLocking) {
+        unlock();
+      }
     }
   }
 
@@ -358,41 +383,48 @@ class Robot {
   }
 
   void keysType(final CharSequence chars) {
-    final boolean chord = isChord(chars);
-    if (chord) {
-      //TODO fix thread safety
-      keysPress(chars);
-      keysRelease(new StringBuilder(chars).reverse());
-    } else {
-      lock();
-      try {
+    lock();
+    try {
+      if (isChord(chars)) {
+        keysPress(chars, false);
+        keysRelease(new StringBuilder(chars).reverse(), false);
+      } else {
         final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
         int[] ints = chars.codePoints().toArray();
         for (int i = 0; i < ints.length; i++) {
-          final String curChar = new String(new int[] { ints[i] }, 0, 1);
+          final int codePoint = ints[i];
           Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
-              final String myCurChar;
-              if (curChar.equals("\n") || curChar.equals("\r")) {
-                //replace formfeeds with carriage returns due to idiosyncrasy of WebView
-                myCurChar = "\r";
+              String myChar;
+              boolean fireEvent;
+              if (codePoint == FORM_FEED || codePoint == CARRIAGE_RETURN) {
                 context.item().httpListener.get().call("resetStatusCode");
+                //replace formfeeds with carriage returns due to idiosyncrasy of WebView
+                myChar = "\r";
+                fireEvent = true;
               } else {
-                myCurChar = curChar;
+                myChar = new String(new int[] { codePoint }, 0, 1);
+                fireEvent = convertKey(codePoint) == null;
               }
-              context.item().view.get().call("fireEvent",
-                  JavaFx.getNew(javafx.scene.input.KeyEvent.class, settingsId,
-                      keyTyped, myCurChar, "", keyUndefined,
-                      //TODO track meta keys
-                      false, false, false, false));
+              if (fireEvent) {
+                context.item().view.get().call("fireEvent",
+                    JavaFx.getNew(javafx.scene.input.KeyEvent.class, settingsId,
+                        keyTyped, myChar, "", keyUndefined,
+                        //TODO track meta keys
+                        false, false, false, false));
+              } else {
+                keysPress(myChar, false);
+                keysRelease(myChar, false);
+              }
               return null;
             }
           }, settingsId);
         }
-      } finally {
-        unlock();
+
       }
+    } finally {
+      unlock();
     }
   }
 
@@ -438,13 +470,23 @@ class Robot {
   }
 
   void mouseClick(final MouseButton button) {
-    //TODO fix thread safety
-    mousePress(button);
-    mouseRelease(button);
+    lock();
+    try {
+      mousePress(button, false);
+      mouseRelease(button, false);
+    } finally {
+      unlock();
+    }
   }
 
   void mousePress(final MouseButton button) {
-    lock();
+    mousePress(button, true);
+  }
+
+  private void mousePress(final MouseButton button, boolean doLocking) {
+    if (doLocking) {
+      lock();
+    }
     if (button == MouseButton.LEFT) {
       context.item().httpListener.get().call("resetStatusCode");
     }
@@ -457,12 +499,20 @@ class Robot {
         }
       }, settingsId);
     } finally {
-      unlock();
+      if (doLocking) {
+        unlock();
+      }
     }
   }
 
   void mouseRelease(final MouseButton button) {
-    lock();
+    mouseRelease(button, true);
+  }
+
+  private void mouseRelease(final MouseButton button, boolean doLocking) {
+    if (doLocking) {
+      lock();
+    }
     try {
       Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
@@ -472,7 +522,9 @@ class Robot {
         }
       }, settingsId);
     } finally {
-      unlock();
+      if (doLocking) {
+        unlock();
+      }
     }
   }
 
