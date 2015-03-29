@@ -112,7 +112,7 @@ class Util {
           if (pauseLength == Pause.SHORT) {
             Thread.sleep(0, 1);
           } else if (pauseLength == Pause.LONG) {
-            Thread.sleep(70 + rand.nextInt(70));
+            Thread.sleep(60 + rand.nextInt(60));
           }
         } catch (Throwable t) {}
         return null;

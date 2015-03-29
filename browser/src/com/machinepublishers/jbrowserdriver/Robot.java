@@ -298,10 +298,10 @@ class Robot {
   }
 
   void keysPress(final CharSequence chars) {
-    keysPress(chars, true);
+    keysPress(chars, true, true);
   }
 
-  private void keysPress(final CharSequence chars, boolean doLocking) {
+  private void keysPress(final CharSequence chars, boolean doLocking, boolean delay) {
     if (doLocking) {
       lock();
     }
@@ -314,7 +314,7 @@ class Robot {
       final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+        Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur));
@@ -335,10 +335,10 @@ class Robot {
   }
 
   void keysRelease(final CharSequence chars) {
-    keysRelease(chars, true);
+    keysRelease(chars, true, true);
   }
 
-  private void keysRelease(final CharSequence chars, boolean doLocking) {
+  private void keysRelease(final CharSequence chars, boolean doLocking, boolean delay) {
     if (doLocking) {
       lock();
     }
@@ -351,7 +351,7 @@ class Robot {
       final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
       for (int i = 0; i < codePoints.length(); i++) {
         final int cur = i;
-        Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+        Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             int[] converted = convertKey(codePoints.get(cur));
@@ -386,42 +386,46 @@ class Robot {
     lock();
     try {
       if (isChord(chars)) {
-        keysPress(chars, false);
-        keysRelease(new StringBuilder(chars).reverse(), false);
+        keysPress(chars, false, true);
+        keysRelease(new StringBuilder(chars).reverse(), false, true);
       } else {
         final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
         int[] ints = chars.codePoints().toArray();
         for (int i = 0; i < ints.length; i++) {
           final int codePoint = ints[i];
-          Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
-            @Override
-            public Object perform() {
-              String myChar;
-              boolean fireEvent;
-              if (codePoint == FORM_FEED || codePoint == CARRIAGE_RETURN) {
-                context.item().httpListener.get().call("resetStatusCode");
-                //replace formfeeds with carriage returns due to idiosyncrasy of WebView
-                myChar = "\r";
-                fireEvent = true;
-              } else {
-                myChar = new String(new int[] { codePoint }, 0, 1);
-                fireEvent = convertKey(codePoint) == null;
-              }
-              if (fireEvent) {
+          String myChar;
+          boolean fireEvent;
+          final boolean reset;
+          if (codePoint == FORM_FEED || codePoint == CARRIAGE_RETURN) {
+            //replace formfeeds with carriage returns due to idiosyncrasy of WebView
+            myChar = "\r";
+            fireEvent = true;
+            reset = true;
+          } else {
+            myChar = new String(new int[] { codePoint }, 0, 1);
+            fireEvent = convertKey(codePoint) == null;
+            reset = false;
+          }
+          if (fireEvent) {
+            Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+              @Override
+              public Object perform() {
+                if (reset) {
+                  context.item().httpListener.get().call("resetStatusCode");
+                }
                 context.item().view.get().call("fireEvent",
                     JavaFx.getNew(javafx.scene.input.KeyEvent.class, settingsId,
                         keyTyped, myChar, "", keyUndefined,
                         //TODO track meta keys
                         false, false, false, false));
-              } else {
-                keysPress(myChar, false);
-                keysRelease(myChar, false);
+                return null;
               }
-              return null;
-            }
-          }, settingsId);
+            }, settingsId);
+          } else {
+            keysPress(myChar, false, false);
+            keysRelease(myChar, false, delay);
+          }
         }
-
       }
     } finally {
       unlock();
