@@ -34,6 +34,7 @@ The following Java system properties can be set:
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
 * `jbd.quickrender` Discard web page image data. Recommended because Java is very inefficient (memory-wise) in handling images. Defaults to `true`.
 * `jbd.blockads` Whether requests to ad/spam servers should be blocked. Defaults to `true`.
+* `jbd.ajaxwait` The idle time required (in milliseconds) before a page is considered to have been loaded completely. This allows the driver to handle ajax. For very slow or overloaded CPUs, set a higher value. Defaults to `600`.
 * `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 
 #### Building
