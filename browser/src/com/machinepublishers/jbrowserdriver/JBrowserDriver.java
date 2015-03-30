@@ -406,6 +406,4 @@ public class JBrowserDriver implements Browser {
       Util.close(out);
     }
   }
-
-  public static void main(String[] args) {}
 }

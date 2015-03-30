@@ -29,7 +29,6 @@ import java.util.Set;
 
 class StatusMonitor {
   private static final Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
-  private static final int MAX_STORAGE = 1000;
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
   private final Set<String> primaryDocuments = new HashSet<String>();
