@@ -61,6 +61,8 @@ The following Java system properties can be set:
 * `jbd.ajaxwait` The idle time required (in milliseconds) before a page is considered to have been loaded completely. This allows the driver to handle ajax. For very slow or overloaded CPUs, set a higher value. Defaults to `600`.
 * `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 
+Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar -cp ./jBrowserDriver-v0.4.1.jar my.app.MainClass`
+
 #### Building
 No build scripts yet exist, but Eclipse project files are part of this source tree.
 
