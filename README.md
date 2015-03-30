@@ -33,7 +33,7 @@ Example:
           new Settings.Builder().browserTimeZone(BrowserTimeZone.AMERICA_NEWYORK).build());
         driver.get("http://example.com"); //This will block for page load and associated AJAX requests.
         System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
-        System.out.println(driver.getPageSource());
+        System.out.println(driver.getPageSource()); //Returns the page source in its current state, including any DOM updates that occurred after page load
       }
     }
     
