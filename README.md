@@ -30,19 +30,22 @@ Example:
     public class Example {
       public static void main(String[] args) {
 
-        // You can optionally pass a Settings object here, constructed using Settings.Builder
-        WebDriver driver = new JBrowserDriver(
-          new Settings.Builder().browserTimeZone(BrowserTimeZone.AMERICA_NEWYORK).build());
+        // You can optionally pass a Settings object here,
+        // constructed using Settings.Builder
+        WebDriver driver = new JBrowserDriver(new Settings.Builder().
+          browserTimeZone(BrowserTimeZone.AMERICA_NEWYORK).build());
 
-        // This will block for the page load and any associated AJAX requests
+        // This will block for the page load and any
+        // associated AJAX requests
         driver.get("http://example.com");
 
-        // You can get status code unlike other Selenium drivers. It blocks for AJAX requests
-        // and page loads after clicks and keyboard events.
+        // You can get status code unlike other Selenium drivers.
+        // It blocks for AJAX requests and page loads after clicks 
+        // and keyboard events.
         System.out.println(((JBrowserDriver)driver).getStatusCode());
 
-        // Returns the page source in its current state, including any DOM updates that
-        // occurred after page load
+        // Returns the page source in its current state, including
+        // any DOM updates that occurred after page load
         System.out.println(driver.getPageSource());
       }
     }
