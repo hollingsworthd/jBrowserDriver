@@ -219,7 +219,7 @@ class Robot {
     }
   }
 
-  private static final int FORM_FEED = "\n".codePointAt(0);
+  private static final int LINE_FEED = "\n".codePointAt(0);
   private static final int CARRIAGE_RETURN = "\r".codePointAt(0);
   private final AtomicReference<JavaFxObject> robot = new AtomicReference<JavaFxObject>();
   private final AtomicLong latestThread = new AtomicLong();
@@ -396,8 +396,8 @@ class Robot {
           String myChar;
           boolean fireEvent;
           final boolean reset;
-          if (codePoint == FORM_FEED || codePoint == CARRIAGE_RETURN) {
-            //replace formfeeds with carriage returns due to idiosyncrasy of WebView
+          if (codePoint == LINE_FEED || codePoint == CARRIAGE_RETURN) {
+            //replace linefeed with carriage returns due to idiosyncrasy of WebView
             myChar = "\r";
             fireEvent = true;
             reset = true;
