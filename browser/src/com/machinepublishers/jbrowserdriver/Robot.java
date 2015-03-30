@@ -476,26 +476,23 @@ class Robot {
   void mouseClick(final MouseButton button) {
     lock();
     try {
-      mousePress(button, false);
-      mouseRelease(button, false);
+      mousePress(button, false, false);
+      mouseRelease(button, false, true);
     } finally {
       unlock();
     }
   }
 
   void mousePress(final MouseButton button) {
-    mousePress(button, true);
+    mousePress(button, true, true);
   }
 
-  private void mousePress(final MouseButton button, boolean doLocking) {
+  private void mousePress(final MouseButton button, boolean doLocking, boolean delay) {
     if (doLocking) {
       lock();
     }
-    if (button == MouseButton.LEFT) {
-      context.item().httpListener.get().call("resetStatusCode");
-    }
     try {
-      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().call("mousePress", button.getValue());
@@ -510,17 +507,20 @@ class Robot {
   }
 
   void mouseRelease(final MouseButton button) {
-    mouseRelease(button, true);
+    mouseRelease(button, true, true);
   }
 
-  private void mouseRelease(final MouseButton button, boolean doLocking) {
+  private void mouseRelease(final MouseButton button, boolean doLocking, boolean delay) {
     if (doLocking) {
       lock();
     }
     try {
-      Util.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      Util.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
+          if (button == MouseButton.LEFT) {
+            context.item().httpListener.get().call("resetStatusCode");
+          }
           robot.get().call("mouseRelease", button.getValue());
           return null;
         }
