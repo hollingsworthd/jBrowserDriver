@@ -18,7 +18,7 @@ Use this library like any other Selenium WebDriver or RemoteWebDriver (it implem
 
 You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/Settings.java#L139) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L86) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
-Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be isolated from each other.
+Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be fully isolated from each other when run in headless mode, which is the default (when it's run with the GUI shown, some of the memory between instances is shared out of necessity).
 
 Example:
 
