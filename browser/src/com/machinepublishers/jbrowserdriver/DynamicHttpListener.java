@@ -171,13 +171,14 @@ class DynamicHttpListener implements LoadListenerClient {
           startStatusMonitor.invoke(statusMonitor, url);
         } else if (statusCode.get() == 0
             && (state == LoadListenerClient.PAGE_FINISHED
-            || state == LoadListenerClient.LOAD_FAILED)) {
+                || state == LoadListenerClient.LOAD_STOPPED
+                || state == LoadListenerClient.LOAD_FAILED)) {
           final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
           final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
           synchronized (resources) {
             resources.remove(frame + url);
           }
-          new Thread(new DynamicAjaxListener(state, newStatusCode, statusCode,
+          new Thread(new DynamicAjaxListener(newStatusCode, statusCode,
               statusMonitor, clearStatusMonitor, resources, timeoutMS.get())).start();
         }
       }

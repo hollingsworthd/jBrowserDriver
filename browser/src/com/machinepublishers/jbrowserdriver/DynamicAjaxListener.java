@@ -26,14 +26,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.sun.webkit.LoadListenerClient;
-
 class DynamicAjaxListener implements Runnable {
   private static final int WAIT_COUNT = 5;
   private static final long WAIT_INTERVAL =
       Long.parseLong(System.getProperty("jbd.ajaxwait", "600")) / WAIT_COUNT;
   private static final long MAX_WAIT_DEFAULT = 15000;
-  private final int state;
   private final AtomicInteger waitCount = new AtomicInteger();
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
@@ -43,10 +40,9 @@ class DynamicAjaxListener implements Runnable {
   private final AtomicBoolean superseded;
   private final long timeoutMS;
 
-  DynamicAjaxListener(final int state, final int newStatusCode,
+  DynamicAjaxListener(final int newStatusCode,
       final AtomicInteger statusCode, final Object statusMonitor,
       final Method clearStatusMonitor, final Set<String> resources, final long timeoutMS) {
-    this.state = state;
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
     this.statusMonitor = statusMonitor;
@@ -62,7 +58,6 @@ class DynamicAjaxListener implements Runnable {
     this.resources = resources;
     this.superseded = superseded;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
-    this.state = -1;
     this.newStatusCode = null;
     this.statusMonitor = null;
     this.clearStatusMonitor = null;
@@ -73,31 +68,29 @@ class DynamicAjaxListener implements Runnable {
     if (superseded.get() || Thread.interrupted()) {
       return;
     }
-    if (newStatusCode == null || state == LoadListenerClient.PAGE_FINISHED) {
-      int totalWait = 0;
-      int size = 0;
-      boolean idle = false;
-      waitCount.set(0);
-      while (!idle && totalWait < timeoutMS) {
-        try {
-          Thread.sleep(WAIT_INTERVAL);
-        } catch (InterruptedException e) {}
-        if (superseded.get() || Thread.interrupted()) {
-          return;
-        }
-        totalWait += WAIT_INTERVAL;
-        synchronized (resources) {
-          size = resources.size();
-        }
-        if (size > 0) {
-          idle = false;
-          waitCount.set(0);
-        } else if (waitCount.get() == WAIT_COUNT) {
-          idle = true;
-        } else {
-          idle = false;
-          waitCount.incrementAndGet();
-        }
+    int totalWait = 0;
+    int size = 0;
+    boolean idle = false;
+    waitCount.set(0);
+    while (!idle && totalWait < timeoutMS) {
+      try {
+        Thread.sleep(WAIT_INTERVAL);
+      } catch (InterruptedException e) {}
+      if (superseded.get() || Thread.interrupted()) {
+        return;
+      }
+      totalWait += WAIT_INTERVAL;
+      synchronized (resources) {
+        size = resources.size();
+      }
+      if (size > 0) {
+        idle = false;
+        waitCount.set(0);
+      } else if (waitCount.get() == WAIT_COUNT) {
+        idle = true;
+      } else {
+        idle = false;
+        waitCount.incrementAndGet();
       }
     }
     synchronized (statusCode) {
