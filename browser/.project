@@ -20,10 +20,5 @@
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/LICENSE</locationURI>
 		</link>
-		<link>
-			<name>src/openjfx-monocle.jar</name>
-			<type>1</type>
-			<locationURI>PROJECT_LOC/lib/openjfx-monocle.jar</locationURI>
-		</link>
 	</linkedResources>
 </projectDescription>
