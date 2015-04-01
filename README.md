@@ -11,7 +11,9 @@ Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when o
 [Latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest)
 
 #### Pre-requisites
-There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required. Note to Linux users: JavaFX is needed and it's part of Oracle's standard JRE, but numerous Linux repositories have separated JavaFX in error, so in Ubuntu, add the Utopic repo (`deb http://cz.archive.ubuntu.com/ubuntu utopic main universe`) and run `apt-get install openjdk-8-jdk openjfx`
+There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
+
+Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-jdk openjfx libxslt1.1 libswt-gtk-3-java`
 
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
