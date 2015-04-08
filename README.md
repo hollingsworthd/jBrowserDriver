@@ -13,7 +13,7 @@ Projects utilizing jBrowserDriver must be licensed as Affero GPLv3 except when o
 #### Pre-requisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
 
-Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-jdk openjfx libxslt1.1 libswt-gtk-3-java`
+Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-jdk openjfx`
 
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
@@ -63,7 +63,7 @@ The following Java system properties can be set:
 * `jbd.ajaxwait` The idle time required (in milliseconds) before a page is considered to have been loaded completely. This allows the driver to handle ajax. For very slow or overloaded CPUs, set a higher value. Defaults to `600`.
 * `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
 
-Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar -cp ./jBrowserDriver-v0.4.1.jar my.app.MainClass`
+Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar`
 
 #### Building
 No build scripts yet exist, but Eclipse project files are part of this source tree.
