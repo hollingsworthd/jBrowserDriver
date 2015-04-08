@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileAlreadyExistsException;
@@ -242,11 +243,12 @@ class JavaFx {
           }
         }
         try {
-          File monocle = new File(tmpDir, "monocle.jar");
-          Files.copy(NativePlatformFactory.class.
-              getProtectionDomain().getCodeSource().getLocation().openStream(),
-              monocle.toPath());
-          urlList.add(monocle.toURI().toURL());
+          File monocleTmp = new File(tmpDir, "monocle.jar");
+          Files.copy(((JarURLConnection) NativePlatformFactory.class.
+              getProtectionDomain().getCodeSource().getLocation().openConnection())
+              .getJarFileURL().openStream(),
+              monocleTmp.toPath());
+          urlList.add(monocleTmp.toURI().toURL());
         } catch (Throwable t) {
           Logs.exception(t);
         }
