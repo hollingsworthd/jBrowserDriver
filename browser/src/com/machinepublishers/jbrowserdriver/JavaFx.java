@@ -22,6 +22,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -30,14 +31,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javafx.embed.swing.JFXPanel;
 
@@ -59,7 +57,7 @@ class JavaFx {
       Class loaded;
       synchronized (lock) {
         if (!classLoaders.containsKey(id)) {
-          classLoaders.put(id, newClassLoader(id == 1l));
+          classLoaders.put(id, newClassLoader());
         }
         loaded = classLoaders.get(id).loadClass(type.getName());
       }
@@ -97,7 +95,7 @@ class JavaFx {
     try {
       synchronized (lock) {
         if (!classLoaders.containsKey(id)) {
-          classLoaders.put(id, newClassLoader(id == 1l));
+          classLoaders.put(id, newClassLoader());
         }
         return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
       }
@@ -115,10 +113,10 @@ class JavaFx {
     }
   }
 
-  private static ClassLoader newClassLoader(boolean useCurrentClassLoader) {
+  private static ClassLoader newClassLoader() {
     try {
       final ClassLoader classLoader;
-      if (!useCurrentClassLoader && Settings.headless()) {
+      if (Settings.headless()) {
         classLoader = new JavaFxClassLoader();
       } else {
         classLoader = JavaFx.class.getClassLoader();
@@ -176,63 +174,83 @@ class JavaFx {
       }
     }
 
+    private static List<File> list(File dir) {
+      File[] children = dir.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File file) {
+          String name = file.getName();
+          return (file.isDirectory()
+          || ((name.endsWith(".so")
+              || name.endsWith(".a")
+              || name.endsWith(".dll")
+              || name.endsWith(".jar"))
+              && (name.contains("jfx")
+              || name.contains("javafx")
+              || name.contains("prism")
+              || name.contains("webkit"))));
+        }
+      });
+      List<File> allFiles = new ArrayList<File>();
+      for (int i = 0; children != null && i < children.length; i++) {
+        if (children[i].isFile()) {
+          allFiles.add(children[i]);
+        } else {
+          allFiles.addAll(list(children[i]));
+        }
+      }
+      return allFiles;
+    }
+
+    private static void deleteAllOnExit(File dir) {
+      dir.deleteOnExit();
+      File[] children = dir.listFiles();
+      for (int i = 0; children != null && i < children.length; i++) {
+        if (children[i].isFile()) {
+          children[i].deleteOnExit();
+        } else {
+          deleteAllOnExit(children[i]);
+        }
+      }
+    }
+
     private static URL[] urls() {
       List<URL> urlList = new ArrayList<URL>();
       try {
-        urlList.add(NativePlatformFactory.class.
-            getProtectionDomain().getCodeSource().getLocation().toURI().toURL());
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
-      Set<File> files = new HashSet<File>();
-      files.add(new File(System.getProperty("java.home")));
-      for (boolean found = true; found;) {
-        Set<File> filesTmp = new HashSet<File>(files);
-        found = false;
-        for (File file : filesTmp) {
-          if (file.isDirectory()) {
-            found = true;
-            files.remove(file);
-            File[] curFiles = file.listFiles();
-            for (int i = 0; i < curFiles.length; i++) {
-              String name = curFiles[i].getName();
-              if (curFiles[i].isDirectory()
-                  || ((name.endsWith(".so")
-                      || name.endsWith(".a")
-                      || name.endsWith(".dll")
-                      || name.endsWith(".jar"))
-                  && (name.contains("jfx")
-                      || name.contains("javafx")
-                      || name.contains("prism")
-                      || name.contains("webkit")))) {
-                files.add(curFiles[i]);
-              }
-            }
-          }
-        }
-      }
-      try {
-        Path tmpDir = Files.createTempDirectory("jbd");
-        tmpDir.toFile().deleteOnExit();
-        File jarDir = new File(tmpDir.toFile(), "jars");
-        jarDir.mkdir();
+        File javaHome = new File(System.getProperty("java.home"));
+        String tmpDir = Files.createTempDirectory("jbd").toFile().getCanonicalPath();
+        List<File> files = list(javaHome);
         for (File file : files) {
           try {
-            File tmpFile;
-            if (file.getName().endsWith(".jar")) {
-              tmpFile = new File(jarDir, file.getName());
-              Files.copy(file.toPath(), tmpFile.toPath());
-            } else {
-              File libDir = new File(tmpDir.toString(), file.getParentFile().getName());
-              libDir.mkdir();
-              tmpFile = new File(libDir, file.getName());
-              Files.copy(file.toPath(), tmpFile.toPath());
+            StringBuilder builder = new StringBuilder();
+            builder.append(tmpDir);
+            builder.append("/");
+            List<String> dirParts = new ArrayList<String>();
+            for (File cur = file; !cur.getParentFile().equals(javaHome); cur = cur.getParentFile()) {
+              dirParts.add(cur.getParentFile().getName());
             }
+            for (int i = dirParts.size() - 1; i > -1; i--) {
+              builder.append(dirParts.get(i));
+              builder.append("/");
+            }
+            File tmpFileDir = new File(builder.toString());
+            tmpFileDir.mkdirs();
+            File tmpFile = new File(tmpFileDir, file.getName());
+            Files.copy(file.toPath(), tmpFile.toPath());
             urlList.add(tmpFile.toURI().toURL());
           } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
             Logs.exception(t);
           }
         }
+        try {
+          File monocle = new File(tmpDir, "monocle.jar");
+          Files.copy(NativePlatformFactory.class.
+              getProtectionDomain().getCodeSource().getLocation().openStream(),
+              monocle.toPath());
+          urlList.add(monocle.toURI().toURL());
+        } catch (Throwable t) {
+          Logs.exception(t);
+        }
+        deleteAllOnExit(new File(tmpDir));
       } catch (Throwable t) {
         Logs.exception(t);
       }
