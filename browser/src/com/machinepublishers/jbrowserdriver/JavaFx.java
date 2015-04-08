@@ -30,6 +30,7 @@ import java.lang.reflect.Field;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -244,10 +245,13 @@ class JavaFx {
         }
         try {
           File monocleTmp = new File(tmpDir, "monocle.jar");
-          Files.copy(((JarURLConnection) NativePlatformFactory.class.
-              getProtectionDomain().getCodeSource().getLocation().openConnection())
-              .getJarFileURL().openStream(),
-              monocleTmp.toPath());
+          URLConnection conn = NativePlatformFactory.class.
+              getProtectionDomain().getCodeSource().getLocation().openConnection();
+          if (conn instanceof JarURLConnection) {
+            Files.copy(((JarURLConnection) conn).getJarFileURL().openStream(), monocleTmp.toPath());
+          } else {
+            Files.copy(conn.getInputStream(), monocleTmp.toPath());
+          }
           urlList.add(monocleTmp.toURI().toURL());
         } catch (Throwable t) {
           Logs.exception(t);
