@@ -50,6 +50,11 @@ public class Settings {
       headless = false;
     }
     try {
+      com.sun.webkit.network.CookieManager.setDefault(new CookieManager());
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
     } catch (Throwable t) {
       Field factory = null;
