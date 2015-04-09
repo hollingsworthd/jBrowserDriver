@@ -1,7 +1,8 @@
 **/bin/
 .metadata/
 **/screenslicer.config
-**/download_cache
+**/download_cache*
+**/media_cache*
 jbrowserdriver*.zip
 jBrowserDriver*.zip
 **/*.log.*
