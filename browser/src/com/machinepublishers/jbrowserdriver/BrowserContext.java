@@ -91,8 +91,10 @@ class BrowserContext {
 
   void init(final JBrowserDriver driver) {
     synchronized (lock) {
-      targetLocator.compareAndSet(null, new TargetLocator(driver, this));
-      items.get(current).init(driver, this);
+      if (!items.isEmpty()) {
+        targetLocator.compareAndSet(null, new TargetLocator(driver, this));
+        items.get(current).init(driver, this);
+      }
     }
     closeLastWindow();
   }
