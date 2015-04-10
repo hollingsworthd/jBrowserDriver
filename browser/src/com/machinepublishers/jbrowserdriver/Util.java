@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 
 import javafx.application.Platform;
 
+import com.machinepublishers.browser.Browser;
+
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
@@ -84,20 +86,31 @@ class Util {
 
   private static class Runner<T> implements Runnable {
     private final Sync<T> action;
-    private final AtomicBoolean done;
-    private final AtomicReference<T> ret;
+    private final AtomicBoolean done = new AtomicBoolean();
+    private final AtomicReference<T> returned = new AtomicReference<T>();
+    private final AtomicReference<RuntimeException> fatal = new AtomicReference<RuntimeException>();
+    private final AtomicReference<RuntimeException> retry = new AtomicReference<RuntimeException>();
 
-    public Runner(Sync<T> action, AtomicBoolean done, AtomicReference<T> ret) {
+    public Runner(Sync<T> action) {
       this.action = action;
-      this.done = done;
-      this.ret = ret;
     }
 
     @Override
     public void run() {
-      T result = action.perform();
+      T result = null;
+      Browser.Fatal browserFatal = null;
+      Browser.Retry browserRetry = null;
+      try {
+        result = action.perform();
+      } catch (Browser.Fatal t) {
+        browserFatal = t;
+      } catch (Browser.Retry t) {
+        browserRetry = t;
+      }
       synchronized (done) {
-        ret.set(result);
+        fatal.set(browserFatal);
+        retry.set(browserRetry);
+        returned.set(result);
         done.set(true);
         done.notifyAll();
       }
@@ -148,25 +161,36 @@ class Util {
     }
     try {
       if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
-        return action.perform();
+        try {
+          return action.perform();
+        } catch (Browser.Fatal t) {
+          throw t;
+        } catch (Browser.Retry t) {
+          throw t;
+        }
       }
-      final AtomicReference<T> ret = new AtomicReference<T>();
-      final AtomicBoolean done = new AtomicBoolean();
-      synchronized (done) {
-        JavaFx.getStatic(Platform.class, id).call("runLater", new Runner<T>(action, done, ret));
+      final Runner<T> runner = new Runner<T>(action);
+      synchronized (runner.done) {
+        JavaFx.getStatic(Platform.class, id).call("runLater", runner);
       }
-      synchronized (done) {
-        if (!done.get()) {
+      synchronized (runner.done) {
+        if (!runner.done.get()) {
           try {
-            done.wait(timeout);
+            runner.done.wait(timeout);
           } catch (InterruptedException e) {
             Logs.exception(e);
           }
-          if (!done.get()) {
+          if (!runner.done.get()) {
             Logs.exception(new RuntimeException("Action never completed."));
           }
         }
-        return ret.get();
+        if (runner.fatal.get() != null) {
+          throw runner.fatal.get();
+        }
+        if (runner.retry.get() != null) {
+          throw runner.retry.get();
+        }
+        return runner.returned.get();
       }
     } finally {
       if (pauseAfterExec != Pause.NONE) {
