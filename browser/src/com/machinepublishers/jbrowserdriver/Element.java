@@ -170,6 +170,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
+            context.item().httpListener.get().call("resetStatusCode");
             node.get().call("call", "scrollIntoView");
             node.get().call("call", "focus");
             node.get().call("call", "setValue", new Object[] { "" });
@@ -261,22 +262,60 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "right").toString()));
-            return (Boolean)
-            node.get().call("eval", "var me = this;"
-                + "        (function(){"
-                + "          for(var i = " + x + "; i < " + (x2 + 1) + "; i++){"
-                + "            for(var j = " + y + "; j < " + (y2 + 1) + "; j++){"
-                + "              if(document.elementFromPoint(i,j) == me){"
-                + "                return true;"
-                + "              }"
-                + "            }"
-                + "          }"
-                + "          return false;})();").unwrap();
+            //a fast approximation of whether this element is visible
+            return (Boolean) node.get().call("eval",
+                "var me = this;"
+                    + "(function(){"
+                    //The following JavaScript is Copyright 2011-2015 Software Freedom Conservancy and Copyright 2004-2011 Selenium committers.
+                    //Adapted and modified from https://github.com/SeleniumHQ/selenium/blob/master/javascript/selenium-core/scripts/selenium-api.js
+                    + "var findEffectiveStyle = function(element) {"
+                    + "    if (element.style == undefined) {"
+                    + "        return undefined;"
+                    + "    }"
+                    + "    if (window.getComputedStyle) {"
+                    + "        return window.getComputedStyle(element, null);"
+                    + "    }"
+                    + "    if (element.currentStyle) {"
+                    + "        return element.currentStyle;"
+                    + "    }"
+                    + "    if (window.document.defaultView && window.document.defaultView.getComputedStyle) {"
+                    + "        return window.document.defaultView.getComputedStyle(element, null);"
+                    + "    }"
+                    + "    return undefined;"
+                    + "};"
+                    + "var findEffectiveStyleProperty = function(element, property) {"
+                    + "    var effectiveStyle = findEffectiveStyle(element);"
+                    + "    var propertyValue = effectiveStyle[property];"
+                    + "    if (propertyValue == 'inherit' && element.parentNode.style) {"
+                    + "        return findEffectiveStyleProperty(element.parentNode, property);"
+                    + "    }"
+                    + "    return propertyValue;"
+                    + "};"
+                    + "var isVisible = function(element) {"
+                    + "    if (element.tagName) {"
+                    + "        var tagName = new String(element.tagName).toLowerCase();"
+                    + "        if (tagName == \"input\") {"
+                    + "            if (element.type) {"
+                    + "                var elementType = new String(element.type).toLowerCase();"
+                    + "                if (elementType == \"hidden\") {"
+                    + "                    return false;"
+                    + "                }"
+                    + "            }"
+                    + "        }"
+                    + "    }"
+                    + "    var visibility = findEffectiveStyleProperty(element, \"visibility\");"
+                    + "    return (visibility != \"hidden\" && isDisplayed(element));"
+                    + "};"
+                    + "var isDisplayed = function(element) {"
+                    + "    var display = findEffectiveStyleProperty(element, \"display\");"
+                    + "    if (display == \"none\") return false;"
+                    + "    if (element.parentNode.style) {"
+                    + "        return isDisplayed(element.parentNode);"
+                    + "    }"
+                    + "    return true;"
+                    + "};"
+                    + "return isDisplayed(me);"
+                    + "})();").unwrap();
           }
         }, context.settingsId.get());
   }
@@ -495,6 +534,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           new Sync<Object>() {
             @Override
             public Object perform() {
+              context.item().httpListener.get().call("resetStatusCode");
               return script(true, script, args);
             }
           }, context.settingsId.get());
@@ -540,6 +580,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           new Sync<Object>() {
             @Override
             public Object perform() {
+              context.item().httpListener.get().call("resetStatusCode");
               return script(false, script, args);
             }
           }, context.settingsId.get());
@@ -581,13 +622,13 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           + "          }"
           + "        }).apply(this);"
           + "        this.screenslicerJS = function(){"
-          + (isWindow ? "var window = this;" : "")
+          + (isWindow ? "this.window = this;" : "")
           + "          arguments[arguments.length-1] = this.screenslicerCallback;"
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     } else {
       this.node.get().call("eval", "this.screenslicerJS = function(){"
-          + (isWindow ? "var window = this;" : "")
+          + (isWindow ? "this.window = this;" : "")
           + "          return (function(){" + script + "}).apply(this, arguments);"
           + "        };");
     }
