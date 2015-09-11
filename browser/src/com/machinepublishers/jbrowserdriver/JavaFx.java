@@ -46,7 +46,6 @@ import com.machinepublishers.browser.Browser.Fatal;
 import com.sun.glass.ui.PlatformFactory;
 import com.sun.glass.ui.monocle.MonoclePlatformFactory;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
-import com.sun.glass.ui.monocle.headless.HeadlessPlatform;
 
 class JavaFx {
   private JavaFx() {}
@@ -145,7 +144,7 @@ class JavaFx {
         field = platformFactory.getDeclaredField("platform");
         field.setAccessible(true);
         field.set(platformFactory, classLoader.loadClass(
-            HeadlessPlatform.class.getName()).newInstance());
+            "com.sun.glass.ui.monocle.HeadlessPlatform").newInstance());
       }
     } catch (Throwable t) {
       //Some versions renamed these fields or made setting them unnecessary, so ignore exception.
