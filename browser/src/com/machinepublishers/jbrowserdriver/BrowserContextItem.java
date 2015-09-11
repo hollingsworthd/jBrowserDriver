@@ -35,6 +35,7 @@ class BrowserContextItem {
 
   final AtomicReference<Window> window = new AtomicReference<Window>();
   final AtomicReference<Navigation> navigation = new AtomicReference<Navigation>();
+  //TODO final AtomicReference<Alert> alert = new AtomicReference<Alert>();
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
@@ -78,6 +79,10 @@ class BrowserContextItem {
                 call("addLoadListenerClient", httpListener.get());
             engine.get().call("setCreatePopupHandler",
                 JavaFx.getNew(DynamicPopupHandler.class, context.settingsId.get(), driver, context));
+            //TODO engine.get().call("setConfirmHandler",
+            //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
+            //TODO engine.get().call("setPromptHandler",
+            //TODO JavaFx.getNew(DynamicPromptHandler.class, context.settingsId.get(), driver, context));
             return null;
           }
         }, context.settingsId.get());
