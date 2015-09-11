@@ -306,7 +306,8 @@ public class Settings {
     String scriptId = "A" + rand.nextLong();
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
     scriptBuilder.append("try{");
-    scriptBuilder.append(browserTimeZone().script());
+    //TODO FIXME custom timezone is buggy on some pages
+    //scriptBuilder.append(browserTimeZone().script());
     scriptBuilder.append(browserProperties().script());
     scriptBuilder.append("}catch(e){}");
     scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
