@@ -56,7 +56,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     HttpCookie out = new HttpCookie(in.getName(), in.getValue());
     out.setDomain(in.getDomain());
     out.setHttpOnly(in.isHttpOnly());
-    out.setMaxAge(in.getExpiry().getTime() - System.currentTimeMillis());
+    if (in.getExpiry() != null) {
+      out.setMaxAge(Math.max(0, (in.getExpiry().getTime() - System.currentTimeMillis()) / 1000));
+    }
     out.setPath(in.getPath());
     out.setSecure(in.isSecure());
     out.setValue(in.getValue());
@@ -65,11 +67,12 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   }
 
   private static Cookie convert(HttpCookie in) {
+    Date expiry = in.getMaxAge() < 0 ? null : new Date((in.getMaxAge() * 1000) + System.currentTimeMillis());
     return new Cookie(in.getName(),
         in.getValue(),
         in.getDomain(),
         in.getPath(),
-        new Date(in.getMaxAge() + System.currentTimeMillis()),
+        expiry,
         in.getSecure(),
         in.isHttpOnly());
   }
