@@ -23,6 +23,8 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,19 +33,21 @@ class DynamicAjaxListener implements Runnable {
   private static final int WAIT_COUNT = 5;
   private static final long WAIT_INTERVAL =
       Long.parseLong(System.getProperty("jbd.ajaxwait", "600")) / WAIT_COUNT;
+  private static final long RESOURCE_TIMEOUT =
+      Long.parseLong(System.getProperty("jbd.resourcetimeout", "5000")) / WAIT_COUNT;
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final AtomicInteger waitCount = new AtomicInteger();
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
   private final Object statusMonitor;
   private final Method clearStatusMonitor;
-  private final Set<String> resources;
+  private final Map<String, Long> resources;
   private final AtomicBoolean superseded;
   private final long timeoutMS;
 
   DynamicAjaxListener(final int newStatusCode,
       final AtomicInteger statusCode, final Object statusMonitor,
-      final Method clearStatusMonitor, final Set<String> resources, final long timeoutMS) {
+      final Method clearStatusMonitor, final Map<String, Long> resources, final long timeoutMS) {
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
     this.statusMonitor = statusMonitor;
@@ -53,7 +57,7 @@ class DynamicAjaxListener implements Runnable {
     this.superseded = new AtomicBoolean();
   }
 
-  DynamicAjaxListener(final AtomicInteger statusCode, final Set<String> resources,
+  DynamicAjaxListener(final AtomicInteger statusCode, final Map<String, Long> resources,
       final AtomicBoolean superseded, final long timeoutMS) {
     this.statusCode = statusCode;
     this.resources = resources;
@@ -62,6 +66,21 @@ class DynamicAjaxListener implements Runnable {
     this.newStatusCode = null;
     this.statusMonitor = null;
     this.clearStatusMonitor = null;
+  }
+
+  private void pruneResources() {
+    final long time = System.currentTimeMillis();
+    synchronized (resources) {
+      final Set<String> remove = new HashSet<String>();
+      for (Map.Entry<String, Long> entry : resources.entrySet()) {
+        if (time - entry.getValue() > RESOURCE_TIMEOUT) {
+          remove.add(entry.getKey());
+        }
+      }
+      for (String key : remove) {
+        resources.remove(key);
+      }
+    }
   }
 
   @Override
@@ -82,6 +101,7 @@ class DynamicAjaxListener implements Runnable {
       }
       totalWait += WAIT_INTERVAL;
       synchronized (resources) {
+        pruneResources();
         size = resources.size();
       }
       if (size > 0) {

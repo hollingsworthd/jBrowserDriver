@@ -24,9 +24,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,7 +36,7 @@ import com.sun.webkit.LoadListenerClient;
 class DynamicHttpListener implements LoadListenerClient {
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
-  private final Set<String> resources = new HashSet<String>();
+  private final Map<String, Long> resources = new HashMap<String, Long>();
   private final AtomicInteger statusCode;
   private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
@@ -109,7 +109,7 @@ class DynamicHttpListener implements LoadListenerClient {
     if (url.startsWith("http://") || url.startsWith("https://")) {
       if (state == LoadListenerClient.RESOURCE_STARTED) {
         synchronized (resources) {
-          resources.add(frame + url);
+          resources.put(frame + url, System.currentTimeMillis());
         }
       } else if (state == LoadListenerClient.RESOURCE_FINISHED
           || state == LoadListenerClient.RESOURCE_FAILED) {
@@ -166,7 +166,7 @@ class DynamicHttpListener implements LoadListenerClient {
             superseded.set(true);
             synchronized (resources) {
               resources.clear();
-              resources.add(frame + url);
+              resources.put(frame + url, System.currentTimeMillis());
             }
           }
           startStatusMonitor.invoke(statusMonitor, url);
