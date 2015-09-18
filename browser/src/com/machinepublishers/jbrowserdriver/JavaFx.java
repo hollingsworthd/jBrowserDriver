@@ -32,8 +32,10 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -143,11 +145,13 @@ class JavaFx {
         platformFactory = classLoader.loadClass(NativePlatformFactory.class.getName());
         field = platformFactory.getDeclaredField("platform");
         field.setAccessible(true);
-        field.set(platformFactory, classLoader.loadClass(
-            "com.sun.glass.ui.monocle.HeadlessPlatform").newInstance());
+        Constructor headlessPlatform =
+            classLoader.loadClass("com.sun.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
+        headlessPlatform.setAccessible(true);
+        field.set(platformFactory, headlessPlatform.newInstance());
       }
     } catch (Throwable t) {
-      //Some versions renamed these fields or made setting them unnecessary, so ignore exception.
+      Logs.exception(t);
     }
     try {
       classLoader.loadClass(JFXPanel.class.getName()).newInstance();
@@ -215,6 +219,25 @@ class JavaFx {
       }
     }
 
+    public static void copy(File source, File dest, CopyOption... options) throws IOException {
+      if (source.isDirectory()) {
+        dest.mkdirs();
+        File[] contents = source.listFiles();
+        if (contents != null) {
+          for (File file : contents) {
+            copy(file, new File(dest.getAbsolutePath() + "/" + file.getName()), options);
+          }
+        }
+      }
+      else {
+        File parent = dest.getParentFile();
+        if (parent != null) {
+          parent.mkdirs();
+        }
+        Files.copy(source.toPath(), dest.toPath(), options);
+      }
+    }
+
     private static URL[] urls() {
       List<URL> urlList = new ArrayList<URL>();
       try {
@@ -244,15 +267,15 @@ class JavaFx {
           }
         }
         try {
-          File monocleTmp = new File(tmpDir, "monocle.jar");
-          URLConnection conn = NativePlatformFactory.class.
-              getProtectionDomain().getCodeSource().getLocation().openConnection();
+          final URL url = NativePlatformFactory.class.getProtectionDomain().getCodeSource().getLocation();
+          final URLConnection conn = url.openConnection();
+          final File bin = new File(tmpDir, "jbrowserdriver");
           if (conn instanceof JarURLConnection) {
-            Files.copy(((JarURLConnection) conn).getJarFileURL().openStream(), monocleTmp.toPath());
+            Files.copy(((JarURLConnection) conn).getJarFileURL().openStream(), bin.toPath());
           } else {
-            Files.copy(conn.getInputStream(), monocleTmp.toPath());
+            copy(Paths.get(url.toURI()).toFile(), bin.toPath().toFile());
           }
-          urlList.add(monocleTmp.toURI().toURL());
+          urlList.add(bin.toURI().toURL());
         } catch (Throwable t) {
           Logs.exception(t);
         }
