@@ -262,60 +262,64 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            //a fast approximation of whether this element is visible
-            return (Boolean) node.get().call("eval",
-                "var me = this;"
-                    + "(function(){"
-                    //The following JavaScript is Copyright 2011-2015 Software Freedom Conservancy and Copyright 2004-2011 Selenium committers.
-                    //Adapted and modified from https://github.com/SeleniumHQ/selenium/blob/master/javascript/selenium-core/scripts/selenium-api.js
-                    + "var findEffectiveStyle = function(element) {"
-                    + "    if (element.style == undefined) {"
-                    + "        return undefined;"
-                    + "    }"
-                    + "    if (window.getComputedStyle) {"
-                    + "        return window.getComputedStyle(element, null);"
-                    + "    }"
-                    + "    if (element.currentStyle) {"
-                    + "        return element.currentStyle;"
-                    + "    }"
-                    + "    if (window.document.defaultView && window.document.defaultView.getComputedStyle) {"
-                    + "        return window.document.defaultView.getComputedStyle(element, null);"
-                    + "    }"
-                    + "    return undefined;"
-                    + "};"
-                    + "var findEffectiveStyleProperty = function(element, property) {"
-                    + "    var effectiveStyle = findEffectiveStyle(element);"
-                    + "    var propertyValue = effectiveStyle[property];"
-                    + "    if (propertyValue == 'inherit' && element.parentNode.style) {"
-                    + "        return findEffectiveStyleProperty(element.parentNode, property);"
-                    + "    }"
-                    + "    return propertyValue;"
-                    + "};"
-                    + "var isVisible = function(element) {"
-                    + "    if (element.tagName) {"
-                    + "        var tagName = new String(element.tagName).toLowerCase();"
-                    + "        if (tagName == \"input\") {"
-                    + "            if (element.type) {"
-                    + "                var elementType = new String(element.type).toLowerCase();"
-                    + "                if (elementType == \"hidden\") {"
-                    + "                    return false;"
-                    + "                }"
-                    + "            }"
-                    + "        }"
-                    + "    }"
-                    + "    var visibility = findEffectiveStyleProperty(element, \"visibility\");"
-                    + "    return (visibility != \"hidden\" && isDisplayed(element));"
-                    + "};"
-                    + "var isDisplayed = function(element) {"
-                    + "    var display = findEffectiveStyleProperty(element, \"display\");"
-                    + "    if (display == \"none\") return false;"
-                    + "    if (element.parentNode.style) {"
-                    + "        return isDisplayed(element.parentNode);"
-                    + "    }"
-                    + "    return true;"
-                    + "};"
-                    + "return isDisplayed(me);"
-                    + "})();").unwrap();
+            try {
+              //a fast approximation of whether this element is visible
+              return (Boolean) node.get().call("eval",
+                  "var me = this;"
+                      + "(function(){"
+                      //The following JavaScript is Copyright 2011-2015 Software Freedom Conservancy and Copyright 2004-2011 Selenium committers.
+                      //Adapted and modified from https://github.com/SeleniumHQ/selenium/blob/master/javascript/selenium-core/scripts/selenium-api.js
+                      + "var findEffectiveStyle = function(element) {"
+                      + "    if (element.style == undefined) {"
+                      + "        return undefined;"
+                      + "    }"
+                      + "    if (window.getComputedStyle) {"
+                      + "        return window.getComputedStyle(element, null);"
+                      + "    }"
+                      + "    if (element.currentStyle) {"
+                      + "        return element.currentStyle;"
+                      + "    }"
+                      + "    if (window.document.defaultView && window.document.defaultView.getComputedStyle) {"
+                      + "        return window.document.defaultView.getComputedStyle(element, null);"
+                      + "    }"
+                      + "    return undefined;"
+                      + "};"
+                      + "var findEffectiveStyleProperty = function(element, property) {"
+                      + "    var effectiveStyle = findEffectiveStyle(element);"
+                      + "    var propertyValue = effectiveStyle[property];"
+                      + "    if (propertyValue == 'inherit' && element.parentNode.style) {"
+                      + "        return findEffectiveStyleProperty(element.parentNode, property);"
+                      + "    }"
+                      + "    return propertyValue;"
+                      + "};"
+                      + "var isVisible = function(element) {"
+                      + "    if (element.tagName) {"
+                      + "        var tagName = new String(element.tagName).toLowerCase();"
+                      + "        if (tagName == \"input\") {"
+                      + "            if (element.type) {"
+                      + "                var elementType = new String(element.type).toLowerCase();"
+                      + "                if (elementType == \"hidden\") {"
+                      + "                    return false;"
+                      + "                }"
+                      + "            }"
+                      + "        }"
+                      + "    }"
+                      + "    var visibility = findEffectiveStyleProperty(element, \"visibility\");"
+                      + "    return (visibility != \"hidden\" && isDisplayed(element));"
+                      + "};"
+                      + "var isDisplayed = function(element) {"
+                      + "    var display = findEffectiveStyleProperty(element, \"display\");"
+                      + "    if (display == \"none\") return false;"
+                      + "    if (element.parentNode.style) {"
+                      + "        return isDisplayed(element.parentNode);"
+                      + "    }"
+                      + "    return true;"
+                      + "};"
+                      + "return isDisplayed(me);"
+                      + "})();").unwrap();
+            } catch (Throwable t) {
+              return false;
+            }
           }
         }, context.settingsId.get());
   }
@@ -408,7 +412,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   private List<WebElement> byTagName(final String tagName) {
-    return (List<WebElement>) executeScript("return this.getElementsByTagName('" + tagName + "');");
+    return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<List<WebElement>>() {
+          @Override
+          public List<WebElement> perform() {
+            return (List<WebElement>) parseScriptResult(node.get().call(
+                "call", "getElementsByTagName", new Object[] { tagName }));
+          }
+        }, context.settingsId.get());
   }
 
   @Override
@@ -530,14 +541,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeAsyncScript(final String script, final Object... args) {
     lock();
     try {
-      Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-          new Sync<Object>() {
-            @Override
-            public Object perform() {
-              context.item().httpListener.get().call("resetStatusCode");
-              return script(true, script, args);
-            }
-          }, context.settingsId.get());
+      script(true, script, args);
       int sleep = 1;
       final int sleepBackoff = 2;
       final int sleepMax = 500;
@@ -576,14 +580,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeScript(final String script, final Object... args) {
     lock();
     try {
-      return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-          new Sync<Object>() {
-            @Override
-            public Object perform() {
-              context.item().httpListener.get().call("resetStatusCode");
-              return script(false, script, args);
-            }
-          }, context.settingsId.get());
+      return script(false, script, args);
     } finally {
       unlock();
     }
@@ -610,29 +607,34 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   private Object script(boolean callback, String script, Object[] args) {
-    List<Object> argList = new ArrayList<Object>();
-    if (args != null) {
-      argList.addAll(Arrays.asList(args));
-    }
-    if (callback) {
-      argList.add(null);
-      this.node.get().call("eval", "(function(){"
-          + "          this.screenslicerCallback = function(){"
-          + "            this.screenslicerCallbackVal = arguments;"
-          + "          }"
-          + "        }).apply(this);"
-          + "        this.screenslicerJS = function(){"
-          + (isWindow ? "this.window = this;" : "")
-          + "          arguments[arguments.length-1] = this.screenslicerCallback;"
-          + "          return (function(){" + script + "}).apply(this, arguments);"
-          + "        };");
-    } else {
-      this.node.get().call("eval", "this.screenslicerJS = function(){"
-          + (isWindow ? "this.window = this;" : "")
-          + "          return (function(){" + script + "}).apply(this, arguments);"
-          + "        };");
-    }
-    return parseScriptResult(this.node.get().call("call", "screenslicerJS", argList.toArray(new Object[0])));
+    return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            List<Object> argList = new ArrayList<Object>();
+            if (args != null) {
+              argList.addAll(Arrays.asList(args));
+            }
+            if (callback) {
+              argList.add(null);
+              node.get().call("eval", "(function(){"
+                  + "          this.screenslicerCallback = function(){"
+                  + "            this.screenslicerCallbackVal = arguments;"
+                  + "          }"
+                  + "        }).apply(this);"
+                  + "        this.screenslicerJS = function(){"
+                  + "          arguments[arguments.length-1] = this.screenslicerCallback;"
+                  + "          return (function(){" + script + "}).apply(this, arguments);"
+                  + "        };");
+            } else {
+              node.get().call("eval", "this.screenslicerJS = function(){"
+                  + "          return (function(){" + script + "}).apply(this, arguments);"
+                  + "        };");
+            }
+            context.item().httpListener.get().call("resetStatusCode");
+            return parseScriptResult(node.get().call("call", "screenslicerJS", argList.toArray(new Object[0])));
+          }
+        }, context.settingsId.get());
   }
 
   private Object parseScriptResult(JavaFxObject obj) {
