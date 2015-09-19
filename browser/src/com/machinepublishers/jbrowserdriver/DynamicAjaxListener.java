@@ -30,13 +30,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class DynamicAjaxListener implements Runnable {
-  private static final int WAIT_COUNT = 5;
   private static final long WAIT_INTERVAL =
-      Long.parseLong(System.getProperty("jbd.ajaxwait", "600")) / WAIT_COUNT;
+      Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
   private static final long RESOURCE_TIMEOUT =
-      Long.parseLong(System.getProperty("jbd.resourcetimeout", "5000")) / WAIT_COUNT;
+      Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
   private static final long MAX_WAIT_DEFAULT = 15000;
-  private final AtomicInteger waitCount = new AtomicInteger();
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
   private final Object statusMonitor;
@@ -68,50 +66,36 @@ class DynamicAjaxListener implements Runnable {
     this.clearStatusMonitor = null;
   }
 
-  private void pruneResources() {
-    final long time = System.currentTimeMillis();
-    synchronized (resources) {
-      final Set<String> remove = new HashSet<String>();
-      for (Map.Entry<String, Long> entry : resources.entrySet()) {
-        if (time - entry.getValue() > RESOURCE_TIMEOUT) {
-          remove.add(entry.getKey());
-        }
-      }
-      for (String key : remove) {
-        resources.remove(key);
-      }
-    }
-  }
-
   @Override
   public void run() {
     if (superseded.get() || Thread.interrupted()) {
       return;
     }
-    int totalWait = 0;
     int size = 0;
-    boolean idle = false;
-    waitCount.set(0);
-    while (!idle && totalWait < timeoutMS) {
+    final long start = System.currentTimeMillis();
+    long time = start;
+    while (time - start < timeoutMS) {
       try {
         Thread.sleep(WAIT_INTERVAL);
       } catch (InterruptedException e) {}
       if (superseded.get() || Thread.interrupted()) {
         return;
       }
-      totalWait += WAIT_INTERVAL;
+      time = System.currentTimeMillis();
       synchronized (resources) {
-        pruneResources();
+        final Set<String> remove = new HashSet<String>();
+        for (Map.Entry<String, Long> entry : resources.entrySet()) {
+          if (time - entry.getValue() > RESOURCE_TIMEOUT) {
+            remove.add(entry.getKey());
+          }
+        }
+        for (String key : remove) {
+          resources.remove(key);
+        }
         size = resources.size();
       }
-      if (size > 0) {
-        idle = false;
-        waitCount.set(0);
-      } else if (waitCount.get() == WAIT_COUNT) {
-        idle = true;
-      } else {
-        idle = false;
-        waitCount.incrementAndGet();
+      if (size == 0) {
+        break;
       }
     }
     synchronized (statusCode) {
