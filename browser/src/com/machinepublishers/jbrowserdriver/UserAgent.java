@@ -27,6 +27,8 @@ import java.util.Map;
 
 /**
  * Browser user agent and related properties.
+ * 
+ * @see RequestHeaders
  */
 public class UserAgent {
   public static enum Family {
@@ -122,6 +124,8 @@ public class UserAgent {
 
   /**
    * Tor Browser
+   * 
+   * @see RequestHeaders#TOR
    */
   public static UserAgent TOR = new UserAgent(
       Family.MOZILLA, "", "Win32", "Windows NT 6.1",
@@ -130,6 +134,8 @@ public class UserAgent {
 
   /**
    * Chrome browser
+   * 
+   * @see RequestHeaders#CHROME
    */
   public static UserAgent CHROME = new UserAgent(
       Family.WEBKIT, "Google Inc.", "Win32", "Windows NT 6.1",

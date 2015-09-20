@@ -34,8 +34,8 @@ import java.util.Set;
 import java.util.TimeZone;
 
 /**
- * Browser timezone and daylight savings offsets change according to this locale.
- * Regardless, locale for formatting of date strings will be en-US.
+ * Browser timezone and daylight savings settings.
+ * Currently one limitation is that locale for formatting of date strings will always be en-US.
  */
 public class Timezone {
   private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-HH-mm");

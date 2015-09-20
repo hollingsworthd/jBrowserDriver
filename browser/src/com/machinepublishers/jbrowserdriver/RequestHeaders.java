@@ -29,6 +29,11 @@ import java.util.Map;
 
 /**
  * Customizes headers sent on each request.
+ * This can be used to mimic behavior of particular browsers
+ * or potentially set up more customized caching and authentication
+ * settings.
+ * 
+ * @see UserAgent
  */
 public class RequestHeaders {
 
@@ -50,6 +55,8 @@ public class RequestHeaders {
 
   /**
    * Tor Browser request headers
+   * 
+   * @see UserAgent#TOR
    */
   public static final RequestHeaders TOR;
   static {
@@ -67,6 +74,8 @@ public class RequestHeaders {
 
   /**
    * Chrome browser request headers
+   * 
+   * @see UserAgent#CHROME
    */
   public static final RequestHeaders CHROME;
   static {
@@ -85,8 +94,8 @@ public class RequestHeaders {
   /**
    * Specify the ordered headers to be sent on each request.
    * 
-   * @see {@link RequestHeaders.DROP_HEADER}
-   * @see {@link RequestHeaders.DYNAMIC_HEADER}
+   * @see RequestHeaders.DROP_HEADER
+   * @see RequestHeaders.DYNAMIC_HEADER
    */
   public RequestHeaders(LinkedHashMap<String, String> headers) {
     headersHttp = createHeaders(headers);
@@ -97,8 +106,8 @@ public class RequestHeaders {
    * Specify the ordered headers to be sent on each request.
    * Allows different sets of headers for HTTP and HTTPS.
    * 
-   * @see {@link RequestHeaders.DROP_HEADER}
-   * @see {@link RequestHeaders.DYNAMIC_HEADER}
+   * @see RequestHeaders.DROP_HEADER
+   * @see RequestHeaders.DYNAMIC_HEADER
    */
   public RequestHeaders(LinkedHashMap<String, String> headersHttp, LinkedHashMap<String, String> headersHttps) {
     this.headersHttp = createHeaders(headersHttp);

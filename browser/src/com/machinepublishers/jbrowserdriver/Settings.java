@@ -38,6 +38,12 @@ import org.openqa.selenium.Dimension;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
+/**
+ * An immutable class which contains settings for the browser.
+ * 
+ * @see Settings#builder()
+ * @see JBrowserDriver#JBrowserDriver(Settings)
+ */
 public class Settings {
   /**
    * A script to guard against canvas fingerprinting and also add some typical navigator properties.
@@ -60,20 +66,20 @@ public class Settings {
     //    builder.append("{value:function(url, target, props){if(event && event.shiftKey){windowOpen(url);}else{windowOpen(url,'_self');}}}");
     //    builder.append(")})();");
 
-    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
-        + "'toBlob', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
-        + "'toDataURL', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
-        + "'createImageData', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
-        + "'getImageData', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
-        + "'measureText', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
-        + "'isPointInPath', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
-        + "'isPointInStroke', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, ");
+    builder.append("'toBlob', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, ");
+    builder.append("'toDataURL', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
+    builder.append("'createImageData', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
+    builder.append("'getImageData', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
+    builder.append("'measureText', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
+    builder.append("'isPointInPath', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
+    builder.append("'isPointInStroke', {value:function(){return undefined;}});");
     HEAD_SCRIPT = builder.toString();
   }
   private static final Random rand = new Random();
@@ -179,7 +185,24 @@ public class Settings {
   }
 
   /**
-   * Helps build the Settings object.
+   * Convenience method for getting a Settings builder, which
+   * configures jBrowserDriver. Settings objects can safely be re-used
+   * across different instances of {@link JBrowserDriver}.
+   * <p>This is equivalent to calling <code> new Settings.Builder()</code>
+   * 
+   * @return Settings.Builder
+   * @see JBrowserDriver#JBrowserDriver(Settings)
+   */
+  public static Settings.Builder builder() {
+    return new Settings.Builder();
+  }
+
+  /**
+   * Helps build a Settings object which configures jBrowserDriver.
+   * Settings objects can safely be re-used
+   * across different instances of {@link JBrowserDriver}.
+   * 
+   * @see JBrowserDriver#JBrowserDriver(Settings)
    */
   public static class Builder {
     private RequestHeaders requestHeaders = RequestHeaders.TOR;
@@ -197,6 +220,7 @@ public class Settings {
      * @param requestHeaders
      *          Headers to be sent on each request. Defaults to {@link RequestHeaders#TOR}.
      * @return this Builder
+     * @see Builder#userAgent(UserAgent)
      */
     public Builder requestHeaders(RequestHeaders requestHeaders) {
       this.requestHeaders = requestHeaders;
@@ -205,7 +229,9 @@ public class Settings {
 
     /**
      * @param screen
-     *          Screen and window size. Defaults to 1000x600.
+     *          Screen and window size. Defaults to 1000x600. This is a typical size for Tor Browser
+     *          but if you're not using the Tor user agent you might want to specify a more common
+     *          size such as 1366x768.
      * @return this Builder
      */
     public Builder screen(Dimension screen) {
@@ -216,7 +242,8 @@ public class Settings {
     /**
      * @param userAgent
      *          Browser's user agent and related properties. Defaults to {@link UserAgent#TOR}.
-     * @return
+     * @return this Builder
+     * @see Builder#requestHeaders(RequestHeaders)
      */
     public Builder userAgent(UserAgent userAgent) {
       this.userAgent = userAgent;
@@ -225,7 +252,9 @@ public class Settings {
 
     /**
      * @param timezone
-     *          Timezone of the browser. Defaults to {@link Timezone#UTC}.
+     *          Timezone of the browser. Defaults to {@link Timezone#UTC}. This is the timezone
+     *          of Tor Browser but if you're not using the Tor user agent you might want to
+     *          use a locale nearer your actual computer, such as {@link Timezone#AMERICA_LOSANGELES} if you're in San Francisco.
      * @return this Builder
      */
     public Builder timezone(Timezone timezone) {
@@ -236,7 +265,7 @@ public class Settings {
     /**
      * @param headScript
      *          Script to be injected in the HTML Head section.
-     *          Omit &lt;script&gt; tags, they will be added automatically.
+     *          Omit &lt;script&gt; tags; they will be added automatically.
      *          Defaults to {@link Settings#HEAD_SCRIPT}.
      * @return this Builder
      */
@@ -322,6 +351,7 @@ public class Settings {
 
     /**
      * @return A Settings object created from this builder.
+     * @see JBrowserDriver#JBrowserDriver(Settings)
      */
     public Settings build() {
       return new Settings(this.requestHeaders, this.screen, this.userAgent, this.timezone,
@@ -341,6 +371,9 @@ public class Settings {
   private final String script;
   private final CookieManager cookieManager = new CookieManager();
 
+  /**
+   * Do not call this constructor. Instead, see {@link Settings#builder()}.
+   */
   Settings() {
     this(new Builder().build());
   }
