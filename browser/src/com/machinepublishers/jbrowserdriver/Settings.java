@@ -182,8 +182,8 @@ public class Settings {
    * Helps build the Settings object.
    */
   public static class Builder {
-    private RequestHeaders requestHeaders = new RequestHeaders();
-    private Dimension screen = new Dimension(1366, 768);
+    private RequestHeaders requestHeaders = RequestHeaders.TOR;
+    private Dimension screen = new Dimension(1000, 600);
     private UserAgent userAgent = UserAgent.TOR;
     private Timezone timezone = Timezone.UTC;
     private String headScript = HEAD_SCRIPT;
@@ -195,7 +195,7 @@ public class Settings {
 
     /**
      * @param requestHeaders
-     *          Headers to be sent on each request
+     *          Headers to be sent on each request. Defaults to {@link RequestHeaders#TOR}.
      * @return this Builder
      */
     public Builder requestHeaders(RequestHeaders requestHeaders) {
@@ -205,7 +205,7 @@ public class Settings {
 
     /**
      * @param screen
-     *          Screen and window size
+     *          Screen and window size. Defaults to 1000x600.
      * @return this Builder
      */
     public Builder screen(Dimension screen) {
@@ -215,7 +215,7 @@ public class Settings {
 
     /**
      * @param userAgent
-     *          Browser's user agent and related properties
+     *          Browser's user agent and related properties. Defaults to {@link UserAgent#TOR}.
      * @return
      */
     public Builder userAgent(UserAgent userAgent) {
@@ -225,7 +225,7 @@ public class Settings {
 
     /**
      * @param timezone
-     *          Timezone of the browser
+     *          Timezone of the browser. Defaults to {@link Timezone#UTC}.
      * @return this Builder
      */
     public Builder timezone(Timezone timezone) {
@@ -237,6 +237,7 @@ public class Settings {
      * @param headScript
      *          Script to be injected in the HTML Head section.
      *          Omit &lt;script&gt; tags, they will be added automatically.
+     *          Defaults to {@link Settings#HEAD_SCRIPT}.
      * @return this Builder
      */
     public Builder headScript(String headScript) {
@@ -246,7 +247,7 @@ public class Settings {
 
     /**
      * @param proxy
-     *          Proxy server to be used
+     *          Proxy server to be used. Defaults to a direct connection (no proxy).
      * @return this Builder
      */
     public Builder proxy(ProxyConfig proxy) {

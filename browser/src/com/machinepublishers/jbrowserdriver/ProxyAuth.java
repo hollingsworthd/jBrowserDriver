@@ -48,7 +48,7 @@ class ProxyAuth extends Authenticator {
   }
 
   static void add(final ProxyConfig proxy) {
-    if (!proxy.directConnection() && proxy.credentials()) {
+    if (proxy != null && !proxy.directConnection() && proxy.credentials()) {
       synchronized (lock) {
         proxies.put(proxy.hostAndPort(),
             new PasswordAuthentication(proxy.user(), proxy.password().toCharArray()));
@@ -57,7 +57,7 @@ class ProxyAuth extends Authenticator {
   }
 
   static void remove(final ProxyConfig proxy) {
-    if (!proxy.directConnection() && proxy.credentials()) {
+    if (proxy != null && !proxy.directConnection() && proxy.credentials()) {
       synchronized (lock) {
         proxies.remove(proxy.hostAndPort());
       }

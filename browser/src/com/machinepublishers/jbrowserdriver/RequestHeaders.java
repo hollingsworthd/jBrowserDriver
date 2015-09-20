@@ -49,9 +49,10 @@ public class RequestHeaders {
   public static final String DYNAMIC_HEADER = "dynamic_header";
 
   /**
-   * Creates default headers which are similar to those sent by Tor Browser.
+   * Tor Browser request headers
    */
-  public RequestHeaders() {
+  public static final RequestHeaders TOR;
+  static {
     LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
     headersTmp.put("Host", DYNAMIC_HEADER);
     headersTmp.put("User-Agent", DYNAMIC_HEADER);
@@ -59,9 +60,26 @@ public class RequestHeaders {
     headersTmp.put("Accept-Language", "en-us,en;q=0.5");
     headersTmp.put("Accept-Encoding", "gzip, deflate");
     headersTmp.put("Cookie", DYNAMIC_HEADER);
+    headersTmp.put("DNT", "1");
     headersTmp.put("Connection", DYNAMIC_HEADER);
-    headersHttp = createHeaders(headersTmp);
-    headersHttps = headersHttp;
+    TOR = new RequestHeaders(headersTmp);
+  }
+
+  /**
+   * Chrome browser request headers
+   */
+  public static final RequestHeaders CHROME;
+  static {
+    LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
+    headersTmp.put("Host", DYNAMIC_HEADER);
+    headersTmp.put("User-Agent", DYNAMIC_HEADER);
+    headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+    headersTmp.put("Accept-Encoding", "gzip, deflate, sdch");
+    headersTmp.put("Accept-Language", "en-US,en;q=0.8");
+    headersTmp.put("Cookie", DYNAMIC_HEADER);
+    headersTmp.put("Upgrade-Insecure-Requests", "1");
+    headersTmp.put("Connection", DYNAMIC_HEADER);
+    CHROME = new RequestHeaders(headersTmp);
   }
 
   /**
