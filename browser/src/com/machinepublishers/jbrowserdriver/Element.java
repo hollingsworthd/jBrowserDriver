@@ -48,7 +48,6 @@ import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Locatable;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
@@ -122,12 +121,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final AtomicReference<JavaFxObject> node;
-  private final boolean isWindow;
   private final BrowserContext context;
 
   Element(final AtomicReference<JavaFxObject> node, final BrowserContext context) {
     try {
-      this.isWindow = node.get().is(Document.class);
       this.node = node;
       this.context = context;
     } catch (Throwable t) {
