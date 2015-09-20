@@ -401,7 +401,9 @@ public class Settings {
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
-    scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
+    if (headless) {
+      scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
+    }
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
     scriptBuilder.append("try{");
     scriptBuilder.append(userAgent.script());

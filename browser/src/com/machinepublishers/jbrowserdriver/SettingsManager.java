@@ -69,8 +69,10 @@ class SettingsManager {
         }
         view.set(JavaFx.getNew(WebView.class, settings.get().id()));
         stage.set(JavaFx.getNew(Stage.class, settings.get().id()));
-        stage.get().call("initStyle",
-            JavaFx.getStatic(StageStyle.class, settings.get().id()).field("UNDECORATED"));
+        if (Settings.headless()) {
+          stage.get().call("initStyle",
+              JavaFx.getStatic(StageStyle.class, settings.get().id()).field("UNDECORATED"));
+        }
         AtomicReference<JavaFxObject> root = new AtomicReference<JavaFxObject>();
         root.set(JavaFx.getNew(StackPane.class, settings.get().id()));
         final Dimension size = settings.get().screen();
