@@ -61,6 +61,64 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
 
+  private static final String IS_DISPLAYED;
+  static {
+    StringBuilder builder = new StringBuilder();
+    builder.append("var me = this;");
+    builder.append("(function(){");
+    //The following JavaScript is Copyright 2011-2015 Software Freedom Conservancy and Copyright 2004-2011 Selenium committers.
+    //Adapted and modified from https://github.com/SeleniumHQ/selenium/blob/master/javascript/selenium-core/scripts/selenium-api.js
+    builder.append("var findEffectiveStyle = function(element) {");
+    builder.append("  if (element.style == undefined) {");
+    builder.append("    return undefined;");
+    builder.append("  }");
+    builder.append("  if (window.getComputedStyle) {");
+    builder.append("    return window.getComputedStyle(element, null);");
+    builder.append("  }");
+    builder.append("  if (element.currentStyle) {");
+    builder.append("    return element.currentStyle;");
+    builder.append("  }");
+    builder.append("  if (window.document.defaultView && window.document.defaultView.getComputedStyle) {");
+    builder.append("    return window.document.defaultView.getComputedStyle(element, null);");
+    builder.append("  }");
+    builder.append("  return undefined;");
+    builder.append("};");
+    builder.append("var findEffectiveStyleProperty = function(element, property) {");
+    builder.append("  var effectiveStyle = findEffectiveStyle(element);");
+    builder.append("  var propertyValue = effectiveStyle[property];");
+    builder.append("  if (propertyValue == 'inherit' && element.parentNode.style) {");
+    builder.append("    return findEffectiveStyleProperty(element.parentNode, property);");
+    builder.append("  }");
+    builder.append("  return propertyValue;");
+    builder.append("};");
+    builder.append("var isVisible = function(element) {");
+    builder.append("  if (element.tagName) {");
+    builder.append("    var tagName = new String(element.tagName).toLowerCase();");
+    builder.append("    if (tagName == \"input\") {");
+    builder.append("      if (element.type) {");
+    builder.append("        var elementType = new String(element.type).toLowerCase();");
+    builder.append("        if (elementType == \"hidden\") {");
+    builder.append("          return false;");
+    builder.append("        }");
+    builder.append("      }");
+    builder.append("    }");
+    builder.append("  }");
+    builder.append("  var visibility = findEffectiveStyleProperty(element, \"visibility\");");
+    builder.append("  return (visibility != \"hidden\" && isDisplayed(element));");
+    builder.append("};");
+    builder.append("var isDisplayed = function(element) {");
+    builder.append("  var display = findEffectiveStyleProperty(element, \"display\");");
+    builder.append("  if (display == \"none\") return false;");
+    builder.append("  if (element.parentNode.style) {");
+    builder.append("    return isDisplayed(element.parentNode);");
+    builder.append("  }");
+    builder.append("  return true;");
+    builder.append("};");
+    builder.append("return isDisplayed(me);");
+    builder.append("})();");
+    IS_DISPLAYED = builder.toString();
+  }
+
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final AtomicReference<JavaFxObject> node;
@@ -264,59 +322,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           public Boolean perform() {
             try {
               //a fast approximation of whether this element is visible
-              return (Boolean) node.get().call("eval",
-                  "var me = this;"
-                      + "(function(){"
-                      //The following JavaScript is Copyright 2011-2015 Software Freedom Conservancy and Copyright 2004-2011 Selenium committers.
-                      //Adapted and modified from https://github.com/SeleniumHQ/selenium/blob/master/javascript/selenium-core/scripts/selenium-api.js
-                      + "var findEffectiveStyle = function(element) {"
-                      + "    if (element.style == undefined) {"
-                      + "        return undefined;"
-                      + "    }"
-                      + "    if (window.getComputedStyle) {"
-                      + "        return window.getComputedStyle(element, null);"
-                      + "    }"
-                      + "    if (element.currentStyle) {"
-                      + "        return element.currentStyle;"
-                      + "    }"
-                      + "    if (window.document.defaultView && window.document.defaultView.getComputedStyle) {"
-                      + "        return window.document.defaultView.getComputedStyle(element, null);"
-                      + "    }"
-                      + "    return undefined;"
-                      + "};"
-                      + "var findEffectiveStyleProperty = function(element, property) {"
-                      + "    var effectiveStyle = findEffectiveStyle(element);"
-                      + "    var propertyValue = effectiveStyle[property];"
-                      + "    if (propertyValue == 'inherit' && element.parentNode.style) {"
-                      + "        return findEffectiveStyleProperty(element.parentNode, property);"
-                      + "    }"
-                      + "    return propertyValue;"
-                      + "};"
-                      + "var isVisible = function(element) {"
-                      + "    if (element.tagName) {"
-                      + "        var tagName = new String(element.tagName).toLowerCase();"
-                      + "        if (tagName == \"input\") {"
-                      + "            if (element.type) {"
-                      + "                var elementType = new String(element.type).toLowerCase();"
-                      + "                if (elementType == \"hidden\") {"
-                      + "                    return false;"
-                      + "                }"
-                      + "            }"
-                      + "        }"
-                      + "    }"
-                      + "    var visibility = findEffectiveStyleProperty(element, \"visibility\");"
-                      + "    return (visibility != \"hidden\" && isDisplayed(element));"
-                      + "};"
-                      + "var isDisplayed = function(element) {"
-                      + "    var display = findEffectiveStyleProperty(element, \"display\");"
-                      + "    if (display == \"none\") return false;"
-                      + "    if (element.parentNode.style) {"
-                      + "        return isDisplayed(element.parentNode);"
-                      + "    }"
-                      + "    return true;"
-                      + "};"
-                      + "return isDisplayed(me);"
-                      + "})();").unwrap();
+              return (Boolean) node.get().call("eval", IS_DISPLAYED).unwrap();
             } catch (Throwable t) {
               return false;
             }
