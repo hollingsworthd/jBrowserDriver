@@ -34,9 +34,48 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openqa.selenium.Dimension;
+
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
 public class Settings {
+  /**
+   * A script to guard against canvas fingerprinting and also add some typical navigator properties.
+   */
+  public static final String HEAD_SCRIPT;
+  static {
+    StringBuilder builder = new StringBuilder();
+    builder.append("Object.defineProperty(window, 'external', ");
+    builder.append("{value:{AddSearchProvider:function(){},IsSearchProviderInstalled:function(){},addSearchEngine:function(){}}});");
+    builder.append("Object.defineProperty(window.external.AddSearchProvider, 'toString', ");
+    builder.append("{value:function(){return 'function AddSearchProvider() { [native code] }';}});");
+    builder.append("Object.defineProperty(window.external.IsSearchProviderInstalled, 'toString', ");
+    builder.append("{value:function(){return 'function IsSearchProviderInstalled() { [native code] }';}});");
+    builder.append("Object.defineProperty(window.external.addSearchEngine, 'toString', ");
+    builder.append("{value:function(){return 'function addSearchEngine() { [native code] }';}});");
+
+    //TODO FIXME handle shift key event in case of headless browser
+    //    builder.append("(function(){");
+    //    builder.append("var windowOpen = window.open;Object.defineProperty(window,'open',");
+    //    builder.append("{value:function(url, target, props){if(event && event.shiftKey){windowOpen(url);}else{windowOpen(url,'_self');}}}");
+    //    builder.append(")})();");
+
+    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
+        + "'toBlob', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(HTMLCanvasElement.prototype, "
+        + "'toDataURL', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+        + "'createImageData', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+        + "'getImageData', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+        + "'measureText', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+        + "'isPointInPath', {value:function(){return undefined;}});");
+    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, "
+        + "'isPointInStroke', {value:function(){return undefined;}});");
+    HEAD_SCRIPT = builder.toString();
+  }
   private static final Random rand = new Random();
   private static final boolean headless;
   static {
@@ -143,12 +182,14 @@ public class Settings {
    * Helps build the Settings object.
    */
   public static class Builder {
-    private RequestHeaders requestHeaders;
-    private BrowserTimeZone browserTimeZone;
-    private BrowserProperties browserProperties;
-    private ProxyConfig proxy;
-    private File downloadDir;
-    private File mediaDir;
+    private RequestHeaders requestHeaders = new RequestHeaders();
+    private Dimension screen = new Dimension(1366, 768);
+    private UserAgent userAgent = UserAgent.TOR;
+    private Timezone timezone = Timezone.UTC;
+    private String headScript = HEAD_SCRIPT;
+    private ProxyConfig proxy = new ProxyConfig();
+    private File downloadDir = new File("./download_cache");
+    private File mediaDir = new File("./media_cache");
     private boolean saveMedia;
     private boolean saveMediaInit;
 
@@ -163,22 +204,43 @@ public class Settings {
     }
 
     /**
-     * @param browserTimeZone
-     *          Timezone of the browser
+     * @param screen
+     *          Screen and window size
      * @return this Builder
      */
-    public Builder browserTimeZone(BrowserTimeZone browserTimeZone) {
-      this.browserTimeZone = browserTimeZone;
+    public Builder screen(Dimension screen) {
+      this.screen = screen;
       return this;
     }
 
     /**
-     * @param browserProperties
-     *          Various DOM and JavaScript properties
+     * @param userAgent
+     *          Browser's user agent and related properties
+     * @return
+     */
+    public Builder userAgent(UserAgent userAgent) {
+      this.userAgent = userAgent;
+      return this;
+    }
+
+    /**
+     * @param timezone
+     *          Timezone of the browser
      * @return this Builder
      */
-    public Builder browserProperties(BrowserProperties browserProperties) {
-      this.browserProperties = browserProperties;
+    public Builder timezone(Timezone timezone) {
+      this.timezone = timezone;
+      return this;
+    }
+
+    /**
+     * @param headScript
+     *          Script to be injected in the HTML Head section.
+     *          Omit &lt;script&gt; tags, they will be added automatically.
+     * @return this Builder
+     */
+    public Builder headScript(String headScript) {
+      this.headScript = headScript;
       return this;
     }
 
@@ -261,14 +323,13 @@ public class Settings {
      * @return A Settings object created from this builder.
      */
     public Settings build() {
-      return new Settings(this.requestHeaders, this.browserTimeZone, this.browserProperties,
-          this.proxy, this.downloadDir, this.mediaDir, this.saveMedia);
+      return new Settings(this.requestHeaders, this.screen, this.userAgent, this.timezone,
+          this.headScript, this.proxy, this.downloadDir, this.mediaDir, this.saveMedia);
     }
   }
 
   private final RequestHeaders requestHeaders;
-  private final BrowserTimeZone browserTimeZone;
-  private final BrowserProperties browserProperties;
+  private final Dimension screen;
   private final ProxyConfig proxy;
   private final File downloadDir;
   private final File mediaDir;
@@ -279,23 +340,23 @@ public class Settings {
   private final CookieManager cookieManager = new CookieManager();
 
   Settings() {
-    this(null, null, null, null, null, null, false);
+    this(new Builder().build());
   }
 
-  private Settings(final RequestHeaders requestHeaders, final BrowserTimeZone browserTimeZone,
-      final BrowserProperties browserProperties, final ProxyConfig proxy,
+  private Settings(final RequestHeaders requestHeaders, final Dimension screen,
+      final UserAgent userAgent, final Timezone timezone,
+      final String headScript, final ProxyConfig proxy,
       final File downloadDir, final File mediaDir, final boolean saveMedia) {
     mySettingsId = -1;
-    this.requestHeaders = requestHeaders == null ? new RequestHeaders() : requestHeaders;
-    this.browserTimeZone = browserTimeZone == null ? BrowserTimeZone.UTC : browserTimeZone;
-    this.browserProperties = browserProperties == null ? new BrowserProperties() : browserProperties;
-    this.proxy = proxy == null ? new ProxyConfig() : proxy;
-    this.downloadDir = downloadDir == null ? new File("./download_cache") : downloadDir;
+    this.requestHeaders = requestHeaders;
+    this.screen = screen;
+    this.proxy = proxy;
+    this.downloadDir = downloadDir;
     if (!this.downloadDir.exists()) {
       this.downloadDir.mkdirs();
       this.downloadDir.deleteOnExit();
     }
-    this.mediaDir = mediaDir == null ? new File("./media_cache") : mediaDir;
+    this.mediaDir = mediaDir;
     if (!this.mediaDir.exists()) {
       this.mediaDir.mkdirs();
       this.mediaDir.deleteOnExit();
@@ -304,22 +365,23 @@ public class Settings {
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
+    scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
     scriptBuilder.append("try{");
-    //TODO FIXME custom timezone is buggy on some pages
-    //scriptBuilder.append(browserTimeZone().script());
-    scriptBuilder.append(browserProperties().script());
-    scriptBuilder.append("}catch(e){}");
-    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild("
-        + "document.getElementById('" + scriptId + "'));");
+    scriptBuilder.append(userAgent.script());
+    scriptBuilder.append(timezone.script());
+    if (headScript != null) {
+      scriptBuilder.append(headScript);
+    }
+    scriptBuilder.append("}catch(e){document.write(e);}");
+    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + scriptId + "'));");
     scriptBuilder.append("</script>");
     script = scriptBuilder.toString();
   }
 
   Settings(Settings original) {
     requestHeaders = original.requestHeaders;
-    browserTimeZone = original.browserTimeZone;
-    browserProperties = original.browserProperties;
+    screen = original.screen;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
     mediaDir = original.mediaDir;
@@ -336,12 +398,8 @@ public class Settings {
     return requestHeaders;
   }
 
-  BrowserTimeZone browserTimeZone() {
-    return browserTimeZone;
-  }
-
-  BrowserProperties browserProperties() {
-    return browserProperties;
+  Dimension screen() {
+    return screen;
   }
 
   ProxyConfig proxy() {

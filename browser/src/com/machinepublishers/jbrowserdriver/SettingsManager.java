@@ -32,6 +32,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import org.openqa.selenium.Dimension;
 
@@ -53,8 +54,8 @@ class SettingsManager {
       public Object perform() {
         if (Settings.headless()) {
           try {
-            System.setProperty("headless.geometry", settings.get().browserProperties().size().getWidth()
-                + "x" + settings.get().browserProperties().size().getHeight());
+            System.setProperty("headless.geometry", settings.get().screen().getWidth()
+                + "x" + settings.get().screen().getHeight());
             JavaFxObject nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
                 settings.get().id()).call("getNativePlatform");
             Field field = ((Class) JavaFx.getStatic(NativePlatform.class,
@@ -68,9 +69,11 @@ class SettingsManager {
         }
         view.set(JavaFx.getNew(WebView.class, settings.get().id()));
         stage.set(JavaFx.getNew(Stage.class, settings.get().id()));
+        stage.get().call("initStyle",
+            JavaFx.getStatic(StageStyle.class, settings.get().id()).field("UNDECORATED"));
         AtomicReference<JavaFxObject> root = new AtomicReference<JavaFxObject>();
         root.set(JavaFx.getNew(StackPane.class, settings.get().id()));
-        final Dimension size = settings.get().browserProperties().size();
+        final Dimension size = settings.get().screen();
         view.get().call("getEngine").call("getHistory").call("setMaxSize", 2);
         view.get().call("getEngine").call("setUserAgent", "" + settings.get().id());
         root.get().call("getChildren").call("add", view.get());
