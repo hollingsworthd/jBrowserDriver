@@ -219,7 +219,7 @@ class JavaFx {
       }
     }
 
-    public static void copy(File source, File dest, CopyOption... options) throws IOException {
+    private static void copy(File source, File dest, CopyOption... options) throws IOException {
       if (source.isDirectory()) {
         dest.mkdirs();
         File[] contents = source.listFiles();
