@@ -373,7 +373,7 @@ public class Settings {
     if (headScript != null) {
       scriptBuilder.append(headScript);
     }
-    scriptBuilder.append("}catch(e){document.write(e);}");
+    scriptBuilder.append("}catch(e){}");
     scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + scriptId + "'));");
     scriptBuilder.append("</script>");
     script = scriptBuilder.toString();
