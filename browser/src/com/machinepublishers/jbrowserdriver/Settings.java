@@ -330,6 +330,7 @@ public class Settings {
 
   private final RequestHeaders requestHeaders;
   private final Dimension screen;
+  private final String userAgentString;
   private final ProxyConfig proxy;
   private final File downloadDir;
   private final File mediaDir;
@@ -350,6 +351,7 @@ public class Settings {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders;
     this.screen = screen;
+    this.userAgentString = userAgent.userAgentString();
     this.proxy = proxy;
     this.downloadDir = downloadDir;
     if (!this.downloadDir.exists()) {
@@ -382,6 +384,7 @@ public class Settings {
   Settings(Settings original) {
     requestHeaders = original.requestHeaders;
     screen = original.screen;
+    userAgentString = original.userAgentString;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
     mediaDir = original.mediaDir;
@@ -400,6 +403,10 @@ public class Settings {
 
   Dimension screen() {
     return screen;
+  }
+
+  String userAgentString() {
+    return userAgentString;
   }
 
   ProxyConfig proxy() {

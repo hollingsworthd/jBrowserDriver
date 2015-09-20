@@ -54,8 +54,7 @@ public class RequestHeaders {
   public RequestHeaders() {
     LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
     headersTmp.put("Host", DYNAMIC_HEADER);
-    headersTmp.put("User-Agent",
-        "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0");
+    headersTmp.put("User-Agent", DYNAMIC_HEADER);
     headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
     headersTmp.put("Accept-Language", "en-us,en;q=0.5");
     headersTmp.put("Accept-Encoding", "gzip, deflate");

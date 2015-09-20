@@ -108,7 +108,11 @@ class StreamHeader extends MessageHeader {
       }
       if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
         if (valueIn != null && !valueIn.isEmpty()) {
-          headersOut.put(name, valueIn);
+          if (name.equalsIgnoreCase("User-Agent")) {
+            headersOut.put(name, settings.get().userAgentString());
+          } else {
+            headersOut.put(name, valueIn);
+          }
         }
       } else {
         headersOut.put(name, valueSettings);

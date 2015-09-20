@@ -137,6 +137,7 @@ public class UserAgent {
       "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36");
 
   private final String script;
+  private final String userAgentString;
 
   /**
    * @param family
@@ -153,7 +154,7 @@ public class UserAgent {
    *          Property of the navigator object and also sent on headers
    */
   public UserAgent(Family family, String vendor, String platform,
-      String oscpu, String appVersion, String userAgent) {
+      String oscpu, String appVersion, String userAgentString) {
     StringBuilder builder = new StringBuilder();
     builder.append(baseNavigator);
     if (family == Family.MOZILLA) {
@@ -167,9 +168,10 @@ public class UserAgent {
     navigator.put("platform", "'" + (platform == null ? "" : platform) + "'");
     navigator.put("oscpu", "'" + (oscpu == null ? "" : oscpu) + "'");
     navigator.put("appVersion", "'" + (appVersion == null ? "" : appVersion) + "'");
-    navigator.put("userAgent", "'" + (userAgent == null ? "" : userAgent) + "'");
+    navigator.put("userAgent", "'" + (userAgentString == null ? "" : userAgentString) + "'");
     builder.append(buildNavigator(navigator));
 
+    this.userAgentString = userAgentString;
     script = builder.toString();
   }
 
@@ -189,6 +191,10 @@ public class UserAgent {
       }
     }
     return builder.toString();
+  }
+
+  String userAgentString() {
+    return userAgentString;
   }
 
   String script() {
