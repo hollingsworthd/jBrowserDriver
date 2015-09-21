@@ -610,10 +610,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   private Object script(boolean callback, String script, Object[] args) {
-    return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Object>() {
+    return parseScriptResult(Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<JavaFxObject>() {
           @Override
-          public Object perform() {
+          public JavaFxObject perform() {
             List<Object> argList = new ArrayList<Object>();
             if (args != null) {
               argList.addAll(Arrays.asList(args));
@@ -635,9 +635,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                   + "        };");
             }
             context.item().httpListener.get().call("resetStatusCode");
-            return parseScriptResult(node.get().call("call", "screenslicerJS", argList.toArray(new Object[0])));
+            return node.get().call("call", "screenslicerJS", argList.toArray(new Object[0]));
           }
-        }, context.settingsId.get());
+        }, context.settingsId.get()));
   }
 
   private Object parseScriptResult(JavaFxObject obj) {
