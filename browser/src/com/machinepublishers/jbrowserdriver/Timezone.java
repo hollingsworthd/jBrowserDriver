@@ -287,9 +287,9 @@ public class Timezone {
     builder = new StringBuilder();
 
     builder.append("Date.prototype.getTimezoneOffset = function(){");
-    builder.append(isDaylightSavings);
+    builder.append(tmpDate);
     builder.append("if(isDaylightSavings){");
-    builder.append(" return " + timeZoneMinutes + " - " + daylightMinutes);
+    builder.append(" return " + timeZoneMinutes + " - " + daylightMinutes + ";");
     builder.append("}");
     builder.append("return " + timeZoneMinutes + ";");
     builder.append("};");
