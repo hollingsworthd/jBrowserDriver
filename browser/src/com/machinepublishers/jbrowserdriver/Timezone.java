@@ -158,19 +158,22 @@ public class Timezone {
   public static final Timezone PACIFIC_AUCKLAND = new Timezone("Pacific/Auckland");
   public static final Timezone PACIFIC_FIJI = new Timezone("Pacific/Fiji");
   public static final Timezone PACIFIC_HONOLULU = new Timezone("Pacific/Honolulu");
+  private static final Map<String, Timezone> zonesByName;
   public static final Set<Timezone> ALL_ZONES;
   static {
-    Set<Timezone> tmp = new HashSet<Timezone>();
+    Map<String, Timezone> zonesByNameTmp = new HashMap<String, Timezone>();
     Field[] fields = Timezone.class.getDeclaredFields();
     for (int i = 0; i < fields.length; i++) {
       try {
         Object obj = fields[i].get(null);
         if (obj instanceof Timezone) {
-          tmp.add((Timezone) fields[i].get(null));
+          Timezone cur = (Timezone) fields[i].get(null);
+          zonesByNameTmp.put(cur.timeZoneName, cur);
         }
       } catch (Throwable t) {}
     }
-    ALL_ZONES = Collections.unmodifiableSet(tmp);
+    ALL_ZONES = Collections.unmodifiableSet(new HashSet<Timezone>(zonesByNameTmp.values()));
+    zonesByName = Collections.unmodifiableMap(zonesByNameTmp);
   }
 
   private String script;
@@ -178,6 +181,18 @@ public class Timezone {
 
   private Timezone(String timeZoneName) {
     this.timeZoneName = timeZoneName;
+  }
+
+  /**
+   * Get a Timezone according to Java's standard locale names.
+   * The names are based on {@link TimeZone} IDs. E.g., <code>America/New_York</code>
+   * 
+   * @param locale
+   *          TimeZone ID
+   * @return Timezone
+   */
+  public static Timezone byName(String locale) {
+    return zonesByName.get(locale);
   }
 
   private static String timeZoneDesc(boolean daylight, int rawOffset, int timeZoneMinutes, int daylightMinutes) {
