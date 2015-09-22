@@ -112,24 +112,13 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getPageSource() {
     init();
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            return context.item().view.get().call("getEngine").
-                call("executeScript", "document.documentElement.outerHTML").toString();
-          }
-        }, context.settingsId.get());
+    return Element.create(context).findElementByTagName("html").getAttribute("outerHTML");
   }
 
   @Override
   public String getCurrentUrl() {
     init();
-    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
-      public String perform() {
-        return context.item().view.get().call("getEngine").call("getLocation").toString();
-      }
-    }, context.settingsId.get());
+    return context.item().view.get().call("getEngine").call("getLocation").toString();
   }
 
   @Override

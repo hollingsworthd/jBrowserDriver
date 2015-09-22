@@ -182,6 +182,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
             context.robot.get().mouseMove(x + 1, y + 1);
+            context.item().httpListener.get().call("resetStatusCode");
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }
@@ -236,14 +237,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   @Override
   public String getAttribute(final String attrName) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            String val = (String) (node.get().call("getMember", attrName).unwrap());
-            return val == null || val.equals("undefined") ? "" : val;
-          }
-        }, context.settingsId.get());
+    String val = (String) (node.get().call("getMember", attrName).unwrap());
+    return val == null || val.equals("undefined") ? "" : val;
   }
 
   @Override

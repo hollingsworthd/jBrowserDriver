@@ -68,9 +68,6 @@ class DynamicAjaxListener implements Runnable {
 
   @Override
   public void run() {
-    if (superseded.get() || Thread.interrupted()) {
-      return;
-    }
     int size = 0;
     final long start = System.currentTimeMillis();
     long time = start;
@@ -78,11 +75,11 @@ class DynamicAjaxListener implements Runnable {
       try {
         Thread.sleep(WAIT_INTERVAL);
       } catch (InterruptedException e) {}
-      if (superseded.get() || Thread.interrupted()) {
-        return;
-      }
       time = System.currentTimeMillis();
       synchronized (resources) {
+        if (superseded.get() || Thread.interrupted()) {
+          return;
+        }
         final Set<String> remove = new HashSet<String>();
         for (Map.Entry<String, Long> entry : resources.entrySet()) {
           if (time - entry.getValue() > RESOURCE_TIMEOUT) {
@@ -100,11 +97,9 @@ class DynamicAjaxListener implements Runnable {
     }
     synchronized (statusCode) {
       if (newStatusCode == null) {
-        synchronized (superseded) {
+        synchronized (resources) {
           if (!superseded.get() && !Thread.interrupted()) {
-            synchronized (resources) {
-              resources.clear();
-            }
+            resources.clear();
             statusCode.set(200);
             statusCode.notifyAll();
           }

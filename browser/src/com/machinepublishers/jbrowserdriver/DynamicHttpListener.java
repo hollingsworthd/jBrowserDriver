@@ -138,12 +138,10 @@ class DynamicHttpListener implements LoadListenerClient {
         thread.interrupt();
       }
       threadsFromReset.clear();
-      synchronized (superseded) {
+      synchronized (resources) {
         superseded.set(false);
         statusCode.set(0);
-        synchronized (resources) {
-          resources.clear();
-        }
+        resources.clear();
       }
       Thread thread = new Thread(new DynamicAjaxListener(
           statusCode, resources, superseded, timeoutMS.get()));
@@ -161,13 +159,11 @@ class DynamicHttpListener implements LoadListenerClient {
         if (state == LoadListenerClient.PAGE_STARTED
             || state == LoadListenerClient.PAGE_REDIRECTED
             || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-          synchronized (superseded) {
+          synchronized (resources) {
             statusCode.set(0);
             superseded.set(true);
-            synchronized (resources) {
-              resources.clear();
-              resources.put(frame + url, System.currentTimeMillis());
-            }
+            resources.clear();
+            resources.put(frame + url, System.currentTimeMillis());
           }
           startStatusMonitor.invoke(statusMonitor, url);
         } else if (statusCode.get() == 0
