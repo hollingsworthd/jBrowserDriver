@@ -76,7 +76,7 @@ class DynamicAjaxListener implements Runnable {
         Thread.sleep(WAIT_INTERVAL);
       } catch (InterruptedException e) {}
       time = System.currentTimeMillis();
-      synchronized (resources) {
+      synchronized (statusCode) {
         if (superseded.get() || Thread.interrupted()) {
           return;
         }
@@ -96,18 +96,15 @@ class DynamicAjaxListener implements Runnable {
       }
     }
     synchronized (statusCode) {
+      if (superseded.get() || Thread.interrupted()) {
+        return;
+      }
       if (newStatusCode == null) {
-        synchronized (resources) {
-          if (!superseded.get() && !Thread.interrupted()) {
-            resources.clear();
-            statusCode.set(200);
-            statusCode.notifyAll();
-          }
-        }
+        resources.clear();
+        statusCode.set(200);
+        statusCode.notifyAll();
       } else {
-        synchronized (resources) {
-          resources.clear();
-        }
+        resources.clear();
         statusCode.set(newStatusCode);
         try {
           clearStatusMonitor.invoke(statusMonitor);

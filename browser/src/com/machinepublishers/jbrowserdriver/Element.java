@@ -182,7 +182,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
             context.robot.get().mouseMove(x + 1, y + 1);
-            context.item().httpListener.get().call("resetStatusCode");
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }

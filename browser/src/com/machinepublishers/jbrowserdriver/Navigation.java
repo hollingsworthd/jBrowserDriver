@@ -23,6 +23,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
@@ -31,18 +32,20 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriver> driver;
   private final AtomicReference<JavaFxObject> view;
+  private final AtomicInteger statusCode;
   private final long settingsId;
 
   Navigation(final AtomicReference<JBrowserDriver> driver,
-      final AtomicReference<JavaFxObject> view, final long settingsId) {
+      final AtomicReference<JavaFxObject> view, final AtomicInteger statusCode, final long settingsId) {
     this.driver = driver;
     this.view = view;
+    this.statusCode = statusCode;
     this.settingsId = settingsId;
   }
 
   @Override
   public void back() {
-    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -57,7 +60,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void forward() {
-    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -72,7 +75,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
 
   @Override
   public void refresh() {
-    Util.exec(Pause.SHORT, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             view.get().call("getEngine").call("reload");

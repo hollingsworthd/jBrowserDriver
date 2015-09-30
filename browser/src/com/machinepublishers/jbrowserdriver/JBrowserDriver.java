@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
@@ -118,7 +119,11 @@ public class JBrowserDriver implements Browser {
   @Override
   public String getCurrentUrl() {
     init();
-    return context.item().view.get().call("getEngine").call("getLocation").toString();
+    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
+      public String perform() {
+        return context.item().view.get().call("getEngine").call("getLocation").toString();
+      }
+    }, context.settingsId.get());
   }
 
   @Override
@@ -149,8 +154,7 @@ public class JBrowserDriver implements Browser {
   @Override
   public void get(final String url) {
     init();
-    context.statusCode.set(0);
-    Util.exec(Pause.SHORT, new Sync<Object>() {
+    Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
       public Object perform() {
         String cleanUrl = url;
         try {
@@ -173,7 +177,7 @@ public class JBrowserDriver implements Browser {
       Logs.exception(e);
     }
     if (context.statusCode.get() == 0) {
-      Util.exec(Pause.SHORT, new Sync<Object>() {
+      Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
         @Override
         public Object perform() {
           context.item().engine.get().call("getLoadWorker").call("cancel");

@@ -60,15 +60,15 @@ class BrowserContextItem {
         context.settingsId.set(Long.parseLong(
             engine.get().call("getUserAgent").toString()));
         context.robot.set(new Robot(context));
-        window.set(new Window(stage, context.settingsId.get()));
+        window.set(new Window(stage, context.statusCode, context.settingsId.get()));
         context.keyboard.set(new Keyboard(context.robot));
         context.mouse.set(new Mouse(context.robot));
         navigation.set(new Navigation(
-            new AtomicReference<JBrowserDriver>(driver), view, context.settingsId.get()));
+            new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
         context.options.set(new Options(
             window, context.settings.get().cookieManager(), context.timeouts));
         context.capabilities.set(new Capabilities());
-        Util.exec(Pause.SHORT, new Sync<Object>() {
+        Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
             httpListener.set(JavaFx.getNew(DynamicHttpListener.class, context.settingsId.get(),

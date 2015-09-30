@@ -106,20 +106,18 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      if (state == LoadListenerClient.RESOURCE_STARTED) {
-        synchronized (resources) {
+    synchronized (statusCode) {
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        if (state == LoadListenerClient.RESOURCE_STARTED) {
           resources.put(frame + url, System.currentTimeMillis());
-        }
-      } else if (state == LoadListenerClient.RESOURCE_FINISHED
-          || state == LoadListenerClient.RESOURCE_FAILED) {
-        String original = null;
-        try {
-          original = (String) originalFromRedirect.invoke(statusMonitor, url);
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
-        synchronized (resources) {
+        } else if (state == LoadListenerClient.RESOURCE_FINISHED
+            || state == LoadListenerClient.RESOURCE_FAILED) {
+          String original = null;
+          try {
+            original = (String) originalFromRedirect.invoke(statusMonitor, url);
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
           resources.remove(frame + url);
           if (original != null) {
             resources.remove(frame + original);
@@ -133,16 +131,14 @@ class DynamicHttpListener implements LoadListenerClient {
   }
 
   public void resetStatusCode() {
-    synchronized (threadsFromReset) {
+    synchronized (statusCode) {
       for (Thread thread : threadsFromReset) {
         thread.interrupt();
       }
       threadsFromReset.clear();
-      synchronized (resources) {
-        superseded.set(false);
-        statusCode.set(0);
-        resources.clear();
-      }
+      superseded.set(false);
+      statusCode.set(0);
+      resources.clear();
       Thread thread = new Thread(new DynamicAjaxListener(
           statusCode, resources, superseded, timeoutMS.get()));
       threadsFromReset.add(thread);
@@ -154,29 +150,27 @@ class DynamicHttpListener implements LoadListenerClient {
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     try {
-      this.frame.compareAndSet(0l, frame);
-      if (this.frame.get() == frame) {
-        if (state == LoadListenerClient.PAGE_STARTED
-            || state == LoadListenerClient.PAGE_REDIRECTED
-            || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-          synchronized (resources) {
+      synchronized (statusCode) {
+        this.frame.compareAndSet(0l, frame);
+        if (this.frame.get() == frame) {
+          if (state == LoadListenerClient.PAGE_STARTED
+              || state == LoadListenerClient.PAGE_REDIRECTED
+              || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
             statusCode.set(0);
             superseded.set(true);
             resources.clear();
             resources.put(frame + url, System.currentTimeMillis());
-          }
-          startStatusMonitor.invoke(statusMonitor, url);
-        } else if (statusCode.get() == 0
-            && (state == LoadListenerClient.PAGE_FINISHED
-                || state == LoadListenerClient.LOAD_STOPPED
-                || state == LoadListenerClient.LOAD_FAILED)) {
-          final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
-          final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
-          synchronized (resources) {
+            startStatusMonitor.invoke(statusMonitor, url);
+          } else if (statusCode.get() == 0
+              && (state == LoadListenerClient.PAGE_FINISHED
+                  || state == LoadListenerClient.LOAD_STOPPED
+                  || state == LoadListenerClient.LOAD_FAILED)) {
+            final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
+            final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
             resources.remove(frame + url);
+            new Thread(new DynamicAjaxListener(newStatusCode, statusCode,
+                statusMonitor, clearStatusMonitor, resources, timeoutMS.get())).start();
           }
-          new Thread(new DynamicAjaxListener(newStatusCode, statusCode,
-              statusMonitor, clearStatusMonitor, resources, timeoutMS.get())).start();
         }
       }
     } catch (Throwable t) {

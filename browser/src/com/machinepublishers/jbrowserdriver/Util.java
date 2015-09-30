@@ -87,17 +87,30 @@ class Util {
 
   private static class Runner<T> implements Runnable {
     private final Sync<T> action;
+    private final AtomicInteger statusCode;
+    private final long id;
     private final AtomicBoolean done = new AtomicBoolean();
     private final AtomicReference<T> returned = new AtomicReference<T>();
     private final AtomicReference<RuntimeException> fatal = new AtomicReference<RuntimeException>();
     private final AtomicReference<RuntimeException> retry = new AtomicReference<RuntimeException>();
 
-    public Runner(Sync<T> action) {
+    public Runner(Sync<T> action, AtomicInteger statusCode, long id) {
       this.action = action;
+      this.statusCode = statusCode;
+      this.id = id;
     }
 
     @Override
     public void run() {
+      if (statusCode.get() != -1) {
+        if (statusCode.get() == 0) {
+          JavaFx.getStatic(Platform.class, id).call("runLater", this);
+          return;
+        }
+        if (Logs.TRACE && statusCode.get() != 200) {
+          System.out.println("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+        }
+      }
       T result = null;
       Browser.Fatal browserFatal = null;
       Browser.Retry browserRetry = null;
@@ -134,32 +147,12 @@ class Util {
     }, settingsId);
   }
 
-  static <T> T exec(Pause pauseAfterExec, final Sync<T> action, final long id) {
-    return exec(pauseAfterExec, new AtomicInteger(-1), 0, action, id);
-  }
-
-  static <T> T exec(Pause pauseAfterExec, final long timeout, final Sync<T> action, final long id) {
-    return exec(pauseAfterExec, new AtomicInteger(-1), timeout, action, id);
-  }
-
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
     return exec(pauseAfterExec, statusCode, 0, action, id);
   }
 
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action, final long id) {
-    if (statusCode.get() != -1) {
-      synchronized (statusCode) {
-        if (statusCode.get() == 0) {
-          try {
-            statusCode.wait();
-          } catch (Throwable t) {}
-        }
-      }
-      if (Logs.TRACE && statusCode.get() != 200) {
-        System.out.println("Performing browser action, but HTTP status is " + statusCode.get() + ".");
-      }
-    }
     try {
       if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
         try {
@@ -170,7 +163,7 @@ class Util {
           throw t;
         }
       }
-      final Runner<T> runner = new Runner<T>(action);
+      final Runner<T> runner = new Runner<T>(action, statusCode, id);
       synchronized (runner.done) {
         JavaFx.getStatic(Platform.class, id).call("runLater", runner);
       }

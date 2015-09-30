@@ -232,7 +232,7 @@ class Robot {
   private final Object keyUndefined;
 
   Robot(final BrowserContext context) {
-    robot.set(Util.exec(Pause.SHORT, new Sync<JavaFxObject>() {
+    robot.set(Util.exec(Pause.SHORT, context.statusCode, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
         return JavaFx.getStatic(Application.class, context.settingsId.get()).call("GetApplication").call("createRobot");
       }

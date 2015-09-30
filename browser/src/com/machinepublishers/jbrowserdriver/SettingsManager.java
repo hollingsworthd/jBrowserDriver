@@ -50,7 +50,7 @@ class SettingsManager {
 
   static void register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
       final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
-    Util.exec(Pause.SHORT, new Sync<Object>() {
+    Util.exec(Pause.SHORT, statusCode, new Sync<Object>() {
       public Object perform() {
         if (Settings.headless()) {
           try {
