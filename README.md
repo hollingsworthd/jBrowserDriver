@@ -25,7 +25,7 @@ Also, you can run as many instances of JBrowserDriver as you want (it's thread s
 Example:
 
     import org.openqa.selenium.WebDriver;
-    import com.machinepublishers.jbrowserdriver.BrowserTimeZone;
+    import com.machinepublishers.jbrowserdriver.Timezone;
     import com.machinepublishers.jbrowserdriver.JBrowserDriver;
     import com.machinepublishers.jbrowserdriver.Settings;
     
@@ -34,8 +34,8 @@ Example:
 
         // You can optionally pass a Settings object here,
         // constructed using Settings.Builder
-        WebDriver driver = new JBrowserDriver(new Settings.Builder().
-          browserTimeZone(BrowserTimeZone.AMERICA_NEWYORK).build());
+        WebDriver driver = new JBrowserDriver(Settings.builder().
+          timezone(Timezone.AMERICA_NEWYORK).build());
 
         // This will block for the page load and any
         // associated AJAX requests
