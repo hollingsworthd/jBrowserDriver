@@ -23,15 +23,12 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import java.util.zip.InflaterInputStream;
 
 class StreamInjectors {
@@ -65,51 +62,29 @@ class StreamInjectors {
     if (conn.getErrorStream() != null) {
       return conn.getInputStream();
     }
-    byte[] connBytes = Util.toBytes(conn.getInputStream());
-    if (connBytes.length > 0) {
-      try {
-        String encoding = conn.getContentEncoding();
-        InputStream in = new ByteArrayInputStream(connBytes);
-        if ("gzip".equalsIgnoreCase(encoding)) {
-          in = new GZIPInputStream(in);
-        } else if ("deflate".equalsIgnoreCase(encoding)) {
-          in = new InflaterInputStream(in);
-        }
-        byte[] content = Util.toBytes(in);
-        synchronized (lock) {
-          for (Injector injector : injectors) {
-            byte[] newContent = injector.inject(conn, content, originalUrl, settingsId);
-            if (newContent != null) {
-              content = newContent;
-            }
-          }
-        }
-        if (content != null) {
-          ByteArrayOutputStream out = null;
-          try {
-            if ("gzip".equalsIgnoreCase(encoding)) {
-              out = new ByteArrayOutputStream();
-              GZIPOutputStream gzip = new GZIPOutputStream(out);
-              gzip.write(content);
-              Util.close(gzip);
-              return new ByteArrayInputStream(out.toByteArray());
-            }
-            if ("deflate".equalsIgnoreCase(encoding)) {
-              out = new ByteArrayOutputStream();
-              DeflaterOutputStream deflate = new DeflaterOutputStream(out);
-              deflate.write(content);
-              Util.close(deflate);
-              return new ByteArrayInputStream(out.toByteArray());
-            }
-          } finally {
-            Util.close(out);
-          }
-          return new ByteArrayInputStream(content);
-        }
-      } catch (Throwable t) {
-        Logs.exception(t);
+    byte[] bytes = new byte[0];
+    try {
+      String encoding = conn.getContentEncoding();
+      if ("gzip".equalsIgnoreCase(encoding)) {
+        bytes = Util.toBytes(new GZIPInputStream(conn.getInputStream()));
+      } else if ("deflate".equalsIgnoreCase(encoding)) {
+        bytes = Util.toBytes(new InflaterInputStream(conn.getInputStream()));
+      } else {
+        bytes = Util.toBytes(conn.getInputStream());
       }
+      synchronized (lock) {
+        for (Injector injector : injectors) {
+          byte[] newContent = injector.inject(conn, bytes, originalUrl, settingsId);
+          if (newContent != null) {
+            bytes = newContent;
+          }
+        }
+      }
+    } catch (Throwable t) {
+      Logs.exception(t);
+    } finally {
+      Util.close(conn.getInputStream());
     }
-    return new ByteArrayInputStream(connBytes);
+    return new ByteArrayInputStream(bytes);
   }
 }

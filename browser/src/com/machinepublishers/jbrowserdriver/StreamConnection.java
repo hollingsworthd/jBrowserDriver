@@ -287,7 +287,7 @@ class StreamConnection extends HttpURLConnection {
 
   @Override
   public String getContentEncoding() {
-    return skip.get() ? null : conn.getContentEncoding();
+    return null;
   }
 
   @Override
