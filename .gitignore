@@ -7,3 +7,4 @@ jbrowserdriver*.zip
 jBrowserDriver*.zip
 **/*.log.*
 **/pemfile_cached
+target/
