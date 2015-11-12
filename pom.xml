@@ -22,7 +22,7 @@
             <groupId>*</groupId>
             <artifactId>*</artifactId>
         </exclusion>
-    </exclusions>
+      </exclusions>
     </dependency>
   </dependencies>
   <build>
