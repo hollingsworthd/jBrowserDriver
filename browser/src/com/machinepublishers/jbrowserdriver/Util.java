@@ -22,6 +22,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -196,25 +197,23 @@ class Util {
   static String toString(InputStream inputStream, String charset) {
     try {
       final char[] chars = new char[8192];
-      StringBuilder builder = new StringBuilder();
-      InputStreamReader reader = new InputStreamReader(inputStream, charset);
-      for (int len; -1 != (len = reader.read(chars));) {
-        builder.append(chars, 0, len);
-      }
+      StringBuilder builder = new StringBuilder(chars.length);
+      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset), chars.length);
+      for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
       return builder.toString();
     } catch (Throwable t) {
       Logs.exception(t);
       return null;
+    } finally {
+      close(inputStream);
     }
   }
 
   static byte[] toBytes(InputStream inputStream) throws IOException {
     try {
       final byte[] bytes = new byte[8192];
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      for (int len = 0; -1 != (len = inputStream.read(bytes));) {
-        out.write(bytes, 0, len);
-      }
+      ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length);
+      for (int len = 0; -1 != (len = inputStream.read(bytes, 0, bytes.length)); out.write(bytes, 0, len));
       return out.toByteArray();
     } finally {
       close(inputStream);
