@@ -85,6 +85,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContexts;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
   private static Pattern pemBlock = Pattern.compile(
@@ -217,7 +218,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         Logs.exception(t);
       }
     }
-    return null;
+    return SSLContexts.createSystemDefault();
   }
 
   private static class SslSocketFactory extends SSLConnectionSocketFactory {
