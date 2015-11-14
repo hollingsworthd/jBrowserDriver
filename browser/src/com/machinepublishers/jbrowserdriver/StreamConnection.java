@@ -32,7 +32,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.ProtocolException;
+import java.net.Proxy;
+import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -60,7 +63,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -72,10 +74,17 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CachingHttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
   private static Pattern pemBlock = Pattern.compile(
@@ -87,22 +96,32 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "16"));
   private static final int CONNECTIONS =
       Integer.parseInt(System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
-  private static final SSLContext sslContext = initSsl();
+  private static final Registry<ConnectionSocketFactory> registry =
+      RegistryBuilder.<ConnectionSocketFactory> create()
+          .register("https", new SslSocketFactory(sslContext()))
+          .register("http", new SocketFactory())
+          .build();
+  private static final PoolingHttpClientConnectionManager manager =
+      new PoolingHttpClientConnectionManager(registry);
+  static {
+    manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
+    manager.setMaxTotal(CONNECTIONS);
+  }
   private static final CloseableHttpClient client = HttpClients.custom()
       .disableRedirectHandling()
       .disableAutomaticRetries()
+      .setConnectionManager(manager)
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
       .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .setSSLContext(sslContext)
       .build();
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
       .disableRedirectHandling()
       .disableAutomaticRetries()
+      .setConnectionManager(manager)
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
       .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .setSSLContext(sslContext)
       .build();
   private static boolean cacheByDefault;
 
@@ -142,7 +161,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
-  private static SSLContext initSsl() {
+  private static SSLContext sslContext() {
     //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
     if (System.getProperty("jbd.pemfile") != null) {
       try {
@@ -199,6 +218,35 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       }
     }
     return null;
+  }
+
+  private static class SslSocketFactory extends SSLConnectionSocketFactory {
+    public SslSocketFactory(final SSLContext sslContext) {
+      super(sslContext);
+    }
+
+    @Override
+    public Socket createSocket(final HttpContext context) throws IOException {
+      return newSocket(context);
+    }
+  }
+
+  private static class SocketFactory extends PlainConnectionSocketFactory {
+    @Override
+    public Socket createSocket(final HttpContext context) throws IOException {
+      return newSocket(context);
+    }
+  }
+
+  private static Socket newSocket(final HttpContext context) {
+    InetSocketAddress proxySocks = (InetSocketAddress) context.getAttribute("proxy.socks.address");
+    InetSocketAddress proxyHttp = (InetSocketAddress) context.getAttribute("proxy.http.address");
+    if (proxySocks != null) {
+      return new Socket(new Proxy(Proxy.Type.SOCKS, proxySocks));
+    } else if (proxyHttp != null) {
+      return new Socket(new Proxy(Proxy.Type.HTTP, proxyHttp));
+    }
+    return new Socket();
   }
 
   private static boolean isBlocked(String host) {
@@ -285,7 +333,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               .setConnectionRequestTimeout(readTimeout);
           ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
           if (proxy != null && !proxy.directConnection()) {
-            config.setProxy(new HttpHost(proxy.host(), proxy.port()));
+            InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+            if (proxy.type() == ProxyConfig.Type.SOCKS) {
+              context.setAttribute("proxy.socks.address", proxyAddress);
+            } else {
+              context.setAttribute("proxy.http.address", proxyAddress);
+            }
           }
           if ("OPTIONS".equals(method)) {
             req = new HttpOptions(urlString);

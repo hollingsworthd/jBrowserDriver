@@ -85,8 +85,8 @@ public class ProxyConfig {
     return user != null && !user.isEmpty() && password != null;
   }
 
-  java.net.Proxy.Type type() {
-    return type == Type.SOCKS ? java.net.Proxy.Type.SOCKS : java.net.Proxy.Type.HTTP;
+  Type type() {
+    return type;
   }
 
   String host() {
