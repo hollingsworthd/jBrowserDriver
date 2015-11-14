@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.Socket;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -341,20 +342,21 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               context.setAttribute("proxy.http.address", proxyAddress);
             }
           }
+          final URI uri = url.toURI();
           if ("OPTIONS".equals(method)) {
-            req = new HttpOptions(urlString);
+            req = new HttpOptions(uri);
           } else if ("GET".equals(method)) {
-            req = new HttpGet(urlString);
+            req = new HttpGet(uri);
           } else if ("HEAD".equals(method)) {
-            req = new HttpHead(urlString);
+            req = new HttpHead(uri);
           } else if ("POST".equals(method)) {
-            req = new HttpPost(urlString);
+            req = new HttpPost(uri);
           } else if ("PUT".equals(method)) {
-            req = new HttpPut(urlString);
+            req = new HttpPut(uri);
           } else if ("DELETE".equals(method)) {
-            req = new HttpDelete(urlString);
+            req = new HttpDelete(uri);
           } else if ("TRACE".equals(method)) {
-            req = new HttpTrace(urlString);
+            req = new HttpTrace(uri);
           }
           processHeaders(SettingsManager.get(settingsId.get()), req);
           context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
@@ -372,15 +374,16 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       exec = true;
       try {
         connect();
-        if ("POST".equals(method)) {
-          ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-        } else if ("PUT".equals(method)) {
-          req = new HttpPut(urlString);
-          ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-        }
-        response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
-        if (response != null && response.getEntity() != null) {
-          entity = response.getEntity();
+        if (req != null) {
+          if ("POST".equals(method)) {
+            ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+          } else if ("PUT".equals(method)) {
+            ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+          }
+          response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
+          if (response != null && response.getEntity() != null) {
+            entity = response.getEntity();
+          }
         }
       } catch (Throwable t) {
         Logs.exception(t);
