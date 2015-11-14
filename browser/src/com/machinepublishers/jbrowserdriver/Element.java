@@ -37,7 +37,9 @@ import netscape.javascript.JSObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.internal.Coordinates;
 import org.openqa.selenium.internal.FindsByClassName;
@@ -713,5 +715,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         return null;
       }
     };
+  }
+
+  @Override
+  public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
+    Logs.warn("Screenshot not supported on jBrowserDriver WebElements");
+    return null;
   }
 }

@@ -58,4 +58,8 @@ class Alert implements org.openqa.selenium.Alert {
 
   }
 
+  @Override
+  public void setCredentials(Credentials credentials) {
+    // TODO Auto-generated method stub
+  }
 }
