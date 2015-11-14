@@ -72,7 +72,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CachingHttpClients;
@@ -117,10 +117,14 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private String method;
   private boolean cache = cacheByDefault;
   private boolean connected;
+  private boolean exec;
   private CloseableHttpResponse response;
   private HttpEntity entity;
   private boolean consumed;
-  private UpStream reqData = new UpStream();
+  private HttpClientContext context = HttpClientContext.create();
+  private HttpRequestBase req;
+  private ByteArrayOutputStream reqData = new ByteArrayOutputStream();
+
   static {
     if (!"false".equals(System.getProperty("jbd.blockads"))) {
       BufferedReader reader = null;
@@ -223,64 +227,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             || contentType.startsWith("model/"));
   }
 
-  private static class UpStream extends InputStream {
-    //TODO fixme
-    private static final int BUFFER_LEN = 8192;
-    private boolean done;
-    private List<byte[]> bytes = new ArrayList<byte[]>();
-    private int listIndexRead;
-    private int arrayIndexRead;
-    private int listIndexWrite;
-    private int arrayIndexWrite;
-    private final Object lock = new Object();
-    private final OutputStream out = new OutputStream() {
-      @Override
-      public void write(int b) throws IOException {
-        synchronized (lock) {
-          if (b >= 0) {
-            if (arrayIndexWrite >= BUFFER_LEN) {
-              arrayIndexWrite = 0;
-              ++listIndexWrite;
-              bytes.add(new byte[BUFFER_LEN]);
-            }
-            bytes.get(listIndexWrite)[arrayIndexWrite++] = (byte) b;
-          }
-          else {
-            done = true;
-          }
-          lock.notify();
-        }
-      }
-    };
-
-    public UpStream() {
-      bytes.add(new byte[BUFFER_LEN]);
-    }
-
-    @Override
-    public int read() throws IOException {
-      synchronized (lock) {
-        while (true) {
-          if (listIndexRead < listIndexWrite || arrayIndexRead < arrayIndexWrite) {
-            if (arrayIndexRead >= BUFFER_LEN) {
-              arrayIndexRead = 0;
-              ++listIndexRead;
-            }
-            return bytes.get(listIndexRead)[arrayIndexRead++];
-          } else {
-            if (done) {
-              return -1;
-            }
-            try {
-              lock.wait();
-            } catch (InterruptedException e) {}
-          }
-        }
-      }
-    }
-
-  }
-
   StreamConnection(URL url) {
     super(url);
     this.url = url;
@@ -341,7 +287,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           if (proxy != null && !proxy.directConnection()) {
             config.setProxy(new HttpHost(proxy.host(), proxy.port()));
           }
-          HttpRequestBase req = null;
           if ("OPTIONS".equals(method)) {
             req = new HttpOptions(urlString);
           } else if ("GET".equals(method)) {
@@ -350,27 +295,41 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             req = new HttpHead(urlString);
           } else if ("POST".equals(method)) {
             req = new HttpPost(urlString);
-            ((HttpPost) req).setEntity(new InputStreamEntity(reqData));
           } else if ("PUT".equals(method)) {
             req = new HttpPut(urlString);
-            ((HttpPut) req).setEntity(new InputStreamEntity(reqData));
           } else if ("DELETE".equals(method)) {
             req = new HttpDelete(urlString);
           } else if ("TRACE".equals(method)) {
             req = new HttpTrace(urlString);
           }
           processHeaders(SettingsManager.get(settingsId.get()), req);
-          HttpClientContext context = HttpClientContext.create();
           context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
           context.setRequestConfig(config.build());
           StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
-          response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
-          if (response != null && response.getEntity() != null) {
-            entity = response.getEntity();
-          }
         } catch (Throwable t) {
           Logs.exception(t);
         }
+      }
+    }
+  }
+
+  private void exec() {
+    if (!exec) {
+      exec = true;
+      try {
+        connect();
+        if ("POST".equals(method)) {
+          ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+        } else if ("PUT".equals(method)) {
+          req = new HttpPut(urlString);
+          ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+        }
+        response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
+        if (response != null && response.getEntity() != null) {
+          entity = response.getEntity();
+        }
+      } catch (Throwable t) {
+        Logs.exception(t);
       }
     }
   }
@@ -389,7 +348,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public InputStream getInputStream() throws IOException {
-    connect();
+    exec();
     if (!consumed) {
       consumed = true;
       if (entity != null && entity.getContent() != null && !skip.get()) {
@@ -431,14 +390,14 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public String getResponseMessage() throws IOException {
-    connect();
+    exec();
     return response == null || response.getStatusLine() == null ?
         null : response.getStatusLine().getReasonPhrase();
   }
 
   //  @Override
   public int getResponseCode() throws IOException {
-    connect();
+    exec();
     StatusMonitor.get(settingsId.get()).addRedirect(
         urlString, getHeaderField("Location"));
     if (skip.get()) {
@@ -586,7 +545,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public OutputStream getOutputStream() throws IOException {
-    return skip.get() ? new ByteArrayOutputStream() : reqData.out;
+    return skip.get() ? new ByteArrayOutputStream() : reqData;
   }
 
   @Override
