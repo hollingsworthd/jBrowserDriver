@@ -94,7 +94,8 @@ class DynamicHttpListener implements LoadListenerClient {
       String contentType, double progress, int errorCode) {
     System.out.println(settingsId
         + "-" + label + "-> " + url
-        + " ** {state: " + state
+        + " ** {timestamp:" + System.currentTimeMillis()
+        + ", state: " + state
         + ", progress: " + progress
         + ", error: " + errorCode
         + ", contentType: "
