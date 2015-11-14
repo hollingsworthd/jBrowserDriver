@@ -90,7 +90,7 @@ public class JBrowserDriver implements Browser {
    * Constructs a browser with default settings, UTC timezone, and no proxy.
    */
   public JBrowserDriver() {
-    this(new Settings());
+    this(Settings.builder().build());
   }
 
   /**
@@ -360,7 +360,7 @@ public class JBrowserDriver implements Browser {
     init();
     context.removeItems();
     SettingsManager.deregister(context.settings);
-    context.settings.get().cookieManager().getCookieStore().removeAll();
+    context.settings.get().cookieStore().clear();
   }
 
   @Override

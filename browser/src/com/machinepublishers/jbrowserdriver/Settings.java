@@ -24,7 +24,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
@@ -34,6 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.client.CookieStore;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.openqa.selenium.Dimension;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
@@ -94,11 +95,6 @@ public class Settings {
       System.setProperty("java.awt.headless", "true");
     } else {
       headless = false;
-    }
-    try {
-      com.sun.webkit.network.CookieManager.setDefault(new CookieManager());
-    } catch (Throwable t) {
-      Logs.exception(t);
     }
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
@@ -369,7 +365,7 @@ public class Settings {
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
-  private final CookieManager cookieManager = new CookieManager();
+  private final CookieStore cookieStore = new BasicCookieStore();
 
   /**
    * Do not call this constructor. Instead, see {@link Settings#builder()}.
@@ -465,8 +461,8 @@ public class Settings {
     return script;
   }
 
-  CookieManager cookieManager() {
-    return cookieManager;
+  CookieStore cookieStore() {
+    return cookieStore;
   }
 
   static boolean headless() {

@@ -66,7 +66,7 @@ class BrowserContextItem {
         navigation.set(new Navigation(
             new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
         context.options.set(new Options(
-            window, context.settings.get().cookieManager(), context.timeouts));
+            window, context.settings.get().cookieStore(), context.timeouts));
         context.capabilities.set(new Capabilities());
         Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
           @Override

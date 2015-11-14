@@ -22,15 +22,14 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.net.CookieManager;
-import java.net.HttpCookie;
-import java.net.URI;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.client.CookieStore;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver.ImeHandler;
 import org.openqa.selenium.WebDriver.Timeouts;
@@ -41,23 +40,22 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
   private final Logs logs = com.machinepublishers.jbrowserdriver.Logs.instance();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;
-  private final CookieManager cookieManager;
+  private final CookieStore cookieStore;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts;
 
   Options(final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window,
-      final CookieManager cookieManager,
+      final CookieStore cookieStore,
       final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts) {
     this.window = window;
-    this.cookieManager = cookieManager;
+    this.cookieStore = cookieStore;
     this.timeouts = timeouts;
   }
 
-  private static HttpCookie convert(Cookie in) {
-    HttpCookie out = new HttpCookie(in.getName(), in.getValue());
+  private static org.apache.http.cookie.Cookie convert(Cookie in) {
+    BasicClientCookie out = new BasicClientCookie(in.getName(), in.getValue());
     out.setDomain(in.getDomain());
-    out.setHttpOnly(in.isHttpOnly());
     if (in.getExpiry() != null) {
-      out.setMaxAge(Math.max(0, (in.getExpiry().getTime() - System.currentTimeMillis()) / 1000));
+      out.setExpiryDate(in.getExpiry());
     }
     out.setPath(in.getPath());
     out.setSecure(in.isSecure());
@@ -66,64 +64,61 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     return out;
   }
 
-  private static Cookie convert(HttpCookie in) {
-    Date expiry = in.getMaxAge() < 0 ? null : new Date((in.getMaxAge() * 1000) + System.currentTimeMillis());
+  private static Cookie convert(org.apache.http.cookie.Cookie in) {
     return new Cookie(in.getName(),
         in.getValue(),
         in.getDomain(),
         in.getPath(),
-        expiry,
-        in.getSecure(),
-        in.isHttpOnly());
+        in.getExpiryDate(),
+        in.isSecure());
   }
 
   @Override
   public void addCookie(Cookie cookie) {
-    cookieManager.getCookieStore().add(null, convert(cookie));
+    cookieStore.addCookie(convert(cookie));
   }
 
   @Override
   public void deleteAllCookies() {
-    cookieManager.getCookieStore().removeAll();
+    cookieStore.clear();
   }
 
   @Override
   public void deleteCookie(Cookie cookie) {
-    List<HttpCookie> cookies = cookieManager.getCookieStore().getCookies();
+    List<org.apache.http.cookie.Cookie> cookies = cookieStore.getCookies();
     String toDelete = cookie.getDomain().toLowerCase()
         + "\n" + cookie.getName().toLowerCase()
         + "\n" + cookie.getPath().toLowerCase();
-    for (HttpCookie cur : cookies) {
+    for (org.apache.http.cookie.Cookie cur : cookies) {
       String curString = cur.getDomain().toLowerCase()
           + "\n" + cur.getName().toLowerCase()
           + "\n" + cur.getPath().toLowerCase();
       if (toDelete.equals(curString)) {
-        if (!cookieManager.getCookieStore().remove(null, cur)) {
-          for (URI uri : cookieManager.getCookieStore().getURIs()) {
-            if (cookieManager.getCookieStore().remove(uri, cur)) {
-              break;
-            }
-          }
-        }
+        removeFromCookieStore(cur);
       }
     }
   }
 
+  private void removeFromCookieStore(org.apache.http.cookie.Cookie cookie) {
+    BasicClientCookie tmp = new BasicClientCookie(cookie.getName(), "");
+    tmp.setDomain(cookie.getDomain());
+    tmp.setPath(cookie.getPath());
+    tmp.setExpiryDate(new Date(0));
+    cookieStore.addCookie(tmp);
+  }
+
   @Override
   public void deleteCookieNamed(String name) {
-    for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
+    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
       if (cur.getName().equals(name)) {
-        cookieManager.getCookieStore().remove(null, cur);
-        for (URI uri : cookieManager.getCookieStore().getURIs()) {
-          cookieManager.getCookieStore().remove(uri, cur);
-        }
+        removeFromCookieStore(cur);
       }
     }
   }
 
   @Override
   public Cookie getCookieNamed(String name) {
-    for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
+    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
       if (cur.getName().equals(name)) {
         return convert(cur);
       }
@@ -134,7 +129,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Set<Cookie> getCookies() {
     Set<Cookie> cookies = new LinkedHashSet<Cookie>();
-    for (HttpCookie cur : cookieManager.getCookieStore().getCookies()) {
+    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
       cookies.add(convert(cur));
     }
     return cookies;

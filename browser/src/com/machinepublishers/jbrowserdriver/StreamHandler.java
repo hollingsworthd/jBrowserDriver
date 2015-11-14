@@ -29,58 +29,30 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 
-import sun.net.www.protocol.https.HttpsURLConnectionImpl;
-
 class StreamHandler implements URLStreamHandlerFactory {
-  private static final HttpHandler httpHandler = new HttpHandler();
-  private static final HttpsHandler httpsHandler = new HttpsHandler();
+  private static final StreamConnectionHandler handler = new StreamConnectionHandler();
 
   StreamHandler() {}
 
-  static class HttpHandler extends sun.net.www.protocol.http.Handler {
+  static class StreamConnectionHandler extends URLStreamHandler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      StreamConnection conn =
-          new StreamConnection((sun.net.www.protocol.http.HttpURLConnection) super.openConnection(url));
-      return conn;
-    }
-
-    private URLConnection defaultConnection(URL url) throws IOException {
-      return super.openConnection(url);
+      return new StreamConnection(url);
     }
   }
 
-  static class HttpsHandler extends sun.net.www.protocol.https.Handler {
-    @Override
-    protected URLConnection openConnection(URL url) throws IOException {
-      StreamConnection conn =
-          new StreamConnection((HttpsURLConnectionImpl) super.openConnection(url));
-      return conn;
-    }
+  static class HttpsDefault extends sun.net.www.protocol.https.Handler {
+    private static HttpsDefault instance = new HttpsDefault();
 
-    private URLConnection defaultConnection(URL url) throws IOException {
-      return super.openConnection(url);
+    public static HttpURLConnection open(URL url) throws IOException {
+      return (HttpURLConnection) instance.openConnection(url);
     }
-  }
-
-  static HttpURLConnection defaultConnection(String location) throws IOException {
-    URL url = new URL(location);
-    if (url.getProtocol().equalsIgnoreCase("http")) {
-      return (HttpURLConnection) new HttpHandler().defaultConnection(url);
-    }
-    if (url.getProtocol().equalsIgnoreCase("https")) {
-      return (HttpURLConnection) new HttpsHandler().defaultConnection(url);
-    }
-    return null;
   }
 
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
-    if ("https".equals(protocol)) {
-      return httpsHandler;
-    }
-    if ("http".equals(protocol)) {
-      return httpHandler;
+    if ("http".equals(protocol) || "https".equals(protocol)) {
+      return handler;
     }
     if ("about".equals(protocol)) {
       return new com.sun.webkit.network.about.Handler();
@@ -103,7 +75,7 @@ class StreamHandler implements URLStreamHandlerFactory {
     if ("netdoc".equals(protocol)) {
       return new sun.net.www.protocol.netdoc.Handler();
     }
-    return null;
+    throw new InternalError();
   }
 
 }

@@ -66,7 +66,7 @@ The following Java system properties can be set:
 Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar`
 
 #### Building
-No build scripts yet exist, but Eclipse project files are part of this source tree.
+The Maven POM file is included. Currently this project is not in Maven Central. Eclipse project files are also included. The head of the source tree is always unstable, please checkout a tagged release for production use.
 
 #### To-do
 Iframes and alert dialogs are not yet handled. Stay tuned.

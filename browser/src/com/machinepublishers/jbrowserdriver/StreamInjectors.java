@@ -57,20 +57,16 @@ class StreamInjectors {
     }
   }
 
-  static InputStream injectedStream(HttpURLConnection conn,
+  static InputStream injectedStream(HttpURLConnection conn, InputStream inputStream,
       String originalUrl, long settingsId) throws IOException {
-    if (conn.getErrorStream() != null) {
-      return conn.getInputStream();
-    }
     byte[] bytes = new byte[0];
     try {
-      String encoding = conn.getContentEncoding();
-      if ("gzip".equalsIgnoreCase(encoding)) {
-        bytes = Util.toBytes(new GZIPInputStream(conn.getInputStream()));
-      } else if ("deflate".equalsIgnoreCase(encoding)) {
-        bytes = Util.toBytes(new InflaterInputStream(conn.getInputStream()));
+      if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) {
+        bytes = Util.toBytes(new GZIPInputStream(inputStream));
+      } else if ("deflate".equalsIgnoreCase(conn.getContentEncoding())) {
+        bytes = Util.toBytes(new InflaterInputStream(inputStream));
       } else {
-        bytes = Util.toBytes(conn.getInputStream());
+        bytes = Util.toBytes(inputStream);
       }
       synchronized (lock) {
         for (Injector injector : injectors) {
@@ -83,7 +79,7 @@ class StreamInjectors {
     } catch (Throwable t) {
       Logs.exception(t);
     } finally {
-      Util.close(conn.getInputStream());
+      Util.close(inputStream);
     }
     return new ByteArrayInputStream(bytes);
   }

@@ -28,7 +28,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.Random;
@@ -58,27 +57,6 @@ class Util {
       } catch (Throwable t) {
         Logs.exception(t);
       }
-    }
-  }
-
-  static void close(HttpURLConnection conn) {
-    /*
-     * Don't log exceptions here: we assume that we're being overly cautious,
-     * trying to close streams that don't exist or are already closed.
-     */
-    if (conn != null) {
-      try {
-        conn.disconnect();
-      } catch (Throwable t) {}
-      try {
-        conn.getInputStream().close();
-      } catch (Throwable t) {}
-      try {
-        conn.getOutputStream().close();
-      } catch (Throwable t) {}
-      try {
-        conn.getErrorStream().close();
-      } catch (Throwable t) {}
     }
   }
 

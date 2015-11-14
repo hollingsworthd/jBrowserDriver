@@ -63,7 +63,9 @@ class StatusMonitor {
   }
 
   void addRedirect(String original, String redirected) {
-    if (!original.equals(redirected)) {
+    if (original != null
+        && redirected != null
+        && !original.equals(redirected)) {
       synchronized (lock) {
         redirects.put(redirected, original);
       }
@@ -118,6 +120,9 @@ class StatusMonitor {
   void clearStatusMonitor() {
     synchronized (lock) {
       if (!monitoring) {
+        for (StreamConnection conn : connections.values()) {
+          Util.close(conn);
+        }
         connections.clear();
         primaryDocuments.clear();
         discarded.clear();
