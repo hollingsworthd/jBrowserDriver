@@ -37,7 +37,26 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class StreamConnectionHandler extends URLStreamHandler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      return new StreamConnection(url);
+      StackTraceElement[] trace = new Throwable().getStackTrace();
+      if (trace.length > 2
+          && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
+        return new StreamConnection(url);
+      }
+      if ("http".equals(url.getProtocol())) {
+        return HttpDefault.open(url);
+      }
+      if ("https".equals(url.getProtocol())) {
+        return HttpsDefault.open(url);
+      }
+      throw new IllegalStateException();
+    }
+  }
+
+  static class HttpDefault extends sun.net.www.protocol.http.Handler {
+    private static HttpDefault instance = new HttpDefault();
+
+    public static HttpURLConnection open(URL url) throws IOException {
+      return (HttpURLConnection) instance.openConnection(url);
     }
   }
 
