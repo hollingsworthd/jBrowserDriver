@@ -456,7 +456,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         null : response.getStatusLine().getReasonPhrase();
   }
 
-  //  @Override
+  @Override
   public int getResponseCode() throws IOException {
     exec();
     StatusMonitor.get(settingsId.get()).addRedirect(
