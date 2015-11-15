@@ -64,6 +64,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -331,6 +332,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         try {
           connected = true;
           config
+              .setCookieSpec(CookieSpecs.STANDARD)
               .setConnectTimeout(connectTimeout)
               .setConnectionRequestTimeout(readTimeout);
           ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
