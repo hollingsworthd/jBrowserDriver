@@ -29,11 +29,9 @@ import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 
 class StreamHandler implements URLStreamHandlerFactory {
-  private static final StreamConnectionHandler handler = new StreamConnectionHandler();
-
   StreamHandler() {}
 
-  static class StreamConnectionHandler extends URLStreamHandler {
+  private static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       StackTraceElement[] trace = new Throwable().getStackTrace();
@@ -41,36 +39,29 @@ class StreamHandler implements URLStreamHandlerFactory {
           && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
         return new StreamConnection(url);
       }
-      if ("http".equals(url.getProtocol())) {
-        return HttpDefault.open(url);
-      }
-      if ("https".equals(url.getProtocol())) {
-        return HttpsDefault.open(url);
-      }
-      throw new IllegalStateException();
+      return super.openConnection(url, null);
     }
   }
 
-  static class HttpDefault extends sun.net.www.protocol.http.Handler {
-    private static HttpDefault instance = new HttpDefault();
-
-    public static URLConnection open(URL url) throws IOException {
-      return instance.openConnection(url);
-    }
-  }
-
-  static class HttpsDefault extends sun.net.www.protocol.https.Handler {
-    private static HttpsDefault instance = new HttpsDefault();
-
-    public static URLConnection open(URL url) throws IOException {
-      return instance.openConnection(url);
+  private static class HttpsHandler extends sun.net.www.protocol.https.Handler {
+    @Override
+    protected URLConnection openConnection(URL url) throws IOException {
+      StackTraceElement[] trace = new Throwable().getStackTrace();
+      if (trace.length > 2
+          && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
+        return new StreamConnection(url);
+      }
+      return super.openConnection(url, null);
     }
   }
 
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
-    if ("http".equals(protocol) || "https".equals(protocol)) {
-      return handler;
+    if ("http".equals(protocol)) {
+      return new HttpHandler();
+    }
+    if ("https".equals(protocol)) {
+      return new HttpsHandler();
     }
     if ("about".equals(protocol)) {
       return new com.sun.webkit.network.about.Handler();
