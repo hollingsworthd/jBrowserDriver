@@ -22,7 +22,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,17 +36,41 @@ import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
   private static final Map<Integer, String> states;
+  private static final Map<Integer, String> errors;
   static {
     Map<Integer, String> statesTmp = new HashMap<Integer, String>();
-    Field[] fields = LoadListenerClient.class.getFields();
-    for (int i = 0; i < fields.length; i++) {
-      if (fields[i].getType().equals(int.class)) {
-        try {
-          statesTmp.put(fields[i].getInt(null), fields[i].getName().toLowerCase());
-        } catch (Throwable t) {}
-      }
-    }
+    statesTmp.put(LoadListenerClient.PAGE_STARTED, "page_started");
+    statesTmp.put(LoadListenerClient.PAGE_FINISHED, "page_finished");
+    statesTmp.put(LoadListenerClient.PAGE_REDIRECTED, "page_redirected");
+    statesTmp.put(LoadListenerClient.LOAD_FAILED, "load_failed");
+    statesTmp.put(LoadListenerClient.LOAD_STOPPED, "load_stopped");
+    statesTmp.put(LoadListenerClient.CONTENT_RECEIVED, "content_received");
+    statesTmp.put(LoadListenerClient.TITLE_RECEIVED, "title_received");
+    statesTmp.put(LoadListenerClient.ICON_RECEIVED, "icon_received");
+    statesTmp.put(LoadListenerClient.CONTENTTYPE_RECEIVED, "contenttype_received");
+    statesTmp.put(LoadListenerClient.DOCUMENT_AVAILABLE, "document_available");
+    statesTmp.put(LoadListenerClient.RESOURCE_STARTED, "resource_started");
+    statesTmp.put(LoadListenerClient.RESOURCE_REDIRECTED, "resource_redirected");
+    statesTmp.put(LoadListenerClient.RESOURCE_FINISHED, "resource_finished");
+    statesTmp.put(LoadListenerClient.RESOURCE_FAILED, "resource_failed");
+    statesTmp.put(LoadListenerClient.PROGRESS_CHANGED, "progress_changed");
     states = Collections.unmodifiableMap(statesTmp);
+
+    Map<Integer, String> errorsTmp = new HashMap<Integer, String>();
+    errorsTmp.put(0, "none");
+    errorsTmp.put(LoadListenerClient.UNKNOWN_HOST, "unknown_host");
+    errorsTmp.put(LoadListenerClient.MALFORMED_URL, "malformed_url");
+    errorsTmp.put(LoadListenerClient.SSL_HANDSHAKE, "ssl_handshake");
+    errorsTmp.put(LoadListenerClient.CONNECTION_REFUSED, "connection_refused");
+    errorsTmp.put(LoadListenerClient.CONNECTION_RESET, "connection_reset");
+    errorsTmp.put(LoadListenerClient.NO_ROUTE_TO_HOST, "no_route_to_host");
+    errorsTmp.put(LoadListenerClient.CONNECTION_TIMED_OUT, "connection_timed_out");
+    errorsTmp.put(LoadListenerClient.PERMISSION_DENIED, "permission_denied");
+    errorsTmp.put(LoadListenerClient.INVALID_RESPONSE, "invalid_response");
+    errorsTmp.put(LoadListenerClient.TOO_MANY_REDIRECTS, "too_many_redirects");
+    errorsTmp.put(LoadListenerClient.FILE_NOT_FOUND, "file_not_found");
+    errorsTmp.put(LoadListenerClient.UNKNOWN_ERROR, "unknown_error");
+    errors = Collections.unmodifiableMap(errorsTmp);
   }
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
@@ -112,7 +135,7 @@ class DynamicHttpListener implements LoadListenerClient {
         + " ** {timestamp: " + System.currentTimeMillis()
         + ", state: " + states.get(state)
         + ", progress: " + progress
-        + ", error: " + errorCode
+        + ", error: " + errors.get(errorCode)
         + ", contentType: "
         + contentType
         + ", frame: " + frame
