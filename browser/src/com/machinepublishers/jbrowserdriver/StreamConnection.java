@@ -177,7 +177,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         }
         String pemBlocks = null;
         if (remote) {
-          HttpURLConnection remotePemFile = StreamHandler.HttpsDefault.open(new URL(location));
+          HttpURLConnection remotePemFile =
+              (HttpURLConnection) StreamHandler.HttpsDefault.open(new URL(location));
           remotePemFile.setRequestMethod("GET");
           remotePemFile.connect();
           pemBlocks = Util.toString(remotePemFile.getInputStream(),

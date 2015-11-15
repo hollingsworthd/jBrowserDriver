@@ -23,7 +23,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -55,16 +54,16 @@ class StreamHandler implements URLStreamHandlerFactory {
   static class HttpDefault extends sun.net.www.protocol.http.Handler {
     private static HttpDefault instance = new HttpDefault();
 
-    public static HttpURLConnection open(URL url) throws IOException {
-      return (HttpURLConnection) instance.openConnection(url);
+    public static URLConnection open(URL url) throws IOException {
+      return instance.openConnection(url);
     }
   }
 
   static class HttpsDefault extends sun.net.www.protocol.https.Handler {
     private static HttpsDefault instance = new HttpsDefault();
 
-    public static HttpURLConnection open(URL url) throws IOException {
-      return (HttpURLConnection) instance.openConnection(url);
+    public static URLConnection open(URL url) throws IOException {
+      return instance.openConnection(url);
     }
   }
 
