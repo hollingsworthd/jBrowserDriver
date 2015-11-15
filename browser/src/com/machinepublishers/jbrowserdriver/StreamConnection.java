@@ -342,7 +342,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               context.setAttribute("proxy.http.address", proxyAddress);
             }
           }
-          final URI uri = url.toURI();
+          final URI uri = new URI(
+              url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
+              url.getPath(), url.getQuery(), null);
           if ("OPTIONS".equals(method)) {
             req = new HttpOptions(uri);
           } else if ("GET".equals(method)) {
