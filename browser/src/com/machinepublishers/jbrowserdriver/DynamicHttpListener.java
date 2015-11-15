@@ -22,8 +22,10 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,19 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.sun.webkit.LoadListenerClient;
 
 class DynamicHttpListener implements LoadListenerClient {
+  private static final Map<Integer, String> states;
+  static {
+    Map<Integer, String> statesTmp = new HashMap<Integer, String>();
+    Field[] fields = LoadListenerClient.class.getFields();
+    for (int i = 0; i < fields.length; i++) {
+      if (fields[i].getType().equals(int.class)) {
+        try {
+          statesTmp.put(fields[i].getInt(null), fields[i].getName().toLowerCase());
+        } catch (Throwable t) {}
+      }
+    }
+    states = Collections.unmodifiableMap(statesTmp);
+  }
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final Map<String, Long> resources = new HashMap<String, Long>();
@@ -95,7 +110,7 @@ class DynamicHttpListener implements LoadListenerClient {
     System.out.println(settingsId
         + "-" + label + "-> " + url
         + " ** {timestamp: " + System.currentTimeMillis()
-        + ", state: " + state
+        + ", state: " + states.get(state)
         + ", progress: " + progress
         + ", error: " + errorCode
         + ", contentType: "
