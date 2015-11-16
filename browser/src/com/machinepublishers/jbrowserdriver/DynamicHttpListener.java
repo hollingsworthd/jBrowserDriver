@@ -164,8 +164,10 @@ class DynamicHttpListener implements LoadListenerClient {
         }
       }
     }
-    if (TRACE) {
-      trace("Rsrc", frame, state, url, contentType, progress, errorCode);
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      if (TRACE) {
+        trace("Rsrc", frame, state, url, contentType, progress, errorCode);
+      }
     }
   }
 
