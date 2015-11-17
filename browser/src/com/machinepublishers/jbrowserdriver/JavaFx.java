@@ -25,7 +25,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.JarURLConnection;
@@ -37,7 +36,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,23 +159,8 @@ class JavaFx {
   }
 
   private static class JavaFxClassLoader extends URLClassLoader {
-    private static final Map<String, byte[]> classes = new HashMap<String, byte[]>();
-    private static final ClassLoader defaultClassLoader = JavaFx.class.getClassLoader();
     static {
-      Class<?>[] resources = new Class<?>[] {
-          DynamicAjaxListener.class,
-          DynamicHttpListener.class,
-          DynamicPopupHandler.class,
-          DynamicTitleListener.class };
-      for (int i = 0; i < resources.length; i++) {
-        try {
-          byte[] classTmp = Util.toBytes(JavaFx.class.getResource("/"
-              + resources[i].getName().replace('.', '/') + ".class").openStream());
-          classes.put(resources[i].getName(), classTmp);
-        } catch (Throwable t) {
-          Logs.exception(t);
-        }
-      }
+      registerAsParallelCapable();
     }
 
     private static List<File> list(File dir) {
@@ -189,11 +172,14 @@ class JavaFx {
           || ((name.endsWith(".so")
               || name.endsWith(".a")
               || name.endsWith(".dll")
-              || name.endsWith(".jar"))
+              || name.endsWith(".jar")
+              || name.contains(".properties"))
               && (name.contains("jfx")
               || name.contains("javafx")
+              || name.contains(".properties")
               || name.contains("prism")
-              || name.contains("webkit"))));
+              || name.contains("webkit")))
+          );
         }
       });
       List<File> allFiles = new ArrayList<File>();
@@ -286,84 +272,27 @@ class JavaFx {
       return urlList.toArray(new URL[0]);
     }
 
+    private final ClassLoader fallback = ClassLoader.getSystemClassLoader();
+
     JavaFxClassLoader() {
       super(urls(), null);
     }
 
     @Override
-    public synchronized Class loadClass(String className) throws ClassNotFoundException {
-      Class c = super.findLoadedClass(className);
-      if (c == null) {
-        if (classes.containsKey(className)) {
-          c = defineClass(className, classes.get(className), 0, classes.get(className).length);
-        } else {
-          if (!className.startsWith("com.machinepublishers.")) {
-            try {
-              c = super.loadClass(className);
-            } catch (Throwable t) {}
-          }
-          if (c == null) {
-            c = defaultClassLoader.loadClass(className);
-          }
+    public Class loadClass(String className, boolean resolve) throws ClassNotFoundException {
+      synchronized (getClassLoadingLock(className)) {
+        Class c = null;
+        if (!className.startsWith("com.machinepublishers.")
+            || className.startsWith("com.machinepublishers.jbrowserdriver.Dynamic")) {
+          try {
+            c = super.loadClass(className, resolve);
+          } catch (Throwable t) {}
         }
+        if (c == null) {
+          c = fallback.loadClass(className);
+        }
+        return c;
       }
-      return c;
     }
-
-    @Override
-    public synchronized void close() throws IOException {
-      super.close();
-    }
-
-    @Override
-    public synchronized URL findResource(String name) {
-      return super.findResource(name);
-    }
-
-    @Override
-    public synchronized Enumeration<URL> findResources(String name) throws IOException {
-      return super.findResources(name);
-    }
-
-    @Override
-    public synchronized InputStream getResourceAsStream(String name) {
-      return super.getResourceAsStream(name);
-    }
-
-    @Override
-    public synchronized URL[] getURLs() {
-      return super.getURLs();
-    }
-
-    @Override
-    public synchronized void clearAssertionStatus() {
-      super.clearAssertionStatus();
-    }
-
-    @Override
-    public synchronized URL getResource(String name) {
-      return super.getResource(name);
-    }
-
-    @Override
-    public synchronized Enumeration<URL> getResources(String name) throws IOException {
-      return super.getResources(name);
-    }
-
-    @Override
-    public synchronized void setClassAssertionStatus(String className, boolean enabled) {
-      super.setClassAssertionStatus(className, enabled);
-    }
-
-    @Override
-    public synchronized void setDefaultAssertionStatus(boolean enabled) {
-      super.setDefaultAssertionStatus(enabled);
-    }
-
-    @Override
-    public synchronized void setPackageAssertionStatus(String packageName, boolean enabled) {
-      super.setPackageAssertionStatus(packageName, enabled);
-    }
-
   }
 }
