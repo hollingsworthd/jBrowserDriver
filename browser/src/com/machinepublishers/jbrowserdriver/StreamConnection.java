@@ -64,6 +64,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -145,6 +146,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private boolean consumed;
   private HttpClientContext context = HttpClientContext.create();
   private HttpRequestBase req;
+  private HttpHost host;
+  private boolean contentEncodingRemoved;
+  private long contentLength = -1;
   private ByteArrayOutputStream reqData = new ByteArrayOutputStream();
 
   static {
@@ -270,12 +274,20 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return false;
   }
 
-  static boolean isMedia(String contentType) {
-    return contentType != null
-        && (contentType.startsWith("image/")
-            || contentType.startsWith("video/")
-            || contentType.startsWith("audio/")
-            || contentType.startsWith("model/"));
+  boolean isMedia() {
+    String contentType = getContentType();
+    System.out.println(contentType);
+    return contentType == null
+        || contentType.isEmpty()
+        || contentType.startsWith("image/")
+        || contentType.startsWith("video/")
+        || contentType.startsWith("audio/")
+        || contentType.startsWith("model/")
+        || contentType.startsWith("font/")
+        || contentType.startsWith("application/octet-stream")
+        || contentType.contains("/font-")
+        || contentType.contains("/vnd.")
+        || contentType.contains("/x.");
   }
 
   StreamConnection(URL url) {
@@ -344,23 +356,22 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               context.setAttribute("proxy.http.address", proxyAddress);
             }
           }
-          final URI uri = new URI(
-              url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(),
-              url.getPath(), url.getQuery(), null);
+          final String file = url.getFile();
+          host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
           if ("OPTIONS".equals(method)) {
-            req = new HttpOptions(uri);
+            req = new HttpOptions(file);
           } else if ("GET".equals(method)) {
-            req = new HttpGet(uri);
+            req = new HttpGet(file);
           } else if ("HEAD".equals(method)) {
-            req = new HttpHead(uri);
+            req = new HttpHead(file);
           } else if ("POST".equals(method)) {
-            req = new HttpPost(uri);
+            req = new HttpPost(file);
           } else if ("PUT".equals(method)) {
-            req = new HttpPut(uri);
+            req = new HttpPut(file);
           } else if ("DELETE".equals(method)) {
-            req = new HttpDelete(uri);
+            req = new HttpDelete(file);
           } else if ("TRACE".equals(method)) {
-            req = new HttpTrace(uri);
+            req = new HttpTrace(file);
           }
           processHeaders(SettingsManager.get(settingsId.get()), req);
           context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
@@ -373,7 +384,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
-  private void exec() {
+  private void exec() throws IOException {
     if (!exec) {
       exec = true;
       try {
@@ -384,7 +395,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("PUT".equals(method)) {
             ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
           }
-          response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
+          response = cache ?
+              cachingClient.execute(host, req, context) : client.execute(host, req, context);
           if (response != null && response.getEntity() != null) {
             entity = response.getEntity();
           }
@@ -484,21 +496,37 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public String getContentEncoding() {
-    return entity == null || entity.getContentEncoding() == null ?
+    if (contentEncodingRemoved) {
+      return null;
+    }
+    return entity == null || entity.getContentEncoding() == null || skip.get() ?
         null : entity.getContentEncoding().getValue();
+  }
+
+  public void removeContentEncoding() {
+    response.removeHeaders("content-encoding");
+    contentEncodingRemoved = true;
   }
 
   @Override
   public int getContentLength() {
-    if (entity != null && entity.getContentLength() > (long) Integer.MAX_VALUE) {
-      throw new NumberFormatException();
+    if (contentLength != -1) {
+      return (int) contentLength;
     }
     return entity == null || skip.get() ? 0 : (int) entity.getContentLength();
   }
 
   @Override
   public long getContentLengthLong() {
+    if (contentLength != -1) {
+      return contentLength;
+    }
     return entity == null || skip.get() ? 0 : entity.getContentLength();
+  }
+
+  public void setContentLength(long contentLength) {
+    this.contentLength = contentLength;
+    response.setHeader("content-length", Long.toString(contentLength));
   }
 
   @Override
@@ -509,7 +537,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public String getContentType() {
-    return entity == null || entity.getContentType() == null ?
+    return entity == null || entity.getContentType() == null || skip.get() ?
         null : entity.getContentType().getValue();
   }
 

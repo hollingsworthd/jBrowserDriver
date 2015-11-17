@@ -24,7 +24,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Random;
@@ -121,12 +120,12 @@ public class Settings {
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     StreamInjectors.add(new Injector() {
       @Override
-      public byte[] inject(HttpURLConnection connection,
+      public byte[] inject(StreamConnection connection,
           byte[] inflatedContent, String originalUrl, long settingsId) {
         AtomicReference<Settings> settings = SettingsManager.get(settingsId);
         try {
           if (settings.get().saveMedia()
-              && StreamConnection.isMedia(connection.getContentType())) {
+              && connection.isMedia()) {
             String filename = Long.toString(System.nanoTime());
             File contentFile = new File(settings.get().mediaDir(), filename + ".content");
             File metaFile = new File(settings.get().mediaDir(), filename + ".metadata");
@@ -144,7 +143,7 @@ public class Settings {
         } catch (Throwable t) {}
         try {
           if (!"false".equals(System.getProperty("jbd.quickrender"))
-              && StreamConnection.isMedia(connection.getContentType())) {
+              && connection.isMedia()) {
             if (Logs.TRACE) {
               System.out.println("Media discarded: " + connection.getURL().toExternalForm());
             }

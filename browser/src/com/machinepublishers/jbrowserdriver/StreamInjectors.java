@@ -25,7 +25,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -33,7 +32,7 @@ import java.util.zip.InflaterInputStream;
 
 class StreamInjectors {
   public static interface Injector {
-    byte[] inject(HttpURLConnection connection, byte[] inflatedContent, String originalUrl, long settingsId);
+    byte[] inject(StreamConnection connection, byte[] inflatedContent, String originalUrl, long settingsId);
   }
 
   private static final Object lock = new Object();
@@ -57,7 +56,7 @@ class StreamInjectors {
     }
   }
 
-  static InputStream injectedStream(HttpURLConnection conn, InputStream inputStream,
+  static InputStream injectedStream(StreamConnection conn, InputStream inputStream,
       String originalUrl, long settingsId) throws IOException {
     byte[] bytes = new byte[0];
     try {
@@ -68,8 +67,10 @@ class StreamInjectors {
       } else {
         bytes = Util.toBytes(inputStream);
       }
+      conn.removeContentEncoding();
       synchronized (lock) {
         for (Injector injector : injectors) {
+          conn.setContentLength(bytes.length);
           byte[] newContent = injector.inject(conn, bytes, originalUrl, settingsId);
           if (newContent != null) {
             bytes = newContent;
@@ -81,6 +82,7 @@ class StreamInjectors {
     } finally {
       Util.close(inputStream);
     }
+    conn.setContentLength(bytes.length);
     return new ByteArrayInputStream(bytes);
   }
 }
