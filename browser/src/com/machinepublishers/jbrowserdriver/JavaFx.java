@@ -169,14 +169,14 @@ class JavaFx {
         public boolean accept(File file) {
           String name = file.getName();
           return (file.isDirectory()
-          || ((name.endsWith(".so")
+              || name.contains(".properties")
+              || ((name.endsWith(".so")
               || name.endsWith(".a")
+              || name.endsWith(".dylib")
               || name.endsWith(".dll")
-              || name.endsWith(".jar")
-              || name.contains(".properties"))
+              || name.endsWith(".jar"))
               && (name.contains("jfx")
               || name.contains("javafx")
-              || name.contains(".properties")
               || name.contains("prism")
               || name.contains("webkit")))
           );
