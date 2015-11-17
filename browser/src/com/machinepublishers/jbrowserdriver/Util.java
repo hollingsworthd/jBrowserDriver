@@ -25,6 +25,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -177,7 +178,9 @@ class Util {
       final char[] chars = new char[8192];
       StringBuilder builder = new StringBuilder(chars.length);
       BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset), chars.length);
-      for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
+      try {
+        for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
+      } catch (EOFException e) {}
       return builder.toString();
     } catch (Throwable t) {
       Logs.exception(t);
@@ -191,7 +194,9 @@ class Util {
     try {
       final byte[] bytes = new byte[8192];
       ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length);
-      for (int len = 0; -1 != (len = inputStream.read(bytes, 0, bytes.length)); out.write(bytes, 0, len));
+      try {
+        for (int len = 0; -1 != (len = inputStream.read(bytes, 0, bytes.length)); out.write(bytes, 0, len));
+      } catch (EOFException e) {}
       return out.toByteArray();
     } finally {
       close(inputStream);
