@@ -90,8 +90,10 @@ public class Settings {
       System.setProperty("glass.platform", "Monocle");
       System.setProperty("monocle.platform", "Headless");
       System.setProperty("prism.order", "sw");
-      //AWT gui is never used anyhow, but set this to prevent programmer errors
-      System.setProperty("java.awt.headless", "true");
+      System.setProperty("prism.useFontConfig", "false");
+      System.setProperty("prism.subpixeltext", "false");
+      System.setProperty("prism.allowhidpi", "false");
+      System.setProperty("prism.dirtyopts", "false");
     } else {
       headless = false;
     }

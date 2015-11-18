@@ -39,6 +39,7 @@ class BrowserContextItem {
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
+  final AtomicReference<Thread> appThread = new AtomicReference<Thread>();
   final AtomicReference<JavaFxObject> httpListener = new AtomicReference<JavaFxObject>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
@@ -54,7 +55,7 @@ class BrowserContextItem {
     }
     synchronized (initLock) {
       if (!initialized.get()) {
-        SettingsManager.register(stage, view,
+        SettingsManager.register(stage, view, appThread,
             context.settings, context.statusCode);
         engine.set(view.get().call("getEngine"));
         context.settingsId.set(Long.parseLong(

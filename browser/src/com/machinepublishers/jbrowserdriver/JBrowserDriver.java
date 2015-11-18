@@ -357,10 +357,7 @@ public class JBrowserDriver implements Browser {
 
   @Override
   public void quit() {
-    init();
-    context.removeItems();
-    SettingsManager.deregister(context.settings);
-    context.settings.get().cookieStore().clear();
+    SettingsManager.deregister(context.settings, context);
   }
 
   @Override

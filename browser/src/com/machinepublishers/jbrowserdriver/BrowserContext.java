@@ -104,6 +104,10 @@ class BrowserContext {
     return items.get(current);
   }
 
+  List<BrowserContextItem> items() {
+    return items;
+  }
+
   String itemId() {
     return Util.exec(Pause.NONE, statusCode,
         new Sync<String>() {

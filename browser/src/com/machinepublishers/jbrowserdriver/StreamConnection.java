@@ -98,34 +98,49 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private static final int ROUTE_CONNECTIONS =
       Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "16"));
   private static final int CONNECTIONS =
-      Integer.parseInt(System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
+      Integer.parseInt(System.getProperty("jbd.maxconnections", "128"));
   private static final Registry<ConnectionSocketFactory> registry =
       RegistryBuilder.<ConnectionSocketFactory> create()
           .register("https", new SslSocketFactory(sslContext()))
           .register("http", new SocketFactory())
           .build();
-  private static final PoolingHttpClientConnectionManager manager =
-      new PoolingHttpClientConnectionManager(registry);
+  private static final ThreadLocal<PoolingHttpClientConnectionManager> manager =
+      new ThreadLocal<PoolingHttpClientConnectionManager>() {
+        protected PoolingHttpClientConnectionManager initialValue() {
+          return new PoolingHttpClientConnectionManager(registry);
+        }
+      };
   static {
-    manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
-    manager.setMaxTotal(CONNECTIONS);
+    manager.get().setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
+    manager.get().setMaxTotal(CONNECTIONS);
   }
-  private static final CloseableHttpClient client = HttpClients.custom()
-      .disableRedirectHandling()
-      .disableAutomaticRetries()
-      .setConnectionManager(manager)
-      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-      .setMaxConnTotal(CONNECTIONS)
-      .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .build();
-  private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
-      .disableRedirectHandling()
-      .disableAutomaticRetries()
-      .setConnectionManager(manager)
-      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-      .setMaxConnTotal(CONNECTIONS)
-      .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .build();
+  private static final ThreadLocal<CloseableHttpClient> client =
+      new ThreadLocal<CloseableHttpClient>() {
+        protected CloseableHttpClient initialValue() {
+          return HttpClients.custom()
+              .disableRedirectHandling()
+              .disableAutomaticRetries()
+              .setConnectionManager(manager.get())
+              .setMaxConnPerRoute(ROUTE_CONNECTIONS)
+              .setMaxConnTotal(CONNECTIONS)
+              .setDefaultCredentialsProvider(ProxyAuth.instance())
+              .build();
+        }
+      };
+  private static final ThreadLocal<CloseableHttpClient> cachingClient =
+      new ThreadLocal<CloseableHttpClient>() {
+        protected CloseableHttpClient initialValue() {
+          return CachingHttpClients.custom()
+              .disableRedirectHandling()
+              .disableAutomaticRetries()
+              .setConnectionManager(manager.get())
+              .setMaxConnPerRoute(ROUTE_CONNECTIONS)
+              .setMaxConnTotal(CONNECTIONS)
+              .setDefaultCredentialsProvider(ProxyAuth.instance())
+              .build();
+        }
+      };
+
   private static boolean cacheByDefault;
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
@@ -395,7 +410,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
           }
           response = cache ?
-              cachingClient.execute(host, req, context) : client.execute(host, req, context);
+              cachingClient.get().execute(host, req, context)
+              : client.get().execute(host, req, context);
           if (response != null && response.getEntity() != null) {
             entity = response.getEntity();
           }
@@ -413,8 +429,22 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public void close() throws IOException {
-    if (response != null) {
-      response.close();
+    try {
+      if (response != null) {
+        response.close();
+      }
+    } catch (Throwable t) {
+      Logs.exception(t);
+    }
+    manager.get().closeExpiredConnections();
+  }
+
+  public static void shutDown() {
+    manager.get().close();
+    try {
+      client.get().close();
+    } catch (Throwable t) {
+      Logs.exception(t);
     }
   }
 

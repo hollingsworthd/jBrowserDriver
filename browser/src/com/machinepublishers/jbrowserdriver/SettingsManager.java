@@ -28,95 +28,94 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+import javafx.application.Application;
+import javafx.application.Platform;
 
 import org.openqa.selenium.Dimension;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Screen;
 import com.sun.glass.ui.monocle.NativePlatform;
 import com.sun.glass.ui.monocle.NativePlatformFactory;
-import com.sun.javafx.webkit.Accessor;
 
 class SettingsManager {
-
   private static final Map<Long, AtomicReference<Settings>> registry =
       new HashMap<Long, AtomicReference<Settings>>();
 
-  static void register(final AtomicReference<JavaFxObject> stage, final AtomicReference<JavaFxObject> view,
-      final AtomicReference<Settings> settings, final AtomicInteger statusCode) {
-    Util.exec(Pause.SHORT, statusCode, new Sync<Object>() {
-      public Object perform() {
-        if (Settings.headless()) {
-          try {
-            System.setProperty("headless.geometry", settings.get().screen().getWidth()
-                + "x" + settings.get().screen().getHeight());
-            JavaFxObject nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
-                settings.get().id()).call("getNativePlatform");
-            Field field = ((Class) JavaFx.getStatic(NativePlatform.class,
-                settings.get().id()).unwrap()).getDeclaredField("screen");
-            field.setAccessible(true);
-            field.set(nativePlatform.unwrap(), null);
-            JavaFx.getStatic(Screen.class, settings.get().id()).call("notifySettingsChanged");
-          } catch (Throwable t) {
-            Logs.exception(t);
-          }
-        }
-        view.set(JavaFx.getNew(WebView.class, settings.get().id()));
-        stage.set(JavaFx.getNew(Stage.class, settings.get().id()));
-        if (Settings.headless()) {
-          stage.get().call("initStyle",
-              JavaFx.getStatic(StageStyle.class, settings.get().id()).field("UNDECORATED"));
-        }
-        AtomicReference<JavaFxObject> root = new AtomicReference<JavaFxObject>();
-        root.set(JavaFx.getNew(StackPane.class, settings.get().id()));
-        final Dimension size = settings.get().screen();
-        view.get().call("getEngine").call("getHistory").call("setMaxSize", 2);
-        view.get().call("getEngine").call("setUserAgent", "" + settings.get().id());
-        root.get().call("getChildren").call("add", view.get());
-        root.get().call("setCache", false);
-        stage.get().call("setScene", JavaFx.getNew(Scene.class, settings.get().id(),
-            root.get().unwrap(), new Double(size.getWidth()), new Double(size.getHeight())));
-        JavaFx.getStatic(Accessor.class, settings.get().id()).
-            call("getPageFor", view.get().call("getEngine")).
-            call("setDeveloperExtrasEnabled", false);
-        stage.get().call("sizeToScene");
-        stage.get().call("show");
-
-        synchronized (registry) {
-          registry.put(settings.get().id(), settings);
-        }
-        ProxyAuth.add(settings.get().proxy());
-        addTitleListener(view, stage, settings.get().id());
-        return null;
+  static void register(
+      final AtomicReference<JavaFxObject> stage,
+      final AtomicReference<JavaFxObject> view,
+      final AtomicReference<Thread> appThread,
+      final AtomicReference<Settings> settings,
+      final AtomicInteger statusCode) {
+    if (Settings.headless()) {
+      try {
+        System.setProperty("headless.geometry", settings.get().screen().getWidth()
+            + "x" + settings.get().screen().getHeight());
+        JavaFxObject nativePlatform = JavaFx.getStatic(NativePlatformFactory.class,
+            settings.get().id()).call("getNativePlatform");
+        Field field = ((Class) JavaFx.getStatic(NativePlatform.class,
+            settings.get().id()).unwrap()).getDeclaredField("screen");
+        field.setAccessible(true);
+        field.set(nativePlatform.unwrap(), null);
+        JavaFx.getStatic(Screen.class, settings.get().id()).call("notifySettingsChanged");
+      } catch (Throwable t) {
+        Logs.exception(t);
       }
-    }, settings.get().id());
+    }
+    ProxyAuth.add(settings.get().proxy());
+    appThread.set(new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Dimension size = settings.get().screen();
+          JavaFx.getStatic(Application.class, settings.get().id()).call(
+              "launch", JavaFx.getStatic(DynamicApplication.class, settings.get().id()),
+              new String[] { Integer.toString(size.getWidth()), Integer.toString(size.getHeight()),
+                  Boolean.toString(Settings.headless()), Long.toString(settings.get().id()) });
+        } catch (Throwable t) {
+          Logs.exception(t);
+        }
+      }
+    }));
+    appThread.get().start();
+    stage.set(JavaFx.getStatic(DynamicApplication.class, settings.get().id()).call("getStage"));
+    view.set(JavaFx.getStatic(DynamicApplication.class, settings.get().id()).call("getView"));
+
+    synchronized (registry) {
+      registry.put(settings.get().id(), settings);
+    }
   }
 
-  static void deregister(AtomicReference<Settings> settings) {
+  static void deregister(AtomicReference<Settings> settings, BrowserContext context) {
     synchronized (registry) {
       registry.remove(settings.get().id());
     }
-    ProxyAuth.remove(settings.get().proxy());
+    if (Settings.headless()) {
+      JavaFx.getStatic(Platform.class, settings.get().id()).call("exit");
+    }
+    StatusMonitor.get(settings.get().id()).clearStatusMonitor();
     StatusMonitor.remove(settings.get().id());
+    context.settings.get().cookieStore().clear();
+    ProxyAuth.remove(settings.get().proxy());
     JavaFx.close(settings.get().id());
+    StreamConnection.shutDown();
+
+    for (BrowserContextItem item : context.items()) {
+      Thread thread = item.appThread.get();
+      if (thread != null) {
+        while (true) {
+          try {
+            thread.join();
+            break;
+          } catch (InterruptedException e) {}
+        }
+      }
+    }
   }
 
   static AtomicReference<Settings> get(long settingsId) {
     synchronized (registry) {
       return registry.get(settingsId);
     }
-  }
-
-  private static void addTitleListener(final AtomicReference<JavaFxObject> view,
-      final AtomicReference<JavaFxObject> stage, final long settingsId) {
-    view.get().call("getEngine").call("titleProperty").
-        call("addListener", JavaFx.getNew(
-            DynamicTitleListener.class, settingsId, stage.get().unwrap()));
   }
 }
