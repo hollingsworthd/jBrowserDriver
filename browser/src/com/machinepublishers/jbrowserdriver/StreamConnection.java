@@ -51,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -96,52 +97,39 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private static final int ROUTE_CONNECTIONS =
-      Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "16"));
+      Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "8"));
   private static final int CONNECTIONS =
-      Integer.parseInt(System.getProperty("jbd.maxconnections", "128"));
+      Integer.parseInt(
+          System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
   private static final Registry<ConnectionSocketFactory> registry =
       RegistryBuilder.<ConnectionSocketFactory> create()
           .register("https", new SslSocketFactory(sslContext()))
           .register("http", new SocketFactory())
           .build();
-  private static final ThreadLocal<PoolingHttpClientConnectionManager> manager =
-      new ThreadLocal<PoolingHttpClientConnectionManager>() {
-        protected PoolingHttpClientConnectionManager initialValue() {
-          return new PoolingHttpClientConnectionManager(registry);
-        }
-      };
+  private static final PoolingHttpClientConnectionManager manager =
+      new PoolingHttpClientConnectionManager(registry);
   static {
-    manager.get().setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
-    manager.get().setMaxTotal(CONNECTIONS);
+    manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
+    manager.setMaxTotal(CONNECTIONS);
   }
-  private static final ThreadLocal<CloseableHttpClient> client =
-      new ThreadLocal<CloseableHttpClient>() {
-        protected CloseableHttpClient initialValue() {
-          return HttpClients.custom()
-              .disableRedirectHandling()
-              .disableAutomaticRetries()
-              .setConnectionManager(manager.get())
-              .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-              .setMaxConnTotal(CONNECTIONS)
-              .setDefaultCredentialsProvider(ProxyAuth.instance())
-              .build();
-        }
-      };
-  private static final ThreadLocal<CloseableHttpClient> cachingClient =
-      new ThreadLocal<CloseableHttpClient>() {
-        protected CloseableHttpClient initialValue() {
-          return CachingHttpClients.custom()
-              .disableRedirectHandling()
-              .disableAutomaticRetries()
-              .setConnectionManager(manager.get())
-              .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-              .setMaxConnTotal(CONNECTIONS)
-              .setDefaultCredentialsProvider(ProxyAuth.instance())
-              .build();
-        }
-      };
-
+  private static final CloseableHttpClient client = HttpClients.custom()
+      .disableRedirectHandling()
+      .disableAutomaticRetries()
+      .setConnectionManager(manager)
+      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
+      .setMaxConnTotal(CONNECTIONS)
+      .setDefaultCredentialsProvider(ProxyAuth.instance())
+      .build();
+  private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
+      .disableRedirectHandling()
+      .disableAutomaticRetries()
+      .setConnectionManager(manager)
+      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
+      .setMaxConnTotal(CONNECTIONS)
+      .setDefaultCredentialsProvider(ProxyAuth.instance())
+      .build();
   private static boolean cacheByDefault;
+  private static AtomicReference<String> trace = new AtomicReference("");
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final RequestConfig.Builder config = RequestConfig.custom();
@@ -290,7 +278,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   boolean isMedia() {
     String contentType = getContentType();
-    System.out.println(contentType);
     return contentType == null
         || contentType.isEmpty()
         || contentType.startsWith("image/")
@@ -308,6 +295,16 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     super(url);
     this.url = url;
     this.urlString = url.toExternalForm();
+    trace();
+  }
+
+  private static void trace() {
+    if (Logs.TRACE) {
+      String newTrace = manager.getTotalStats().toString();
+      if (!newTrace.equals(trace.getAndSet(newTrace))) {
+        System.out.println("Connection pool - " + newTrace);
+      }
+    }
   }
 
   private void processHeaders(AtomicReference<Settings> settings, HttpRequestBase req) {
@@ -355,45 +352,41 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           || isBlocked(url.getHost())) {
         skip.set(true);
       } else {
-        try {
-          connected = true;
-          config
-              .setCookieSpec(CookieSpecs.STANDARD)
-              .setConnectTimeout(connectTimeout)
-              .setConnectionRequestTimeout(readTimeout);
-          ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
-          if (proxy != null && !proxy.directConnection()) {
-            InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
-            if (proxy.type() == ProxyConfig.Type.SOCKS) {
-              context.setAttribute("proxy.socks.address", proxyAddress);
-            } else {
-              context.setAttribute("proxy.http.address", proxyAddress);
-            }
+        connected = true;
+        config
+            .setCookieSpec(CookieSpecs.STANDARD)
+            .setConnectTimeout(connectTimeout)
+            .setConnectionRequestTimeout(readTimeout);
+        ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
+        if (proxy != null && !proxy.directConnection()) {
+          InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+          if (proxy.type() == ProxyConfig.Type.SOCKS) {
+            context.setAttribute("proxy.socks.address", proxyAddress);
+          } else {
+            context.setAttribute("proxy.http.address", proxyAddress);
           }
-          final String file = url.getFile();
-          host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
-          if ("OPTIONS".equals(method)) {
-            req = new HttpOptions(file);
-          } else if ("GET".equals(method)) {
-            req = new HttpGet(file);
-          } else if ("HEAD".equals(method)) {
-            req = new HttpHead(file);
-          } else if ("POST".equals(method)) {
-            req = new HttpPost(file);
-          } else if ("PUT".equals(method)) {
-            req = new HttpPut(file);
-          } else if ("DELETE".equals(method)) {
-            req = new HttpDelete(file);
-          } else if ("TRACE".equals(method)) {
-            req = new HttpTrace(file);
-          }
-          processHeaders(SettingsManager.get(settingsId.get()), req);
-          context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
-          context.setRequestConfig(config.build());
-          StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
-        } catch (Throwable t) {
-          Logs.exception(t);
         }
+        final String file = url.getFile();
+        host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+        if ("OPTIONS".equals(method)) {
+          req = new HttpOptions(file);
+        } else if ("GET".equals(method)) {
+          req = new HttpGet(file);
+        } else if ("HEAD".equals(method)) {
+          req = new HttpHead(file);
+        } else if ("POST".equals(method)) {
+          req = new HttpPost(file);
+        } else if ("PUT".equals(method)) {
+          req = new HttpPut(file);
+        } else if ("DELETE".equals(method)) {
+          req = new HttpDelete(file);
+        } else if ("TRACE".equals(method)) {
+          req = new HttpTrace(file);
+        }
+        processHeaders(SettingsManager.get(settingsId.get()), req);
+        context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
+        context.setRequestConfig(config.build());
+        StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
       }
     }
   }
@@ -401,23 +394,19 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private void exec() throws IOException {
     if (!exec) {
       exec = true;
-      try {
-        connect();
-        if (req != null) {
-          if ("POST".equals(method)) {
-            ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-          } else if ("PUT".equals(method)) {
-            ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-          }
-          response = cache ?
-              cachingClient.get().execute(host, req, context)
-              : client.get().execute(host, req, context);
-          if (response != null && response.getEntity() != null) {
-            entity = response.getEntity();
-          }
+      connect();
+      if (req != null) {
+        if ("POST".equals(method)) {
+          ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+        } else if ("PUT".equals(method)) {
+          ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
         }
-      } catch (Throwable t) {
-        Logs.exception(t);
+        response = cache ?
+            cachingClient.execute(host, req, context)
+            : client.execute(host, req, context);
+        if (response != null && response.getEntity() != null) {
+          entity = response.getEntity();
+        }
       }
     }
   }
@@ -436,13 +425,15 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     } catch (Throwable t) {
       Logs.exception(t);
     }
-    manager.get().closeExpiredConnections();
+    manager.closeExpiredConnections();
+    manager.closeIdleConnections(30, TimeUnit.SECONDS);
+    trace();
   }
 
   public static void shutDown() {
-    manager.get().close();
+    manager.close();
     try {
-      client.get().close();
+      client.close();
     } catch (Throwable t) {
       Logs.exception(t);
     }
