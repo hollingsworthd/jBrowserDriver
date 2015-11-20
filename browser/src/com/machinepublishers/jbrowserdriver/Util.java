@@ -38,8 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javafx.application.Platform;
-
 import com.machinepublishers.browser.Browser;
 
 class Util {
@@ -84,7 +82,7 @@ class Util {
     public void run() {
       if (statusCode.get() != -1) {
         if (statusCode.get() == 0) {
-          JavaFx.getStatic(Platform.class, id).call("runLater", this);
+          JavaFx.getStatic("javafx.application.Platform", id).call("runLater", this);
           return;
         }
         if (Logs.TRACE && statusCode.get() != 200) {
@@ -134,7 +132,7 @@ class Util {
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action, final long id) {
     try {
-      if ((boolean) JavaFx.getStatic(Platform.class, id).call("isFxApplicationThread").unwrap()) {
+      if ((boolean) JavaFx.getStatic("javafx.application.Platform", id).call("isFxApplicationThread").unwrap()) {
         try {
           return action.perform();
         } catch (Browser.Fatal t) {
@@ -145,7 +143,7 @@ class Util {
       }
       final Runner<T> runner = new Runner<T>(action, statusCode, id);
       synchronized (runner.done) {
-        JavaFx.getStatic(Platform.class, id).call("runLater", runner);
+        JavaFx.getStatic("javafx.application.Platform", id).call("runLater", runner);
       }
       synchronized (runner.done) {
         if (!runner.done.get()) {

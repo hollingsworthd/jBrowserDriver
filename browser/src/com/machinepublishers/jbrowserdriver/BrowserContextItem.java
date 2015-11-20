@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.sun.javafx.webkit.Accessor;
 
 class BrowserContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
@@ -68,14 +67,14 @@ class BrowserContextItem {
         Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
           @Override
           public Object perform() {
-            httpListener.set(JavaFx.getNew(DynamicHttpListener.class, context.settingsId.get(),
+            httpListener.set(JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicHttpListener", context.settingsId.get(),
                 context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
                 context.settingsId.get()));
-            JavaFx.getStatic(Accessor.class, context.settingsId.get()).
+            JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settingsId.get()).
                 call("getPageFor", view.get().call("getEngine")).
                 call("addLoadListenerClient", httpListener.get());
             engine.get().call("setCreatePopupHandler",
-                JavaFx.getNew(DynamicPopupHandler.class, context.settingsId.get(), driver, context));
+                JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicPopupHandler", context.settingsId.get(), driver, context));
             //TODO engine.get().call("setConfirmHandler",
             //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
             //TODO engine.get().call("setPromptHandler",

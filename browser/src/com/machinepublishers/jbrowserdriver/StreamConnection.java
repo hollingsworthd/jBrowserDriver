@@ -40,6 +40,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -93,6 +94,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
+  private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
   private static final Set<String> adHosts = new HashSet<String>();
@@ -352,12 +354,21 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               .setCookieSpec(CookieSpecs.STANDARD)
               .setConnectTimeout(connectTimeout)
               .setConnectionRequestTimeout(readTimeout);
-          final URI uri;
+          URI uri = null;
           try {
             uri = url.toURI();
           } catch (URISyntaxException e) {
-            Logs.exception(e);
-            return;
+            String urlString = url.toExternalForm();
+            Matcher matcher = invalidUrlChar.matcher(urlString);
+            StringBuilder builder = new StringBuilder();
+            int left = 0;
+            while (matcher.find()) {
+              builder.append(urlString.substring(left, matcher.start()));
+              builder.append(URLEncoder.encode(matcher.group(), "utf-8"));
+              left = matcher.start() + 1;
+            }
+            builder.append(urlString.substring(left));
+            uri = new URI(builder.toString());
           }
           if ("OPTIONS".equals(method)) {
             req = new HttpOptions(uri);
@@ -390,7 +401,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         }
       }
     } catch (Throwable t) {
-      Logs.exception(t);
+      throw new IOException(t.getMessage() + ": " + urlString, t);
     }
   }
 
@@ -413,10 +424,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           }
         }
       }
-    } catch (IOException e) {
-      throw e;
     } catch (Throwable t) {
-      Logs.exception(t);
+      throw new IOException(t.getMessage() + ": " + urlString, t);
     }
   }
 

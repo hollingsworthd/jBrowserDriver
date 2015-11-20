@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javafx.application.Application;
-
 import org.openqa.selenium.Dimension;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
@@ -44,15 +42,15 @@ public class SettingsManager {
       final AtomicReference<Settings> settings) {
     ProxyAuth.add(settings.get().proxy());
     if (Settings.headless() &&
-        JavaFx.getStatic(com.sun.glass.ui.Application.class, settings.get().id()).
+        JavaFx.getStatic("com.sun.glass.ui.Application", settings.get().id()).
             call("GetApplication") == null) {
       new Thread(new Runnable() {
         @Override
         public void run() {
           Dimension size = settings.get().screen();
           try {
-            JavaFx.getStatic(Application.class, settings.get().id()).call(
-                "launch", JavaFx.getStatic(DynamicApplication.class, settings.get().id()),
+            JavaFx.getStatic("javafx.application.Application", settings.get().id()).call(
+                "launch", JavaFx.getStatic("com.machinepublishers.jbrowserdriver.DynamicApplication", settings.get().id()),
                 new String[] { Integer.toString(size.getWidth()), Integer.toString(size.getHeight()),
                     Boolean.toString(Settings.headless()), Long.toString(settings.get().id()) });
           } catch (Throwable t) {
@@ -62,7 +60,7 @@ public class SettingsManager {
       }).start();
     } else {
       Dimension size = settings.get().screen();
-      final JavaFxObject app = JavaFx.getNew(DynamicApplication.class, settings.get().id());
+      final JavaFxObject app = JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicApplication", settings.get().id());
       app.call("init",
           size.getWidth(), size.getHeight(), Settings.headless(), settings.get().id());
       Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
@@ -72,8 +70,8 @@ public class SettingsManager {
         }
       }, settings.get().id());
     }
-    stage.set(JavaFx.getStatic(DynamicApplication.class, settings.get().id()).call("getStage"));
-    view.set(JavaFx.getStatic(DynamicApplication.class, settings.get().id()).call("getView"));
+    stage.set(JavaFx.getStatic("com.machinepublishers.jbrowserdriver.DynamicApplication", settings.get().id()).call("getStage"));
+    view.set(JavaFx.getStatic("com.machinepublishers.jbrowserdriver.DynamicApplication", settings.get().id()).call("getView"));
 
     synchronized (registry) {
       registry.put(settings.get().id(), settings);

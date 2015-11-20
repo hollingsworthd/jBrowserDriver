@@ -33,8 +33,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.webkit.LoadListenerClient;
+import com.sun.webkit.network.CookieManager;
 
 class DynamicHttpListener implements LoadListenerClient {
+  static {
+    CookieManager.setDefault(null);
+  }
   private static final Map<Integer, String> states;
   private static final Map<Integer, String> errors;
   static {

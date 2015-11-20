@@ -29,9 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import netscape.javascript.JSObject;
 
 import org.openqa.selenium.By;
@@ -366,12 +363,12 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           @Override
           public WebElement perform() {
             final JavaFxObject xPath =
-                JavaFx.getStatic(XPathFactory.class, context.settingsId.get()).
+                JavaFx.getStatic("javax.xml.xpath.XPathFactory", context.settingsId.get()).
                     call("newInstance").call("newXPath");
             return new Element(
                 new AtomicReference<JavaFxObject>(
                     xPath.call("evaluate",
-                        expr, node.get(), JavaFx.getStatic(XPathConstants.class, context.settingsId.get()).
+                        expr, node.get(), JavaFx.getStatic("javax.xml.xpath.XPathConstants", context.settingsId.get()).
                             field("NODE"))), context);
           }
         }, context.settingsId.get());
@@ -384,10 +381,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           @Override
           public List<WebElement> perform() {
             JavaFxObject xPath = JavaFx.getStatic(
-                XPathFactory.class, context.settingsId.get()).call("newInstance").call("newXPath");
+                "javax.xml.xpath.XPathFactory", context.settingsId.get()).call("newInstance").call("newXPath");
             JavaFxObject list = xPath.call(
                 "evaluate", expr, node.get(), JavaFx.getStatic(
-                    XPathConstants.class, context.settingsId.get()).field("NODESET"));
+                    "javax.xml.xpath.XPathConstants", context.settingsId.get()).field("NODESET"));
             List<WebElement> elements = new ArrayList<WebElement>();
             int length = Integer.parseInt(list.call("getLength").toString());
             for (int i = 0; i < length; i++) {

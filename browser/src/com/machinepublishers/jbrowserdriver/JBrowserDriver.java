@@ -22,26 +22,10 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.awt.Point;
-import java.awt.Transparency;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.image.WritableImage;
-
-import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -52,7 +36,6 @@ import org.openqa.selenium.WebElement;
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.sun.javafx.webkit.Accessor;
 
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver
@@ -135,7 +118,7 @@ public class JBrowserDriver implements Browser {
         return null;
       }
     }, context.settingsId.get());
-    JavaFx.getStatic(Accessor.class, context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
     context.settings.set(new Settings(settings, context.settingsId.get()));
     context.reset(this);
     context.settings.get().cookieStore().clear();
@@ -397,9 +380,9 @@ public class JBrowserDriver implements Browser {
         return null;
       }
     }, context.settingsId.get());
-    JavaFx.getStatic(Accessor.class, context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
     if (Settings.headless()) {
-      JavaFx.getStatic(Platform.class, context.settings.get().id()).call("exit");
+      JavaFx.getStatic("javafx.application.Platform", context.settings.get().id()).call("exit");
     }
     SettingsManager.close(context.settings.get().id());
     context.settings.get().cookieStore().clear();
@@ -438,34 +421,18 @@ public class JBrowserDriver implements Browser {
           return bytes;
         }
       }, context.settingsId.get());
-      DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
-      WritableRaster raster = Raster.createInterleavedRaster(buffer, width.get(), height.get(),
-          bytesPerComponent.get() * width.get(), bytesPerComponent.get(), new int[] { 0, 1, 2 },
-          (Point) null);
-      ColorModel cm = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
-          false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
-      BufferedImage image = new BufferedImage(cm, raster, true, null);
 
-      ByteArrayOutputStream out = null;
-      try {
-        out = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", out);
-        return outputType.convertFromPngBytes(out.toByteArray());
-      } catch (Throwable t) {
-        Logs.exception(t);
-        return null;
-      } finally {
-        Util.close(out);
-      }
+      return outputType.convertFromPngBytes((byte[]) JavaFx.getStatic("com.machinepublishers.jbrowserdriver.DynamicScreenshot", context.settingsId.get())
+          .call("toPng", bytes, width.get(), height.get(), bytesPerComponent.get()).unwrap());
     } else {
       init();
       JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
         public JavaFxObject perform() {
           return JavaFx.getStatic(
-              SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
+              "javafx.embed.swing.SwingFXUtils", Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
               call("fromFXImage", context.item().view.get().
-                  call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.settingsId.get()),
-                      JavaFx.getNew(WritableImage.class, context.settingsId.get(),
+                  call("snapshot", JavaFx.getNew("javafx.scene.SnapshotParameters", context.settingsId.get()),
+                      JavaFx.getNew("javafx.scene.image.WritableImage", context.settingsId.get(),
                           (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
                           (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
         }
@@ -473,7 +440,7 @@ public class JBrowserDriver implements Browser {
       ByteArrayOutputStream out = null;
       try {
         out = new ByteArrayOutputStream();
-        JavaFx.getStatic(ImageIO.class, context.settingsId.get()).call("write", image, "png", out);
+        JavaFx.getStatic("javax.imageio.ImageIO", context.settingsId.get()).call("write", image, "png", out);
         return outputType.convertFromPngBytes(out.toByteArray());
       } catch (Throwable t) {
         Logs.exception(t);

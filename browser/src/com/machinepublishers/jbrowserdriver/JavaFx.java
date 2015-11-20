@@ -40,12 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.embed.swing.JFXPanel;
-
 import com.machinepublishers.browser.Browser.Fatal;
-import com.sun.glass.ui.PlatformFactory;
-import com.sun.glass.ui.monocle.MonoclePlatformFactory;
-import com.sun.glass.ui.monocle.NativePlatformFactory;
 
 class JavaFx {
   private JavaFx() {}
@@ -53,7 +48,7 @@ class JavaFx {
   private static final Map<Long, ClassLoader> classLoaders = new HashMap<Long, ClassLoader>();
   private static final Object lock = new Object();
 
-  static JavaFxObject getNew(Class<?> type, Long id, Object... params) {
+  static JavaFxObject getNew(String type, Long id, Object... params) {
     Throwable firstError = null;
     try {
       Class loaded;
@@ -61,7 +56,7 @@ class JavaFx {
         if (!classLoaders.containsKey(id)) {
           classLoaders.put(id, newClassLoader());
         }
-        loaded = classLoaders.get(id).loadClass(type.getName());
+        loaded = classLoaders.get(id).loadClass(type);
       }
       if (params == null || params.length == 0) {
         Constructor constructor = loaded.getDeclaredConstructor();
@@ -90,16 +85,16 @@ class JavaFx {
     } catch (Throwable t) {
       firstError = firstError == null ? t : firstError;
     }
-    throw new Fatal("Could not construct " + type.getName(), firstError);
+    throw new Fatal("Could not construct " + type, firstError);
   }
 
-  static JavaFxObject getStatic(Class<?> type, Long id) {
+  static JavaFxObject getStatic(String type, Long id) {
     try {
       synchronized (lock) {
         if (!classLoaders.containsKey(id)) {
           classLoaders.put(id, newClassLoader());
         }
-        return new JavaFxObject(classLoaders.get(id).loadClass(type.getName()));
+        return new JavaFxObject(classLoaders.get(id).loadClass(type));
       }
     } catch (Throwable t) {
       Logs.exception(t);
@@ -136,13 +131,13 @@ class JavaFx {
   private static void initToolkit(ClassLoader classLoader) {
     try {
       if (Settings.headless()) {
-        Class<?> platformFactory = classLoader.loadClass(PlatformFactory.class.getName());
+        Class<?> platformFactory = classLoader.loadClass("com.sun.glass.ui.PlatformFactory");
         Field field = platformFactory.getDeclaredField("instance");
         field.setAccessible(true);
         field.set(platformFactory, classLoader.loadClass(
-            MonoclePlatformFactory.class.getName()).newInstance());
+            "com.sun.glass.ui.monocle.MonoclePlatformFactory").newInstance());
 
-        platformFactory = classLoader.loadClass(NativePlatformFactory.class.getName());
+        platformFactory = classLoader.loadClass("com.sun.glass.ui.monocle.NativePlatformFactory");
         field = platformFactory.getDeclaredField("platform");
         field.setAccessible(true);
         Constructor headlessPlatform =
@@ -151,7 +146,7 @@ class JavaFx {
         field.set(platformFactory, headlessPlatform.newInstance());
       } else {
         try {
-          classLoader.loadClass(JFXPanel.class.getName()).newInstance();
+          classLoader.loadClass("javafx.embed.swing.JFXPanel").newInstance();
         } catch (Throwable t) {
           Logs.exception(t);
         }
@@ -250,7 +245,7 @@ class JavaFx {
           }
         }
         try {
-          final URL url = NativePlatformFactory.class.getProtectionDomain().getCodeSource().getLocation();
+          final URL url = JavaFx.class.getProtectionDomain().getCodeSource().getLocation();
           final URLConnection conn = url.openConnection();
           final File bin = new File(tmpDir, "jbrowserdriver");
           if (conn instanceof JarURLConnection) {
@@ -291,17 +286,16 @@ class JavaFx {
             && ((!className.startsWith("com.machinepublishers.")
                 && !className.startsWith("sun.util.")
                 && !className.startsWith("sun.misc.")
-                && !className.startsWith("sun.reflect.")
             ) || className.startsWith("com.machinepublishers.jbrowserdriver.Dynamic"))) {
           try {
             c = super.findClass(className);
+            if (resolve) {
+              super.resolveClass(c);
+            }
           } catch (Throwable t) {}
         }
         if (c == null) {
           c = fallback.loadClass(className);
-        }
-        if (resolve) {
-          super.resolveClass(c);
         }
         return c;
       }

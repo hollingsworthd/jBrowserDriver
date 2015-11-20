@@ -87,7 +87,6 @@ class JavaFxObject {
       paramTypes = null;
     } else {
       paramsAlt = new Object[params.length + 1];
-      paramTypes = new Class[params.length];
       for (int i = 0; i < params.length; i++) {
         params[i] = params[i] instanceof JavaFxObject ? ((JavaFxObject) params[i]).unwrap() : params[i];
         paramsAlt[i] = params[i];
