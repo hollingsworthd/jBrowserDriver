@@ -33,9 +33,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -64,7 +67,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -148,7 +150,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private boolean consumed;
   private HttpClientContext context = HttpClientContext.create();
   private HttpRequestBase req;
-  private HttpHost host;
   private boolean contentEncodingRemoved;
   private long contentLength = -1;
   private ByteArrayOutputStream reqData = new ByteArrayOutputStream();
@@ -291,9 +292,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         || contentType.contains("/x.");
   }
 
-  StreamConnection(URL url) {
+  StreamConnection(URL url) throws MalformedURLException {
     super(url);
-    this.url = url;
+    this.url = new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getFile());
     this.urlString = url.toExternalForm();
     trace();
   }
@@ -307,32 +308,25 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
-  private void processHeaders(AtomicReference<Settings> settings, HttpRequestBase req) {
+  private void processHeaders(AtomicReference<Settings> settings, HttpRequestBase req, String host) {
     boolean https = urlString.startsWith("https://");
     Collection<String> names = https ? settings.get().headers().namesHttps()
         : settings.get().headers().namesHttp();
     for (String name : names) {
-      List<String> valuesIn = reqHeaders.get(name);
+      List<String> valuesIn = reqHeaders.get(name.toLowerCase());
       String valueSettings = https ? settings.get().headers().headerHttps(name)
           : settings.get().headers().headerHttp(name);
       if (valueSettings == RequestHeaders.DROP_HEADER) {
         continue;
       }
-      if ("Cache-Control".equalsIgnoreCase(name)
-          && valuesIn != null
-          && !valuesIn.isEmpty()
-          && "no-cache".equals(valuesIn.get(0))) {
-        //JavaFX initially sets Cache-Control to no-cache but real browsers don't 
-        reqHeaders.remove("Cache-Control");
-      }
       if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
-        if (valuesIn != null && !valuesIn.isEmpty()) {
-          if (name.equalsIgnoreCase("User-Agent")) {
-            req.addHeader(name, settings.get().userAgentString());
-          } else {
-            for (String curVal : valuesIn) {
-              req.addHeader(name, curVal);
-            }
+        if (name.equalsIgnoreCase("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
+          req.addHeader(name, settings.get().userAgentString());
+        } else if (name.equalsIgnoreCase("host")) {
+          req.addHeader(name, host);
+        } else if (valuesIn != null && !valuesIn.isEmpty()) {
+          for (String curVal : valuesIn) {
+            req.addHeader(name, curVal);
           }
         }
       } else {
@@ -357,24 +351,28 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             .setCookieSpec(CookieSpecs.STANDARD)
             .setConnectTimeout(connectTimeout)
             .setConnectionRequestTimeout(readTimeout);
-        final String file = url.getFile();
-        host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
-        if ("OPTIONS".equals(method)) {
-          req = new HttpOptions(file);
-        } else if ("GET".equals(method)) {
-          req = new HttpGet(file);
-        } else if ("HEAD".equals(method)) {
-          req = new HttpHead(file);
-        } else if ("POST".equals(method)) {
-          req = new HttpPost(file);
-        } else if ("PUT".equals(method)) {
-          req = new HttpPut(file);
-        } else if ("DELETE".equals(method)) {
-          req = new HttpDelete(file);
-        } else if ("TRACE".equals(method)) {
-          req = new HttpTrace(file);
+        final URI uri;
+        try {
+          uri = url.toURI();
+        } catch (URISyntaxException e) {
+          throw new IOException(e);
         }
-        processHeaders(SettingsManager.get(settingsId.get()), req);
+        if ("OPTIONS".equals(method)) {
+          req = new HttpOptions(uri);
+        } else if ("GET".equals(method)) {
+          req = new HttpGet(uri);
+        } else if ("HEAD".equals(method)) {
+          req = new HttpHead(uri);
+        } else if ("POST".equals(method)) {
+          req = new HttpPost(uri);
+        } else if ("PUT".equals(method)) {
+          req = new HttpPut(uri);
+        } else if ("DELETE".equals(method)) {
+          req = new HttpDelete(uri);
+        } else if ("TRACE".equals(method)) {
+          req = new HttpTrace(uri);
+        }
+        processHeaders(SettingsManager.get(settingsId.get()), req, url.getHost());
         ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
         if (proxy != null && !proxy.directConnection()) {
           InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
@@ -402,11 +400,10 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
         }
         response = cache ?
-            cachingClient.execute(host, req, context)
-            : client.execute(host, req, context);
+            cachingClient.execute(req, context) : client.execute(req, context);
         if (response != null && response.getEntity() != null) {
           entity = response.getEntity();
-          response.setHeader("Cache-Control", "no-store");
+          response.setHeader("cache-control", "no-store");
         }
       }
     }
@@ -437,7 +434,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     if (!consumed) {
       consumed = true;
       if (entity != null && entity.getContent() != null && !skip.get()) {
-        String header = getHeaderField("Content-Disposition");
+        String header = getHeaderField("content-disposition");
         if (header != null && !header.isEmpty()) {
           Matcher matcher = downloadHeader.matcher(header);
           if (matcher.matches()) {
@@ -484,7 +481,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   public int getResponseCode() throws IOException {
     exec();
     StatusMonitor.get(settingsId.get()).addRedirect(
-        urlString, getHeaderField("Location"));
+        urlString, getHeaderField("location"));
     if (skip.get()) {
       return 204;
     }
@@ -692,13 +689,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public long getIfModifiedSince() {
-    return getRequestProperty("If-Modified-Since") == null ?
-        0 : Long.parseLong(getRequestProperty("If-Modified-Since"));
+    return getRequestProperty("if-modified-since") == null ?
+        0 : Long.parseLong(getRequestProperty("if-modified-since"));
   }
 
   @Override
   public void setIfModifiedSince(long ifmodifiedsince) {
-    setRequestProperty("If-Modified-Since", Long.toString(ifmodifiedsince));
+    setRequestProperty("if-modified-since", Long.toString(ifmodifiedsince));
   }
 
   @Override
@@ -708,30 +705,41 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public String getRequestProperty(String key) {
+    key = key.toLowerCase();
     return reqHeaders.get(key) == null || reqHeaders.get(key).isEmpty() ?
         null : reqHeaders.get(key).get(0);
   }
 
   @Override
   public void setRequestProperty(String key, String value) {
-    if (key.equalsIgnoreCase("user-agent")) {
-      settingsId.set(Long.parseLong(value));
+    key = key.toLowerCase();
+    if (!"cookie".equals(key)
+        && !"pragma".equals(key)
+        && !"cache-control".equals(key)) {
+      if (key.equalsIgnoreCase("user-agent")) {
+        settingsId.set(Long.parseLong(value));
+      }
+      reqHeaders.remove(key);
+      List<String> list = new ArrayList<String>();
+      list.add(value);
+      reqHeaders.put(key, list);
     }
-    reqHeaders.remove(key);
-    List<String> list = new ArrayList<String>();
-    list.add(value);
-    reqHeaders.put(key, list);
   }
 
   @Override
   public void addRequestProperty(String key, String value) {
-    if (key.equalsIgnoreCase("user-agent")) {
-      settingsId.set(Long.parseLong(value));
+    key = key.toLowerCase();
+    if (!"cookie".equals(key)
+        && !"pragma".equals(key)
+        && !"cache-control".equals(key)) {
+      if (key.equalsIgnoreCase("user-agent")) {
+        settingsId.set(Long.parseLong(value));
+      }
+      if (reqHeaders.get(key) == null) {
+        reqHeaders.put(key, new ArrayList<String>());
+      }
+      reqHeaders.get(key).add(value);
     }
-    if (reqHeaders.get(key) == null) {
-      reqHeaders.put(key, new ArrayList<String>());
-    }
-    reqHeaders.get(key).add(value);
   }
 
   @Override
