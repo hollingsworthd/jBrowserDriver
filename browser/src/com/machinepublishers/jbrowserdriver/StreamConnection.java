@@ -341,71 +341,82 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public void connect() throws IOException {
-    if (!connected) {
-      if (StatusMonitor.get(settingsId.get()).isDiscarded(urlString)
-          || isBlocked(url.getHost())) {
-        skip.set(true);
-      } else if (SettingsManager.get(settingsId.get()) != null) {
-        connected = true;
-        config
-            .setCookieSpec(CookieSpecs.STANDARD)
-            .setConnectTimeout(connectTimeout)
-            .setConnectionRequestTimeout(readTimeout);
-        final URI uri;
-        try {
-          uri = url.toURI();
-        } catch (URISyntaxException e) {
-          throw new IOException(e);
-        }
-        if ("OPTIONS".equals(method)) {
-          req = new HttpOptions(uri);
-        } else if ("GET".equals(method)) {
-          req = new HttpGet(uri);
-        } else if ("HEAD".equals(method)) {
-          req = new HttpHead(uri);
-        } else if ("POST".equals(method)) {
-          req = new HttpPost(uri);
-        } else if ("PUT".equals(method)) {
-          req = new HttpPut(uri);
-        } else if ("DELETE".equals(method)) {
-          req = new HttpDelete(uri);
-        } else if ("TRACE".equals(method)) {
-          req = new HttpTrace(uri);
-        }
-        processHeaders(SettingsManager.get(settingsId.get()), req, url.getHost());
-        ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
-        if (proxy != null && !proxy.directConnection()) {
-          InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
-          if (proxy.type() == ProxyConfig.Type.SOCKS) {
-            context.setAttribute("proxy.socks.address", proxyAddress);
-          } else {
-            context.setAttribute("proxy.http.address", proxyAddress);
+    try {
+      if (!connected) {
+        if (StatusMonitor.get(settingsId.get()).isDiscarded(urlString)
+            || isBlocked(url.getHost())) {
+          skip.set(true);
+        } else if (SettingsManager.get(settingsId.get()) != null) {
+          connected = true;
+          config
+              .setCookieSpec(CookieSpecs.STANDARD)
+              .setConnectTimeout(connectTimeout)
+              .setConnectionRequestTimeout(readTimeout);
+          final URI uri;
+          try {
+            uri = url.toURI();
+          } catch (URISyntaxException e) {
+            Logs.exception(e);
+            return;
           }
+          if ("OPTIONS".equals(method)) {
+            req = new HttpOptions(uri);
+          } else if ("GET".equals(method)) {
+            req = new HttpGet(uri);
+          } else if ("HEAD".equals(method)) {
+            req = new HttpHead(uri);
+          } else if ("POST".equals(method)) {
+            req = new HttpPost(uri);
+          } else if ("PUT".equals(method)) {
+            req = new HttpPut(uri);
+          } else if ("DELETE".equals(method)) {
+            req = new HttpDelete(uri);
+          } else if ("TRACE".equals(method)) {
+            req = new HttpTrace(uri);
+          }
+          processHeaders(SettingsManager.get(settingsId.get()), req, url.getHost());
+          ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
+          if (proxy != null && !proxy.directConnection()) {
+            InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+            if (proxy.type() == ProxyConfig.Type.SOCKS) {
+              context.setAttribute("proxy.socks.address", proxyAddress);
+            } else {
+              context.setAttribute("proxy.http.address", proxyAddress);
+            }
+          }
+          context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
+          context.setRequestConfig(config.build());
+          StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
         }
-        context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
-        context.setRequestConfig(config.build());
-        StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
       }
+    } catch (Throwable t) {
+      Logs.exception(t);
     }
   }
 
   private void exec() throws IOException {
-    if (!exec) {
-      exec = true;
-      connect();
-      if (req != null) {
-        if ("POST".equals(method)) {
-          ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-        } else if ("PUT".equals(method)) {
-          ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
-        }
-        response = cache ?
-            cachingClient.execute(req, context) : client.execute(req, context);
-        if (response != null && response.getEntity() != null) {
-          entity = response.getEntity();
-          response.setHeader("cache-control", "no-store");
+    try {
+      if (!exec) {
+        exec = true;
+        connect();
+        if (req != null) {
+          if ("POST".equals(method)) {
+            ((HttpPost) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+          } else if ("PUT".equals(method)) {
+            ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
+          }
+          response = cache ?
+              cachingClient.execute(req, context) : client.execute(req, context);
+          if (response != null && response.getEntity() != null) {
+            entity = response.getEntity();
+            response.setHeader("cache-control", "no-store");
+          }
         }
       }
+    } catch (IOException e) {
+      throw e;
+    } catch (Throwable t) {
+      Logs.exception(t);
     }
   }
 
@@ -486,7 +497,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       return 204;
     }
     return response == null || response.getStatusLine() == null ?
-        0 : response.getStatusLine().getStatusCode();
+        499 : response.getStatusLine().getStatusCode();
   }
 
   @Override
