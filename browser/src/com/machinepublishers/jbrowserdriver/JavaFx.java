@@ -23,8 +23,8 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.JarURLConnection;
@@ -107,10 +107,12 @@ class JavaFx {
     }
   }
 
-  static void close(Long id) {
+  static void close(long settingsId) {
     synchronized (lock) {
-      if (classLoaders.get(id) instanceof JavaFxClassLoader) {
-        Util.close((JavaFxClassLoader) classLoaders.remove(id));
+      ClassLoader classLoader = classLoaders.get(settingsId);
+      if (classLoader instanceof JavaFxClassLoader) {
+        Util.close((JavaFxClassLoader) classLoader);
+        JavaFxClassLoader.markForDeletion(((JavaFxClassLoader) classLoader).myTmpDir, true);
       }
     }
   }
@@ -119,7 +121,7 @@ class JavaFx {
     try {
       final ClassLoader classLoader;
       if (Settings.headless()) {
-        classLoader = new JavaFxClassLoader();
+        classLoader = new JavaFxClassLoader(Files.createTempDirectory("jbd").toFile());
       } else {
         classLoader = JavaFx.class.getClassLoader();
       }
@@ -147,12 +149,13 @@ class JavaFx {
             classLoader.loadClass("com.sun.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
         headlessPlatform.setAccessible(true);
         field.set(platformFactory, headlessPlatform.newInstance());
+      } else {
+        try {
+          classLoader.loadClass(JFXPanel.class.getName()).newInstance();
+        } catch (Throwable t) {
+          Logs.exception(t);
+        }
       }
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
-    try {
-      classLoader.loadClass(JFXPanel.class.getName()).newInstance();
     } catch (Throwable t) {
       Logs.exception(t);
     }
@@ -164,23 +167,7 @@ class JavaFx {
     }
 
     private static List<File> list(File dir) {
-      File[] children = dir.listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File file) {
-          String name = file.getName();
-          return (file.isDirectory()
-          || ((name.endsWith(".so")
-              || name.endsWith(".a")
-              || name.endsWith(".dylib")
-              || name.endsWith(".dll")
-              || name.endsWith(".jar"))
-              && (name.contains("jfx")
-              || name.contains("javafx")
-              || name.contains("prism")
-              || name.contains("webkit")))
-          );
-        }
-      });
+      File[] children = dir.listFiles();
       List<File> allFiles = new ArrayList<File>();
       for (int i = 0; children != null && i < children.length; i++) {
         if (children[i].isFile()) {
@@ -192,15 +179,27 @@ class JavaFx {
       return allFiles;
     }
 
-    private static void deleteAllOnExit(File dir) {
-      dir.deleteOnExit();
+    private static void markForDeletion(File dir, boolean deleteNow) {
       File[] children = dir.listFiles();
       for (int i = 0; children != null && i < children.length; i++) {
-        if (children[i].isFile()) {
-          children[i].deleteOnExit();
-        } else {
-          deleteAllOnExit(children[i]);
+        try {
+          if (children[i].isFile()) {
+            if (deleteNow) {
+              children[i].delete();
+            } else {
+              children[i].deleteOnExit();
+            }
+          } else {
+            markForDeletion(children[i], deleteNow);
+          }
+        } catch (Throwable t) {
+          Logs.exception(t);
         }
+      }
+      if (deleteNow) {
+        dir.delete();
+      } else {
+        dir.deleteOnExit();
       }
     }
 
@@ -223,11 +222,10 @@ class JavaFx {
       }
     }
 
-    private static URL[] urls() {
+    private static URL[] urls(String tmpDir) {
       List<URL> urlList = new ArrayList<URL>();
       try {
         File javaHome = new File(System.getProperty("java.home"));
-        String tmpDir = Files.createTempDirectory("jbd").toFile().getCanonicalPath();
         List<File> files = list(javaHome);
         for (File file : files) {
           try {
@@ -245,7 +243,7 @@ class JavaFx {
             File tmpFileDir = new File(builder.toString());
             tmpFileDir.mkdirs();
             File tmpFile = new File(tmpFileDir, file.getName());
-            Files.copy(file.toPath(), tmpFile.toPath());
+            copy(file, tmpFile);
             urlList.add(tmpFile.toURI().toURL());
           } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
             Logs.exception(t);
@@ -256,7 +254,12 @@ class JavaFx {
           final URLConnection conn = url.openConnection();
           final File bin = new File(tmpDir, "jbrowserdriver");
           if (conn instanceof JarURLConnection) {
-            Files.copy(((JarURLConnection) conn).getJarFileURL().openStream(), bin.toPath());
+            InputStream stream = ((JarURLConnection) conn).getJarFileURL().openStream();
+            try {
+              Files.copy(stream, bin.toPath());
+            } finally {
+              stream.close();
+            }
           } else {
             copy(Paths.get(url.toURI()).toFile(), bin.toPath().toFile());
           }
@@ -264,7 +267,8 @@ class JavaFx {
         } catch (Throwable t) {
           Logs.exception(t);
         }
-        deleteAllOnExit(new File(tmpDir));
+        File tmpDirFile = new File(tmpDir);
+        markForDeletion(tmpDirFile, false);
       } catch (Throwable t) {
         Logs.exception(t);
       }
@@ -272,23 +276,32 @@ class JavaFx {
     }
 
     private final ClassLoader fallback = ClassLoader.getSystemClassLoader();
+    private final File myTmpDir;
 
-    JavaFxClassLoader() {
-      super(urls(), null);
+    JavaFxClassLoader(File tmpDir) {
+      super(urls(tmpDir.getAbsolutePath()), null);
+      this.myTmpDir = tmpDir;
     }
 
     @Override
     public Class loadClass(String className, boolean resolve) throws ClassNotFoundException {
       synchronized (getClassLoadingLock(className)) {
-        Class c = null;
-        if (!className.startsWith("com.machinepublishers.")
-            || className.startsWith("com.machinepublishers.jbrowserdriver.Dynamic")) {
+        Class c = findLoadedClass(className);
+        if (c == null
+            && ((!className.startsWith("com.machinepublishers.")
+                && !className.startsWith("sun.util.")
+                && !className.startsWith("sun.misc.")
+                && !className.startsWith("sun.reflect.")
+            ) || className.startsWith("com.machinepublishers.jbrowserdriver.Dynamic"))) {
           try {
-            c = super.loadClass(className, resolve);
+            c = super.findClass(className);
           } catch (Throwable t) {}
         }
         if (c == null) {
           c = fallback.loadClass(className);
+        }
+        if (resolve) {
+          super.resolveClass(c);
         }
         return c;
       }

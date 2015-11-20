@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
@@ -234,7 +235,8 @@ class Robot {
   Robot(final BrowserContext context) {
     robot.set(Util.exec(Pause.SHORT, context.statusCode, new Sync<JavaFxObject>() {
       public JavaFxObject perform() {
-        return JavaFx.getStatic(Application.class, context.settingsId.get()).call("GetApplication").call("createRobot");
+        return JavaFx.getStatic(
+            Application.class, context.settingsId.get()).call("GetApplication").call("createRobot");
       }
     }, context.settingsId.get()));
     this.context = context;
@@ -541,6 +543,28 @@ class Robot {
         public Object perform() {
           robot.get().call("mouseWheel", wheelAmt);
           return null;
+        }
+      }, settingsId);
+    } finally {
+      unlock();
+    }
+  }
+
+  JavaFxObject screenshot() {
+    lock();
+    try {
+      return Util.exec(Pause.LONG, statusCode, new Sync<JavaFxObject>() {
+        @Override
+        public JavaFxObject perform() {
+          int x = (int) Math.rint(
+              (Double) context.item().stage.get().call("getX").unwrap()
+                  + (Double) context.item().stage.get().call("getScene").call("getX").unwrap());
+          int y = (int) Math.rint(
+              (Double) context.item().stage.get().call("getY").unwrap()
+                  + (Double) context.item().stage.get().call("getScene").call("getY").unwrap());
+          Dimension screen = context.settings.get().screen();
+          return robot.get().call("getScreenCapture",
+              x, y, screen.getWidth(), screen.getHeight(), false);
         }
       }, settingsId);
     } finally {

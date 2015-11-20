@@ -22,12 +22,21 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.awt.Point;
+import java.awt.Transparency;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
-import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
@@ -43,6 +52,7 @@ import org.openqa.selenium.WebElement;
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.sun.javafx.webkit.Accessor;
 
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver
@@ -110,6 +120,36 @@ public class JBrowserDriver implements Browser {
     context.init(this);
   }
 
+  /**
+   * Reset the state of the browser. More efficient than quitting the
+   * browser and creating a new instance.
+   * 
+   * @param settings
+   *          New settings to take effect, superseding the original ones
+   */
+  public void reset(final Settings settings) {
+    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+      @Override
+      public Object perform() {
+        context.item().engine.get().call("getLoadWorker").call("cancel");
+        return null;
+      }
+    }, context.settingsId.get());
+    JavaFx.getStatic(Accessor.class, context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    context.settings.set(new Settings(settings, context.settingsId.get()));
+    context.reset(this);
+    context.settings.get().cookieStore().clear();
+    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
+  }
+
+  /**
+   * Reset the state of the browser. More efficient than quitting the
+   * browser and creating a new instance.
+   */
+  public void reset() {
+    reset(context.settings.get());
+  }
+
   @Override
   public String getPageSource() {
     init();
@@ -156,14 +196,7 @@ public class JBrowserDriver implements Browser {
     init();
     Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
       public Object perform() {
-        String cleanUrl = url;
-        try {
-          cleanUrl = new URL(url).toExternalForm();
-        } catch (Throwable t) {
-          Logs.exception(t);
-          cleanUrl = url.startsWith("http://") || url.startsWith("https://") ? url : "http://" + url;
-        }
-        context.item().engine.get().call("load", cleanUrl);
+        context.item().engine.get().call("load", url);
         return null;
       }
     }, context.settingsId.get());
@@ -357,7 +390,22 @@ public class JBrowserDriver implements Browser {
 
   @Override
   public void quit() {
-    SettingsManager.deregister(context.settings, context);
+    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+      @Override
+      public Object perform() {
+        context.item().engine.get().call("getLoadWorker").call("cancel");
+        return null;
+      }
+    }, context.settingsId.get());
+    JavaFx.getStatic(Accessor.class, context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    if (Settings.headless()) {
+      JavaFx.getStatic(Platform.class, context.settings.get().id()).call("exit");
+    }
+    SettingsManager.close(context.settings.get().id());
+    context.settings.get().cookieStore().clear();
+    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
+    StatusMonitor.remove(context.settings.get().id());
+    JavaFx.close(context.settings.get().id());
   }
 
   @Override
@@ -373,28 +421,66 @@ public class JBrowserDriver implements Browser {
 
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
-    init();
-    JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
-      public JavaFxObject perform() {
-        return JavaFx.getStatic(
-            SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
-            call("fromFXImage", context.item().view.get().
-                call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.settingsId.get()),
-                    JavaFx.getNew(WritableImage.class, context.settingsId.get(),
-                        (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
-                        (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
+    if (Settings.headless()) {
+      init();
+      final AtomicInteger bytesPerComponent = new AtomicInteger();
+      final AtomicInteger width = new AtomicInteger();
+      final AtomicInteger height = new AtomicInteger();
+      byte[] bytes = Util.exec(Pause.NONE, context.statusCode, new Sync<byte[]>() {
+        public byte[] perform() {
+          JavaFxObject pixels = context.robot.get().screenshot();
+          bytesPerComponent.set((int) pixels.call("getBytesPerComponent").unwrap());
+          width.set((int) pixels.call("getWidth").unwrap());
+          height.set((int) pixels.call("getHeight").unwrap());
+          JavaFxObject pixelBuffer = pixels.call("asByteBuffer");
+          byte[] bytes = new byte[(int) (pixelBuffer.call("remaining").unwrap())];
+          pixelBuffer.call("get", new Object[] { bytes });
+          return bytes;
+        }
+      }, context.settingsId.get());
+      DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
+      WritableRaster raster = Raster.createInterleavedRaster(buffer, width.get(), height.get(),
+          bytesPerComponent.get() * width.get(), bytesPerComponent.get(), new int[] { 0, 1, 2 },
+          (Point) null);
+      ColorModel cm = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
+          false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+      BufferedImage image = new BufferedImage(cm, raster, true, null);
+
+      ByteArrayOutputStream out = null;
+      try {
+        out = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", out);
+        return outputType.convertFromPngBytes(out.toByteArray());
+      } catch (Throwable t) {
+        Logs.exception(t);
+        return null;
+      } finally {
+        Util.close(out);
       }
-    }, context.settingsId.get());
-    ByteArrayOutputStream out = null;
-    try {
-      out = new ByteArrayOutputStream();
-      JavaFx.getStatic(ImageIO.class, context.settingsId.get()).call("write", image, "png", out);
-      return outputType.convertFromPngBytes(out.toByteArray());
-    } catch (Throwable t) {
-      Logs.exception(t);
-      return null;
-    } finally {
-      Util.close(out);
+    } else {
+      init();
+      JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
+        public JavaFxObject perform() {
+          return JavaFx.getStatic(
+              SwingFXUtils.class, Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
+              call("fromFXImage", context.item().view.get().
+                  call("snapshot", JavaFx.getNew(SnapshotParameters.class, context.settingsId.get()),
+                      JavaFx.getNew(WritableImage.class, context.settingsId.get(),
+                          (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
+                          (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
+        }
+      }, context.settingsId.get());
+      ByteArrayOutputStream out = null;
+      try {
+        out = new ByteArrayOutputStream();
+        JavaFx.getStatic(ImageIO.class, context.settingsId.get()).call("write", image, "png", out);
+        return outputType.convertFromPngBytes(out.toByteArray());
+      } catch (Throwable t) {
+        Logs.exception(t);
+        return null;
+      } finally {
+        Util.close(out);
+      }
     }
   }
 }

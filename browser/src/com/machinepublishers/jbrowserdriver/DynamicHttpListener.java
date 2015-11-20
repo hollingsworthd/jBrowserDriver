@@ -145,6 +145,9 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
+    if (SettingsManager.get(settingsId) == null) {
+      throw new RuntimeException("Request made after browser closed. Ignoring...");
+    }
     synchronized (statusCode) {
       if (url.startsWith("http://") || url.startsWith("https://")) {
         if (state == LoadListenerClient.RESOURCE_STARTED) {
@@ -190,6 +193,9 @@ class DynamicHttpListener implements LoadListenerClient {
   @Override
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
+    if (SettingsManager.get(settingsId) == null) {
+      throw new RuntimeException("Request made after browser closed. Ignoring...");
+    }
     try {
       synchronized (statusCode) {
         this.frame.compareAndSet(0l, frame);

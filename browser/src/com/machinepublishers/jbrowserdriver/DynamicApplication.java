@@ -22,9 +22,11 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
@@ -32,9 +34,13 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import com.sun.glass.ui.Screen;
+import com.sun.glass.ui.monocle.NativePlatform;
+import com.sun.glass.ui.monocle.NativePlatformFactory;
 import com.sun.javafx.webkit.Accessor;
 
 public class DynamicApplication extends Application {
+  private static final int HISTORY_SIZE = 8;
   private static final Object lock = new Object();
   private static Stage myStage;
   private static WebView myView;
@@ -65,6 +71,13 @@ public class DynamicApplication extends Application {
     }
   }
 
+  public void init(int width, int height, boolean headless, long settingsId) {
+    this.width = width;
+    this.height = height;
+    this.headless = headless;
+    this.settingsId = settingsId;
+  }
+
   @Override
   public void init() throws Exception {
     List<String> params = getParameters().getRaw();
@@ -74,21 +87,33 @@ public class DynamicApplication extends Application {
     settingsId = Long.parseLong(params.get(3));
   }
 
+  public void start() throws Exception {
+    start(null);
+  }
+
   @Override
-  public void start(Stage sstage) throws Exception {
-    Stage stage = new Stage();
-    stage.setOpacity(0d);
+  public void start(Stage stage) throws Exception {
+    if (headless) {
+      System.setProperty("headless.geometry", width + "x" + height);
+      NativePlatform platform = NativePlatformFactory.getNativePlatform();
+      Field field = NativePlatform.class.getDeclaredField("screen");
+      field.setAccessible(true);
+      field.set(platform, null);
+      Screen.notifySettingsChanged();
+    }
+    if (stage == null) {
+      stage = new Stage();
+    }
+    Platform.setImplicitExit(false);
     WebView view = new WebView();
     view.setCache(false);
-    view.setOpacity(0d);
+    StackPane root = new StackPane();
+    root.setCache(false);
     if (headless) {
       stage.initStyle(StageStyle.UNDECORATED);
     }
-    StackPane root = new StackPane();
-    root.setCache(false);
-    root.setOpacity(0d);
     WebEngine engine = view.getEngine();
-    engine.getHistory().setMaxSize(0);
+    engine.getHistory().setMaxSize(HISTORY_SIZE);
     engine.setUserAgent(Long.toString(settingsId));
     Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
     Accessor.getPageFor(engine).setUsePageCache(false);
@@ -97,7 +122,6 @@ public class DynamicApplication extends Application {
     stage.sizeToScene();
     engine.titleProperty().addListener(new DynamicTitleListener(stage));
     stage.show();
-
     synchronized (lock) {
       myStage = stage;
       myView = view;

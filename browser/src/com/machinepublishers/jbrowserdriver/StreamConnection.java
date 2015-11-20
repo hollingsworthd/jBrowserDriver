@@ -351,21 +351,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       if (StatusMonitor.get(settingsId.get()).isDiscarded(urlString)
           || isBlocked(url.getHost())) {
         skip.set(true);
-      } else {
+      } else if (SettingsManager.get(settingsId.get()) != null) {
         connected = true;
         config
             .setCookieSpec(CookieSpecs.STANDARD)
             .setConnectTimeout(connectTimeout)
             .setConnectionRequestTimeout(readTimeout);
-        ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
-        if (proxy != null && !proxy.directConnection()) {
-          InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
-          if (proxy.type() == ProxyConfig.Type.SOCKS) {
-            context.setAttribute("proxy.socks.address", proxyAddress);
-          } else {
-            context.setAttribute("proxy.http.address", proxyAddress);
-          }
-        }
         final String file = url.getFile();
         host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
         if ("OPTIONS".equals(method)) {
@@ -384,6 +375,15 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           req = new HttpTrace(file);
         }
         processHeaders(SettingsManager.get(settingsId.get()), req);
+        ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
+        if (proxy != null && !proxy.directConnection()) {
+          InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+          if (proxy.type() == ProxyConfig.Type.SOCKS) {
+            context.setAttribute("proxy.socks.address", proxyAddress);
+          } else {
+            context.setAttribute("proxy.http.address", proxyAddress);
+          }
+        }
         context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
         context.setRequestConfig(config.build());
         StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
@@ -406,6 +406,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             : client.execute(host, req, context);
         if (response != null && response.getEntity() != null) {
           entity = response.getEntity();
+          response.setHeader("Cache-Control", "no-store");
         }
       }
     }
@@ -428,15 +429,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     manager.closeExpiredConnections();
     manager.closeIdleConnections(30, TimeUnit.SECONDS);
     trace();
-  }
-
-  public static void shutDown() {
-    manager.close();
-    try {
-      client.close();
-    } catch (Throwable t) {
-      Logs.exception(t);
-    }
   }
 
   @Override
@@ -693,26 +685,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   @Override
-  public boolean getDefaultUseCaches() {
-    return cacheByDefault;
-  }
-
-  @Override
-  public void setDefaultUseCaches(boolean defaultusecaches) {
-    cacheByDefault = defaultusecaches;
-  }
-
-  @Override
-  public boolean getUseCaches() {
-    return cache;
-  }
-
-  @Override
-  public void setUseCaches(boolean usecaches) {
-    this.cache = usecaches;
-  }
-
-  @Override
   public boolean usingProxy() {
     ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
     return proxy != null && !proxy.directConnection();
@@ -779,13 +751,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public boolean getAllowUserInteraction() {
-    //Always allow interactoin
+    //Always allow interaction
     return true;
   }
 
   @Override
   public void setAllowUserInteraction(boolean allowuserinteraction) {
-    //Always allow interactoin
+    //Always allow interaction
   }
 
   @Override
@@ -821,4 +793,25 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     //Never follow redirects. JavaFX handles them.
   }
 
+  @Override
+  public boolean getDefaultUseCaches() {
+    //Don't cache. TODO let caching be configurable.
+    return true;
+  }
+
+  @Override
+  public void setDefaultUseCaches(boolean defaultusecaches) {
+    //Don't cache. TODO let caching be configurable.
+  }
+
+  @Override
+  public boolean getUseCaches() {
+    //Don't cache. TODO let caching be configurable.
+    return true;
+  }
+
+  @Override
+  public void setUseCaches(boolean usecaches) {
+    //Don't cache. TODO let caching be configurable.
+  }
 }

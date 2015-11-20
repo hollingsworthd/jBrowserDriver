@@ -176,7 +176,7 @@ final class MonocleView extends View {
         super.notifyMenu(x, y, xAbs, yAbs, isKeyboardTrigger);
     }
 
-    @Override
+//    @Override
     protected int _getNativeFrameBuffer(long ptr) {
         return 0;
     }

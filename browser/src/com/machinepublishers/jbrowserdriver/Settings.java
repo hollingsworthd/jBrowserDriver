@@ -426,6 +426,18 @@ public class Settings {
     script = original.script;
   }
 
+  Settings(Settings original, long settingsId) {
+    requestHeaders = original.requestHeaders;
+    screen = original.screen;
+    userAgentString = original.userAgentString;
+    proxy = original.proxy;
+    downloadDir = original.downloadDir;
+    mediaDir = original.mediaDir;
+    saveMedia = original.saveMedia;
+    mySettingsId = settingsId;
+    script = original.script;
+  }
+
   long id() {
     return mySettingsId;
   }

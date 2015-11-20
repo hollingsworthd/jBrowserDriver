@@ -39,7 +39,6 @@ class BrowserContextItem {
   final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
-  final AtomicReference<Thread> appThread = new AtomicReference<Thread>();
   final AtomicReference<JavaFxObject> httpListener = new AtomicReference<JavaFxObject>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final Object initLock = new Object();
@@ -55,11 +54,8 @@ class BrowserContextItem {
     }
     synchronized (initLock) {
       if (!initialized.get()) {
-        SettingsManager.register(stage, view, appThread,
-            context.settings, context.statusCode);
+        SettingsManager.register(stage, view, context.settings);
         engine.set(view.get().call("getEngine"));
-        context.settingsId.set(Long.parseLong(
-            engine.get().call("getUserAgent").toString()));
         context.robot.set(new Robot(context));
         window.set(new Window(stage, context.statusCode, context.settingsId.get()));
         context.keyboard.set(new Keyboard(context.robot));
