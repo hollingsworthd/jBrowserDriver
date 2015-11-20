@@ -286,6 +286,7 @@ class JavaFx {
             && ((!className.startsWith("com.machinepublishers.")
                 && !className.startsWith("sun.util.")
                 && !className.startsWith("sun.misc.")
+                && !className.startsWith("sun.reflect.")
             ) || className.startsWith("com.machinepublishers.jbrowserdriver.Dynamic"))) {
           try {
             c = super.findClass(className);
