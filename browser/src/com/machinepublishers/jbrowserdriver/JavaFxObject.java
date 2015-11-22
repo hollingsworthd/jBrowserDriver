@@ -22,174 +22,57 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.rmi.RemoteException;
 
 import com.machinepublishers.browser.Browser.Fatal;
 
 class JavaFxObject {
-  private final Object object;
+  private final JavaFxObjectRemote instance;
 
-  JavaFxObject(Object object) {
-    this.object = object;
+  JavaFxObject(JavaFxObjectRemote instance) {
+    this.instance = instance;
   }
 
-  JavaFxObject(Class<?> object) {
-    this.object = object;
+  JavaFxObject(JavaFxObject instance) {
+    this.instance = instance.instance;
   }
 
   Object unwrap() {
-    return this.object;
+    try {
+      return instance.unwrap();
+    } catch (RemoteException e) {
+      throw new Fatal(e);
+    }
   }
 
   boolean is(Class<?> type) {
-    Class<?> thisType = object.getClass();
-    do {
-      if (thisType.getName().equals(type.getName())) {
-        return true;
-      }
-      Class<?>[] interfaces = thisType.getInterfaces();
-      for (int i = 0; i < interfaces.length; i++) {
-        if (interfaces[i].getName().equals(type.getName())) {
-          return true;
-        }
-      }
-      thisType = thisType.getSuperclass();
-    } while (thisType != null);
-    return false;
+    try {
+      return instance.is(type);
+    } catch (RemoteException e) {
+      throw new Fatal(e);
+    }
   }
 
   JavaFxObject field(String fieldName) {
-    Throwable firstError = null;
-    Class<?> curClass = ((Class) object);
-    while (curClass != null) {
-      try {
-        Field field = curClass.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        Object ret = field.get(null);
-        return ret == null ? null : new JavaFxObject(ret);
-      } catch (Throwable t) {
-        firstError = firstError == null ? t : firstError;
-      }
-      curClass = curClass.getSuperclass();
+    try {
+      JavaFxObjectRemote ret = instance.field(fieldName);
+      return ret == null ? null : new JavaFxObject(ret);
+    } catch (RemoteException e) {
+      throw new Fatal(e);
     }
-    throw new Fatal("Failed to get field: " + fieldName, firstError);
   }
 
   JavaFxObject call(String methodName, Object... params) {
-    Class[] paramTypes;
-    Object[] paramsAlt;
-    if (params == null || params.length == 0) {
-      params = null;
-      paramsAlt = new Object[1];
-      paramTypes = null;
-    } else {
-      paramsAlt = new Object[params.length + 1];
-      for (int i = 0; i < params.length; i++) {
-        params[i] = params[i] instanceof JavaFxObject ? ((JavaFxObject) params[i]).unwrap() : params[i];
-        paramsAlt[i] = params[i];
+    try {
+      for (int i = 0; params != null && i < params.length; i++) {
+        if (params[i] instanceof JavaFxObject) {
+          params[i] = ((JavaFxObject) params[i]).instance;
+        }
       }
-      paramTypes = new Class[params.length];
-      for (int i = 0; i < params.length; i++) {
-        paramTypes[i] = params[i] == null ? null : params[i].getClass();
-      }
-      unbox(paramTypes);
+      JavaFxObjectRemote ret = instance.call(methodName, params);
+      return ret == null ? null : new JavaFxObject(ret);
+    } catch (RemoteException e) {
+      throw new Fatal(e);
     }
-    Throwable firstError = null;
-    if (object instanceof Class) {
-      Class<?> curClass = ((Class) object);
-      while (curClass != null) {
-        try {
-          Method method = curClass.getDeclaredMethod(methodName, paramTypes);
-          method.setAccessible(true);
-          Object ret = method.invoke(null, params);
-          return ret == null ? null : new JavaFxObject(ret);
-        } catch (Throwable t) {
-          firstError = firstError == null ? t : firstError;
-        }
-        Method[] methods = curClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-          if (methods[i].getName().equals(methodName)) {
-            try {
-              methods[i].setAccessible(true);
-              Object ret = methods[i].invoke(null, params);
-              return ret == null ? null : new JavaFxObject(ret);
-            } catch (Throwable t) {}
-            try {
-              Parameter[] declaredParams = methods[i].getParameters();
-              if (declaredParams.length == params.length + 1
-                  && declaredParams[params.length].isVarArgs()) {
-                paramsAlt[params.length] = Array.newInstance(declaredParams[params.length].getType(), 0);
-                Object ret = methods[i].invoke(null, paramsAlt);
-                return ret == null ? null : new JavaFxObject(ret);
-              }
-            } catch (Throwable t) {}
-          }
-        }
-        curClass = curClass.getSuperclass();
-      }
-    } else {
-      Class<?> curClass = object.getClass();
-      while (curClass != null) {
-        try {
-          Method method = curClass.getDeclaredMethod(methodName, paramTypes);
-          method.setAccessible(true);
-          Object ret = method.invoke(object, params);
-          return ret == null ? null : new JavaFxObject(ret);
-        } catch (Throwable t) {
-          firstError = firstError == null ? t : firstError;
-        }
-        Method[] methods = curClass.getDeclaredMethods();
-        for (int i = 0; i < methods.length; i++) {
-          if (methods[i].getName().equals(methodName)) {
-            try {
-              methods[i].setAccessible(true);
-              Object ret = methods[i].invoke(object, params);
-              return ret == null ? null : new JavaFxObject(ret);
-            } catch (Throwable t) {}
-            try {
-              Parameter[] declaredParams = methods[i].getParameters();
-              if (declaredParams.length == params.length + 1
-                  && declaredParams[params.length].isVarArgs()) {
-                paramsAlt[params.length] = Array.newInstance(declaredParams[params.length].getType(), 0);
-                Object ret = methods[i].invoke(object, paramsAlt);
-                return ret == null ? null : new JavaFxObject(ret);
-              }
-            } catch (Throwable t) {}
-          }
-        }
-        curClass = curClass.getSuperclass();
-      }
-    }
-    throw new Fatal("Method call failed: " + methodName, firstError);
-  }
-
-  static void unbox(Class[] classes) {
-    for (int i = 0; i < classes.length; i++) {
-      classes[i] = classes[i] == null ?
-          null : (classes[i].equals(Double.class) ?
-              double.class : (classes[i].equals(Float.class) ?
-                  float.class : (classes[i].equals(Long.class) ?
-                      long.class : (classes[i].equals(Integer.class) ?
-                          int.class : (classes[i].equals(Boolean.class) ?
-                              boolean.class : classes[i])))));
-    }
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return object.equals(obj);
-  }
-
-  @Override
-  public int hashCode() {
-    return object.hashCode();
-  }
-
-  @Override
-  public String toString() {
-    return object.toString();
   }
 }

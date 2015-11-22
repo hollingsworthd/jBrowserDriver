@@ -29,8 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import netscape.javascript.JSObject;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
@@ -56,10 +54,13 @@ import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
+import netscape.javascript.JSObject;
+
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
 
   private static final String IS_DISPLAYED;
+
   static {
     StringBuilder builder = new StringBuilder();
     builder.append("var me = this;");
@@ -362,14 +363,12 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<WebElement>() {
           @Override
           public WebElement perform() {
-            final JavaFxObject xPath =
-                JavaFx.getStatic("javax.xml.xpath.XPathFactory", context.settingsId.get()).
-                    call("newInstance").call("newXPath");
+            final JavaFxObject xPath = JavaFx.getStatic("javax.xml.xpath.XPathFactory", context.settingsId.get()).call("newInstance").call("newXPath");
             return new Element(
                 new AtomicReference<JavaFxObject>(
                     xPath.call("evaluate",
-                        expr, node.get(), JavaFx.getStatic("javax.xml.xpath.XPathConstants", context.settingsId.get()).
-                            field("NODE"))), context);
+                        expr, node.get(), JavaFx.getStatic("javax.xml.xpath.XPathConstants", context.settingsId.get()).field("NODE"))),
+                context);
           }
         }, context.settingsId.get());
   }
@@ -555,16 +554,16 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
               }
             }, context.settingsId.get());
         if (!result.is(String.class) || !"undefined".equals(result.toString())) {
-          result = new JavaFxObject(parseScriptResult(result));
-          if (result.is(List.class)) {
-            if (((List) result).size() == 0) {
+          Object parsed = parseScriptResult(result);
+          if (parsed instanceof List) {
+            if (((List) parsed).size() == 0) {
               return null;
             }
-            if (((List) result).size() == 1) {
-              return ((List) result.unwrap()).get(0);
+            if (((List) parsed).size() == 1) {
+              return ((List) parsed).get(0);
             }
           }
-          return result.unwrap();
+          return parsed;
         }
       }
     } finally {
@@ -682,24 +681,24 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       public Point onPage() {
         Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<Object>() {
-              @Override
-              public Point perform() {
-                node.get().call("call", "scrollIntoView");
-                return null;
-              }
-            }, context.settingsId.get());
+          @Override
+          public Point perform() {
+            node.get().call("call", "scrollIntoView");
+            return null;
+          }
+        }, context.settingsId.get());
         return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<Point>() {
-              @Override
-              public Point perform() {
-                JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-                double y = Double.parseDouble(obj.call("getMember", "top").toString());
-                double x = Double.parseDouble(obj.call("getMember", "left").toString());
-                y = y < 0d ? 0d : y;
-                x = x < 0d ? 0d : x;
-                return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-              }
-            }, context.settingsId.get());
+          @Override
+          public Point perform() {
+            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
+            double y = Double.parseDouble(obj.call("getMember", "top").toString());
+            double x = Double.parseDouble(obj.call("getMember", "left").toString());
+            y = y < 0d ? 0d : y;
+            x = x < 0d ? 0d : x;
+            return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
+          }
+        }, context.settingsId.get());
       }
 
       @Override
