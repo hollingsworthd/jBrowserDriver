@@ -36,7 +36,8 @@ import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  private static final boolean CONSOLE = !"false".equals(System.getProperty("jbd.logconsole"));
+  private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
+  private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
   private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
   private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
   private static final Map<Long, Logs> logMap = new HashMap<Long, Logs>();
@@ -77,7 +78,7 @@ class Logs implements org.openqa.selenium.logging.Logs {
         entries.removeFirst();
       }
     }
-    if (CONSOLE) {
+    if (TRACE_CONSOLE) {
       System.out.println(entry);
     }
   }
@@ -90,7 +91,7 @@ class Logs implements org.openqa.selenium.logging.Logs {
         entries.removeFirst();
       }
     }
-    if (CONSOLE) {
+    if (WARN_CONSOLE) {
       System.err.println(entry);
     }
   }
@@ -109,14 +110,14 @@ class Logs implements org.openqa.selenium.logging.Logs {
         }
       }
     } catch (Throwable t2) {
-      if (CONSOLE) {
+      if (WARN_CONSOLE) {
         System.err.println("While logging a message, an error occurred: " + t2.getMessage());
       }
       return;
     } finally {
       Util.close(writer);
     }
-    if (CONSOLE) {
+    if (WARN_CONSOLE) {
       System.err.println(entry);
     }
   }
