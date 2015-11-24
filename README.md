@@ -66,7 +66,7 @@ The following Java system properties can be set:
 * `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.
 * `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `2147483647`.
 
-Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar`
+Example: `java -Djbd.browsergui=true -Djbd.quickrender=false -jar myapp.jar`
 
 #### Building
 The Maven POM file is included. Currently this project is not in Maven Central. Eclipse project files are also included. The head of the source tree is always unstable, please checkout a tagged release for production use.
