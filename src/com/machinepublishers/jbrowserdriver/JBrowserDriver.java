@@ -23,6 +23,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -103,6 +104,13 @@ public class JBrowserDriver implements Browser {
    */
   public void init() {
     context.init(this);
+  }
+
+  /**
+   * @return Temporary directory where generated runtime files are saved.
+   */
+  public File temporaryDir() {
+    return JavaFx.tmpDir(context.settingsId.get());
   }
 
   /**

@@ -114,6 +114,16 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
     }
   }
 
+  public File tmpDir(long settingsId) {
+    synchronized (lock) {
+      ClassLoader classLoader = classLoaders.get(settingsId);
+      if (classLoader != null && classLoader instanceof JavaFxClassLoader) {
+        return ((JavaFxClassLoader) classLoader).myTmpDir;
+      }
+    }
+    return null;
+  }
+
   private static ClassLoader newClassLoader(long settingsId) {
     try {
       final ClassLoader classLoader;

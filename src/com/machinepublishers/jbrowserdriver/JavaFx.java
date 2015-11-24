@@ -22,6 +22,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
 import java.rmi.RemoteException;
 
 import com.machinepublishers.browser.Browser.Fatal;
@@ -57,6 +58,14 @@ class JavaFx {
   static void close(long settingsId) {
     try {
       instance.close(settingsId);
+    } catch (RemoteException e) {
+      throw new Fatal(e);
+    }
+  }
+
+  static File tmpDir(long settingsId) {
+    try {
+      return instance.tmpDir(settingsId);
     } catch (RemoteException e) {
       throw new Fatal(e);
     }
