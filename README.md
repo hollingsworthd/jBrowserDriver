@@ -18,7 +18,7 @@ Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
 
-You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/Settings.java#L196) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L100) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
+You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/Settings.java#L193) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/browser/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L96) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
 Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be fully isolated from each other when run in headless mode, which is the default (when it's run with the GUI shown, some of the memory between instances is shared out of necessity).
 
@@ -55,14 +55,16 @@ Example:
 
 #### Global Properties
 The following Java system properties can be set:
-* `jbd.trace` Log details of every request to standard out. Defaults to `false`.
-* `jbd.standarderror` Mirror log output to standard error (the console). Otherwise logs are only available through the Selenium APIs. Defaults to `false`.
+* `jbd.logconsole` Mirror log output to standard out/error. Otherwise logs are only available through the Selenium APIs. Defaults to `true`.
+* `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Regardless of this setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
-* `jbd.quickrender` Discard web page image data. Recommended because Java is very inefficient (memory-wise) in handling images. Defaults to `true`.
-* `jbd.blockads` Whether requests to ad/spam servers should be blocked. Defaults to `true`.
-* `jbd.ajaxwait` The idle time required (in milliseconds) before a page is considered to have been loaded completely. This allows the driver to handle ajax. For very slow or overloaded CPUs, set a higher value. Defaults to `600`.
-* `jbd.pemfile` Specifies a source of trusted certificate authorities. Otherwise the JRE default keystore is used. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`
-
+* `jbd.quickrender` Exclude web page images and binary data from rendering. These resources are still requested and can optionally be saved to disk (see the Settings options). Some versions of Java are inefficient (memory-wise) in rendering images. Defaults to `true`.
+* `jbd.blockads` Whether requests to ad/spam servers should be blocked. Based on hosts in ad-hosts.txt in the source tree. Defaults to `true`.
+* `jbd.ajaxwait` The idle time (no pending AJAX requests) required in milliseconds before a page is considered to have been loaded completely. For very slow or overloaded CPUs, set a higher value. Defaults to `120`.
+* `jbd.ajaxresourcetimeout` The time in milliseconds after which an AJAX request will be ignored when considering whether all AJAX requests have completed. Defaults to `2000`.
+* `jbd.pemfile` Specifies a source of trusted certificate authorities. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`. Defaults to the JRE keystore.
+* `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.
+* `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `2147483647`.
 Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar`
 
 #### Building
