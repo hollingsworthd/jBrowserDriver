@@ -56,7 +56,7 @@ Example:
 #### Global Properties
 The following Java system properties can be set:
 * `jbd.logconsole` Mirror log output to standard out/error. Otherwise logs are only available through the Selenium APIs. Defaults to `true`.
-* `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Regardless of this setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.
+* `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
 * `jbd.quickrender` Exclude web page images and binary data from rendering. These resources are still requested and can optionally be saved to disk (see the Settings options). Some versions of Java are inefficient (memory-wise) in rendering images. Defaults to `true`.
 * `jbd.blockads` Whether requests to ad/spam servers should be blocked. Based on hosts in ad-hosts.txt in the source tree. Defaults to `true`.
