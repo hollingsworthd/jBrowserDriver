@@ -102,7 +102,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private static final int ROUTE_CONNECTIONS = Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "8"));
   private static final int CONNECTIONS = Integer.parseInt(
-      System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
+      System.getProperty("jbd.maxconnections", "3000"));
   private static final Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
       .register("https", new SslSocketFactory(sslContext()))
       .register("http", new SocketFactory())
