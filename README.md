@@ -65,6 +65,7 @@ The following Java system properties can be set:
 * `jbd.pemfile` Specifies a source of trusted certificate authorities. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`. Defaults to the JRE keystore.
 * `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.
 * `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `2147483647`.
+
 Example: `java -Djbd.trace=true -Djbd.ajaxwait=1000 -jar myapp.jar`
 
 #### Building
