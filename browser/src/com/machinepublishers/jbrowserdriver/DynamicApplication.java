@@ -25,6 +25,11 @@ package com.machinepublishers.jbrowserdriver;
 import java.lang.reflect.Field;
 import java.util.List;
 
+import com.sun.glass.ui.Screen;
+import com.sun.glass.ui.monocle.NativePlatform;
+import com.sun.glass.ui.monocle.NativePlatformFactory;
+import com.sun.javafx.webkit.Accessor;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -33,11 +38,6 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
-import com.sun.glass.ui.Screen;
-import com.sun.glass.ui.monocle.NativePlatform;
-import com.sun.glass.ui.monocle.NativePlatformFactory;
-import com.sun.javafx.webkit.Accessor;
 
 public class DynamicApplication extends Application {
   private static final int HISTORY_SIZE = 8;

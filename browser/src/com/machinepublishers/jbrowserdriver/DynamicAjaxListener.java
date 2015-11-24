@@ -30,10 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class DynamicAjaxListener implements Runnable {
-  private static final long WAIT_INTERVAL =
-      Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
-  private static final long RESOURCE_TIMEOUT =
-      Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
+  private static final long WAIT_INTERVAL = Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
+  private static final long RESOURCE_TIMEOUT = Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;

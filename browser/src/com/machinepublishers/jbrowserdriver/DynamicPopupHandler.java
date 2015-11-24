@@ -36,6 +36,7 @@ class DynamicPopupHandler implements Callback<PopupFeatures, WebEngine> {
   private static final Method spawn;
   private static final Field contextItemEngine;
   private static final Method unwrap;
+
   static {
     Method spawnTmp = null;
     Field contextItemEngineTmp = null;

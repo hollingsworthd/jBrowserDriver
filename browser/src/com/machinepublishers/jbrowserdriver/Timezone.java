@@ -39,10 +39,13 @@ import java.util.TimeZone;
  */
 public class Timezone {
   private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-HH-mm");
+
   static {
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
+
   private static final Map<Integer, String> offsets = new HashMap<Integer, String>();
+
   static {
     offsets.put(-36000000, "HAST");
     offsets.put(-32400000, "AKST");
@@ -63,7 +66,9 @@ public class Timezone {
     offsets.put(43200000, "NZST");
     offsets.put(46800000, "MIT");
   }
+
   private static final Map<Integer, String> daylightTimzones = new HashMap<Integer, String>();
+
   static {
     daylightTimzones.put(-36000000, "HADT");
     daylightTimzones.put(-32400000, "AKDT");
@@ -84,6 +89,7 @@ public class Timezone {
     daylightTimzones.put(43200000, "NZDT");
     daylightTimzones.put(46800000, "MIT");
   }
+
   public static final Timezone UTC = new Timezone("UTC");
   public static final Timezone AFRICA_ABIDJAN = new Timezone("Africa/Abidjan");
   public static final Timezone AFRICA_ACCRA = new Timezone("Africa/Accra");
@@ -160,6 +166,7 @@ public class Timezone {
   public static final Timezone PACIFIC_HONOLULU = new Timezone("Pacific/Honolulu");
   private static final Map<String, Timezone> zonesByName;
   public static final Set<Timezone> ALL_ZONES;
+
   static {
     Map<String, Timezone> zonesByNameTmp = new HashMap<String, Timezone>();
     Field[] fields = Timezone.class.getDeclaredFields();

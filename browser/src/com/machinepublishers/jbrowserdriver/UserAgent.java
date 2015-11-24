@@ -44,6 +44,7 @@ public class UserAgent {
   }
 
   private static final String baseNavigator;
+
   static {
     Map<String, String> baseNavigatorTmp = new LinkedHashMap<String, String>();
     baseNavigatorTmp.put("vibrate", "function(){return true;}");
@@ -69,6 +70,7 @@ public class UserAgent {
   }
 
   private static final String mozNavigator;
+
   static {
     Map<String, String> mozNavigatorTmp = new LinkedHashMap<String, String>();
     mozNavigatorTmp.put("mozId", "null");
@@ -111,6 +113,7 @@ public class UserAgent {
   }
 
   private static final String webkitNavigator;
+
   static {
     Map<String, String> webkitNavigatorTmp = new LinkedHashMap<String, String>();
     webkitNavigatorTmp.put("vendorSub", "''");

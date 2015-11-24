@@ -59,6 +59,7 @@ public class RequestHeaders {
    * @see UserAgent#TOR
    */
   public static final RequestHeaders TOR;
+
   static {
     LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
     headersTmp.put("Host", DYNAMIC_HEADER);
@@ -78,6 +79,7 @@ public class RequestHeaders {
    * @see UserAgent#CHROME
    */
   public static final RequestHeaders CHROME;
+
   static {
     LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>();
     headersTmp.put("Host", DYNAMIC_HEADER);
