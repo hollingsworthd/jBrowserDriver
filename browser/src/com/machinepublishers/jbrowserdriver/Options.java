@@ -38,15 +38,17 @@ import org.openqa.selenium.logging.Logs;
 
 class Options implements org.openqa.selenium.WebDriver.Options {
   private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
-  private final Logs logs = com.machinepublishers.jbrowserdriver.Logs.instance();
+  private final AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;
   private final CookieStore cookieStore;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts;
 
   Options(final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window,
+      AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs,
       final CookieStore cookieStore,
       final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts) {
     this.window = window;
+    this.logs = logs;
     this.cookieStore = cookieStore;
     this.timeouts = timeouts;
   }
@@ -142,7 +144,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public Logs logs() {
-    return logs;
+    return logs.get();
   }
 
   @Override

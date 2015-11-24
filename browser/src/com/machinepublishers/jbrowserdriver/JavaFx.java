@@ -58,7 +58,7 @@ class JavaFx {
     try {
       instance.close(settingsId);
     } catch (RemoteException e) {
-      Logs.exception(e);
+      throw new Fatal(e);
     }
   }
 }

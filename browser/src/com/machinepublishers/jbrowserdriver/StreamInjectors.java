@@ -78,7 +78,7 @@ class StreamInjectors {
         }
       }
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(settingsId).exception(t);
     } finally {
       Util.close(inputStream);
     }

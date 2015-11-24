@@ -49,6 +49,7 @@ public class Settings {
    * A script to guard against canvas fingerprinting and also add some typical navigator properties.
    */
   public static final String HEAD_SCRIPT;
+
   static {
     StringBuilder builder = new StringBuilder();
     builder.append("Object.defineProperty(window, 'external', ");
@@ -82,8 +83,10 @@ public class Settings {
     builder.append("'isPointInStroke', {value:function(){return undefined;}});");
     HEAD_SCRIPT = builder.toString();
   }
+
   private static final Random rand = new Random();
   private static final boolean headless;
+
   static {
     if (!"true".equals(System.getProperty("jbd.browsergui"))) {
       headless = true;
@@ -146,13 +149,10 @@ public class Settings {
         try {
           if (!"false".equals(System.getProperty("jbd.quickrender"))
               && connection.isMedia()) {
-            if (Logs.TRACE) {
-              System.out.println("Media discarded: " + connection.getURL().toExternalForm());
-            }
+            Logs.logsFor(settingsId).trace("Media discarded: " + connection.getURL().toExternalForm());
             StatusMonitor.get(settingsId).addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
-          } else if (
-          (connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
+          } else if ((connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
               && StatusMonitor.get(settingsId).isPrimaryDocument(connection.getURL().toExternalForm())) {
             String injected = null;
             String charset = Util.charset(connection);

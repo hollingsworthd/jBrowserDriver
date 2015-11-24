@@ -40,7 +40,6 @@ class BrowserContextItem {
   final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
   final AtomicReference<JavaFxObject> httpListener = new AtomicReference<JavaFxObject>();
   final AtomicBoolean initialized = new AtomicBoolean();
-  final Object initLock = new Object();
   final AtomicReference<String> itemId = new AtomicReference<String>();
 
   BrowserContextItem() {
@@ -48,42 +47,30 @@ class BrowserContextItem {
   }
 
   void init(final JBrowserDriver driver, final BrowserContext context) {
-    if (initialized.get()) {
-      return;
-    }
-    synchronized (initLock) {
-      if (!initialized.get()) {
-        SettingsManager.register(stage, view, context.settings);
-        engine.set(view.get().call("getEngine"));
-        context.robot.set(new Robot(context));
-        window.set(new Window(stage, context.statusCode, context.settingsId.get()));
-        context.keyboard.set(new Keyboard(context.robot));
-        context.mouse.set(new Mouse(context.robot));
-        navigation.set(new Navigation(
-            new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
-        context.options.set(new Options(
-            window, context.settings.get().cookieStore(), context.timeouts));
-        context.capabilities.set(new Capabilities());
-        Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
-          @Override
-          public Object perform() {
-            httpListener.set(JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicHttpListener", context.settingsId.get(),
-                context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
-                context.settingsId.get()));
-            JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settingsId.get()).
-                call("getPageFor", view.get().call("getEngine")).
-                call("addLoadListenerClient", httpListener.get());
-            engine.get().call("setCreatePopupHandler",
-                JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicPopupHandler", context.settingsId.get(), driver, context));
-            //TODO engine.get().call("setConfirmHandler",
-            //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
-            //TODO engine.get().call("setPromptHandler",
-            //TODO JavaFx.getNew(DynamicPromptHandler.class, context.settingsId.get(), driver, context));
-            return null;
-          }
-        }, context.settingsId.get());
-        initialized.set(true);
-      }
+    if (initialized.compareAndSet(false, true)) {
+      SettingsManager.register(stage, view, context.settings);
+      engine.set(view.get().call("getEngine"));
+      window.set(new Window(stage, context.statusCode, context.settingsId.get()));
+      navigation.set(new Navigation(
+          new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
+      context.options.set(new Options(
+          window, context.logs, context.settings.get().cookieStore(), context.timeouts));
+      Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
+        @Override
+        public Object perform() {
+          httpListener.set(JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicHttpListener", context.settingsId.get(),
+              context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
+              context.settingsId.get()));
+          JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settingsId.get()).call("getPageFor", view.get().call("getEngine")).call("addLoadListenerClient", httpListener.get());
+          engine.get().call("setCreatePopupHandler",
+              JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicPopupHandler", context.settingsId.get(), driver, context));
+          //TODO engine.get().call("setConfirmHandler",
+          //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
+          //TODO engine.get().call("setPromptHandler",
+          //TODO JavaFx.getNew(DynamicPromptHandler.class, context.settingsId.get(), driver, context));
+          return null;
+        }
+      }, context.settingsId.get());
     }
   }
 }

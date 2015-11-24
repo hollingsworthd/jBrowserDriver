@@ -51,10 +51,11 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
  * and the browser sessions will be isolated from each other.
  * <p>
  * Example:
+ * 
  * <pre>
  * WebDriver driver = new JBrowserDriver();
  * driver.get("http://example.com"); //This will block for page load and associated AJAX requests.
- * System.out.println(((JBrowserDriver)driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
+ * System.out.println(((JBrowserDriver) driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
  * System.out.println(driver.getPageSource());
  * </pre>
  */
@@ -63,6 +64,7 @@ public class JBrowserDriver implements Browser {
    * Use this string on sendKeys functions to delete text.
    */
   public static final String KEYBOARD_DELETE;
+
   static {
     final int CHARS_TO_DELETE = 60;
     StringBuilder builder = new StringBuilder();
@@ -77,7 +79,7 @@ public class JBrowserDriver implements Browser {
     KEYBOARD_DELETE = builder.toString();
   }
 
-  private final BrowserContext context = new BrowserContext();
+  final BrowserContext context;
 
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
@@ -92,7 +94,7 @@ public class JBrowserDriver implements Browser {
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    context.settings.set(new Settings(settings));
+    context = new BrowserContext(new Settings(settings));
   }
 
   /**
@@ -123,6 +125,7 @@ public class JBrowserDriver implements Browser {
     context.reset(this);
     context.settings.get().cookieStore().clear();
     StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
+    context.logs.get().clear();
   }
 
   /**
@@ -159,7 +162,7 @@ public class JBrowserDriver implements Browser {
         }
       }
     } catch (InterruptedException e) {
-      Logs.exception(e);
+      context.logs.get().exception(e);
     }
     return context.statusCode.get();
   }
@@ -190,7 +193,7 @@ public class JBrowserDriver implements Browser {
         }
       }
     } catch (InterruptedException e) {
-      Logs.exception(e);
+      context.logs.get().exception(e);
     }
     if (context.statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -389,6 +392,7 @@ public class JBrowserDriver implements Browser {
     StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
     StatusMonitor.remove(context.settings.get().id());
     JavaFx.close(context.settings.get().id());
+    Logs.close(context.settingsId.get());
   }
 
   @Override
@@ -429,12 +433,12 @@ public class JBrowserDriver implements Browser {
       JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
         public JavaFxObject perform() {
           return JavaFx.getStatic(
-              "javafx.embed.swing.SwingFXUtils", Long.parseLong(context.item().engine.get().call("getUserAgent").toString())).
-              call("fromFXImage", context.item().view.get().
-                  call("snapshot", JavaFx.getNew("javafx.scene.SnapshotParameters", context.settingsId.get()),
-                      JavaFx.getNew("javafx.scene.image.WritableImage", context.settingsId.get(),
-                          (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
-                          (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))), null);
+              "javafx.embed.swing.SwingFXUtils", Long.parseLong(context.item().engine.get().call("getUserAgent").toString()))
+              .call("fromFXImage", context.item().view.get().call("snapshot", JavaFx.getNew("javafx.scene.SnapshotParameters", context.settingsId.get()),
+                  JavaFx.getNew("javafx.scene.image.WritableImage", context.settingsId.get(),
+                      (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
+                      (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))),
+                  null);
         }
       }, context.settingsId.get());
       ByteArrayOutputStream out = null;
@@ -443,7 +447,7 @@ public class JBrowserDriver implements Browser {
         JavaFx.getStatic("javax.imageio.ImageIO", context.settingsId.get()).call("write", image, "png", out);
         return outputType.convertFromPngBytes(out.toByteArray());
       } catch (Throwable t) {
-        Logs.exception(t);
+        context.logs.get().exception(t);
         return null;
       } finally {
         Util.close(out);

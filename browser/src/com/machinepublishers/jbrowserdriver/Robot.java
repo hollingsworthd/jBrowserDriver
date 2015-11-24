@@ -41,9 +41,9 @@ class Robot {
 
   private static int keyEvent(String name) {
     try {
-      return (Integer) JavaFx.getStatic("java.awt.event.KeyEvent", 0l).field(name).unwrap();
+      return (Integer) JavaFx.getStatic("java.awt.event.KeyEvent", 1l).field(name).unwrap();
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(1l).exception(t);
       return -1;
     }
   }
@@ -113,7 +113,9 @@ class Robot {
     keyConvert.put(Keys.UP, keyEvent("VK_UP"));
     keyConvert.put(Keys.NULL, -1);
   }
+
   private static final Map<String, int[]> keyMap = new HashMap<String, int[]>();
+
   static {
     keyMap.put("1", new int[] { keyEvent("VK_1") });
     keyMap.put("2", new int[] { keyEvent("VK_2") });
@@ -215,9 +217,7 @@ class Robot {
   }
 
   static enum MouseButton {
-    LEFT(com.sun.glass.ui.Robot.MOUSE_LEFT_BTN),
-    MIDDLE(com.sun.glass.ui.Robot.MOUSE_MIDDLE_BTN),
-    RIGHT(com.sun.glass.ui.Robot.MOUSE_RIGHT_BTN);
+    LEFT(com.sun.glass.ui.Robot.MOUSE_LEFT_BTN), MIDDLE(com.sun.glass.ui.Robot.MOUSE_MIDDLE_BTN), RIGHT(com.sun.glass.ui.Robot.MOUSE_RIGHT_BTN);
     private final int value;
 
     MouseButton(int value) {
@@ -250,10 +250,8 @@ class Robot {
     this.context = context;
     this.statusCode = context.statusCode;
     this.settingsId = context.settingsId.get();
-    this.keyTyped = JavaFx.getStatic("javafx.scene.input.KeyEvent", settingsId).
-        field("KEY_TYPED").unwrap();
-    this.keyUndefined = JavaFx.getStatic("javafx.scene.input.KeyCode", settingsId).
-        field("UNDEFINED").unwrap();
+    this.keyTyped = JavaFx.getStatic("javafx.scene.input.KeyEvent", settingsId).field("KEY_TYPED").unwrap();
+    this.keyUndefined = JavaFx.getStatic("javafx.scene.input.KeyCode", settingsId).field("UNDEFINED").unwrap();
   }
 
   private int[] convertKey(int codePoint) {
@@ -295,7 +293,7 @@ class Robot {
         try {
           curThread.wait();
         } catch (Exception e) {
-          Logs.exception(e);
+          context.logs.get().exception(e);
         }
       }
     }

@@ -99,7 +99,7 @@ class StatusMonitor {
     }
   }
 
-  int stopStatusMonitor(String url) {
+  int stopStatusMonitor(String url, long settingsId) {
     StreamConnection conn = null;
     synchronized (lock) {
       monitoring = false;
@@ -111,7 +111,7 @@ class StatusMonitor {
         code = conn.getResponseCode();
         code = code <= 0 ? 499 : code;
       } catch (Throwable t) {
-        Logs.exception(t);
+        Logs.logsFor(settingsId).exception(t);
       }
     }
     return code;

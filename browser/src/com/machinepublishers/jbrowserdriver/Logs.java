@@ -25,8 +25,10 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -34,20 +36,53 @@ import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  public static final boolean TRACE = "true".equals(System.getProperty("jbd.trace"));
-  private static final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
-  private static final int MAX_LOGS = 50;
-  private static final Logs instance = new Logs();
+  private static final boolean CONSOLE = "true".equals(System.getProperty("jbd.logconsole"));
+  private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
+  private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
+  private static final Map<Long, Logs> logMap = new HashMap<Long, Logs>();
 
-  private Logs() {
+  private Logs() {}
 
+  static Logs newInstance(long settingsId) {
+    Logs logs = new Logs();
+    synchronized (logMap) {
+      logMap.put(settingsId, logs);
+    }
+    return logs;
   }
 
-  static Logs instance() {
-    return instance;
+  static Logs logsFor(long settingsId) {
+    synchronized (logMap) {
+      return logMap.get(settingsId);
+    }
   }
 
-  static void warn(String message) {
+  static void close(long settingsId) {
+    synchronized (logMap) {
+      logMap.remove(settingsId).clear();
+    }
+  }
+
+  void clear() {
+    synchronized (entries) {
+      entries.clear();
+    }
+  }
+
+  void trace(String message) {
+    final LogEntry entry = new LogEntry(Level.FINEST, System.currentTimeMillis(), message);
+    synchronized (entries) {
+      entries.add(entry);
+      if (entries.size() > MAX_LOGS) {
+        entries.removeFirst();
+      }
+    }
+    if (CONSOLE) {
+      System.out.println(entry);
+    }
+  }
+
+  void warn(String message) {
     final LogEntry entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
@@ -55,12 +90,12 @@ class Logs implements org.openqa.selenium.logging.Logs {
         entries.removeFirst();
       }
     }
-    if ("true".equals(System.getProperty("jbd.standarderror"))) {
+    if (CONSOLE) {
       System.err.println(entry);
     }
   }
 
-  static void exception(Throwable t) {
+  void exception(Throwable t) {
     final LogEntry entry;
     StringWriter writer = null;
     try {
@@ -74,14 +109,14 @@ class Logs implements org.openqa.selenium.logging.Logs {
         }
       }
     } catch (Throwable t2) {
-      if ("true".equals(System.getProperty("jbd.standarderror"))) {
+      if (CONSOLE) {
         System.err.println("While logging a message, an error occurred: " + t2.getMessage());
       }
       return;
     } finally {
       Util.close(writer);
     }
-    if ("true".equals(System.getProperty("jbd.standarderror"))) {
+    if (CONSOLE) {
       System.err.println(entry);
     }
   }

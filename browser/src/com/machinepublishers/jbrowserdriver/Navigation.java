@@ -51,7 +51,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
             try {
               view.get().call("getEngine").call("getHistory").call("go", -1);
             } catch (IndexOutOfBoundsException e) {
-              Logs.exception(e);
+              driver.get().context.logs.get().exception(e);
             }
             return null;
           }
@@ -66,7 +66,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
             try {
               view.get().call("getEngine").call("getHistory").call("go", 1);
             } catch (IndexOutOfBoundsException e) {
-              Logs.exception(e);
+              driver.get().context.logs.get().exception(e);
             }
             return null;
           }

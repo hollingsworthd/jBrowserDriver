@@ -39,8 +39,10 @@ class DynamicHttpListener implements LoadListenerClient {
   static {
     CookieManager.setDefault(null);
   }
+
   private static final Map<Integer, String> states;
   private static final Map<Integer, String> errors;
+
   static {
     Map<Integer, String> statesTmp = new HashMap<Integer, String>();
     statesTmp.put(LoadListenerClient.PAGE_STARTED, "page_started");
@@ -76,6 +78,7 @@ class DynamicHttpListener implements LoadListenerClient {
     errorsTmp.put(LoadListenerClient.UNKNOWN_ERROR, "unknown_error");
     errors = Collections.unmodifiableMap(errorsTmp);
   }
+
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final Map<String, Long> resources = new HashMap<String, Long>();
@@ -84,31 +87,40 @@ class DynamicHttpListener implements LoadListenerClient {
   private final AtomicLong frame = new AtomicLong();
   private final Object statusMonitor;
   private final AtomicLong timeoutMS;
-  private static final boolean TRACE = "true".equals(System.getProperty("jbd.trace"));
   private static final Method getStatusMonitor;
   private static final Method startStatusMonitor;
   private static final Method stopStatusMonitor;
   private static final Method clearStatusMonitor;
   private static final Method originalFromRedirect;
+  private static final Method logsFor;
+  private static final Method trace;
+
   static {
     Method getStatusMonitorTmp = null;
     Method startStatusMonitorTmp = null;
     Method stopStatusMonitorTmp = null;
     Method clearStatusMonitorTmp = null;
     Method originalFromRedirectTmp = null;
+    Method logsForTmp = null;
+    Method traceTmp = null;
     try {
-      Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().
-          loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
+      Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
       getStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("get", long.class);
       getStatusMonitorTmp.setAccessible(true);
       startStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("startStatusMonitor", String.class);
       startStatusMonitorTmp.setAccessible(true);
-      stopStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("stopStatusMonitor", String.class);
+      stopStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("stopStatusMonitor", String.class, long.class);
       stopStatusMonitorTmp.setAccessible(true);
       clearStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("clearStatusMonitor");
       clearStatusMonitorTmp.setAccessible(true);
       originalFromRedirectTmp = statusMonitorClass.getDeclaredMethod("originalFromRedirect", String.class);
       originalFromRedirectTmp.setAccessible(true);
+
+      Class logsClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.Logs");
+      logsForTmp = logsClass.getDeclaredMethod("logsFor", long.class);
+      logsForTmp.setAccessible(true);
+      traceTmp = logsClass.getDeclaredMethod("trace", String.class);
+      traceTmp.setAccessible(true);
     } catch (Throwable t) {
       t.printStackTrace();
     }
@@ -117,6 +129,8 @@ class DynamicHttpListener implements LoadListenerClient {
     stopStatusMonitor = stopStatusMonitorTmp;
     clearStatusMonitor = clearStatusMonitorTmp;
     originalFromRedirect = originalFromRedirectTmp;
+    logsFor = logsForTmp;
+    trace = traceTmp;
   }
 
   DynamicHttpListener(AtomicInteger statusCode, AtomicLong timeoutMS, long settingsId) {
@@ -134,16 +148,18 @@ class DynamicHttpListener implements LoadListenerClient {
 
   private void trace(String label, long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    System.out.println(settingsId
-        + "-" + label + "-> " + url
-        + " ** {timestamp: " + System.currentTimeMillis()
-        + ", state: " + states.get(state)
-        + ", progress: " + progress
-        + ", error: " + errors.get(errorCode)
-        + ", contentType: "
-        + contentType
-        + ", frame: " + frame
-        + "}");
+    try {
+      trace.invoke(logsFor.invoke(null, settingsId),
+          new StringBuilder()
+              .append(settingsId).append("-").append(label).append("-> ")
+              .append(url)
+              .append(" ** {timestamp: ").append(System.currentTimeMillis())
+              .append(", state: ").append(states.get(state))
+              .append(", progress: ").append(progress)
+              .append(", error: ").append(errors.get(errorCode))
+              .append(", contentType: ").append(contentType)
+              .append(", frame: ").append(frame).append("}").toString());
+    } catch (Throwable t) {}
   }
 
   @Override
@@ -172,9 +188,7 @@ class DynamicHttpListener implements LoadListenerClient {
       }
     }
     if (url.startsWith("http://") || url.startsWith("https://")) {
-      if (TRACE) {
-        trace("Rsrc", frame, state, url, contentType, progress, errorCode);
-      }
+      trace("Rsrc", frame, state, url, contentType, progress, errorCode);
     }
   }
 
@@ -216,7 +230,7 @@ class DynamicHttpListener implements LoadListenerClient {
               && (state == LoadListenerClient.PAGE_FINISHED
                   || state == LoadListenerClient.LOAD_STOPPED
                   || state == LoadListenerClient.LOAD_FAILED)) {
-            final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url);
+            final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url, settingsId);
             final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
             resources.remove(frame + url);
             new Thread(new DynamicAjaxListener(newStatusCode, statusCode,
@@ -227,9 +241,7 @@ class DynamicHttpListener implements LoadListenerClient {
     } catch (Throwable t) {
       t.printStackTrace();
     }
-    if (TRACE) {
-      trace("Page", frame, state, url, contentType, progress, errorCode);
-    }
+    trace("Page", frame, state, url, contentType, progress, errorCode);
   }
 
 }

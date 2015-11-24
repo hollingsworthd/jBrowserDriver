@@ -56,7 +56,7 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
       Class loaded;
       synchronized (lock) {
         if (!classLoaders.containsKey(id)) {
-          classLoaders.put(id, newClassLoader());
+          classLoaders.put(id, newClassLoader(id));
         }
         loaded = classLoaders.get(id).loadClass(type);
       }
@@ -94,12 +94,12 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
     try {
       synchronized (lock) {
         if (!classLoaders.containsKey(id)) {
-          classLoaders.put(id, newClassLoader());
+          classLoaders.put(id, newClassLoader(id));
         }
         return new JavaFxObjectServer(classLoaders.get(id).loadClass(type));
       }
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(id).exception(t);
       return null;
     }
   }
@@ -109,28 +109,28 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
       ClassLoader classLoader = classLoaders.get(settingsId);
       if (classLoader instanceof JavaFxClassLoader) {
         Util.close((JavaFxClassLoader) classLoader);
-        JavaFxClassLoader.markForDeletion(((JavaFxClassLoader) classLoader).myTmpDir, true);
+        JavaFxClassLoader.markForDeletion(((JavaFxClassLoader) classLoader).myTmpDir, true, settingsId);
       }
     }
   }
 
-  private static ClassLoader newClassLoader() {
+  private static ClassLoader newClassLoader(long settingsId) {
     try {
       final ClassLoader classLoader;
       if (Settings.headless()) {
-        classLoader = new JavaFxClassLoader(Files.createTempDirectory("jbd").toFile());
+        classLoader = new JavaFxClassLoader(Files.createTempDirectory("jbd").toFile(), settingsId);
       } else {
         classLoader = JavaFx.class.getClassLoader();
       }
-      initToolkit(classLoader);
+      initToolkit(classLoader, settingsId);
       return classLoader;
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(settingsId).exception(t);
       return null;
     }
   }
 
-  private static void initToolkit(ClassLoader classLoader) {
+  private static void initToolkit(ClassLoader classLoader, long settingsId) {
     try {
       if (Settings.headless()) {
         Class<?> platformFactory = classLoader.loadClass("com.sun.glass.ui.PlatformFactory");
@@ -149,11 +149,11 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
         try {
           classLoader.loadClass("javafx.embed.swing.JFXPanel").newInstance();
         } catch (Throwable t) {
-          Logs.exception(t);
+          Logs.logsFor(settingsId).exception(t);
         }
       }
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(settingsId).exception(t);
     }
   }
 
@@ -175,7 +175,7 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
       return allFiles;
     }
 
-    private static void markForDeletion(File dir, boolean deleteNow) {
+    private static void markForDeletion(File dir, boolean deleteNow, long settingsId) {
       File[] children = dir.listFiles();
       for (int i = 0; children != null && i < children.length; i++) {
         try {
@@ -186,10 +186,10 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
               children[i].deleteOnExit();
             }
           } else {
-            markForDeletion(children[i], deleteNow);
+            markForDeletion(children[i], deleteNow, settingsId);
           }
         } catch (Throwable t) {
-          Logs.exception(t);
+          Logs.logsFor(settingsId).exception(t);
         }
       }
       if (deleteNow) {
@@ -217,7 +217,7 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
       }
     }
 
-    private static URL[] urls(String tmpDir) {
+    private static URL[] urls(String tmpDir, long settingsId) {
       List<URL> urlList = new ArrayList<URL>();
       try {
         File javaHome = new File(System.getProperty("java.home"));
@@ -241,7 +241,7 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
             copy(file, tmpFile);
             urlList.add(tmpFile.toURI().toURL());
           } catch (FileAlreadyExistsException e) {} catch (Throwable t) {
-            Logs.exception(t);
+            Logs.logsFor(settingsId).exception(t);
           }
         }
         try {
@@ -260,12 +260,12 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
           }
           urlList.add(bin.toURI().toURL());
         } catch (Throwable t) {
-          Logs.exception(t);
+          Logs.logsFor(settingsId).exception(t);
         }
         File tmpDirFile = new File(tmpDir);
-        markForDeletion(tmpDirFile, false);
+        markForDeletion(tmpDirFile, false, settingsId);
       } catch (Throwable t) {
-        Logs.exception(t);
+        Logs.logsFor(settingsId).exception(t);
       }
       return urlList.toArray(new URL[0]);
     }
@@ -273,8 +273,8 @@ class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
     private final ClassLoader fallback = ClassLoader.getSystemClassLoader();
     private final File myTmpDir;
 
-    JavaFxClassLoader(File tmpDir) {
-      super(urls(tmpDir.getAbsolutePath()), null);
+    JavaFxClassLoader(File tmpDir, long settingsId) {
+      super(urls(tmpDir.getAbsolutePath(), settingsId), null);
       this.myTmpDir = tmpDir;
     }
 

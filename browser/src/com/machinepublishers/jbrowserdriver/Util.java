@@ -53,9 +53,7 @@ class Util {
     if (closeable != null) {
       try {
         closeable.close();
-      } catch (Throwable t) {
-        Logs.exception(t);
-      }
+      } catch (Throwable t) {}
     }
   }
 
@@ -85,8 +83,8 @@ class Util {
           JavaFx.getStatic("javafx.application.Platform", id).call("runLater", this);
           return;
         }
-        if (Logs.TRACE && statusCode.get() != 200) {
-          System.out.println("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+        if (statusCode.get() != 200) {
+          Logs.logsFor(id).trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
         }
       }
       T result = null;
@@ -150,10 +148,10 @@ class Util {
           try {
             runner.done.wait(timeout);
           } catch (InterruptedException e) {
-            Logs.exception(e);
+            Logs.logsFor(id).exception(e);
           }
           if (!runner.done.get()) {
-            Logs.exception(new RuntimeException("Action never completed."));
+            Logs.logsFor(id).exception(new RuntimeException("Action never completed."));
           }
         }
         if (runner.fatal.get() != null) {
@@ -181,7 +179,6 @@ class Util {
       } catch (EOFException e) {}
       return builder.toString();
     } catch (Throwable t) {
-      Logs.exception(t);
       return null;
     } finally {
       close(inputStream);

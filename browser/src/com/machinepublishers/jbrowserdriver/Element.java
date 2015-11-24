@@ -588,7 +588,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         try {
           context.curThread.wait();
         } catch (Exception e) {
-          Logs.exception(e);
+          context.logs.get().exception(e);
         }
       }
     }
@@ -715,7 +715,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   @Override
   public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
-    Logs.warn("Screenshot not supported on jBrowserDriver WebElements");
+    context.logs.get().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 }

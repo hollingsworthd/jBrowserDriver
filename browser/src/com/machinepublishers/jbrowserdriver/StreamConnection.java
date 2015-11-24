@@ -100,22 +100,20 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private static final Set<String> adHosts = new HashSet<String>();
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
-  private static final int ROUTE_CONNECTIONS =
-      Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "8"));
-  private static final int CONNECTIONS =
-      Integer.parseInt(
-          System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
-  private static final Registry<ConnectionSocketFactory> registry =
-      RegistryBuilder.<ConnectionSocketFactory> create()
-          .register("https", new SslSocketFactory(sslContext()))
-          .register("http", new SocketFactory())
-          .build();
-  private static final PoolingHttpClientConnectionManager manager =
-      new PoolingHttpClientConnectionManager(registry);
+  private static final int ROUTE_CONNECTIONS = Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "8"));
+  private static final int CONNECTIONS = Integer.parseInt(
+      System.getProperty("jbd.maxconnections", Integer.toString(Integer.MAX_VALUE)));
+  private static final Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
+      .register("https", new SslSocketFactory(sslContext()))
+      .register("http", new SocketFactory())
+      .build();
+  private static final PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(registry);
+
   static {
     manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
     manager.setMaxTotal(CONNECTIONS);
   }
+
   private static final CloseableHttpClient client = HttpClients.custom()
       .disableRedirectHandling()
       .disableAutomaticRetries()
@@ -133,7 +131,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setDefaultCredentialsProvider(ProxyAuth.instance())
       .build();
   private static boolean cacheByDefault;
-  private static AtomicReference<String> trace = new AtomicReference("");
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final RequestConfig.Builder config = RequestConfig.custom();
@@ -166,7 +163,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           adHosts.add(line);
         }
       } catch (Throwable t) {
-        Logs.exception(t);
+        Logs.logsFor(1l).exception(t);
       } finally {
         Util.close(reader);
       }
@@ -206,8 +203,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         while (matcher.find()) {
           String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
           ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
-          java.security.cert.X509Certificate cert =
-              (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
+          java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
           String alias = cert.getSubjectX500Principal().getName("RFC2253");
           if (alias != null && !keyStore.containsAlias(alias)) {
             found = true;
@@ -215,18 +211,16 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           }
         }
         if (found) {
-          KeyManagerFactory keyManager =
-              KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+          KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
           keyManager.init(keyStore, null);
-          TrustManagerFactory trustManager =
-              TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+          TrustManagerFactory trustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
           trustManager.init(keyStore);
           SSLContext context = SSLContext.getInstance("TLS");
           context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
           return context;
         }
       } catch (Throwable t) {
-        Logs.exception(t);
+        Logs.logsFor(1l).exception(t);
       }
     }
     return SSLContexts.createSystemDefault();
@@ -261,14 +255,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return new Socket();
   }
 
-  private static boolean isBlocked(String host) {
+  private boolean isBlocked(String host) {
     if (!adHosts.isEmpty()) {
       host = host.toLowerCase();
       while (host.contains(".")) {
         if (adHosts.contains(host)) {
-          if (Logs.TRACE) {
-            System.out.println("Ad blocked: " + host);
-          }
+          Logs.logsFor(settingsId.get()).trace("Ad blocked: " + host);
           host = null;
           return true;
         }
@@ -298,16 +290,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     super(url);
     this.url = new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getFile());
     this.urlString = url.toExternalForm();
-    trace();
-  }
-
-  private static void trace() {
-    if (Logs.TRACE) {
-      String newTrace = manager.getTotalStats().toString();
-      if (!newTrace.equals(trace.getAndSet(newTrace))) {
-        System.out.println("Connection pool - " + newTrace);
-      }
-    }
   }
 
   private void processHeaders(AtomicReference<Settings> settings, HttpRequestBase req, String host) {
@@ -416,8 +398,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("PUT".equals(method)) {
             ((HttpPut) req).setEntity(new ByteArrayEntity(reqData.toByteArray()));
           }
-          response = cache ?
-              cachingClient.execute(req, context) : client.execute(req, context);
+          response = cache ? cachingClient.execute(req, context) : client.execute(req, context);
           if (response != null && response.getEntity() != null) {
             entity = response.getEntity();
             response.setHeader("cache-control", "no-store");
@@ -441,11 +422,10 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         response.close();
       }
     } catch (Throwable t) {
-      Logs.exception(t);
+      Logs.logsFor(settingsId.get()).exception(t);
     }
     manager.closeExpiredConnections();
     manager.closeIdleConnections(30, TimeUnit.SECONDS);
-    trace();
   }
 
   @Override
@@ -485,7 +465,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         return getInputStream();
       }
     } catch (IOException e) {
-      Logs.exception(e);
+      Logs.logsFor(settingsId.get()).exception(e);
     }
     return null;
   }
@@ -493,8 +473,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public String getResponseMessage() throws IOException {
     exec();
-    return response == null || response.getStatusLine() == null ?
-        null : response.getStatusLine().getReasonPhrase();
+    return response == null || response.getStatusLine() == null ? null : response.getStatusLine().getReasonPhrase();
   }
 
   @Override
@@ -505,8 +484,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     if (skip.get()) {
       return 204;
     }
-    return response == null || response.getStatusLine() == null ?
-        499 : response.getStatusLine().getStatusCode();
+    return response == null || response.getStatusLine() == null ? 499 : response.getStatusLine().getStatusCode();
   }
 
   @Override
@@ -528,8 +506,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     if (contentEncodingRemoved) {
       return null;
     }
-    return entity == null || entity.getContentEncoding() == null || skip.get() ?
-        null : entity.getContentEncoding().getValue();
+    return entity == null || entity.getContentEncoding() == null || skip.get() ? null : entity.getContentEncoding().getValue();
   }
 
   public void removeContentEncoding() {
@@ -566,8 +543,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public String getContentType() {
-    return entity == null || entity.getContentType() == null || skip.get() ?
-        null : entity.getContentType().getValue();
+    return entity == null || entity.getContentType() == null || skip.get() ? null : entity.getContentType().getValue();
   }
 
   @Override
@@ -644,8 +620,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return response == null
         || response.getAllHeaders() == null
         || n >= response.getAllHeaders().length
-        || response.getAllHeaders()[n] == null ?
-        null : response.getAllHeaders()[n].getName();
+        || response.getAllHeaders()[n] == null ? null : response.getAllHeaders()[n].getName();
   }
 
   @Override
@@ -653,8 +628,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return response == null
         || response.getAllHeaders() == null
         || n >= response.getAllHeaders().length
-        || response.getAllHeaders()[n] == null ?
-        null : response.getAllHeaders()[n].getValue();
+        || response.getAllHeaders()[n] == null ? null : response.getAllHeaders()[n].getValue();
   }
 
   ///////////////////////////////////////////////////////////
@@ -709,8 +683,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public long getIfModifiedSince() {
-    return getRequestProperty("if-modified-since") == null ?
-        0 : Long.parseLong(getRequestProperty("if-modified-since"));
+    return getRequestProperty("if-modified-since") == null ? 0 : Long.parseLong(getRequestProperty("if-modified-since"));
   }
 
   @Override
@@ -726,8 +699,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public String getRequestProperty(String key) {
     key = key.toLowerCase();
-    return reqHeaders.get(key) == null || reqHeaders.get(key).isEmpty() ?
-        null : reqHeaders.get(key).get(0);
+    return reqHeaders.get(key) == null || reqHeaders.get(key).isEmpty() ? null : reqHeaders.get(key).get(0);
   }
 
   @Override

@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -36,6 +37,8 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class BrowserContext {
+  final AtomicBoolean initialized = new AtomicBoolean();
+  final AtomicReference<Logs> logs = new AtomicReference();
   final AtomicReference<Timeouts> timeouts = new AtomicReference<Timeouts>(new Timeouts());
   final AtomicReference<TargetLocator> targetLocator = new AtomicReference<TargetLocator>();
   final AtomicReference<Options> options = new AtomicReference<Options>();
@@ -53,11 +56,14 @@ class BrowserContext {
   private int current = 0;
   private final Object lock = new Object();
 
-  BrowserContext() {
+  BrowserContext(Settings settings) {
     synchronized (lock) {
       BrowserContextItem newContext = new BrowserContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
+      this.settings.set(settings);
+      settingsId.set(settings.id());
+      logs.set(Logs.newInstance(settingsId.get()));
     }
   }
 
@@ -74,10 +80,15 @@ class BrowserContext {
 
   void init(final JBrowserDriver driver) {
     synchronized (lock) {
-      settingsId.set(settings.get().id());
       if (!items.isEmpty()) {
-        targetLocator.compareAndSet(null, new TargetLocator(driver, this));
         items.get(current).init(driver, this);
+      }
+      if (initialized.compareAndSet(false, true)) {
+        targetLocator.set(new TargetLocator(driver, this));
+        robot.set(new Robot(this));
+        keyboard.set(new Keyboard(robot));
+        mouse.set(new Mouse(robot));
+        capabilities.set(new Capabilities());
       }
     }
   }
