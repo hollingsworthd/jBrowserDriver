@@ -36,7 +36,7 @@ import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  private static final boolean CONSOLE = "true".equals(System.getProperty("jbd.logconsole"));
+  private static final boolean CONSOLE = !"false".equals(System.getProperty("jbd.logconsole"));
   private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
   private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
   private static final Map<Long, Logs> logMap = new HashMap<Long, Logs>();
