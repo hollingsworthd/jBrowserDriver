@@ -64,7 +64,7 @@ The following Java system properties can be set:
 * `jbd.ajaxresourcetimeout` The time in milliseconds after which an AJAX request will be ignored when considering whether all AJAX requests have completed. Defaults to `2000`.
 * `jbd.pemfile` Specifies a source of trusted certificate authorities. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`. Defaults to the JRE keystore.
 * `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.
-* `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `2147483647`.
+* `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `3000`.
 
 Example: `java -Djbd.browsergui=true -Djbd.quickrender=false -jar myapp.jar`
 
