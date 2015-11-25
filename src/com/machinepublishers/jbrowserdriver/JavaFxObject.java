@@ -75,4 +75,9 @@ class JavaFxObject {
       throw new Fatal(e);
     }
   }
+
+  @Override
+  public String toString() {
+    return unwrap().toString();
+  }
 }
