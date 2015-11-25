@@ -172,19 +172,4 @@ class JavaFxObjectServer extends UnicastRemoteObject implements JavaFxObjectRemo
                   : (classes[i].equals(Long.class) ? long.class : (classes[i].equals(Integer.class) ? int.class : (classes[i].equals(Boolean.class) ? boolean.class : classes[i])))));
     }
   }
-
-  @Override
-  public boolean equals(Object obj) {
-    return object.equals(obj);
-  }
-
-  @Override
-  public int hashCode() {
-    return object.hashCode();
-  }
-
-  @Override
-  public String toString() {
-    return object.toString();
-  }
 }
