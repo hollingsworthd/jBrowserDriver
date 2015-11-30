@@ -38,8 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.machinepublishers.browser.Browser;
-
 import javafx.application.Platform;
 
 class Util {
@@ -90,13 +88,13 @@ class Util {
         }
       }
       T result = null;
-      Browser.Fatal browserFatal = null;
-      Browser.Retry browserRetry = null;
+      BrowserException.Fatal browserFatal = null;
+      BrowserException.Retry browserRetry = null;
       try {
         result = action.perform();
-      } catch (Browser.Fatal t) {
+      } catch (BrowserException.Fatal t) {
         browserFatal = t;
-      } catch (Browser.Retry t) {
+      } catch (BrowserException.Retry t) {
         browserRetry = t;
       }
       synchronized (done) {
@@ -135,9 +133,9 @@ class Util {
       if ((boolean) Platform.isFxApplicationThread()) {
         try {
           return action.perform();
-        } catch (Browser.Fatal t) {
+        } catch (BrowserException.Fatal t) {
           throw t;
-        } catch (Browser.Retry t) {
+        } catch (BrowserException.Retry t) {
           throw t;
         }
       }

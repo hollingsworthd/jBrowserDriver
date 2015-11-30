@@ -36,10 +36,10 @@ import javafx.application.Application;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
-public class SettingsManager {
+class SettingsManager {
   private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
 
-  public static void register(
+  static void register(
       final AtomicReference<Stage> stage,
       final AtomicReference<WebView> view,
       final AtomicReference<Settings> settings) {
@@ -83,13 +83,13 @@ public class SettingsManager {
     }
   }
 
-  public static void close(long settingsId) {
+  static void close(long settingsId) {
     synchronized (registry) {
       registry.remove(settingsId);
     }
   }
 
-  public static AtomicReference<Settings> get(long settingsId) {
+  static AtomicReference<Settings> get(long settingsId) {
     synchronized (registry) {
       return registry.get(settingsId);
     }

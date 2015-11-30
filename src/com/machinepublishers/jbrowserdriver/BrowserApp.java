@@ -39,6 +39,9 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+/**
+ * Internal use only.
+ */
 public class BrowserApp extends Application {
   private static final int HISTORY_SIZE = 8;
   private static final Object lock = new Object();
@@ -49,7 +52,14 @@ public class BrowserApp extends Application {
   private boolean headless;
   private long settingsId;
 
-  public static Stage getStage() {
+  /**
+   * Internal use only.
+   */
+  public BrowserApp() {
+
+  }
+
+  static Stage getStage() {
     synchronized (lock) {
       while (myStage == null) {
         try {
@@ -60,7 +70,7 @@ public class BrowserApp extends Application {
     }
   }
 
-  public static WebView getView() {
+  static WebView getView() {
     synchronized (lock) {
       while (myView == null) {
         try {
@@ -71,7 +81,7 @@ public class BrowserApp extends Application {
     }
   }
 
-  public void init(int width, int height, boolean headless, long settingsId) {
+  void init(int width, int height, boolean headless, long settingsId) {
     this.width = width;
     this.height = height;
     this.headless = headless;
@@ -87,7 +97,7 @@ public class BrowserApp extends Application {
     settingsId = Long.parseLong(params.get(3));
   }
 
-  public void start() throws Exception {
+  void start() throws Exception {
     start(null);
   }
 

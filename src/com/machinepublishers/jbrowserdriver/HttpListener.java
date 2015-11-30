@@ -139,7 +139,7 @@ class HttpListener implements LoadListenerClient {
     }
   }
 
-  public void resetStatusCode() {
+  void resetStatusCode() {
     synchronized (statusCode) {
       for (Thread thread : threadsFromReset) {
         thread.interrupt();

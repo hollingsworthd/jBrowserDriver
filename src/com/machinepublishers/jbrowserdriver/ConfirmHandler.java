@@ -28,7 +28,7 @@ class ConfirmHandler implements Callback<String, Boolean> {
   //private final JBrowserDriver driver;
   //private final Object browserContext;
 
-  public ConfirmHandler(final JBrowserDriver driver, final Object browserContext) {
+  ConfirmHandler(final JBrowserDriver driver, final Object browserContext) {
     //this.driver = driver;
     //this.browserContext = browserContext;
   }

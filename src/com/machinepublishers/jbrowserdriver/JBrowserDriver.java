@@ -31,12 +31,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.HasCapabilities;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.HasInputDevices;
+import org.openqa.selenium.internal.FindsByClassName;
+import org.openqa.selenium.internal.FindsByCssSelector;
+import org.openqa.selenium.internal.FindsById;
+import org.openqa.selenium.internal.FindsByLinkText;
+import org.openqa.selenium.internal.FindsByName;
+import org.openqa.selenium.internal.FindsByTagName;
+import org.openqa.selenium.internal.FindsByXPath;
+import org.openqa.selenium.internal.Killable;
 
-import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.javafx.webkit.Accessor;
@@ -68,7 +80,9 @@ import javafx.scene.image.WritableImage;
  * System.out.println(driver.getPageSource());
  * </pre>
  */
-public class JBrowserDriver implements Browser {
+public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
+    FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
+    FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
   //  static {
   //    if (System.getSecurityManager() == null) {
   //      System.setSecurityManager(new SecurityManager());
@@ -179,7 +193,6 @@ public class JBrowserDriver implements Browser {
     }, context.settingsId.get());
   }
 
-  @Override
   public int getStatusCode() {
     init();
     try {
