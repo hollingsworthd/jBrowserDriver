@@ -1,14 +1,13 @@
 /* 
  * jBrowserDriver (TM)
  * Copyright (C) 2014-2015 Machine Publishers, LLC
- * ops@machinepublishers.com | screenslicer.com | machinepublishers.com
+ * ops@machinepublishers.com | machinepublishers.com
  * Cincinnati, Ohio, USA
  *
  * You can redistribute this program and/or modify it under the terms of the GNU Affero General Public
  * License version 3 as published by the Free Software Foundation.
  *
- * "ScreenSlicer", "jBrowserDriver", "Machine Publishers", and "automatic, zero-config web scraping"
- * are trademarks of Machine Publishers, LLC.
+ * "jBrowserDriver" and "Machine Publishers" are trademarks of Machine Publishers, LLC.
  * 
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
