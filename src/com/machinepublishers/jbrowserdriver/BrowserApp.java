@@ -39,7 +39,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class DynamicApplication extends Application {
+public class BrowserApp extends Application {
   private static final int HISTORY_SIZE = 8;
   private static final Object lock = new Object();
   private static Stage myStage;
@@ -120,7 +120,7 @@ public class DynamicApplication extends Application {
     root.getChildren().add(view);
     stage.setScene(new Scene(root, width, height));
     stage.sizeToScene();
-    engine.titleProperty().addListener(new DynamicTitleListener(stage));
+    engine.titleProperty().addListener(new TitleListener(stage));
     stage.show();
     synchronized (lock) {
       myStage = stage;

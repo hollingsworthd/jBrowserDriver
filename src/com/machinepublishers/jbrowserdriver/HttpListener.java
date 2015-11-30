@@ -22,7 +22,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.sun.webkit.LoadListenerClient;
 import com.sun.webkit.network.CookieManager;
 
-class DynamicHttpListener implements LoadListenerClient {
+class HttpListener implements LoadListenerClient {
   static {
     CookieManager.setDefault(null);
   }
@@ -85,81 +84,29 @@ class DynamicHttpListener implements LoadListenerClient {
   private final AtomicInteger statusCode;
   private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
-  private final Object statusMonitor;
   private final AtomicLong timeoutMS;
-  private static final Method getStatusMonitor;
-  private static final Method startStatusMonitor;
-  private static final Method stopStatusMonitor;
-  private static final Method clearStatusMonitor;
-  private static final Method originalFromRedirect;
-  private static final Method logsFor;
-  private static final Method trace;
+  private final StatusMonitor statusMonitor;
+  private final Logs logs;
 
-  static {
-    Method getStatusMonitorTmp = null;
-    Method startStatusMonitorTmp = null;
-    Method stopStatusMonitorTmp = null;
-    Method clearStatusMonitorTmp = null;
-    Method originalFromRedirectTmp = null;
-    Method logsForTmp = null;
-    Method traceTmp = null;
-    try {
-      Class statusMonitorClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.StatusMonitor");
-      getStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("get", long.class);
-      getStatusMonitorTmp.setAccessible(true);
-      startStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("startStatusMonitor", String.class);
-      startStatusMonitorTmp.setAccessible(true);
-      stopStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("stopStatusMonitor", String.class, long.class);
-      stopStatusMonitorTmp.setAccessible(true);
-      clearStatusMonitorTmp = statusMonitorClass.getDeclaredMethod("clearStatusMonitor");
-      clearStatusMonitorTmp.setAccessible(true);
-      originalFromRedirectTmp = statusMonitorClass.getDeclaredMethod("originalFromRedirect", String.class);
-      originalFromRedirectTmp.setAccessible(true);
-
-      Class logsClass = DynamicHttpListener.class.getClassLoader().loadClass("com.machinepublishers.jbrowserdriver.Logs");
-      logsForTmp = logsClass.getDeclaredMethod("logsFor", long.class);
-      logsForTmp.setAccessible(true);
-      traceTmp = logsClass.getDeclaredMethod("trace", String.class);
-      traceTmp.setAccessible(true);
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-    getStatusMonitor = getStatusMonitorTmp;
-    startStatusMonitor = startStatusMonitorTmp;
-    stopStatusMonitor = stopStatusMonitorTmp;
-    clearStatusMonitor = clearStatusMonitorTmp;
-    originalFromRedirect = originalFromRedirectTmp;
-    logsFor = logsForTmp;
-    trace = traceTmp;
-  }
-
-  DynamicHttpListener(AtomicInteger statusCode, AtomicLong timeoutMS, long settingsId) {
+  HttpListener(AtomicInteger statusCode, AtomicLong timeoutMS, long settingsId) {
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
     this.settingsId = settingsId;
-    Object statusMonitorTmp = null;
-    try {
-      statusMonitorTmp = getStatusMonitor.invoke(null, settingsId);
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-    statusMonitor = statusMonitorTmp;
+    this.statusMonitor = StatusMonitor.get(settingsId);
+    this.logs = Logs.logsFor(settingsId);
   }
 
   private void trace(String label, long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    try {
-      trace.invoke(logsFor.invoke(null, settingsId),
-          new StringBuilder()
-              .append(settingsId).append("-").append(label).append("-> ")
-              .append(url)
-              .append(" ** {timestamp: ").append(System.currentTimeMillis())
-              .append(", state: ").append(states.get(state))
-              .append(", progress: ").append(progress)
-              .append(", error: ").append(errors.get(errorCode))
-              .append(", contentType: ").append(contentType)
-              .append(", frame: ").append(frame).append("}").toString());
-    } catch (Throwable t) {}
+    logs.trace(new StringBuilder()
+        .append(settingsId).append("-").append(label).append("-> ")
+        .append(url)
+        .append(" ** {timestamp: ").append(System.currentTimeMillis())
+        .append(", state: ").append(states.get(state))
+        .append(", progress: ").append(progress)
+        .append(", error: ").append(errors.get(errorCode))
+        .append(", contentType: ").append(contentType)
+        .append(", frame: ").append(frame).append("}").toString());
   }
 
   @Override
@@ -176,7 +123,7 @@ class DynamicHttpListener implements LoadListenerClient {
             || state == LoadListenerClient.RESOURCE_FAILED) {
           String original = null;
           try {
-            original = (String) originalFromRedirect.invoke(statusMonitor, url);
+            original = statusMonitor.originalFromRedirect(url);
           } catch (Throwable t) {
             t.printStackTrace();
           }
@@ -201,8 +148,8 @@ class DynamicHttpListener implements LoadListenerClient {
       superseded.set(false);
       statusCode.set(0);
       resources.clear();
-      Thread thread = new Thread(new DynamicAjaxListener(
-          statusCode, resources, superseded, timeoutMS.get()));
+      Thread thread = new Thread(new AjaxListener(
+          statusCode, settingsId, resources, superseded, timeoutMS.get()));
       threadsFromReset.add(thread);
       thread.start();
     }
@@ -225,16 +172,16 @@ class DynamicHttpListener implements LoadListenerClient {
             superseded.set(true);
             resources.clear();
             resources.put(frame + url, System.currentTimeMillis());
-            startStatusMonitor.invoke(statusMonitor, url);
+            statusMonitor.startStatusMonitor(url);
           } else if (statusCode.get() == 0
               && (state == LoadListenerClient.PAGE_FINISHED
                   || state == LoadListenerClient.LOAD_STOPPED
                   || state == LoadListenerClient.LOAD_FAILED)) {
-            final int code = (Integer) stopStatusMonitor.invoke(statusMonitor, url, settingsId);
+            final int code = statusMonitor.stopStatusMonitor(url);
             final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
             resources.remove(frame + url);
-            new Thread(new DynamicAjaxListener(newStatusCode, statusCode,
-                statusMonitor, clearStatusMonitor, resources, timeoutMS.get())).start();
+            new Thread(new AjaxListener(newStatusCode, statusCode, settingsId,
+                resources, timeoutMS.get())).start();
           }
         }
       }

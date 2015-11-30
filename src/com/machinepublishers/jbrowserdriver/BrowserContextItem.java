@@ -28,6 +28,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.sun.javafx.webkit.Accessor;
+
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 
 class BrowserContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
@@ -35,10 +40,10 @@ class BrowserContextItem {
   final AtomicReference<Window> window = new AtomicReference<Window>();
   final AtomicReference<Navigation> navigation = new AtomicReference<Navigation>();
   //TODO final AtomicReference<Alert> alert = new AtomicReference<Alert>();
-  final AtomicReference<JavaFxObject> stage = new AtomicReference<JavaFxObject>();
-  final AtomicReference<JavaFxObject> view = new AtomicReference<JavaFxObject>();
-  final AtomicReference<JavaFxObject> engine = new AtomicReference<JavaFxObject>();
-  final AtomicReference<JavaFxObject> httpListener = new AtomicReference<JavaFxObject>();
+  final AtomicReference<Stage> stage = new AtomicReference<Stage>();
+  final AtomicReference<WebView> view = new AtomicReference<WebView>();
+  final AtomicReference<WebEngine> engine = new AtomicReference<WebEngine>();
+  final AtomicReference<HttpListener> httpListener = new AtomicReference<HttpListener>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
 
@@ -49,7 +54,7 @@ class BrowserContextItem {
   void init(final JBrowserDriver driver, final BrowserContext context) {
     if (initialized.compareAndSet(false, true)) {
       SettingsManager.register(stage, view, context.settings);
-      engine.set(view.get().call("getEngine"));
+      engine.set(view.get().getEngine());
       window.set(new Window(stage, context.statusCode, context.settingsId.get()));
       navigation.set(new Navigation(
           new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
@@ -58,12 +63,11 @@ class BrowserContextItem {
       Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
-          httpListener.set(JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicHttpListener", context.settingsId.get(),
+          httpListener.set(new HttpListener(
               context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
               context.settingsId.get()));
-          JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settingsId.get()).call("getPageFor", view.get().call("getEngine")).call("addLoadListenerClient", httpListener.get());
-          engine.get().call("setCreatePopupHandler",
-              JavaFx.getNew("com.machinepublishers.jbrowserdriver.DynamicPopupHandler", context.settingsId.get(), driver, context));
+          Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
+          engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
           //TODO engine.get().call("setConfirmHandler",
           //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
           //TODO engine.get().call("setPromptHandler",

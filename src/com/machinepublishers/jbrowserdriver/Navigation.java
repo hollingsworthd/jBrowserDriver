@@ -29,14 +29,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
+import javafx.scene.web.WebView;
+
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriver> driver;
-  private final AtomicReference<JavaFxObject> view;
+  private final AtomicReference<WebView> view;
   private final AtomicInteger statusCode;
   private final long settingsId;
 
   Navigation(final AtomicReference<JBrowserDriver> driver,
-      final AtomicReference<JavaFxObject> view, final AtomicInteger statusCode, final long settingsId) {
+      final AtomicReference<WebView> view, final AtomicInteger statusCode, final long settingsId) {
     this.driver = driver;
     this.view = view;
     this.statusCode = statusCode;
@@ -49,7 +51,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
         new Sync<Object>() {
           public Object perform() {
             try {
-              view.get().call("getEngine").call("getHistory").call("go", -1);
+              view.get().getEngine().getHistory().go(-1);
             } catch (IndexOutOfBoundsException e) {
               driver.get().context.logs.get().exception(e);
             }
@@ -64,7 +66,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
         new Sync<Object>() {
           public Object perform() {
             try {
-              view.get().call("getEngine").call("getHistory").call("go", 1);
+              view.get().getEngine().getHistory().go(1);
             } catch (IndexOutOfBoundsException e) {
               driver.get().context.logs.get().exception(e);
             }
@@ -78,7 +80,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
-            view.get().call("getEngine").call("reload");
+            view.get().getEngine().reload();
             return null;
           }
         }, settingsId);

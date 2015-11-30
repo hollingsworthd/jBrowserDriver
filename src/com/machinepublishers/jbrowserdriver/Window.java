@@ -31,12 +31,14 @@ import org.openqa.selenium.Point;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
+import javafx.stage.Stage;
+
 class Window implements org.openqa.selenium.WebDriver.Window {
-  private final AtomicReference<JavaFxObject> stage;
+  private final AtomicReference<Stage> stage;
   private final AtomicInteger statusCode;
   private final long settingsId;
 
-  Window(final AtomicReference<JavaFxObject> stage,
+  Window(final AtomicReference<Stage> stage,
       final AtomicInteger statusCode, final long settingsId) {
     this.stage = stage;
     this.statusCode = statusCode;
@@ -47,7 +49,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     Util.exec(Pause.SHORT, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().call("close");
+        stage.get().close();
         return null;
       }
     }, settingsId);
@@ -58,8 +60,8 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Point>() {
       @Override
       public Point perform() {
-        return new Point((int) Math.rint((Double) stage.get().call("getX").unwrap()),
-            (int) Math.rint((Double) stage.get().call("getY").unwrap()));
+        return new Point((int) Math.rint((Double) stage.get().getX()),
+            (int) Math.rint((Double) stage.get().getY()));
       }
     }, settingsId);
   }
@@ -69,8 +71,8 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Dimension>() {
       @Override
       public Dimension perform() {
-        return new Dimension((int) Math.rint((Double) stage.get().call("getWidth").unwrap()),
-            (int) Math.rint((Double) stage.get().call("getHeight").unwrap()));
+        return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
+            (int) Math.rint((Double) stage.get().getHeight()));
       }
     }, settingsId);
   }
@@ -80,7 +82,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().call("setMaximized", true);
+        stage.get().setMaximized(true);
         return null;
       }
     }, settingsId);
@@ -91,9 +93,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().call("setMaximized", false);
-        stage.get().call("setX", point.getX());
-        stage.get().call("setY", point.getY());
+        stage.get().setMaximized(false);
+        stage.get().setX(point.getX());
+        stage.get().setY(point.getY());
         return null;
       }
     }, settingsId);
@@ -104,9 +106,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().call("setMaximized", false);
-        stage.get().call("setWidth", dimension.getWidth());
-        stage.get().call("setHeight", dimension.getHeight());
+        stage.get().setMaximized(false);
+        stage.get().setWidth(dimension.getWidth());
+        stage.get().setHeight(dimension.getHeight());
         return null;
       }
     }, settingsId);

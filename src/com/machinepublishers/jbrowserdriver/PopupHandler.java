@@ -22,14 +22,21 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import javafx.scene.web.PromptData;
+import javafx.scene.web.PopupFeatures;
+import javafx.scene.web.WebEngine;
 import javafx.util.Callback;
 
-class DynamicPromptHandler implements Callback<PromptData, String> {
+class PopupHandler implements Callback<PopupFeatures, WebEngine> {
+  private final JBrowserDriver driver;
+  private final BrowserContext context;
 
-  @Override
-  public String call(PromptData arg0) {
-    return null;
+  PopupHandler(final JBrowserDriver driver, final BrowserContext context) {
+    this.driver = driver;
+    this.context = context;
   }
 
+  @Override
+  public WebEngine call(PopupFeatures features) {
+    return context.spawn(driver).engine.get();
+  }
 }

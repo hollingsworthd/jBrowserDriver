@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
@@ -46,6 +49,7 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Locatable;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
@@ -120,10 +124,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
-  private final AtomicReference<JavaFxObject> node;
+  private final AtomicReference<JSObject> node;
   private final BrowserContext context;
 
-  Element(final AtomicReference<JavaFxObject> node, final BrowserContext context) {
+  Element(final AtomicReference<JSObject> node, final BrowserContext context) {
     try {
       this.node = node;
       this.context = context;
@@ -133,13 +137,13 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   }
 
   static Element create(final BrowserContext context) {
-    final long settingsId = Long.parseLong(context.item().engine.get().call("getUserAgent").toString());
-    final AtomicReference<JavaFxObject> doc = new AtomicReference<JavaFxObject>(
+    final long settingsId = Long.parseLong(context.item().engine.get().getUserAgent());
+    final AtomicReference<JSObject> doc = new AtomicReference<JSObject>(
         Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<JavaFxObject>() {
+            new Sync<JSObject>() {
               @Override
-              public JavaFxObject perform() {
-                return context.item().engine.get().call("getDocument");
+              public JSObject perform() {
+                return (JSObject) context.item().engine.get().getDocument();
               }
             }, settingsId));
     return new Element(doc, context);
@@ -151,9 +155,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
-            node.get().call("call", "scrollIntoView");
+            node.get().call("scrollIntoView");
             if (context.keyboard.get().isShiftPressed()) {
-              node.get().call("eval",
+              node.get().eval(
                   "this.origOnclick = this.onclick;"
                       + "this.onclick=function(event){"
                       + "  this.target='_blank';"
@@ -176,9 +180,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
-            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-            double y = Double.parseDouble(obj.call("getMember", "top").toString());
-            double x = Double.parseDouble(obj.call("getMember", "left").toString());
+            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            double y = Double.parseDouble(obj.getMember("top").toString());
+            double x = Double.parseDouble(obj.getMember("left").toString());
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
             context.robot.get().mouseMove(x + 1, y + 1);
@@ -194,11 +198,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
-            context.item().httpListener.get().call("resetStatusCode");
-            if (node.get().is(HTMLInputElement.class)) {
-              node.get().call("getForm").call("submit");
-            } else if (node.get().is(HTMLFormElement.class)) {
-              node.get().call("submit");
+            context.item().httpListener.get().resetStatusCode();
+            if (node.get() instanceof HTMLInputElement) {
+              ((HTMLInputElement) node.get()).getForm().submit();
+            } else if (node.get() instanceof HTMLFormElement) {
+              ((HTMLFormElement) node.get()).submit();
             }
             return null;
           }
@@ -211,8 +215,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
-            node.get().call("call", "scrollIntoView");
-            node.get().call("call", "focus");
+            node.get().call("scrollIntoView");
+            node.get().call("focus");
             return null;
           }
         }, context.settingsId.get());
@@ -225,10 +229,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Object>() {
           @Override
           public Object perform() {
-            context.item().httpListener.get().call("resetStatusCode");
-            node.get().call("call", "scrollIntoView");
-            node.get().call("call", "focus");
-            node.get().call("call", "setValue", new Object[] { "" });
+            context.item().httpListener.get().resetStatusCode();
+            node.get().call("scrollIntoView");
+            node.get().call("focus");
+            node.get().call("setValue", new Object[] { "" });
             return null;
           }
         }, context.settingsId.get());
@@ -236,7 +240,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   @Override
   public String getAttribute(final String attrName) {
-    String val = (String) (node.get().call("getMember", attrName).unwrap());
+    String val = (String) (node.get().getMember(attrName));
     return val == null || val.equals("undefined") ? "" : val;
   }
 
@@ -246,10 +250,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<String>() {
           @Override
           public String perform() {
-            return cleanUpCssVal((String) (node.get().call("eval", "var me = this;"
+            return cleanUpCssVal((String) (node.get().eval("var me = this;"
                 + "(function(){"
                 + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
-                + "})();").unwrap()));
+                + "})();")));
           }
         }, context.settingsId.get());
   }
@@ -271,9 +275,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Point>() {
           @Override
           public Point perform() {
-            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
+            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
             return new Point(x + 1, y + 1);
           }
         }, context.settingsId.get());
@@ -285,11 +289,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Dimension>() {
           @Override
           public Dimension perform() {
-            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.call("getMember", "top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.call("getMember", "left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.call("getMember", "right").toString()));
+            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
             return new Dimension(x2 - x, y2 - y);
           }
         }, context.settingsId.get());
@@ -313,7 +317,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           public Boolean perform() {
             try {
               //a fast approximation of whether this element is visible
-              return (Boolean) node.get().call("eval", IS_DISPLAYED).unwrap();
+              return (Boolean) node.get().eval(IS_DISPLAYED);
             } catch (Throwable t) {
               return false;
             }
@@ -327,7 +331,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            String val = node.get().call("getMember", "disabled").toString();
+            String val = node.get().getMember("disabled").toString();
             return val == null || "undefined".equals(val) || val.isEmpty();
           }
         }, context.settingsId.get());
@@ -339,8 +343,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            String selected = node.get().call("getMember", "selected").toString();
-            String checked = node.get().call("getMember", "checked").toString();
+            String selected = node.get().getMember("selected").toString();
+            String checked = node.get().getMember("checked").toString();
             return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
                 || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
           }
@@ -363,12 +367,13 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<WebElement>() {
           @Override
           public WebElement perform() {
-            final JavaFxObject xPath = JavaFx.getStatic("javax.xml.xpath.XPathFactory", context.settingsId.get()).call("newInstance").call("newXPath");
-            return new Element(
-                new AtomicReference<JavaFxObject>(
-                    xPath.call("evaluate",
-                        expr, node.get(), JavaFx.getStatic("javax.xml.xpath.XPathConstants", context.settingsId.get()).field("NODE"))),
-                context);
+            try {
+              return new Element(new AtomicReference(XPathFactory.newInstance().newXPath().evaluate(
+                  expr, node.get(), XPathConstants.NODE)), context);
+            } catch (Throwable t) {
+              Logs.logsFor(context.settingsId.get()).exception(t);
+            }
+            return null;
           }
         }, context.settingsId.get());
   }
@@ -379,18 +384,18 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<List<WebElement>>() {
           @Override
           public List<WebElement> perform() {
-            JavaFxObject xPath = JavaFx.getStatic(
-                "javax.xml.xpath.XPathFactory", context.settingsId.get()).call("newInstance").call("newXPath");
-            JavaFxObject list = xPath.call(
-                "evaluate", expr, node.get(), JavaFx.getStatic(
-                    "javax.xml.xpath.XPathConstants", context.settingsId.get()).field("NODESET"));
-            List<WebElement> elements = new ArrayList<WebElement>();
-            int length = Integer.parseInt(list.call("getLength").toString());
-            for (int i = 0; i < length; i++) {
-              elements.add(new Element(
-                  new AtomicReference<JavaFxObject>(new JavaFxObject(list.call("item", i))), context));
+            try {
+              List<WebElement> elements = new ArrayList<WebElement>();
+              NodeList list = (NodeList) XPathFactory.newInstance().newXPath().evaluate(
+                  expr, node.get(), XPathConstants.NODESET);
+              for (int i = 0; i < list.getLength(); i++) {
+                elements.add(new Element(new AtomicReference(list.item(i)), context));
+              }
+              return elements;
+            } catch (Throwable t) {
+              Logs.logsFor(context.settingsId.get()).exception(t);
             }
-            return elements;
+            return null;
           }
         }, context.settingsId.get());
   }
@@ -411,8 +416,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<List<WebElement>>() {
           @Override
           public List<WebElement> perform() {
-            return (List<WebElement>) parseScriptResult(node.get().call(
-                "call", "getElementsByTagName", new Object[] { tagName }));
+            return (List<WebElement>) parseScriptResult(
+                node.get().call("getElementsByTagName", new Object[] { tagName }));
           }
         }, context.settingsId.get());
   }
@@ -423,11 +428,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         new Sync<WebElement>() {
           @Override
           public WebElement perform() {
-            JavaFxObject result = node.get().call("call", "querySelector", new Object[] { expr });
+            JSObject result = (JSObject) node.get().call("querySelector", new Object[] { expr });
             if (result == null) {
               return null;
             }
-            return new Element(new AtomicReference<JavaFxObject>(result), context);
+            return new Element(new AtomicReference(result), context);
           }
         }, context.settingsId.get());
   }
@@ -439,11 +444,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
           @Override
           public List<WebElement> perform() {
             List<WebElement> elements = new ArrayList<WebElement>();
-            JavaFxObject result = node.get().call("call", "querySelectorAll", new Object[] { expr });
+            JSObject result = (JSObject) node.get().call("querySelectorAll", new Object[] { expr });
             for (int i = 0;; i++) {
-              JavaFxObject cur = result.call("getSlot", i);
-              if (cur.is(Node.class)) {
-                elements.add(new Element(new AtomicReference<JavaFxObject>(cur), context));
+              Object cur = result.getSlot(i);
+              if (cur instanceof Node) {
+                elements.add(new Element(new AtomicReference(cur), context));
               } else {
                 break;
               }
@@ -545,15 +550,15 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        JavaFxObject result = Util.exec(
+        Object result = Util.exec(
             Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<JavaFxObject>() {
+            new Sync<Object>() {
               @Override
-              public JavaFxObject perform() {
-                return node.get().call("eval", "(function(){return this.screenslicerCallbackVal;})();");
+              public Object perform() {
+                return node.get().eval("(function(){return this.screenslicerCallbackVal;})();");
               }
             }, context.settingsId.get());
-        if (!result.is(String.class) || !"undefined".equals(result.toString())) {
+        if (!(result instanceof String) || !"undefined".equals(result.toString())) {
           Object parsed = parseScriptResult(result);
           if (parsed instanceof List) {
             if (((List) parsed).size() == 0) {
@@ -603,16 +608,16 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   private Object script(boolean callback, String script, Object[] args) {
     return parseScriptResult(Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<JavaFxObject>() {
+        new Sync<Object>() {
           @Override
-          public JavaFxObject perform() {
+          public Object perform() {
             List<Object> argList = new ArrayList<Object>();
             if (args != null) {
               argList.addAll(Arrays.asList(args));
             }
             if (callback) {
               argList.add(null);
-              node.get().call("eval", "(function(){"
+              node.get().eval("(function(){"
                   + "          this.screenslicerCallback = function(){"
                   + "            this.screenslicerCallbackVal = arguments;"
                   + "          }"
@@ -622,48 +627,42 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             } else {
-              node.get().call("eval", "this.screenslicerJS = function(){"
+              node.get().eval("this.screenslicerJS = function(){"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             }
-            context.item().httpListener.get().call("resetStatusCode");
-            return node.get().call("call", "screenslicerJS", argList.toArray(new Object[0]));
+            context.item().httpListener.get().resetStatusCode();
+            return node.get().call("screenslicerJS", argList.toArray(new Object[0]));
           }
         }, context.settingsId.get()));
   }
 
-  private Object parseScriptResult(JavaFxObject obj) {
-    if (obj == null || (obj.is(String.class) && "undefined".equals(obj.toString()))) {
+  private Object parseScriptResult(Object obj) {
+    if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
       return null;
     }
-    if (obj.is(Node.class)) {
-      return new Element(new AtomicReference<JavaFxObject>(obj), context);
+    if (obj instanceof Node) {
+      return new Element(new AtomicReference(obj), context);
     }
-    if (obj.is(JSObject.class)) {
+    if (obj instanceof JSObject) {
       List<Object> result = new ArrayList<Object>();
       for (int i = 0;; i++) {
-        JavaFxObject cur = obj.call("getSlot", i);
-        if (cur.is(String.class) && "undefined".equals(cur.toString())) {
+        Object cur = ((JSObject) obj).getSlot(i);
+        if (cur instanceof String && "undefined".equals(cur.toString())) {
           break;
         }
         result.add(parseScriptResult(cur));
       }
       return result;
     }
-    if (obj.is(Boolean.class)) {
-      return obj.unwrap();
+    if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
+      return obj;
     }
-    if (obj.is(Long.class)) {
-      return obj.unwrap();
+    if (obj instanceof Integer) {
+      return new Long((Integer) obj);
     }
-    if (obj.is(Integer.class)) {
-      return new Long((Integer) obj.unwrap());
-    }
-    if (obj.is(Double.class)) {
-      return obj.unwrap();
-    }
-    if (obj.is(Float.class)) {
-      return new Double((Double) obj.unwrap());
+    if (obj instanceof Float) {
+      return new Double((Float) obj);
     }
     return obj.toString();
   }
@@ -683,7 +682,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             new Sync<Object>() {
           @Override
           public Point perform() {
-            node.get().call("call", "scrollIntoView");
+            node.get().call("scrollIntoView");
             return null;
           }
         }, context.settingsId.get());
@@ -691,9 +690,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
             new Sync<Point>() {
           @Override
           public Point perform() {
-            JavaFxObject obj = node.get().call("call", "getBoundingClientRect");
-            double y = Double.parseDouble(obj.call("getMember", "top").toString());
-            double x = Double.parseDouble(obj.call("getMember", "left").toString());
+            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            double y = Double.parseDouble(obj.getMember("top").toString());
+            double x = Double.parseDouble(obj.getMember("left").toString());
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
             return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);

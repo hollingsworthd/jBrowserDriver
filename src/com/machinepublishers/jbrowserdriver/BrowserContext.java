@@ -134,7 +134,7 @@ class BrowserContext {
             synchronized (lock) {
               BrowserContextItem newContext = new BrowserContextItem();
               newContext.init(driver, thisObj);
-              newContext.stage.get().call("toBack");
+              newContext.stage.get().toBack();
               items.add(newContext);
               itemMap.put(newContext.itemId.get(), newContext);
               return newContext;
@@ -150,7 +150,7 @@ class BrowserContext {
           public Object perform() {
             synchronized (lock) {
               current = items.indexOf(itemMap.get(id));
-              items.get(current).stage.get().call("toFront");
+              items.get(current).stage.get().toFront();
               return null;
             }
           }
@@ -162,7 +162,7 @@ class BrowserContext {
       @Override
       public Object perform() {
         synchronized (lock) {
-          items.get(current).stage.get().call("close");
+          items.get(current).stage.get().close();
           itemMap.remove(items.remove(current).itemId.get());
           current = 0;
           return null;
@@ -176,7 +176,7 @@ class BrowserContext {
       @Override
       public Object perform() {
         synchronized (lock) {
-          itemMap.remove(itemId).stage.get().call("close");
+          itemMap.remove(itemId).stage.get().close();
           items.remove(itemId);
           current = 0;
           return null;
@@ -191,7 +191,7 @@ class BrowserContext {
       public Object perform() {
         synchronized (lock) {
           for (BrowserContextItem curItem : items) {
-            curItem.stage.get().call("close");
+            curItem.stage.get().close();
           }
           items.clear();
           itemMap.clear();

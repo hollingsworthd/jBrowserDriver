@@ -35,13 +35,16 @@ class StatusMonitor {
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
+  private final long settingsId;
   private boolean monitoring;
 
-  private StatusMonitor() {}
+  private StatusMonitor(long settingsId) {
+    this.settingsId = settingsId;
+  }
 
   static synchronized StatusMonitor get(long settingsId) {
     if (!instances.containsKey(settingsId)) {
-      instances.put(settingsId, new StatusMonitor());
+      instances.put(settingsId, new StatusMonitor(settingsId));
     }
     return instances.get(settingsId);
   }
@@ -99,7 +102,7 @@ class StatusMonitor {
     }
   }
 
-  int stopStatusMonitor(String url, long settingsId) {
+  int stopStatusMonitor(String url) {
     StreamConnection conn = null;
     synchronized (lock) {
       monitoring = false;

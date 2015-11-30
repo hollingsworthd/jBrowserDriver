@@ -22,46 +22,43 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class DynamicAjaxListener implements Runnable {
+class AjaxListener implements Runnable {
   private static final long WAIT_INTERVAL = Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
   private static final long RESOURCE_TIMEOUT = Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
-  private final Object statusMonitor;
-  private final Method clearStatusMonitor;
+  private final long settingsId;
   private final Map<String, Long> resources;
   private final AtomicBoolean superseded;
   private final long timeoutMS;
 
-  DynamicAjaxListener(final int newStatusCode,
-      final AtomicInteger statusCode, final Object statusMonitor,
-      final Method clearStatusMonitor, final Map<String, Long> resources, final long timeoutMS) {
+  AjaxListener(final int newStatusCode,
+      final AtomicInteger statusCode, final long settingsId,
+      final Map<String, Long> resources, final long timeoutMS) {
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
-    this.statusMonitor = statusMonitor;
-    this.clearStatusMonitor = clearStatusMonitor;
+    this.settingsId = settingsId;
     this.resources = resources;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.superseded = new AtomicBoolean();
   }
 
-  DynamicAjaxListener(final AtomicInteger statusCode, final Map<String, Long> resources,
+  AjaxListener(final AtomicInteger statusCode, final long settingsId,
+      final Map<String, Long> resources,
       final AtomicBoolean superseded, final long timeoutMS) {
     this.statusCode = statusCode;
+    this.settingsId = settingsId;
     this.resources = resources;
     this.superseded = superseded;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.newStatusCode = null;
-    this.statusMonitor = null;
-    this.clearStatusMonitor = null;
   }
 
   @Override
@@ -105,7 +102,7 @@ class DynamicAjaxListener implements Runnable {
         resources.clear();
         statusCode.set(newStatusCode);
         try {
-          clearStatusMonitor.invoke(statusMonitor);
+          StatusMonitor.get(settingsId).clearStatusMonitor();
         } catch (Throwable t) {
           t.printStackTrace();
         }

@@ -22,11 +22,13 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -37,6 +39,12 @@ import org.openqa.selenium.WebElement;
 import com.machinepublishers.browser.Browser;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.sun.javafx.webkit.Accessor;
+
+import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.image.WritableImage;
 
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver
@@ -61,6 +69,24 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
  * </pre>
  */
 public class JBrowserDriver implements Browser {
+  //  static {
+  //    if (System.getSecurityManager() == null) {
+  //      System.setSecurityManager(new SecurityManager());
+  //    }
+  //  }
+  //
+  //  private static final JBrowserDriverRemote instance;
+  //
+  //  static {
+  //    JBrowserDriverRemote instanceTmp = null;
+  //    try {
+  //      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverServer");
+  //    } catch (Throwable t) {
+  //      Logs.logsFor(1l).exception(t);
+  //    }
+  //    instance = instanceTmp;
+  //  }
+
   /**
    * Use this string on sendKeys functions to delete text.
    */
@@ -107,13 +133,6 @@ public class JBrowserDriver implements Browser {
   }
 
   /**
-   * @return Temporary directory where generated runtime files are saved.
-   */
-  public File temporaryDir() {
-    return JavaFx.tmpDir(context.settingsId.get());
-  }
-
-  /**
    * Reset the state of the browser. More efficient than quitting the
    * browser and creating a new instance.
    * 
@@ -124,11 +143,11 @@ public class JBrowserDriver implements Browser {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        context.item().engine.get().call("getLoadWorker").call("cancel");
+        context.item().engine.get().getLoadWorker().cancel();
         return null;
       }
     }, context.settingsId.get());
-    JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    Accessor.getPageFor(context.item().engine.get()).stop();
     context.settings.set(new Settings(settings, context.settingsId.get()));
     context.reset(this);
     context.settings.get().cookieStore().clear();
@@ -155,7 +174,7 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
       public String perform() {
-        return context.item().view.get().call("getEngine").call("getLocation").toString();
+        return context.item().view.get().getEngine().getLocation();
       }
     }, context.settingsId.get());
   }
@@ -180,7 +199,7 @@ public class JBrowserDriver implements Browser {
     init();
     return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
       public String perform() {
-        return context.item().view.get().call("getEngine").call("getTitle").toString();
+        return context.item().view.get().getEngine().getTitle();
       }
     }, context.settingsId.get());
   }
@@ -190,7 +209,7 @@ public class JBrowserDriver implements Browser {
     init();
     Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
       public Object perform() {
-        context.item().engine.get().call("load", url);
+        context.item().engine.get().load(url);
         return null;
       }
     }, context.settingsId.get());
@@ -207,7 +226,7 @@ public class JBrowserDriver implements Browser {
       Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
         @Override
         public Object perform() {
-          context.item().engine.get().call("getLoadWorker").call("cancel");
+          context.item().engine.get().getLoadWorker().cancel();
           return null;
         }
       }, context.settingsId.get());
@@ -387,19 +406,18 @@ public class JBrowserDriver implements Browser {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        context.item().engine.get().call("getLoadWorker").call("cancel");
+        context.item().engine.get().getLoadWorker().cancel();
         return null;
       }
     }, context.settingsId.get());
-    JavaFx.getStatic("com.sun.javafx.webkit.Accessor", context.settings.get().id()).call("getPageFor", context.item().engine.get()).call("stop");
+    Accessor.getPageFor(context.item().engine.get()).stop();
     if (Settings.headless()) {
-      JavaFx.getStatic("javafx.application.Platform", context.settings.get().id()).call("exit");
+      Platform.exit();
     }
     SettingsManager.close(context.settings.get().id());
     context.settings.get().cookieStore().clear();
     StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
     StatusMonitor.remove(context.settings.get().id());
-    JavaFx.close(context.settings.get().id());
     Logs.close(context.settingsId.get());
   }
 
@@ -416,50 +434,28 @@ public class JBrowserDriver implements Browser {
 
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
-    if (Settings.headless()) {
-      init();
-      final AtomicInteger bytesPerComponent = new AtomicInteger();
-      final AtomicInteger width = new AtomicInteger();
-      final AtomicInteger height = new AtomicInteger();
-      byte[] bytes = Util.exec(Pause.NONE, context.statusCode, new Sync<byte[]>() {
-        public byte[] perform() {
-          JavaFxObject pixels = context.robot.get().screenshot();
-          bytesPerComponent.set((int) pixels.call("getBytesPerComponent").unwrap());
-          width.set((int) pixels.call("getWidth").unwrap());
-          height.set((int) pixels.call("getHeight").unwrap());
-          JavaFxObject pixelBuffer = pixels.call("asByteBuffer");
-          byte[] bytes = new byte[(int) (pixelBuffer.call("remaining").unwrap())];
-          pixelBuffer.call("get", new Object[] { bytes });
-          return bytes;
-        }
-      }, context.settingsId.get());
-
-      return outputType.convertFromPngBytes((byte[]) JavaFx.getStatic("com.machinepublishers.jbrowserdriver.DynamicScreenshot", context.settingsId.get())
-          .call("toPng", bytes, width.get(), height.get(), bytesPerComponent.get()).unwrap());
-    } else {
-      init();
-      JavaFxObject image = Util.exec(Pause.NONE, context.statusCode, new Sync<JavaFxObject>() {
-        public JavaFxObject perform() {
-          return JavaFx.getStatic(
-              "javafx.embed.swing.SwingFXUtils", Long.parseLong(context.item().engine.get().call("getUserAgent").toString()))
-              .call("fromFXImage", context.item().view.get().call("snapshot", JavaFx.getNew("javafx.scene.SnapshotParameters", context.settingsId.get()),
-                  JavaFx.getNew("javafx.scene.image.WritableImage", context.settingsId.get(),
-                      (int) Math.rint((Double) context.item().view.get().call("getWidth").unwrap()),
-                      (int) Math.rint((Double) context.item().view.get().call("getHeight").unwrap()))),
-                  null);
-        }
-      }, context.settingsId.get());
-      ByteArrayOutputStream out = null;
-      try {
-        out = new ByteArrayOutputStream();
-        JavaFx.getStatic("javax.imageio.ImageIO", context.settingsId.get()).call("write", image, "png", out);
-        return outputType.convertFromPngBytes(out.toByteArray());
-      } catch (Throwable t) {
-        context.logs.get().exception(t);
-        return null;
-      } finally {
-        Util.close(out);
+    init();
+    BufferedImage image = Util.exec(Pause.NONE, context.statusCode, new Sync<BufferedImage>() {
+      public BufferedImage perform() {
+        return SwingFXUtils.fromFXImage(
+            context.item().view.get().snapshot(
+                new SnapshotParameters(),
+                new WritableImage(
+                    (int) Math.rint((Double) context.item().view.get().getWidth()),
+                    (int) Math.rint((Double) context.item().view.get().getHeight()))),
+            null);
       }
+    }, context.settingsId.get());
+    ByteArrayOutputStream out = null;
+    try {
+      out = new ByteArrayOutputStream();
+      ImageIO.write(image, "png", out);
+      return outputType.convertFromPngBytes(out.toByteArray());
+    } catch (Throwable t) {
+      context.logs.get().exception(t);
+      return null;
+    } finally {
+      Util.close(out);
     }
   }
 }

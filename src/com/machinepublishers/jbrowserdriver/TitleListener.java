@@ -22,52 +22,20 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.io.File;
-import java.rmi.RemoteException;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.stage.Stage;
 
-import com.machinepublishers.browser.Browser.Fatal;
+class TitleListener implements ChangeListener<String> {
+  private final Stage stage;
 
-class JavaFx {
-  private static JavaFxRemote instance;
-
-  static {
-    try {
-      instance = new JavaFxServer();
-    } catch (RemoteException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+  TitleListener(Stage stage) {
+    this.stage = stage;
   }
 
-  static JavaFxObject getNew(String type, Long id, Object... params) {
-    try {
-      return new JavaFxObject(instance.getNew(type, id, params));
-    } catch (RemoteException e) {
-      throw new Fatal(e);
-    }
-  }
-
-  static JavaFxObject getStatic(String type, Long id) {
-    try {
-      return new JavaFxObject(instance.getStatic(type, id));
-    } catch (RemoteException e) {
-      throw new Fatal(e);
-    }
-  }
-
-  static void close(long settingsId) {
-    try {
-      instance.close(settingsId);
-    } catch (RemoteException e) {
-      throw new Fatal(e);
-    }
-  }
-
-  static File tmpDir(long settingsId) {
-    try {
-      return instance.tmpDir(settingsId);
-    } catch (RemoteException e) {
-      throw new Fatal(e);
-    }
+  @Override
+  public void changed(ObservableValue<? extends String> observable,
+      String oldValue, final String newValue) {
+    stage.setTitle(newValue);
   }
 }

@@ -22,20 +22,14 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.stage.Stage;
+import javafx.scene.web.PromptData;
+import javafx.util.Callback;
 
-class DynamicTitleListener implements ChangeListener<String> {
-  private final Stage stage;
-
-  DynamicTitleListener(Stage stage) {
-    this.stage = stage;
-  }
+class PromptHandler implements Callback<PromptData, String> {
 
   @Override
-  public void changed(ObservableValue<? extends String> observable,
-      String oldValue, final String newValue) {
-    stage.setTitle(newValue);
+  public String call(PromptData arg0) {
+    return null;
   }
+
 }

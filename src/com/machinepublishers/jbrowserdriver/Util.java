@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 
 import com.machinepublishers.browser.Browser;
 
+import javafx.application.Platform;
+
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
@@ -80,7 +82,7 @@ class Util {
     public void run() {
       if (statusCode.get() != -1) {
         if (statusCode.get() == 0) {
-          JavaFx.getStatic("javafx.application.Platform", id).call("runLater", this);
+          Platform.runLater(this);
           return;
         }
         if (statusCode.get() != 200) {
@@ -130,7 +132,7 @@ class Util {
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action, final long id) {
     try {
-      if ((boolean) JavaFx.getStatic("javafx.application.Platform", id).call("isFxApplicationThread").unwrap()) {
+      if ((boolean) Platform.isFxApplicationThread()) {
         try {
           return action.perform();
         } catch (Browser.Fatal t) {
@@ -141,7 +143,7 @@ class Util {
       }
       final Runner<T> runner = new Runner<T>(action, statusCode, id);
       synchronized (runner.done) {
-        JavaFx.getStatic("javafx.application.Platform", id).call("runLater", runner);
+        Platform.runLater(runner);
       }
       synchronized (runner.done) {
         if (!runner.done.get()) {

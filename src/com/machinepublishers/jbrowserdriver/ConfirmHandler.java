@@ -24,11 +24,11 @@ package com.machinepublishers.jbrowserdriver;
 
 import javafx.util.Callback;
 
-class DynamicConfirmHandler implements Callback<String, Boolean> {
+class ConfirmHandler implements Callback<String, Boolean> {
   //private final JBrowserDriver driver;
   //private final Object browserContext;
 
-  public DynamicConfirmHandler(final JBrowserDriver driver, final Object browserContext) {
+  public ConfirmHandler(final JBrowserDriver driver, final Object browserContext) {
     //this.driver = driver;
     //this.browserContext = browserContext;
   }
