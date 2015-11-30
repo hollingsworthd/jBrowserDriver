@@ -58,26 +58,68 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
 
 /**
- * Use this library like any other Selenium WebDriver or RemoteWebDriver
- * (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot,
- * Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
- * FindsByCssSelector, FindsByTagName, and FindsByXPath).
+ * Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's
+ * JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName,
+ * FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
  * <p>
- * You can optionally pass a Settings object to the constructor to specify a proxy,
- * request headers, time zone, user agent, or navigator details. By default, the
- * browser mimics the fingerprint of Tor Browser.
+ * You can optionally pass a {@link Settings} object to the {@link JBrowserDriver#JBrowserDriver(Settings)}
+ * constructor to specify a proxy, request headers, time zone, user agent, or navigator details.
+ * By default, the browser mimics the fingerprint of Tor Browser.
  * <p>
- * Also, you can run as many instances of JBrowserDriver as you want (it's thread safe),
- * and the browser sessions will be isolated from each other.
+ * Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the
+ * browser sessions will be fully isolated from each other when run in headless mode, which is the
+ * default (when it's run with the GUI shown, some of the memory between instances is shared out of
+ * necessity).
  * <p>
  * Example:
  * 
  * <pre>
- * WebDriver driver = new JBrowserDriver();
- * driver.get("http://example.com"); //This will block for page load and associated AJAX requests.
- * System.out.println(((JBrowserDriver) driver).getStatusCode()); //You can get status code unlike other Selenium drivers! It blocks for AJAX requests and page loads after clicks and keyboard events.
- * System.out.println(driver.getPageSource());
+ * import org.openqa.selenium.WebDriver;
+ * import com.machinepublishers.jbrowserdriver.Timezone;
+ * import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+ * import com.machinepublishers.jbrowserdriver.Settings;
+ * 
+ * public class Example {
+ *   public static void main(String[] args) {
+ * 
+ *     // You can optionally pass a Settings object here,
+ *     // constructed using Settings.Builder
+ *     WebDriver driver = new JBrowserDriver(Settings.builder().timezone(Timezone.AMERICA_NEWYORK).build());
+ * 
+ *     // This will block for the page load and any
+ *     // associated AJAX requests
+ *     driver.get("http://example.com");
+ * 
+ *     // You can get status code unlike other Selenium drivers.
+ *     // It blocks for AJAX requests and page loads after clicks
+ *     // and keyboard events.
+ *     System.out.println(((JBrowserDriver) driver).getStatusCode());
+ * 
+ *     // Returns the page source in its current state, including
+ *     // any DOM updates that occurred after page load
+ *     System.out.println(driver.getPageSource());
+ *   }
+ * }
  * </pre>
+ * 
+ * Java System Properties:
+ * <br>
+ * `jbd.traceconsole` Mirror trace-level log messages to standard out. Otherwise these logs are only available through the Selenium APIs. Defaults to `false`.<br>
+ * `jbd.warnconsole` Mirror warning-level log messages to standard error. Otherwise these logs are only available through the Selenium APIs. Defaults to `true`.<br>
+ * `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this setting, logs are cleared per
+ * instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.<br>
+ * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.<br>
+ * `jbd.quickrender` Exclude web page images and binary data from rendering. These resources are still requested and can optionally be saved to disk (see the Settings options). Some versions of Java
+ * are inefficient (memory-wise) in rendering images. Defaults to `true`.<br>
+ * `jbd.blockads` Whether requests to ad/spam servers should be blocked. Based on hosts in ad-hosts.txt in the source tree. Defaults to `true`.<br>
+ * `jbd.ajaxwait` The idle time (no pending AJAX requests) required in milliseconds before a page is considered to have been loaded completely. For very slow or overloaded CPUs, set a higher value.
+ * Defaults to `120`.<br>
+ * `jbd.ajaxresourcetimeout` The time in milliseconds after which an AJAX request will be ignored when considering whether all AJAX requests have completed. Defaults to `2000`.<br>
+ * `jbd.pemfile` Specifies a source of trusted certificate authorities. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`. Alternate sources must follow
+ * that format too. Can be a local file as well. *Defaults to the JRE keystore*, so you can use JDK's keytool to import specific certs.<br>
+ * `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.<br>
+ * `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `3000`.<br>
+ * 
  */
 public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
