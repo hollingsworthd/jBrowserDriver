@@ -27,9 +27,9 @@ import org.openqa.selenium.WebElement;
 
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final JBrowserDriver driver;
-  private final BrowserContext context;
+  private final Context context;
 
-  TargetLocator(JBrowserDriver driver, BrowserContext context) {
+  TargetLocator(JBrowserDriver driver, Context context) {
     this.driver = driver;
     this.context = context;
   }

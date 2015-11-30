@@ -33,7 +33,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
-class BrowserContextItem {
+class ContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
 
   final AtomicReference<Window> window = new AtomicReference<Window>();
@@ -46,11 +46,11 @@ class BrowserContextItem {
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
 
-  BrowserContextItem() {
+  ContextItem() {
     itemId.set(Long.toString(currentItemId.getAndIncrement()));
   }
 
-  void init(final JBrowserDriver driver, final BrowserContext context) {
+  void init(final JBrowserDriver driver, final Context context) {
     if (initialized.compareAndSet(false, true)) {
       SettingsManager.register(stage, view, context.settings);
       engine.set(view.get().getEngine());

@@ -123,9 +123,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private final AtomicReference<JSObject> node;
-  private final BrowserContext context;
+  private final Context context;
 
-  Element(final AtomicReference<JSObject> node, final BrowserContext context) {
+  Element(final AtomicReference<JSObject> node, final Context context) {
     try {
       this.node = node;
       this.context = context;
@@ -134,7 +134,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
-  static Element create(final BrowserContext context) {
+  static Element create(final Context context) {
     final long settingsId = Long.parseLong(context.item().engine.get().getUserAgent());
     final AtomicReference<JSObject> doc = new AtomicReference<JSObject>(
         Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),

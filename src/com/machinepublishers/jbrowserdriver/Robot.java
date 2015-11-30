@@ -228,12 +228,12 @@ class Robot {
   private final AtomicReference<com.sun.glass.ui.Robot> robot = new AtomicReference<com.sun.glass.ui.Robot>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
-  private final BrowserContext context;
+  private final Context context;
   private final long settingsId;
   private final AtomicInteger statusCode;
   private final KeyCode keyUndefined;
 
-  Robot(final BrowserContext context) {
+  Robot(final Context context) {
     robot.set(Util.exec(Pause.SHORT, context.statusCode, new Sync<com.sun.glass.ui.Robot>() {
       public com.sun.glass.ui.Robot perform() {
         return Application.GetApplication().createRobot();

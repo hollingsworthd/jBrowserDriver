@@ -41,7 +41,7 @@ import javafx.stage.StageStyle;
 /**
  * Internal use only.
  */
-public class BrowserApp extends Application {
+public class App extends Application {
   private static final int HISTORY_SIZE = 8;
   private static final Object lock = new Object();
   private static Stage myStage;
@@ -54,7 +54,7 @@ public class BrowserApp extends Application {
   /**
    * Internal use only.
    */
-  public BrowserApp() {
+  public App() {
 
   }
 

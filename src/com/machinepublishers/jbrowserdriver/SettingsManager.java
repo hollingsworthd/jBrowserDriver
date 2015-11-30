@@ -50,7 +50,7 @@ class SettingsManager {
         public void run() {
           Dimension size = settings.get().screen();
           try {
-            Application.launch(BrowserApp.class,
+            Application.launch(App.class,
                 new String[] { Integer.toString(size.getWidth()), Integer.toString(size.getHeight()),
                     Boolean.toString(Settings.headless()), Long.toString(settings.get().id()) });
           } catch (Throwable t) {
@@ -60,7 +60,7 @@ class SettingsManager {
       }).start();
     } else {
       Dimension size = settings.get().screen();
-      final BrowserApp app = new BrowserApp();
+      final App app = new App();
       app.init(
           size.getWidth(), size.getHeight(), Settings.headless(), settings.get().id());
       Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
@@ -74,8 +74,8 @@ class SettingsManager {
         }
       }, settings.get().id());
     }
-    stage.set(BrowserApp.getStage());
-    view.set(BrowserApp.getView());
+    stage.set(App.getStage());
+    view.set(App.getView());
 
     synchronized (registry) {
       registry.put(settings.get().id(), settings);

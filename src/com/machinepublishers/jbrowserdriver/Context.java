@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
-class BrowserContext {
+class Context {
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<Logs> logs = new AtomicReference();
   final AtomicReference<Timeouts> timeouts = new AtomicReference<Timeouts>(new Timeouts());
@@ -50,14 +50,14 @@ class BrowserContext {
   final AtomicLong settingsId = new AtomicLong();
   final AtomicLong latestThread = new AtomicLong();
   final AtomicLong curThread = new AtomicLong();
-  private final Map<String, BrowserContextItem> itemMap = new LinkedHashMap<String, BrowserContextItem>();
-  private final List<BrowserContextItem> items = new ArrayList<BrowserContextItem>();
+  private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
+  private final List<ContextItem> items = new ArrayList<ContextItem>();
   private int current = 0;
   private final Object lock = new Object();
 
-  BrowserContext(Settings settings) {
+  Context(Settings settings) {
     synchronized (lock) {
-      BrowserContextItem newContext = new BrowserContextItem();
+      ContextItem newContext = new ContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
       this.settings.set(settings);
@@ -70,7 +70,7 @@ class BrowserContext {
     removeItems();
     synchronized (lock) {
       statusCode.set(-1);
-      BrowserContextItem newContext = new BrowserContextItem();
+      ContextItem newContext = new ContextItem();
       newContext.init(driver, this);
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
@@ -92,11 +92,11 @@ class BrowserContext {
     }
   }
 
-  BrowserContextItem item() {
+  ContextItem item() {
     return items.get(current);
   }
 
-  List<BrowserContextItem> items() {
+  List<ContextItem> items() {
     return items;
   }
 
@@ -124,14 +124,14 @@ class BrowserContext {
         }, settingsId.get());
   }
 
-  BrowserContextItem spawn(final JBrowserDriver driver) {
-    final BrowserContext thisObj = this;
+  ContextItem spawn(final JBrowserDriver driver) {
+    final Context thisObj = this;
     return Util.exec(Pause.SHORT, statusCode,
-        new Sync<BrowserContextItem>() {
+        new Sync<ContextItem>() {
           @Override
-          public BrowserContextItem perform() {
+          public ContextItem perform() {
             synchronized (lock) {
-              BrowserContextItem newContext = new BrowserContextItem();
+              ContextItem newContext = new ContextItem();
               newContext.init(driver, thisObj);
               newContext.stage.get().toBack();
               items.add(newContext);
@@ -189,7 +189,7 @@ class BrowserContext {
       @Override
       public Object perform() {
         synchronized (lock) {
-          for (BrowserContextItem curItem : items) {
+          for (ContextItem curItem : items) {
             curItem.stage.get().close();
           }
           items.clear();

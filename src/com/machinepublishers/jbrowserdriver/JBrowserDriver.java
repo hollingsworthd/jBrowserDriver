@@ -161,7 +161,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     KEYBOARD_DELETE = builder.toString();
   }
 
-  final BrowserContext context;
+  final Context context;
 
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
@@ -176,7 +176,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    context = new BrowserContext(new Settings(settings));
+    context = new Context(new Settings(settings));
   }
 
   /**
