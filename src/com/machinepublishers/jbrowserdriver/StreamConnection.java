@@ -44,7 +44,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.Permission;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -67,6 +69,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -85,12 +88,14 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
@@ -120,6 +125,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
       .setDefaultCredentialsProvider(ProxyAuth.instance())
+      .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
       .disableRedirectHandling()
@@ -128,6 +134,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
       .setDefaultCredentialsProvider(ProxyAuth.instance())
+      .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
   private static boolean cacheByDefault;
 
@@ -170,56 +177,71 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   private static SSLContext sslContext() {
-    //a good pem source: https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt
-    if (System.getProperty("jbd.pemfile") != null) {
-      try {
-        String location = System.getProperty("jbd.pemfile");
-        File cachedPemFile = new File("./pemfile_cached");
-        boolean remote = location.startsWith("https://") || location.startsWith("http://");
-        if (remote && cachedPemFile.exists()
-            && (System.currentTimeMillis() - cachedPemFile.lastModified() < 48 * 60 * 60 * 1000)) {
-          location = cachedPemFile.getAbsolutePath();
-          remote = false;
+    final String property = System.getProperty("jbd.pemfile");
+    if (property != null && !property.isEmpty() && !"null".equals(property)) {
+      if ("trustanything".equals(property)) {
+        try {
+          return SSLContexts.custom().loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()),
+              new TrustStrategy() {
+                public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                  return true;
+                }
+              }).build();
+        } catch (Throwable t) {
+          Logs.logsFor(1l).exception(t);
         }
-        String pemBlocks = null;
-        if (remote) {
-          HttpURLConnection remotePemFile = (HttpURLConnection) new URL(location).openConnection();
-          remotePemFile.setRequestMethod("GET");
-          remotePemFile.connect();
-          pemBlocks = Util.toString(remotePemFile.getInputStream(),
-              Util.charset(remotePemFile));
-          cachedPemFile.delete();
-          Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
-        } else {
-          pemBlocks = new String(Files.readAllBytes(
-              Paths.get(new File(location).getAbsolutePath())), "utf-8");
-        }
-        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keyStore.load(null);
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        Matcher matcher = pemBlock.matcher(pemBlocks);
-        boolean found = false;
-        while (matcher.find()) {
-          String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
-          ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
-          java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
-          String alias = cert.getSubjectX500Principal().getName("RFC2253");
-          if (alias != null && !keyStore.containsAlias(alias)) {
-            found = true;
-            keyStore.setCertificateEntry(alias, cert);
+      } else {
+        try {
+          String location = property;
+          location = location.equals("compatible")
+              ? "https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt" : location;
+          File cachedPemFile = new File("./pemfile_cached");
+          boolean remote = location.startsWith("https://") || location.startsWith("http://");
+          if (remote && cachedPemFile.exists()
+              && (System.currentTimeMillis() - cachedPemFile.lastModified() < 48 * 60 * 60 * 1000)) {
+            location = cachedPemFile.getAbsolutePath();
+            remote = false;
           }
+          String pemBlocks = null;
+          if (remote) {
+            HttpURLConnection remotePemFile = (HttpURLConnection) new URL(location).openConnection();
+            remotePemFile.setRequestMethod("GET");
+            remotePemFile.connect();
+            pemBlocks = Util.toString(remotePemFile.getInputStream(),
+                Util.charset(remotePemFile));
+            cachedPemFile.delete();
+            Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
+          } else {
+            pemBlocks = new String(Files.readAllBytes(
+                Paths.get(new File(location).getAbsolutePath())), "utf-8");
+          }
+          KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+          keyStore.load(null);
+          CertificateFactory cf = CertificateFactory.getInstance("X.509");
+          Matcher matcher = pemBlock.matcher(pemBlocks);
+          boolean found = false;
+          while (matcher.find()) {
+            String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
+            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
+            java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
+            String alias = cert.getSubjectX500Principal().getName("RFC2253");
+            if (alias != null && !keyStore.containsAlias(alias)) {
+              found = true;
+              keyStore.setCertificateEntry(alias, cert);
+            }
+          }
+          if (found) {
+            KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManager.init(keyStore, null);
+            TrustManagerFactory trustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManager.init(keyStore);
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
+            return context;
+          }
+        } catch (Throwable t) {
+          Logs.logsFor(1l).exception(t);
         }
-        if (found) {
-          KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-          keyManager.init(keyStore, null);
-          TrustManagerFactory trustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-          trustManager.init(keyStore);
-          SSLContext context = SSLContext.getInstance("TLS");
-          context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
-          return context;
-        }
-      } catch (Throwable t) {
-        Logs.logsFor(1l).exception(t);
       }
     }
     return SSLContexts.createSystemDefault();
@@ -243,15 +265,17 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
-  private static Socket newSocket(final HttpContext context) {
+  private static Socket newSocket(final HttpContext context) throws IOException {
     InetSocketAddress proxySocks = (InetSocketAddress) context.getAttribute("proxy.socks.address");
-    InetSocketAddress proxyHttp = (InetSocketAddress) context.getAttribute("proxy.http.address");
+    Socket socket;
     if (proxySocks != null) {
-      return new Socket(new Proxy(Proxy.Type.SOCKS, proxySocks));
-    } else if (proxyHttp != null) {
-      return new Socket(new Proxy(Proxy.Type.HTTP, proxyHttp));
+      socket = new Socket(new Proxy(Proxy.Type.SOCKS, proxySocks));
+    } else {
+      socket = new Socket();
     }
-    return new Socket();
+    socket.setTcpNoDelay(true);
+    socket.setKeepAlive(true);
+    return socket;
   }
 
   private boolean isBlocked(String host) {
@@ -369,11 +393,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           processHeaders(SettingsManager.get(settingsId.get()), req, url.getHost());
           ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
           if (proxy != null && !proxy.directConnection()) {
-            InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+            config.setExpectContinueEnabled(proxy.expectContinue());
             if (proxy.type() == ProxyConfig.Type.SOCKS) {
-              context.setAttribute("proxy.socks.address", proxyAddress);
+              context.setAttribute("proxy.socks.address",
+                  new InetSocketAddress(proxy.host(), proxy.port()));
             } else {
-              context.setAttribute("proxy.http.address", proxyAddress);
+              config.setProxy(new HttpHost(proxy.host(), proxy.port()));
             }
           }
           context.setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
@@ -478,8 +503,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public int getResponseCode() throws IOException {
     exec();
-    StatusMonitor.get(settingsId.get()).addRedirect(
-        urlString, getHeaderField("location"));
+    StatusMonitor.get(settingsId.get()).addRedirect(urlString, getHeaderField("location"));
     if (skip.get()) {
       return 204;
     }

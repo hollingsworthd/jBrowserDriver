@@ -31,6 +31,7 @@ public class ProxyConfig {
   private final String hostAndPort;
   private final String user;
   private final String password;
+  private final boolean expectContinue;
 
   /**
    * The proxy type.
@@ -56,6 +57,18 @@ public class ProxyConfig {
     hostAndPort = null;
     user = null;
     password = null;
+    expectContinue = false;
+  }
+
+  /**
+   * Creates a proxy.
+   * 
+   * @param type
+   * @param host
+   * @param port
+   */
+  public ProxyConfig(Type type, String host, int port) {
+    this(type, host, port, null, null, true);
   }
 
   /**
@@ -68,12 +81,28 @@ public class ProxyConfig {
    * @param password
    */
   public ProxyConfig(Type type, String host, int port, String user, String password) {
+    this(type, host, port, user, password, true);
+  }
+
+  /**
+   * Creates a proxy.
+   * 
+   * @param type
+   * @param host
+   * @param port
+   * @param user
+   * @param password
+   * @param expectContinue
+   *          Whether the proxy uses "Expect: 100-Continue" functionality
+   */
+  public ProxyConfig(Type type, String host, int port, String user, String password, boolean expectContinue) {
     this.type = type;
     this.host = host;
     this.port = port;
     this.hostAndPort = host + ":" + port;
     this.user = user;
     this.password = password;
+    this.expectContinue = expectContinue;
   }
 
   boolean directConnection() {
@@ -106,5 +135,9 @@ public class ProxyConfig {
 
   String password() {
     return password == null ? "" : password;
+  }
+
+  boolean expectContinue() {
+    return expectContinue;
   }
 }
