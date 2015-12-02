@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLProtocolException;
+
 import com.machinepublishers.browser.Browser;
 
 class Util {
@@ -176,7 +178,7 @@ class Util {
       BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset), chars.length);
       try {
         for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
-      } catch (EOFException e) {}
+      } catch (EOFException | SSLProtocolException e) {}
       return builder.toString();
     } catch (Throwable t) {
       return null;
@@ -191,7 +193,7 @@ class Util {
       ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length);
       try {
         for (int len = 0; -1 != (len = inputStream.read(bytes, 0, bytes.length)); out.write(bytes, 0, len));
-      } catch (EOFException e) {}
+      } catch (EOFException | SSLProtocolException e) {}
       return out.toByteArray();
     } finally {
       close(inputStream);
