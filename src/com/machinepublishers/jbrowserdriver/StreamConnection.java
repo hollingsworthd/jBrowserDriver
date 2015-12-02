@@ -370,6 +370,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           processHeaders(SettingsManager.get(settingsId.get()), req, url.getHost());
           ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
           if (proxy != null && !proxy.directConnection()) {
+            config.setExpectContinueEnabled(proxy.expectContinue());
             InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
             if (proxy.type() == ProxyConfig.Type.SOCKS) {
               context.setAttribute("proxy.socks.address", proxyAddress);
