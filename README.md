@@ -18,7 +18,7 @@ Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
 
-You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L209) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L178) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
+You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L209) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L201) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
 Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be fully isolated from each other when run in headless mode, which is the default (when it's run with the GUI shown, some of the memory between instances is shared out of necessity).
 
