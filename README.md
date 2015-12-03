@@ -49,6 +49,9 @@ Example:
         // Returns the page source in its current state, including
         // any DOM updates that occurred after page load
         System.out.println(driver.getPageSource());
+        
+        // Close the browser. Allows this thread to terminate.
+        driver.quit();
       }
     }
     
