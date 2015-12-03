@@ -36,7 +36,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +43,7 @@ import java.util.Map;
 
 import com.machinepublishers.browser.Browser.Fatal;
 
-class JavaFxServer extends UnicastRemoteObject implements JavaFxRemote {
+class JavaFxServer implements JavaFxRemote {
   JavaFxServer() throws RemoteException {}
 
   private final Map<Long, ClassLoader> classLoaders = new HashMap<Long, ClassLoader>();

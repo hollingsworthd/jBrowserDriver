@@ -1,9 +1,8 @@
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface JavaFxObjectRemote extends Remote {
+public interface JavaFxObjectRemote {
   Object unwrap() throws RemoteException;
 
   boolean is(Class<?> type) throws RemoteException;

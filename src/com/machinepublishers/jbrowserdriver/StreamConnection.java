@@ -165,7 +165,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       BufferedReader reader = null;
       try {
         reader = new BufferedReader(
-            new InputStreamReader(StreamConnection.class.getResourceAsStream("./ad-hosts.txt")));
+            new InputStreamReader(StreamConnection.class.getResourceAsStream("/com/machinepublishers/jbrowserdriver/ad-hosts.txt")));
         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
           adHosts.add(line);
         }

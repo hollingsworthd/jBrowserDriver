@@ -27,11 +27,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
 import com.machinepublishers.browser.Browser.Fatal;
 
-class JavaFxObjectServer extends UnicastRemoteObject implements JavaFxObjectRemote {
+class JavaFxObjectServer implements JavaFxObjectRemote {
   private final Object object;
 
   JavaFxObjectServer(Object object) throws RemoteException {
