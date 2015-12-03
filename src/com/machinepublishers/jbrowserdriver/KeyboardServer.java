@@ -21,40 +21,52 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.atomic.AtomicReference;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Keys;
 
-  Alert() {}
+class KeyboardServer extends UnicastRemoteObject implements KeyboardRemote,
+    org.openqa.selenium.interactions.Keyboard {
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
+  private final AtomicReference<Robot> robot;
+  private boolean shiftPressed;
+  private final Object lock = new Object();
+
+  KeyboardServer(final AtomicReference<Robot> robot) throws RemoteException {
+    this.robot = robot;
   }
 
   @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
+  public void pressKey(CharSequence key) {
+    synchronized (lock) {
+      if (!shiftPressed) {
+        shiftPressed = Keys.SHIFT.equals(key) || Keys.LEFT_SHIFT.equals(key);
+      }
+    }
+    robot.get().keysPress(key);
   }
 
   @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
+  public void releaseKey(CharSequence key) {
+    synchronized (lock) {
+      if (shiftPressed) {
+        shiftPressed = !Keys.SHIFT.equals(key) && !Keys.LEFT_SHIFT.equals(key);
+      }
+    }
+    robot.get().keysRelease(key);
   }
 
   @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
+  public void sendKeys(CharSequence... keys) {
+    robot.get().keysType(keys);
   }
 
   @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
+  public boolean isShiftPressed() {
+    synchronized (lock) {
+      return shiftPressed;
+    }
   }
 }

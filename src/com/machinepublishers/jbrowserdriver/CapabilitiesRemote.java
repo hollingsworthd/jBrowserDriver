@@ -21,40 +21,25 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.Map;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Platform;
 
-  Alert() {}
+interface CapabilitiesRemote extends Remote {
+  Map<String, ?> asMap() throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  String getBrowserName() throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
+  Object getCapability(String name) throws RemoteException;
 
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
+  Platform getPlatform() throws RemoteException;
 
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  String getVersion() throws RemoteException;
 
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
+  boolean is(String name) throws RemoteException;
 
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  boolean isJavascriptEnabled() throws RemoteException;
+
 }

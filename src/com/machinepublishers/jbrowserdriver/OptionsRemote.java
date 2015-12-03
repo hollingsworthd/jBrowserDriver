@@ -21,40 +21,34 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.Set;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.WebDriver.ImeHandler;
+import org.openqa.selenium.WebDriver.Timeouts;
+import org.openqa.selenium.WebDriver.Window;
+import org.openqa.selenium.logging.Logs;
 
-  Alert() {}
+interface OptionsRemote extends Remote {
+  void addCookie(Cookie cookie) throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  void deleteAllCookies() throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
+  void deleteCookie(Cookie cookie) throws RemoteException;
 
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
+  void deleteCookieNamed(String name) throws RemoteException;
 
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  Cookie getCookieNamed(String name) throws RemoteException;
 
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
+  Set<Cookie> getCookies() throws RemoteException;
 
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  ImeHandler ime() throws RemoteException;
+
+  Logs logs() throws RemoteException;
+
+  Timeouts timeouts() throws RemoteException;
+
+  Window window() throws RemoteException;
 }

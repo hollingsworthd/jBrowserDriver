@@ -21,40 +21,36 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
+import java.util.List;
 
-class Alert implements org.openqa.selenium.Alert {
+class ImeHandlerServer extends UnicastRemoteObject implements ImeHandlerRemote,
+    org.openqa.selenium.WebDriver.ImeHandler {
 
-  Alert() {}
-
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
+  protected ImeHandlerServer() throws RemoteException {
+    super();
   }
 
   @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
+  public void activateEngine(String name) {}
+
+  @Override
+  public void deactivate() {}
+
+  @Override
+  public String getActiveEngine() {
+    return "default";
   }
 
   @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
+  public List<String> getAvailableEngines() {
+    return Arrays.asList(new String[] { "default" });
   }
 
   @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
+  public boolean isActivated() {
+    return true;
   }
 }

@@ -21,40 +21,52 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.Map;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Platform;
 
-  Alert() {}
+class CapabilitiesServer extends UnicastRemoteObject implements CapabilitiesRemote,
+    org.openqa.selenium.Capabilities {
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
+  protected CapabilitiesServer() throws RemoteException {
+    super();
   }
 
   @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
+  public Map<String, ?> asMap() {
+    return new HashMap<String, String>();
   }
 
   @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
+  public String getBrowserName() {
+    return "jBrowserDriver (WebKit-based) by Machine Publishers, LLC";
   }
 
   @Override
-  public String getText() {
-    // TODO Auto-generated method stub
+  public Object getCapability(String name) {
     return null;
   }
 
   @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
+  public Platform getPlatform() {
+    return Platform.ANY;
   }
 
   @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
+  public String getVersion() {
+    return Runtime.class.getPackage().getImplementationVersion();
+  }
+
+  @Override
+  public boolean is(String name) {
+    return false;
+  }
+
+  @Override
+  public boolean isJavascriptEnabled() {
+    return true;
   }
 }

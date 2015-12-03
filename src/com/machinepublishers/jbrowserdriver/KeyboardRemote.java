@@ -21,40 +21,15 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-class Alert implements org.openqa.selenium.Alert {
+interface KeyboardRemote extends Remote {
+  void pressKey(CharSequence key) throws RemoteException;
 
-  Alert() {}
+  void releaseKey(CharSequence key) throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  void sendKeys(CharSequence... keys) throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  boolean isShiftPressed() throws RemoteException;
 }

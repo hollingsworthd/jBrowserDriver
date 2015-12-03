@@ -21,40 +21,31 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
-class Alert implements org.openqa.selenium.Alert {
+interface TimeoutsRemote extends Remote {
+  org.openqa.selenium.WebDriver.Timeouts implicitlyWait(long duration, TimeUnit unit)
+      throws RemoteException;
 
-  Alert() {}
+  org.openqa.selenium.WebDriver.Timeouts pageLoadTimeout(long duration, TimeUnit unit)
+      throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  org.openqa.selenium.WebDriver.Timeouts setScriptTimeout(long duration, TimeUnit unit)
+      throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
+  long getImplicitlyWaitMS() throws RemoteException;
 
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
+  long getPageLoadTimeoutMS() throws RemoteException;
 
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  long getScriptTimeoutMS() throws RemoteException;
 
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
+  AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
 
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
+
+  AtomicLong getScriptTimeoutObjMS() throws RemoteException;
+
 }

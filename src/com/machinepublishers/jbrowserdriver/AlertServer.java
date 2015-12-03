@@ -21,11 +21,17 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
 import org.openqa.selenium.security.Credentials;
 
-class Alert implements org.openqa.selenium.Alert {
+class AlertServer extends UnicastRemoteObject implements AlertRemote,
+    org.openqa.selenium.Alert {
 
-  Alert() {}
+  protected AlertServer() throws RemoteException {
+    super();
+  }
 
   @Override
   public void accept() {

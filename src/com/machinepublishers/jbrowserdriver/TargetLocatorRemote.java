@@ -21,40 +21,27 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
-  Alert() {}
+interface TargetLocatorRemote extends Remote {
+  WebElement activeElement() throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  Alert alert() throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
+  WebDriver defaultContent() throws RemoteException;
 
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
+  WebDriver frame(int arg0) throws RemoteException;
 
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  WebDriver frame(String arg0) throws RemoteException;
 
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
+  WebDriver frame(WebElement arg0) throws RemoteException;
 
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  WebDriver parentFrame() throws RemoteException;
+
+  WebDriver window(String windowHandle) throws RemoteException;
 }

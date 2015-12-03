@@ -21,40 +21,69 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
-  Alert() {}
+class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRemote,
+    org.openqa.selenium.WebDriver.TargetLocator {
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
+  private final JBrowserDriver driver;
+  private final Context context;
+
+  TargetLocatorServer(JBrowserDriver driver, Context context) throws RemoteException {
+    this.driver = driver;
+    this.context = context;
   }
 
   @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public String getText() {
+  public WebElement activeElement() {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public void sendKeys(String arg0) {
+  public Alert alert() {
     // TODO Auto-generated method stub
+    return null;
   }
 
   @Override
-  public void setCredentials(Credentials credentials) {
+  public WebDriver defaultContent() {
     // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public WebDriver frame(int arg0) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public WebDriver frame(String arg0) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public WebDriver frame(WebElement arg0) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public WebDriver parentFrame() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public WebDriver window(String windowHandle) {
+    context.setCurrent(windowHandle);
+    return driver;
   }
 }

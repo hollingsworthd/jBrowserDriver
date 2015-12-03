@@ -147,23 +147,6 @@ import javafx.scene.image.WritableImage;
 public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
-  //  static {
-  //    if (System.getSecurityManager() == null) {
-  //      System.setSecurityManager(new SecurityManager());
-  //    }
-  //  }
-  //
-  //  private static final JBrowserDriverRemote instance;
-  //
-  //  static {
-  //    JBrowserDriverRemote instanceTmp = null;
-  //    try {
-  //      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverServer");
-  //    } catch (Throwable t) {
-  //      Logs.logsFor(1l).exception(t);
-  //    }
-  //    instance = instanceTmp;
-  //  }
 
   /**
    * Use this string on sendKeys functions to delete text.

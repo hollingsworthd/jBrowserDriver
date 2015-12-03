@@ -21,40 +21,22 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-class Alert implements org.openqa.selenium.Alert {
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 
-  Alert() {}
+interface WindowRemote extends Remote {
+  void close() throws RemoteException;
 
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
-  }
+  Point getPosition() throws RemoteException;
 
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
-  }
+  Dimension getSize() throws RemoteException;
 
-  @Override
-  public void dismiss() {
-    // TODO Auto-generated method stub
-  }
+  void maximize() throws RemoteException;
 
-  @Override
-  public String getText() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  void setPosition(final Point point) throws RemoteException;
 
-  @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
+  void setSize(final Dimension dimension) throws RemoteException;
 }
