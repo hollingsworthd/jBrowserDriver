@@ -102,24 +102,47 @@ import javafx.scene.image.WritableImage;
  * }
  * </pre>
  * 
- * Java System Properties:
- * <br>
- * `jbd.traceconsole` Mirror trace-level log messages to standard out. Otherwise these logs are only available through the Selenium APIs. Defaults to `false`.<br>
- * `jbd.warnconsole` Mirror warning-level log messages to standard error. Otherwise these logs are only available through the Selenium APIs. Defaults to `true`.<br>
- * `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this setting, logs are cleared per
- * instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.<br>
- * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.<br>
- * `jbd.quickrender` Exclude web page images and binary data from rendering. These resources are still requested and can optionally be saved to disk (see the Settings options). Some versions of Java
- * are inefficient (memory-wise) in rendering images. Defaults to `true`.<br>
- * `jbd.blockads` Whether requests to ad/spam servers should be blocked. Based on hosts in ad-hosts.txt in the source tree. Defaults to `true`.<br>
- * `jbd.ajaxwait` The idle time (no pending AJAX requests) required in milliseconds before a page is considered to have been loaded completely. For very slow or overloaded CPUs, set a higher value.
- * Defaults to `120`.<br>
- * `jbd.ajaxresourcetimeout` The time in milliseconds after which an AJAX request will be ignored when considering whether all AJAX requests have completed. Defaults to `2000`.<br>
- * `jbd.pemfile` Specifies a source of trusted certificate authorities. Recommended value is: `'https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt'`. Alternate sources must follow
- * that format too. Can be a local file as well. *Defaults to the JRE keystore*, so you can use JDK's keytool to import specific certs.<br>
- * `jbd.maxrouteconnections` Maximum number of concurrent connections to a specific host+proxy combo. Defaults to `8`.<br>
- * `jbd.maxconnections` Maximum number of concurrent connections overall. Defaults to `3000`.<br>
- * 
+ * <b>Java System Properties:</b>
+ * <p>
+ * <b>jbd.traceconsole</b> Mirror trace-level log messages to standard out.
+ * Otherwise these logs are only available through the Selenium APIs.Defaults to <b>false</b>.
+ * <p>
+ * <b>jbd.warnconsole</b> Mirror warning-level log messages to standard error. Otherwise
+ * these logs are only available through the Selenium APIs. Defaults to <b>true</b>.
+ * <p>
+ * <b>jbd.maxlogs</b> Maximum number of log entries to store in memory, accessible via the
+ * Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this
+ * setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(),
+ * or Logs.get(String). Defaults to <b>5000</b>.
+ * <p>
+ * <b>jbd.browsergui</b> Show the browser GUI window. Defaults to <b>false</b>.
+ * <p>
+ * <b>jbd.quickrender</b> Exclude web page images and binary data from rendering. These
+ * resources are still requested and can optionally be saved to disk (see the Settings
+ * options). Some versions of Java are inefficient (memory-wise) in rendering images.
+ * Defaults to <b>true</b>.
+ * <p>
+ * <b>jbd.blockads</b> Whether requests to ad/spam servers should be blocked. Based on hosts
+ * in ad-hosts.txt in the source tree. Defaults to <b>true</b>.
+ * <p>
+ * <b>jbd.ajaxwait</b> The idle time (no pending AJAX requests) required in milliseconds
+ * before a page is considered to have been loaded completely. For very slow or overloaded
+ * CPUs, set a higher value. Defaults to <b>120</b>.
+ * <p>
+ * <b>jbd.ajaxresourcetimeout</b> The time in milliseconds after which an AJAX request will
+ * be ignored when considering whether all AJAX requests have completed. Defaults to <b>2000</b>.
+ * <p>
+ * <b>jbd.pemfile</b> Specifies a source of trusted certificate authorities. Can take one of
+ * four values: (1) <b>compatible</b> to accept standard browser certs, (2) <b>trustanything</b>
+ * to accept any SSL cert, (3) a file path, or (4) a URL. The default when this property is not
+ * set is your JRE's keystore, so you can use JDK's keytool to import specific certs.
+ * <p>
+ * <b>jbd.maxrouteconnections</b> Maximum number of concurrent connections to a specific
+ * host+proxy combo. Defaults to <b>8</b>.
+ * <p>
+ * <b>jbd.maxconnections</b> Maximum number of concurrent connections overall.
+ * Defaults to <b>3000</b>.
+ * <p>
  */
 public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
