@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.openqa.selenium.Dimension;
-
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
@@ -48,21 +46,23 @@ class SettingsManager {
       new Thread(new Runnable() {
         @Override
         public void run() {
-          Dimension size = settings.get().screen();
           try {
             Application.launch(App.class,
-                new String[] { Integer.toString(size.getWidth()), Integer.toString(size.getHeight()),
-                    Boolean.toString(Settings.headless()), Long.toString(settings.get().id()) });
+                new String[] {
+                    Integer.toString(settings.get().screenWidth()),
+                    Integer.toString(settings.get().screenHeight()),
+                    Boolean.toString(Settings.headless()),
+                    Long.toString(settings.get().id()) });
           } catch (Throwable t) {
             Logs.logsFor(settings.get().id()).exception(t);
           }
         }
       }).start();
     } else {
-      Dimension size = settings.get().screen();
       final App app = new App();
       app.init(
-          size.getWidth(), size.getHeight(), Settings.headless(), settings.get().id());
+          settings.get().screenWidth(), settings.get().screenHeight(),
+          Settings.headless(), settings.get().id());
       Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
         public Object perform() {
           try {

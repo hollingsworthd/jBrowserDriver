@@ -21,10 +21,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Customizes headers sent on each request.
@@ -34,10 +33,10 @@ import java.util.Map;
  * 
  * @see UserAgent
  */
-public class RequestHeaders {
+public class RequestHeaders implements Serializable {
 
-  private final Map<String, String> headersHttp;
-  private final Map<String, String> headersHttps;
+  private final LinkedHashMap<String, String> headersHttp;
+  private final LinkedHashMap<String, String> headersHttps;
   /**
    * Use this as a header value to force the header to be dropped from the request. For instance,
    * JavaFX WebKit will always add the Cookie header but adding the header map entry
@@ -116,20 +115,20 @@ public class RequestHeaders {
     this.headersHttps = createHeaders(headersHttps);
   }
 
-  private static Map<String, String> createHeaders(LinkedHashMap<String, String> headers) {
-    LinkedHashMap<String, String> headersTmp = new LinkedHashMap<String, String>(headers);
-    if (!headersTmp.containsKey("Accept-Charset")
-        && !headersTmp.containsKey("accept-charset")
-        && !headersTmp.containsKey("Accept-charset")
-        && !headersTmp.containsKey("ACCEPT-CHARSET")) {
-      headersTmp.put("Accept-Charset", DROP_HEADER);
+  private static LinkedHashMap<String, String> createHeaders(LinkedHashMap<String, String> headersIn) {
+    LinkedHashMap<String, String> headersOut = new LinkedHashMap<String, String>(headersIn);
+    if (!headersOut.containsKey("Accept-Charset")
+        && !headersOut.containsKey("accept-charset")
+        && !headersOut.containsKey("Accept-charset")
+        && !headersOut.containsKey("ACCEPT-CHARSET")) {
+      headersOut.put("Accept-Charset", DROP_HEADER);
     }
-    if (!headersTmp.containsKey("Pragma")
-        && !headersTmp.containsKey("pragma")
-        && !headersTmp.containsKey("PRAGMA")) {
-      headersTmp.put("Pragma", DROP_HEADER);
+    if (!headersOut.containsKey("Pragma")
+        && !headersOut.containsKey("pragma")
+        && !headersOut.containsKey("PRAGMA")) {
+      headersOut.put("Pragma", DROP_HEADER);
     }
-    return Collections.unmodifiableMap(headersTmp);
+    return headersOut;
   }
 
   Collection<String> namesHttp() {

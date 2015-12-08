@@ -22,6 +22,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -44,7 +45,7 @@ import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
  * @see Settings#builder()
  * @see JBrowserDriver#JBrowserDriver(Settings)
  */
-public class Settings {
+public class Settings implements Serializable {
   /**
    * A script to guard against canvas fingerprinting and also add some typical navigator properties.
    */
@@ -373,7 +374,8 @@ public class Settings {
   }
 
   private final RequestHeaders requestHeaders;
-  private final Dimension screen;
+  private final int screenWidth;
+  private final int screenHeight;
   private final String userAgentString;
   private final ProxyConfig proxy;
   private final File downloadDir;
@@ -382,7 +384,7 @@ public class Settings {
   private static final AtomicLong settingsId = new AtomicLong();
   private final long mySettingsId;
   private final String script;
-  private final CookieStore cookieStore = new BasicCookieStore();
+  private transient final CookieStore cookieStore = new BasicCookieStore();
 
   /**
    * Do not call this constructor. Instead, see {@link Settings#builder()}.
@@ -397,7 +399,8 @@ public class Settings {
       final File downloadDir, final File mediaDir, final boolean saveMedia) {
     mySettingsId = -1;
     this.requestHeaders = requestHeaders;
-    this.screen = screen;
+    this.screenWidth = screen.getWidth();
+    this.screenHeight = screen.getHeight();
     this.userAgentString = userAgent.userAgentString();
     this.proxy = proxy;
     this.downloadDir = downloadDir;
@@ -432,7 +435,8 @@ public class Settings {
 
   Settings(Settings original) {
     requestHeaders = original.requestHeaders;
-    screen = original.screen;
+    screenWidth = original.screenWidth;
+    screenHeight = original.screenHeight;
     userAgentString = original.userAgentString;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
@@ -444,7 +448,8 @@ public class Settings {
 
   Settings(Settings original, long settingsId) {
     requestHeaders = original.requestHeaders;
-    screen = original.screen;
+    screenWidth = original.screenWidth;
+    screenHeight = original.screenHeight;
     userAgentString = original.userAgentString;
     proxy = original.proxy;
     downloadDir = original.downloadDir;
@@ -462,8 +467,12 @@ public class Settings {
     return requestHeaders;
   }
 
-  Dimension screen() {
-    return screen;
+  int screenWidth() {
+    return screenWidth;
+  }
+
+  int screenHeight() {
+    return screenWidth;
   }
 
   String userAgentString() {

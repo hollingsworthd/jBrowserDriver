@@ -21,10 +21,12 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.Serializable;
+
 /**
  * Proxy server settings.
  */
-public class ProxyConfig {
+public class ProxyConfig implements Serializable {
   private final Type type;
   private final String host;
   private final int port;
