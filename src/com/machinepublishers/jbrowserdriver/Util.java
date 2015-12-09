@@ -29,6 +29,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketException;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.Random;
@@ -39,6 +40,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLProtocolException;
+
+import org.apache.http.ConnectionClosedException;
 
 import com.machinepublishers.browser.Browser;
 
@@ -178,7 +181,7 @@ class Util {
       BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset), chars.length);
       try {
         for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
-      } catch (EOFException | SSLProtocolException e) {}
+      } catch (EOFException | SSLProtocolException | ConnectionClosedException | SocketException e) {}
       return builder.toString();
     } catch (Throwable t) {
       return null;
@@ -193,7 +196,7 @@ class Util {
       ByteArrayOutputStream out = new ByteArrayOutputStream(bytes.length);
       try {
         for (int len = 0; -1 != (len = inputStream.read(bytes, 0, bytes.length)); out.write(bytes, 0, len));
-      } catch (EOFException | SSLProtocolException e) {}
+      } catch (EOFException | SSLProtocolException | ConnectionClosedException | SocketException e) {}
       return out.toByteArray();
     } finally {
       close(inputStream);

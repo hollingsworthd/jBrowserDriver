@@ -123,6 +123,7 @@ class StatusMonitor {
         for (StreamConnection conn : connections.values()) {
           Util.close(conn);
         }
+        StreamConnection.cleanUp();
         connections.clear();
         primaryDocuments.clear();
         discarded.clear();
