@@ -401,7 +401,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByTagName(String tagName) {
     List<WebElement> list = byTagName(tagName);
-    return list.isEmpty() ? null : list.get(0);
+    return list == null || list.isEmpty() ? null : list.get(0);
   }
 
   @Override

@@ -176,8 +176,7 @@ class HttpListener implements LoadListenerClient {
               && (state == LoadListenerClient.PAGE_FINISHED
                   || state == LoadListenerClient.LOAD_STOPPED
                   || state == LoadListenerClient.LOAD_FAILED)) {
-            final int code = statusMonitor.stopStatusMonitor(url);
-            final int newStatusCode = state == LoadListenerClient.PAGE_FINISHED ? code : 499;
+            final int newStatusCode = statusMonitor.stopStatusMonitor(url);
             resources.remove(frame + url);
             new Thread(new AjaxListener(newStatusCode, statusCode, settingsId,
                 resources, timeoutMS.get())).start();

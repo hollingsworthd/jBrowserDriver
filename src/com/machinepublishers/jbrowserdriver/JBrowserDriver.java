@@ -227,7 +227,8 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public String getPageSource() {
     init();
-    return Element.create(context).findElementByTagName("html").getAttribute("outerHTML");
+    WebElement element = Element.create(context).findElementByTagName("html");
+    return element == null ? null : element.getAttribute("outerHTML");
   }
 
   @Override
