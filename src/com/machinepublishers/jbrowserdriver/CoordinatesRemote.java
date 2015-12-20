@@ -23,29 +23,13 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-interface TimeoutsRemote extends Remote {
-  TimeoutsRemote implicitlyWait(long duration, TimeUnit unit)
-      throws RemoteException;
+interface CoordinatesRemote extends Remote {
+  Point onScreen() throws RemoteException;
 
-  TimeoutsRemote pageLoadTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  Point inViewPort() throws RemoteException;
 
-  TimeoutsRemote setScriptTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  Point onPage() throws RemoteException;
 
-  long getImplicitlyWaitMS() throws RemoteException;
-
-  long getPageLoadTimeoutMS() throws RemoteException;
-
-  long getScriptTimeoutMS() throws RemoteException;
-
-  AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
-
-  AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
-
-  AtomicLong getScriptTimeoutObjMS() throws RemoteException;
-
+  Object getAuxiliary() throws RemoteException;
 }

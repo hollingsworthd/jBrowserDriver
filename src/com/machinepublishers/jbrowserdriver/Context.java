@@ -21,6 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -38,12 +39,12 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 class Context {
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<Logs> logs = new AtomicReference();
-  final AtomicReference<Timeouts> timeouts = new AtomicReference<Timeouts>(new Timeouts());
-  final AtomicReference<TargetLocator> targetLocator = new AtomicReference<TargetLocator>();
-  final AtomicReference<Options> options = new AtomicReference<Options>();
-  final AtomicReference<Keyboard> keyboard = new AtomicReference<Keyboard>();
-  final AtomicReference<Mouse> mouse = new AtomicReference<Mouse>();
-  final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
+  final AtomicReference<TimeoutsServer> timeouts = new AtomicReference<TimeoutsServer>();
+  final AtomicReference<TargetLocatorServer> targetLocator = new AtomicReference<TargetLocatorServer>();
+  final AtomicReference<OptionsServer> options = new AtomicReference<OptionsServer>();
+  final AtomicReference<KeyboardServer> keyboard = new AtomicReference<KeyboardServer>();
+  final AtomicReference<MouseServer> mouse = new AtomicReference<MouseServer>();
+  final AtomicReference<CapabilitiesServer> capabilities = new AtomicReference<CapabilitiesServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicReference<Settings> settings = new AtomicReference<Settings>();
@@ -63,10 +64,15 @@ class Context {
       this.settings.set(settings);
       settingsId.set(settings.id());
       logs.set(Logs.newInstance(settingsId.get()));
+      try {
+        timeouts.set(new TimeoutsServer());
+      } catch (RemoteException e) {
+        logs.get().exception(e);
+      }
     }
   }
 
-  void reset(JBrowserDriver driver) {
+  void reset(JBrowserDriverServer driver) {
     removeItems();
     synchronized (lock) {
       statusCode.set(-1);
@@ -77,17 +83,21 @@ class Context {
     }
   }
 
-  void init(final JBrowserDriver driver) {
+  void init(final JBrowserDriverServer driver) {
     synchronized (lock) {
       if (!items.isEmpty()) {
         items.get(current).init(driver, this);
       }
       if (initialized.compareAndSet(false, true)) {
-        targetLocator.set(new TargetLocator(driver, this));
         robot.set(new Robot(this));
-        keyboard.set(new Keyboard(robot));
-        mouse.set(new Mouse(robot));
-        capabilities.set(new Capabilities());
+        try {
+          targetLocator.set(new TargetLocatorServer(driver, this));
+          keyboard.set(new KeyboardServer(robot));
+          mouse.set(new MouseServer(robot));
+          capabilities.set(new CapabilitiesServer());
+        } catch (RemoteException e) {
+          logs.get().exception(e);
+        }
       }
     }
   }
@@ -124,7 +134,7 @@ class Context {
         }, settingsId.get());
   }
 
-  ContextItem spawn(final JBrowserDriver driver) {
+  ContextItem spawn(final JBrowserDriverServer driver) {
     final Context thisObj = this;
     return Util.exec(Pause.SHORT, statusCode,
         new Sync<ContextItem>() {

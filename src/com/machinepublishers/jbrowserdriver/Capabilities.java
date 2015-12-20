@@ -21,48 +21,94 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.HashMap;
+import java.rmi.RemoteException;
 import java.util.Map;
 
 import org.openqa.selenium.Platform;
 
 class Capabilities implements org.openqa.selenium.Capabilities {
 
-  Capabilities() {}
+  private final CapabilitiesRemote remote;
+
+  Capabilities(CapabilitiesRemote remote) {
+    this.remote = remote;
+  }
 
   @Override
   public Map<String, ?> asMap() {
-    return new HashMap<String, String>();
+    try {
+      return remote.asMap();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public String getBrowserName() {
-    return "jBrowserDriver (WebKit-based) by Machine Publishers, LLC";
+    try {
+      return remote.getBrowserName();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Object getCapability(String name) {
-    return null;
+    try {
+      return remote.getCapability(name);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Platform getPlatform() {
-    return Platform.ANY;
+    try {
+      return remote.getPlatform();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public String getVersion() {
-    return Runtime.class.getPackage().getImplementationVersion();
+    try {
+      return remote.getVersion();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public boolean is(String name) {
-    return false;
+    try {
+      return remote.is(name);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return false;
+    }
   }
 
   @Override
   public boolean isJavascriptEnabled() {
-    return true;
+    try {
+      return remote.isJavascriptEnabled();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return false;
+    }
   }
 
 }

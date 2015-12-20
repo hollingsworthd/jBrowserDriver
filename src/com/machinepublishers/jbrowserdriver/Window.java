@@ -21,96 +21,65 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Point;
-
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
-
-import javafx.stage.Stage;
+import java.rmi.RemoteException;
 
 class Window implements org.openqa.selenium.WebDriver.Window {
-  private final AtomicReference<Stage> stage;
-  private final AtomicInteger statusCode;
-  private final long settingsId;
+  private final WindowRemote remote;
 
-  Window(final AtomicReference<Stage> stage,
-      final AtomicInteger statusCode, final long settingsId) {
-    this.stage = stage;
-    this.statusCode = statusCode;
-    this.settingsId = settingsId;
-  }
-
-  void close() {
-    Util.exec(Pause.SHORT, statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().close();
-        return null;
-      }
-    }, settingsId);
+  Window(WindowRemote remote) {
+    this.remote = remote;
   }
 
   @Override
   public Point getPosition() {
-    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Point>() {
-      @Override
-      public Point perform() {
-        return new Point((int) Math.rint((Double) stage.get().getX()),
-            (int) Math.rint((Double) stage.get().getY()));
-      }
-    }, settingsId);
+    try {
+      return remote.getPosition();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Dimension getSize() {
-    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Dimension>() {
-      @Override
-      public Dimension perform() {
-        return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
-            (int) Math.rint((Double) stage.get().getHeight()));
-      }
-    }, settingsId);
+    try {
+      return remote.getSize();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public void maximize() {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().setMaximized(true);
-        return null;
-      }
-    }, settingsId);
+    try {
+      remote.maximize();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+    }
   }
 
   @Override
-  public void setPosition(final Point point) {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().setMaximized(false);
-        stage.get().setX(point.getX());
-        stage.get().setY(point.getY());
-        return null;
-      }
-    }, settingsId);
+  public void setPosition(final org.openqa.selenium.Point point) {
+    try {
+      remote.setPosition(new Point(point));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
-  public void setSize(final Dimension dimension) {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().setMaximized(false);
-        stage.get().setWidth(dimension.getWidth());
-        stage.get().setHeight(dimension.getHeight());
-        return null;
-      }
-    }, settingsId);
+  public void setSize(final org.openqa.selenium.Dimension dimension) {
+    try {
+      remote.setSize(new Dimension(dimension));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
 }

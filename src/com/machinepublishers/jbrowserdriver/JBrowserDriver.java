@@ -21,13 +21,10 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.HasCapabilities;
@@ -47,15 +44,6 @@ import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
-
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
-import com.sun.javafx.webkit.Accessor;
-
-import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.image.WritableImage;
 
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's
@@ -148,6 +136,12 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
 
+  static {
+    if (System.getSecurityManager() == null) {
+      System.setSecurityManager(new SecurityManager());
+    }
+  }
+
   /**
    * Use this string on sendKeys functions to delete text.
    */
@@ -167,13 +161,19 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     KEYBOARD_DELETE = builder.toString();
   }
 
-  final Context context;
+  private final JBrowserDriverRemote remote;
 
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
    */
   public JBrowserDriver() {
-    this(Settings.builder().build());
+    JBrowserDriverRemote instanceTmp = null;
+    try {
+      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverRemote");
+    } catch (Throwable t) {
+      Logs.logsFor(1l).exception(t);
+    }
+    remote = instanceTmp;
   }
 
   /**
@@ -182,7 +182,17 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    context = new Context(new Settings(settings));
+    this();
+    try {
+      remote.setUp(settings);
+    } catch (RemoteException e) {
+      //TODO
+      e.printStackTrace();
+    }
+  }
+
+  JBrowserDriver(JBrowserDriverRemote remote) {
+    this.remote = remote;
   }
 
   /**
@@ -190,7 +200,12 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
   public void init() {
-    context.init(this);
+    try {
+      remote.init();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -201,19 +216,12 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    *          New settings to take effect, superseding the original ones
    */
   public void reset(final Settings settings) {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        context.item().engine.get().getLoadWorker().cancel();
-        return null;
-      }
-    }, context.settingsId.get());
-    Accessor.getPageFor(context.item().engine.get()).stop();
-    context.settings.set(new Settings(settings, context.settingsId.get()));
-    context.reset(this);
-    context.settings.get().cookieStore().clear();
-    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
-    context.logs.get().clear();
+    try {
+      remote.reset(settings);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -221,302 +229,413 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * browser and creating a new instance.
    */
   public void reset() {
-    reset(context.settings.get());
+    try {
+      remote.reset();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+    }
   }
 
   @Override
   public String getPageSource() {
-    init();
-    WebElement element = Element.create(context).findElementByTagName("html");
-    return element == null ? null : element.getAttribute("outerHTML");
+    try {
+      return remote.getPageSource();
+    } catch (RemoteException e) {
+      //TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public String getCurrentUrl() {
-    init();
-    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
-      public String perform() {
-        return context.item().view.get().getEngine().getLocation();
-      }
-    }, context.settingsId.get());
+    try {
+      return remote.getCurrentUrl();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   public int getStatusCode() {
-    init();
     try {
-      synchronized (context.statusCode) {
-        if (context.statusCode.get() == 0) {
-          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
-        }
-      }
-    } catch (InterruptedException e) {
-      context.logs.get().exception(e);
+      return remote.getStatusCode();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return -1;
     }
-    return context.statusCode.get();
   }
 
   @Override
   public String getTitle() {
-    init();
-    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
-      public String perform() {
-        return context.item().view.get().getEngine().getTitle();
-      }
-    }, context.settingsId.get());
+    try {
+      return remote.getTitle();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public void get(final String url) {
-    init();
-    Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
-      public Object perform() {
-        context.item().engine.get().load(url);
-        return null;
-      }
-    }, context.settingsId.get());
     try {
-      synchronized (context.statusCode) {
-        if (context.statusCode.get() == 0) {
-          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
-        }
-      }
-    } catch (InterruptedException e) {
-      context.logs.get().exception(e);
-    }
-    if (context.statusCode.get() == 0) {
-      Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-        @Override
-        public Object perform() {
-          context.item().engine.get().getLoadWorker().cancel();
-          return null;
-        }
-      }, context.settingsId.get());
+      remote.get(url);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
   }
 
   @Override
   public WebElement findElement(By by) {
-    init();
-    return by.findElement(this);
+    try {
+      return new Element(remote.findElement(by));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElements(By by) {
-    init();
-    return by.findElements(this);
+    try {
+      return Element.constructList(remote.findElements(by));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementById(String id) {
-    init();
-    return Element.create(context).findElementById(id);
+    try {
+      return new Element(remote.findElementById(id));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsById(String id) {
-    init();
-    return Element.create(context).findElementsById(id);
+    try {
+      return Element.constructList(remote.findElementsById(id));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByXPath(String expr) {
-    init();
-    return Element.create(context).findElementByXPath(expr);
+    try {
+      return new Element(remote.findElementByXPath(expr));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
-    init();
-    return Element.create(context).findElementsByXPath(expr);
+    try {
+      return Element.constructList(remote.findElementsByXPath(expr));
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByLinkText(final String text) {
-    init();
-    return Element.create(context).findElementByLinkText(text);
+    try {
+      return new Element(remote.findElementByLinkText(text));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByPartialLinkText(String text) {
-    init();
-    return Element.create(context).findElementByPartialLinkText(text);
+    try {
+      return new Element(remote.findElementByPartialLinkText(text));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
-    init();
-    return Element.create(context).findElementsByLinkText(text);
+    try {
+      return Element.constructList(remote.findElementsByLinkText(text));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
-    init();
-    return Element.create(context).findElementsByPartialLinkText(text);
+    try {
+      return Element.constructList(remote.findElementsByPartialLinkText(text));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByClassName(String cssClass) {
-    init();
-    return Element.create(context).findElementByClassName(cssClass);
+    try {
+      return new Element(remote.findElementByClassName(cssClass));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
-    init();
-    return Element.create(context).findElementsByClassName(cssClass);
+    try {
+      return Element.constructList(remote.findElementsByClassName(cssClass));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByName(String name) {
-    init();
-    return Element.create(context).findElementByName(name);
+    try {
+      return new Element(remote.findElementByName(name));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByName(String name) {
-    init();
-    return Element.create(context).findElementsByName(name);
+    try {
+      return Element.constructList(remote.findElementsByName(name));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByCssSelector(String expr) {
-    init();
-    return Element.create(context).findElementByCssSelector(expr);
+    try {
+      return new Element(remote.findElementByCssSelector(expr));
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
-    init();
-    return Element.create(context).findElementsByCssSelector(expr);
+    try {
+      return Element.constructList(remote.findElementsByCssSelector(expr));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public WebElement findElementByTagName(String tagName) {
-    init();
-    return Element.create(context).findElementByTagName(tagName);
+    try {
+      return new Element(remote.findElementByTagName(tagName));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
-    init();
-    return Element.create(context).findElementsByTagName(tagName);
+    try {
+      return Element.constructList(remote.findElementsByTagName(tagName));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Object executeAsyncScript(String script, Object... args) {
-    init();
-    return Element.create(context).executeAsyncScript(script, args);
+    try {
+      return Element.constructObject(remote.executeAsyncScript(script, args));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Object executeScript(String script, Object... args) {
-    init();
-    return Element.create(context).executeScript(script, args);
+    try {
+      return Element.constructObject(remote.executeScript(script, args));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
-  public Keyboard getKeyboard() {
-    init();
-    return context.keyboard.get();
+  public org.openqa.selenium.interactions.Keyboard getKeyboard() {
+    try {
+      return new Keyboard(remote.getKeyboard());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
-  public Mouse getMouse() {
-    init();
-    return context.mouse.get();
+  public org.openqa.selenium.interactions.Mouse getMouse() {
+    try {
+      return new Mouse(remote.getMouse());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
-  public Capabilities getCapabilities() {
-    init();
-    return context.capabilities.get();
+  public org.openqa.selenium.Capabilities getCapabilities() {
+    try {
+      return new Capabilities(remote.getCapabilities());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public void close() {
-    init();
-    context.removeItem();
+    try {
+      remote.close();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public String getWindowHandle() {
-    init();
-    return context.itemId();
+    try {
+      return remote.getWindowHandle();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Set<String> getWindowHandles() {
-    init();
-    return context.itemIds();
+    try {
+      return remote.getWindowHandles();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Options manage() {
-    init();
-    return context.options.get();
+    try {
+      return new com.machinepublishers.jbrowserdriver.Options(remote.manage());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Navigation navigate() {
-    init();
-    return context.item().navigation.get();
+    try {
+      return new com.machinepublishers.jbrowserdriver.Navigation(remote.navigate());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public void quit() {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        context.item().engine.get().getLoadWorker().cancel();
-        return null;
-      }
-    }, context.settingsId.get());
-    Accessor.getPageFor(context.item().engine.get()).stop();
-    if (Settings.headless()) {
-      Platform.exit();
+    try {
+      remote.quit();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    SettingsManager.close(context.settings.get().id());
-    context.settings.get().cookieStore().clear();
-    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
-    StatusMonitor.remove(context.settings.get().id());
-    Logs.close(context.settingsId.get());
   }
 
   @Override
   public TargetLocator switchTo() {
-    init();
-    return context.targetLocator.get();
+    try {
+      return new com.machinepublishers.jbrowserdriver.TargetLocator(remote.switchTo());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public void kill() {
-    quit();
+    try {
+      remote.kill();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+    }
   }
 
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
-    init();
-    BufferedImage image = Util.exec(Pause.NONE, context.statusCode, new Sync<BufferedImage>() {
-      public BufferedImage perform() {
-        return SwingFXUtils.fromFXImage(
-            context.item().view.get().snapshot(
-                new SnapshotParameters(),
-                new WritableImage(
-                    (int) Math.rint((Double) context.item().view.get().getWidth()),
-                    (int) Math.rint((Double) context.item().view.get().getHeight()))),
-            null);
-      }
-    }, context.settingsId.get());
-    ByteArrayOutputStream out = null;
     try {
-      out = new ByteArrayOutputStream();
-      ImageIO.write(image, "png", out);
-      return outputType.convertFromPngBytes(out.toByteArray());
-    } catch (Throwable t) {
-      context.logs.get().exception(t);
+      return outputType.convertFromPngBytes(remote.getScreenshot());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
       return null;
-    } finally {
-      Util.close(out);
     }
   }
 }

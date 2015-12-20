@@ -35,19 +35,19 @@ class TimeoutsServer extends UnicastRemoteObject implements TimeoutsRemote,
   TimeoutsServer() throws RemoteException {}
 
   @Override
-  public org.openqa.selenium.WebDriver.Timeouts implicitlyWait(long duration, TimeUnit unit) {
+  public TimeoutsServer implicitlyWait(long duration, TimeUnit unit) {
     implicit.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
   @Override
-  public org.openqa.selenium.WebDriver.Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
+  public TimeoutsServer pageLoadTimeout(long duration, TimeUnit unit) {
     load.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
   @Override
-  public org.openqa.selenium.WebDriver.Timeouts setScriptTimeout(long duration, TimeUnit unit) {
+  public TimeoutsServer setScriptTimeout(long duration, TimeUnit unit) {
     script.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }

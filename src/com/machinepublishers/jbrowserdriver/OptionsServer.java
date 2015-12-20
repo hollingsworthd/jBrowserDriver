@@ -32,23 +32,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver.ImeHandler;
-import org.openqa.selenium.WebDriver.Timeouts;
-import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.logging.Logs;
 
 class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
-  private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
+  private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs;
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;
+  private final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window;
   private final CookieStore cookieStore;
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts;
+  private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
 
-  OptionsServer(final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window,
+  OptionsServer(final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window,
       AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs,
       final CookieStore cookieStore,
-      final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts)
+      final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
           throws RemoteException {
     this.window = window;
     this.logs = logs;
@@ -141,7 +138,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
   }
 
   @Override
-  public ImeHandler ime() {
+  public ImeHandlerServer ime() {
     return imeHandler;
   }
 
@@ -151,12 +148,12 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
   }
 
   @Override
-  public Timeouts timeouts() {
+  public TimeoutsServer timeouts() {
     return timeouts.get();
   }
 
   @Override
-  public Window window() {
+  public WindowServer window() {
     return window.get();
   }
 

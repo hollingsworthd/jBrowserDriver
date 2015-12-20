@@ -24,65 +24,69 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRemote,
     org.openqa.selenium.WebDriver.TargetLocator {
 
-  private final JBrowserDriver driver;
+  private final JBrowserDriverServer driver;
   private final Context context;
 
-  TargetLocatorServer(JBrowserDriver driver, Context context) throws RemoteException {
+  TargetLocatorServer(JBrowserDriverServer driver, Context context) throws RemoteException {
     this.driver = driver;
     this.context = context;
   }
 
   @Override
-  public WebElement activeElement() {
+  public ElementServer activeElement() {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public Alert alert() {
+  public AlertServer alert() {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver defaultContent() {
+  public JBrowserDriverServer defaultContent() {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver frame(int arg0) {
+  public JBrowserDriverServer frame(int arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver frame(String arg0) {
+  public JBrowserDriverServer frame(String arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver frame(WebElement arg0) {
+  public JBrowserDriverServer frame(WebElement arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver parentFrame() {
+  public JBrowserDriverServer frame(ElementRemote arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public WebDriver window(String windowHandle) {
+  public JBrowserDriverServer parentFrame() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public JBrowserDriverServer window(String windowHandle) {
     context.setCurrent(windowHandle);
     return driver;
   }

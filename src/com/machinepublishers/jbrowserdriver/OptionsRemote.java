@@ -26,9 +26,6 @@ import java.rmi.RemoteException;
 import java.util.Set;
 
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver.ImeHandler;
-import org.openqa.selenium.WebDriver.Timeouts;
-import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.logging.Logs;
 
 interface OptionsRemote extends Remote {
@@ -44,11 +41,11 @@ interface OptionsRemote extends Remote {
 
   Set<Cookie> getCookies() throws RemoteException;
 
-  ImeHandler ime() throws RemoteException;
+  ImeHandlerRemote ime() throws RemoteException;
 
   Logs logs() throws RemoteException;
 
-  Timeouts timeouts() throws RemoteException;
+  TimeoutsRemote timeouts() throws RemoteException;
 
-  Window window() throws RemoteException;
+  WindowRemote window() throws RemoteException;
 }

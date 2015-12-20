@@ -21,56 +21,76 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
-  private AtomicLong implicit = new AtomicLong();
-  private AtomicLong load = new AtomicLong();
-  private AtomicLong script = new AtomicLong();
+  private final TimeoutsRemote remote;
 
-  Timeouts() {}
+  Timeouts(TimeoutsRemote remote) {
+    this.remote = remote;
+  }
 
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
-    implicit.set(unit.convert(duration, TimeUnit.MILLISECONDS));
-    return this;
+    try {
+      return new Timeouts(remote.implicitlyWait(duration, unit));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
-    load.set(unit.convert(duration, TimeUnit.MILLISECONDS));
-    return this;
+    try {
+      return new Timeouts(remote.pageLoadTimeout(duration, unit));
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Timeouts setScriptTimeout(long duration, TimeUnit unit) {
-    script.set(unit.convert(duration, TimeUnit.MILLISECONDS));
-    return this;
+    try {
+      return new Timeouts(remote.setScriptTimeout(duration, unit));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   long getImplicitlyWaitMS() {
-    return implicit.get();
+    try {
+      return remote.getImplicitlyWaitMS();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return -1;
+    }
   }
 
   long getPageLoadTimeoutMS() {
-    return load.get();
+    try {
+      return remote.getPageLoadTimeoutMS();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return -1;
+    }
   }
 
   long getScriptTimeoutMS() {
-    return script.get();
+    try {
+      return remote.getScriptTimeoutMS();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return -1;
+    }
   }
-
-  AtomicLong getImplicitlyWaitObjMS() {
-    return implicit;
-  }
-
-  AtomicLong getPageLoadTimeoutObjMS() {
-    return load;
-  }
-
-  AtomicLong getScriptTimeoutObjMS() {
-    return script;
-  }
-
 }

@@ -26,10 +26,10 @@ import javafx.scene.web.WebEngine;
 import javafx.util.Callback;
 
 class PopupHandler implements Callback<PopupFeatures, WebEngine> {
-  private final JBrowserDriver driver;
+  private final JBrowserDriverServer driver;
   private final Context context;
 
-  PopupHandler(final JBrowserDriver driver, final Context context) {
+  PopupHandler(final JBrowserDriverServer driver, final Context context) {
     this.driver = driver;
     this.context = context;
   }

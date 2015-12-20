@@ -24,9 +24,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Point;
-
 interface WindowRemote extends Remote {
   void close() throws RemoteException;
 

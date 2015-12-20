@@ -21,6 +21,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -36,8 +37,8 @@ import javafx.stage.Stage;
 class ContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
 
-  final AtomicReference<Window> window = new AtomicReference<Window>();
-  final AtomicReference<Navigation> navigation = new AtomicReference<Navigation>();
+  final AtomicReference<WindowServer> window = new AtomicReference<WindowServer>();
+  final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
   //TODO final AtomicReference<Alert> alert = new AtomicReference<Alert>();
   final AtomicReference<Stage> stage = new AtomicReference<Stage>();
   final AtomicReference<WebView> view = new AtomicReference<WebView>();
@@ -50,15 +51,19 @@ class ContextItem {
     itemId.set(Long.toString(currentItemId.getAndIncrement()));
   }
 
-  void init(final JBrowserDriver driver, final Context context) {
+  void init(final JBrowserDriverServer driver, final Context context) {
     if (initialized.compareAndSet(false, true)) {
       SettingsManager.register(stage, view, context.settings);
       engine.set(view.get().getEngine());
-      window.set(new Window(stage, context.statusCode, context.settingsId.get()));
-      navigation.set(new Navigation(
-          new AtomicReference<JBrowserDriver>(driver), view, context.statusCode, context.settingsId.get()));
-      context.options.set(new Options(
-          window, context.logs, context.settings.get().cookieStore(), context.timeouts));
+      try {
+        window.set(new WindowServer(stage, context.statusCode, context.settingsId.get()));
+        navigation.set(new NavigationServer(
+            new AtomicReference<JBrowserDriverServer>(driver), view, context.statusCode, context.settingsId.get()));
+        context.options.set(new OptionsServer(
+            window, context.logs, context.settings.get().cookieStore(), context.timeouts));
+      } catch (RemoteException e) {
+        context.logs.get().exception(e);
+      }
       Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {

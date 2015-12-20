@@ -21,31 +21,36 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.rmi.server.UnicastRemoteObject;
 
-interface TimeoutsRemote extends Remote {
-  TimeoutsRemote implicitlyWait(long duration, TimeUnit unit)
-      throws RemoteException;
+import org.openqa.selenium.interactions.internal.Coordinates;
 
-  TimeoutsRemote pageLoadTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+class CoordinatesServer extends UnicastRemoteObject
+    implements CoordinatesRemote, org.openqa.selenium.interactions.internal.Coordinates {
+  final Coordinates coordinates;
 
-  TimeoutsRemote setScriptTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  CoordinatesServer(Coordinates coordinates) throws RemoteException {
+    this.coordinates = coordinates;
+  }
 
-  long getImplicitlyWaitMS() throws RemoteException;
+  @Override
+  public Point onScreen() {
+    return new Point(coordinates.onScreen());
+  }
 
-  long getPageLoadTimeoutMS() throws RemoteException;
+  @Override
+  public Point inViewPort() {
+    return new Point(coordinates.inViewPort());
+  }
 
-  long getScriptTimeoutMS() throws RemoteException;
+  @Override
+  public Point onPage() {
+    return new Point(coordinates.onPage());
+  }
 
-  AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
-
-  AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
-
-  AtomicLong getScriptTimeoutObjMS() throws RemoteException;
-
+  @Override
+  public Object getAuxiliary() {
+    return coordinates.getAuxiliary();
+  }
 }

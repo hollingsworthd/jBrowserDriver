@@ -24,24 +24,20 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-
 interface TargetLocatorRemote extends Remote {
-  WebElement activeElement() throws RemoteException;
+  ElementRemote activeElement() throws RemoteException;
 
-  Alert alert() throws RemoteException;
+  AlertRemote alert() throws RemoteException;
 
-  WebDriver defaultContent() throws RemoteException;
+  JBrowserDriverRemote defaultContent() throws RemoteException;
 
-  WebDriver frame(int arg0) throws RemoteException;
+  JBrowserDriverRemote frame(int arg0) throws RemoteException;
 
-  WebDriver frame(String arg0) throws RemoteException;
+  JBrowserDriverRemote frame(String arg0) throws RemoteException;
 
-  WebDriver frame(WebElement arg0) throws RemoteException;
+  JBrowserDriverRemote frame(ElementRemote arg0) throws RemoteException;
 
-  WebDriver parentFrame() throws RemoteException;
+  JBrowserDriverRemote parentFrame() throws RemoteException;
 
-  WebDriver window(String windowHandle) throws RemoteException;
+  JBrowserDriverRemote window(String windowHandle) throws RemoteException;
 }

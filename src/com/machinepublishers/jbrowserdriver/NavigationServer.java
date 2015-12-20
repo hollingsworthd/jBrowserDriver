@@ -34,12 +34,12 @@ import javafx.scene.web.WebView;
 
 class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
     org.openqa.selenium.WebDriver.Navigation {
-  private final AtomicReference<JBrowserDriver> driver;
+  private final AtomicReference<JBrowserDriverServer> driver;
   private final AtomicReference<WebView> view;
   private final AtomicInteger statusCode;
   private final long settingsId;
 
-  NavigationServer(final AtomicReference<JBrowserDriver> driver,
+  NavigationServer(final AtomicReference<JBrowserDriverServer> driver,
       final AtomicReference<WebView> view, final AtomicInteger statusCode, final long settingsId)
           throws RemoteException {
     this.driver = driver;
@@ -50,13 +50,13 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
 
   @Override
   public void back() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
               view.get().getEngine().getHistory().go(-1);
             } catch (IndexOutOfBoundsException e) {
-              driver.get().context.logs.get().exception(e);
+              driver.get().context.get().logs.get().exception(e);
             }
             return null;
           }
@@ -65,13 +65,13 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
 
   @Override
   public void forward() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
               view.get().getEngine().getHistory().go(1);
             } catch (IndexOutOfBoundsException e) {
-              driver.get().context.logs.get().exception(e);
+              driver.get().context.get().logs.get().exception(e);
             }
             return null;
           }
@@ -80,7 +80,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
 
   @Override
   public void refresh() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             view.get().getEngine().reload();

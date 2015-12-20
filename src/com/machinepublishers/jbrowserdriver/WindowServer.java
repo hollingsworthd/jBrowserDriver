@@ -26,9 +26,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Point;
-
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
@@ -94,6 +91,11 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
 
   @Override
   public void setPosition(final Point point) {
+    setPosition(point);
+  }
+
+  @Override
+  public void setPosition(final org.openqa.selenium.Point point) {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -107,6 +109,11 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
 
   @Override
   public void setSize(final Dimension dimension) {
+    setSize(dimension);
+  }
+
+  @Override
+  public void setSize(final org.openqa.selenium.Dimension dimension) {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {

@@ -21,17 +21,17 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
+
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
-  private final JBrowserDriver driver;
-  private final Context context;
+  private final TargetLocatorRemote remote;
 
-  TargetLocator(JBrowserDriver driver, Context context) {
-    this.driver = driver;
-    this.context = context;
+  TargetLocator(TargetLocatorRemote remote) {
+    this.remote = remote;
   }
 
   @Override
@@ -78,7 +78,12 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
 
   @Override
   public WebDriver window(String windowHandle) {
-    context.setCurrent(windowHandle);
-    return driver;
+    try {
+      return new JBrowserDriver(remote.window(windowHandle));
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 }

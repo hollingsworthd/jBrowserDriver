@@ -27,56 +27,60 @@ import java.util.List;
 import java.util.Set;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Keyboard;
-import org.openqa.selenium.interactions.Mouse;
 
 interface JBrowserDriverRemote extends Remote {
+  void setUp(final Settings settings) throws RemoteException;
+
+  void init() throws RemoteException;
+
+  void reset(Settings settings) throws RemoteException;
+
+  void reset() throws RemoteException;
+
+  int getStatusCode() throws RemoteException;
 
   void kill() throws RemoteException;
 
-  <X> X getScreenshotAs(OutputType<X> target) throws WebDriverException, RemoteException;
+  byte[] getScreenshot() throws WebDriverException, RemoteException;
 
-  Capabilities getCapabilities() throws RemoteException;
+  CapabilitiesRemote getCapabilities() throws RemoteException;
 
-  Keyboard getKeyboard() throws RemoteException;
+  KeyboardRemote getKeyboard() throws RemoteException;
 
-  Mouse getMouse() throws RemoteException;
+  MouseRemote getMouse() throws RemoteException;
 
-  WebElement findElementByXPath(String using) throws RemoteException;
+  ElementRemote findElementByXPath(String using) throws RemoteException;
 
-  List<WebElement> findElementsByXPath(String using) throws RemoteException;
+  List<ElementRemote> findElementsByXPath(String using) throws RemoteException;
 
-  WebElement findElementByTagName(String using) throws RemoteException;
+  ElementRemote findElementByTagName(String using) throws RemoteException;
 
-  List<WebElement> findElementsByTagName(String using) throws RemoteException;
+  List<ElementRemote> findElementsByTagName(String using) throws RemoteException;
 
-  WebElement findElementByCssSelector(String using) throws RemoteException;
+  ElementRemote findElementByCssSelector(String using) throws RemoteException;
 
-  List<WebElement> findElementsByCssSelector(String using) throws RemoteException;
+  List<ElementRemote> findElementsByCssSelector(String using) throws RemoteException;
 
-  WebElement findElementByName(String using) throws RemoteException;
+  ElementRemote findElementByName(String using) throws RemoteException;
 
-  List<WebElement> findElementsByName(String using) throws RemoteException;
+  List<ElementRemote> findElementsByName(String using) throws RemoteException;
 
-  WebElement findElementByLinkText(String using) throws RemoteException;
+  ElementRemote findElementByLinkText(String using) throws RemoteException;
 
-  List<WebElement> findElementsByLinkText(String using) throws RemoteException;
+  List<ElementRemote> findElementsByLinkText(String using) throws RemoteException;
 
-  WebElement findElementByPartialLinkText(String using) throws RemoteException;
+  ElementRemote findElementByPartialLinkText(String using) throws RemoteException;
 
-  List<WebElement> findElementsByPartialLinkText(String using) throws RemoteException;
+  List<ElementRemote> findElementsByPartialLinkText(String using) throws RemoteException;
 
-  WebElement findElementByClassName(String using) throws RemoteException;
+  ElementRemote findElementByClassName(String using) throws RemoteException;
 
-  List<WebElement> findElementsByClassName(String using) throws RemoteException;
+  List<ElementRemote> findElementsByClassName(String using) throws RemoteException;
 
-  WebElement findElementById(String using) throws RemoteException;
+  ElementRemote findElementById(String using) throws RemoteException;
 
-  List<WebElement> findElementsById(String using) throws RemoteException;
+  List<ElementRemote> findElementsById(String using) throws RemoteException;
 
   Object executeScript(String script, Object... args) throws RemoteException;
 
@@ -88,9 +92,9 @@ interface JBrowserDriverRemote extends Remote {
 
   String getTitle() throws RemoteException;
 
-  List<WebElement> findElements(By by) throws RemoteException;
+  List<ElementRemote> findElements(By by) throws RemoteException;
 
-  WebElement findElement(By by) throws RemoteException;
+  ElementRemote findElement(By by) throws RemoteException;
 
   String getPageSource() throws RemoteException;
 
@@ -102,10 +106,10 @@ interface JBrowserDriverRemote extends Remote {
 
   String getWindowHandle() throws RemoteException;
 
-  org.openqa.selenium.WebDriver.TargetLocator switchTo() throws RemoteException;
+  TargetLocatorRemote switchTo() throws RemoteException;
 
-  org.openqa.selenium.WebDriver.Navigation navigate() throws RemoteException;
+  NavigationRemote navigate() throws RemoteException;
 
-  org.openqa.selenium.WebDriver.Options manage() throws RemoteException;
+  OptionsRemote manage() throws RemoteException;
 
 }

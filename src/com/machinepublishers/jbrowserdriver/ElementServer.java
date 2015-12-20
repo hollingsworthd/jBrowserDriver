@@ -34,13 +34,10 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.internal.Coordinates;
 import org.openqa.selenium.internal.FindsByClassName;
 import org.openqa.selenium.internal.FindsByCssSelector;
 import org.openqa.selenium.internal.FindsById;
@@ -358,21 +355,23 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public WebElement findElement(By by) {
-    return by.findElement(this);
+  public ElementServer findElement(By by) {
+    //TODO FIXME
+    return null;//by.findElement(this);
   }
 
   @Override
-  public List<WebElement> findElements(By by) {
-    return by.findElements(this);
+  public List findElements(By by) {
+    //TODO FIXME
+    return null;//by.findElements(this);
   }
 
   @Override
-  public WebElement findElementByXPath(final String expr) {
+  public ElementServer findElementByXPath(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<WebElement>() {
+        new Sync<ElementServer>() {
           @Override
-          public WebElement perform() {
+          public ElementServer perform() {
             try {
               return new ElementServer(new AtomicReference(XPathFactory.newInstance().newXPath().evaluate(
                   expr, node.get(), XPathConstants.NODE)), context);
@@ -385,13 +384,13 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public List<WebElement> findElementsByXPath(final String expr) {
+  public List findElementsByXPath(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<List<WebElement>>() {
+        new Sync<List<ElementServer>>() {
           @Override
-          public List<WebElement> perform() {
+          public List<ElementServer> perform() {
             try {
-              List<WebElement> elements = new ArrayList<WebElement>();
+              List<ElementServer> elements = new ArrayList<ElementServer>();
               NodeList list = (NodeList) XPathFactory.newInstance().newXPath().evaluate(
                   expr, node.get(), XPathConstants.NODESET);
               for (int i = 0; i < list.getLength(); i++) {
@@ -407,33 +406,33 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public WebElement findElementByTagName(String tagName) {
-    List<WebElement> list = byTagName(tagName);
-    return list.isEmpty() ? null : list.get(0);
+  public ElementServer findElementByTagName(String tagName) {
+    List<ElementServer> list = byTagName(tagName);
+    return list == null || list.isEmpty() ? null : list.get(0);
   }
 
   @Override
-  public List<WebElement> findElementsByTagName(String tagName) {
+  public List findElementsByTagName(String tagName) {
     return byTagName(tagName);
   }
 
-  private List<WebElement> byTagName(final String tagName) {
+  private List byTagName(final String tagName) {
     return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<List<WebElement>>() {
+        new Sync<List<ElementServer>>() {
           @Override
-          public List<WebElement> perform() {
-            return (List<WebElement>) parseScriptResult(
+          public List<ElementServer> perform() {
+            return (List<ElementServer>) parseScriptResult(
                 node.get().call("getElementsByTagName", new Object[] { tagName }));
           }
         }, context.settingsId.get());
   }
 
   @Override
-  public WebElement findElementByCssSelector(final String expr) {
+  public ElementServer findElementByCssSelector(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<WebElement>() {
+        new Sync<ElementServer>() {
           @Override
-          public WebElement perform() {
+          public ElementServer perform() {
             JSObject result = (JSObject) node.get().call("querySelector", new Object[] { expr });
             if (result == null) {
               return null;
@@ -449,12 +448,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public List<WebElement> findElementsByCssSelector(final String expr) {
+  public List findElementsByCssSelector(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<List<WebElement>>() {
+        new Sync<List<ElementServer>>() {
           @Override
-          public List<WebElement> perform() {
-            List<WebElement> elements = new ArrayList<WebElement>();
+          public List<ElementServer> perform() {
+            List<ElementServer> elements = new ArrayList<ElementServer>();
             JSObject result = (JSObject) node.get().call("querySelectorAll", new Object[] { expr });
             for (int i = 0;; i++) {
               Object cur = result.getSlot(i);
@@ -475,46 +474,46 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public WebElement findElementByName(String name) {
+  public ElementServer findElementByName(String name) {
     return findElementByCssSelector("*[name='" + name + "']");
   }
 
   @Override
-  public List<WebElement> findElementsByName(String name) {
+  public List findElementsByName(String name) {
     return findElementsByCssSelector("*[name='" + name + "']");
   }
 
   @Override
-  public WebElement findElementByLinkText(final String text) {
-    List<WebElement> list = byLinkText(text, false, false);
+  public ElementServer findElementByLinkText(final String text) {
+    List<ElementServer> list = byLinkText(text, false, false);
     return list.isEmpty() ? null : list.get(0);
   }
 
   @Override
-  public WebElement findElementByPartialLinkText(String text) {
-    List<WebElement> list = byLinkText(text, false, true);
+  public ElementServer findElementByPartialLinkText(String text) {
+    List<ElementServer> list = byLinkText(text, false, true);
     return list.isEmpty() ? null : list.get(0);
   }
 
   @Override
-  public List<WebElement> findElementsByLinkText(String text) {
+  public List findElementsByLinkText(String text) {
     return byLinkText(text, true, false);
   }
 
   @Override
-  public List<WebElement> findElementsByPartialLinkText(String text) {
+  public List findElementsByPartialLinkText(String text) {
     return byLinkText(text, true, true);
   }
 
-  private List<WebElement> byLinkText(final String text,
+  private List byLinkText(final String text,
       final boolean multiple, final boolean partial) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<List<WebElement>>() {
+        new Sync<List<ElementServer>>() {
           @Override
-          public List<WebElement> perform() {
-            List<WebElement> nodes = (List<WebElement>) findElementsByTagName("a");
-            List<WebElement> elements = new ArrayList<WebElement>();
-            for (WebElement cur : nodes) {
+          public List<ElementServer> perform() {
+            List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
+            List<ElementServer> elements = new ArrayList<ElementServer>();
+            for (ElementServer cur : nodes) {
               if ((partial && cur.getText().contains(text))
                   || (!partial && cur.getText().equals(text))) {
                 elements.add(cur);
@@ -529,27 +528,27 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public WebElement findElementByClassName(String cssClass) {
-    List<WebElement> list = byCssClass(cssClass);
+  public ElementServer findElementByClassName(String cssClass) {
+    List<ElementServer> list = byCssClass(cssClass);
     return list.isEmpty() ? null : list.get(0);
   }
 
   @Override
-  public List<WebElement> findElementsByClassName(String cssClass) {
+  public List findElementsByClassName(String cssClass) {
     return byCssClass(cssClass);
   }
 
-  private List<WebElement> byCssClass(String cssClass) {
-    return (List<WebElement>) executeScript("return this.getElementsByClassName('" + cssClass + "');");
+  private List byCssClass(String cssClass) {
+    return (List<ElementServer>) executeScript("return this.getElementsByClassName('" + cssClass + "');");
   }
 
   @Override
-  public WebElement findElementById(final String id) {
+  public ElementServer findElementById(final String id) {
     return findElementByCssSelector("*[id='" + id + "']");
   }
 
   @Override
-  public List<WebElement> findElementsById(String id) {
+  public List findElementsById(String id) {
     return findElementsByCssSelector("*[id='" + id + "']");
   }
 
@@ -689,52 +688,64 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   @Override
-  public Coordinates getCoordinates() {
-    return new Coordinates() {
+  public CoordinatesServer getCoordinates() {
+    try {
+      return new CoordinatesServer(new org.openqa.selenium.interactions.internal.Coordinates() {
 
-      @Override
-      public Point onScreen() {
-        return null;
-      }
+        @Override
+        public Point onScreen() {
+          return null;
+        }
 
-      @Override
-      public Point onPage() {
-        Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<Object>() {
-          @Override
-          public Point perform() {
-            node.get().call("scrollIntoView");
-            return null;
-          }
-        }, context.settingsId.get());
-        return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<Point>() {
-          @Override
-          public Point perform() {
-            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
-            double y = Double.parseDouble(obj.getMember("top").toString());
-            double x = Double.parseDouble(obj.getMember("left").toString());
-            y = y < 0d ? 0d : y;
-            x = x < 0d ? 0d : x;
-            return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-          }
-        }, context.settingsId.get());
-      }
+        @Override
+        public Point onPage() {
+          Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+              new Sync<Object>() {
+            @Override
+            public Point perform() {
+              node.get().call("scrollIntoView");
+              return null;
+            }
+          }, context.settingsId.get());
+          return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+              new Sync<Point>() {
+            @Override
+            public Point perform() {
+              JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+              double y = Double.parseDouble(obj.getMember("top").toString());
+              double x = Double.parseDouble(obj.getMember("left").toString());
+              y = y < 0d ? 0d : y;
+              x = x < 0d ? 0d : x;
+              return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
+            }
+          }, context.settingsId.get());
+        }
 
-      @Override
-      public Point inViewPort() {
-        return null;
-      }
+        @Override
+        public Point inViewPort() {
+          return null;
+        }
 
-      @Override
-      public Object getAuxiliary() {
-        return null;
-      }
-    };
+        @Override
+        public Object getAuxiliary() {
+          return null;
+        }
+      });
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
+    context.logs.get().warn("Screenshot not supported on jBrowserDriver WebElements");
+    return null;
+  }
+
+  @Override
+  public byte[] getScreenshot() throws WebDriverException {
     context.logs.get().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }

@@ -22,77 +22,62 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
-
-import javafx.scene.web.WebView;
+import java.rmi.RemoteException;
 
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
-  private final AtomicReference<JBrowserDriver> driver;
-  private final AtomicReference<WebView> view;
-  private final AtomicInteger statusCode;
-  private final long settingsId;
+  private final NavigationRemote remote;
 
-  Navigation(final AtomicReference<JBrowserDriver> driver,
-      final AtomicReference<WebView> view, final AtomicInteger statusCode, final long settingsId) {
-    this.driver = driver;
-    this.view = view;
-    this.statusCode = statusCode;
-    this.settingsId = settingsId;
+  Navigation(NavigationRemote remote) {
+    this.remote = remote;
   }
 
   @Override
   public void back() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            try {
-              view.get().getEngine().getHistory().go(-1);
-            } catch (IndexOutOfBoundsException e) {
-              driver.get().context.logs.get().exception(e);
-            }
-            return null;
-          }
-        }, settingsId);
+    try {
+      remote.back();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void forward() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            try {
-              view.get().getEngine().getHistory().go(1);
-            } catch (IndexOutOfBoundsException e) {
-              driver.get().context.logs.get().exception(e);
-            }
-            return null;
-          }
-        }, settingsId);
+    try {
+      remote.forward();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void refresh() {
-    Util.exec(Pause.SHORT, statusCode, ((Timeouts) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            view.get().getEngine().reload();
-            return null;
-          }
-        }, settingsId);
+    try {
+      remote.refresh();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void to(String url) {
-    driver.get().get(url);
+    try {
+      remote.to(url);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void to(URL url) {
-    driver.get().get(url.toExternalForm());
+    try {
+      remote.to(url);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
-
 }

@@ -21,31 +21,15 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.io.Serializable;
 
-interface TimeoutsRemote extends Remote {
-  TimeoutsRemote implicitlyWait(long duration, TimeUnit unit)
-      throws RemoteException;
+class Dimension extends org.openqa.selenium.Dimension implements Serializable {
 
-  TimeoutsRemote pageLoadTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  Dimension(int width, int height) {
+    super(width, height);
+  }
 
-  TimeoutsRemote setScriptTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
-
-  long getImplicitlyWaitMS() throws RemoteException;
-
-  long getPageLoadTimeoutMS() throws RemoteException;
-
-  long getScriptTimeoutMS() throws RemoteException;
-
-  AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
-
-  AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
-
-  AtomicLong getScriptTimeoutObjMS() throws RemoteException;
-
+  Dimension(org.openqa.selenium.Dimension dimension) {
+    super(dimension.width, dimension.height);
+  }
 }

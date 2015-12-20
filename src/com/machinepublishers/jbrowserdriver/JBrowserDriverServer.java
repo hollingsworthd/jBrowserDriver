@@ -24,17 +24,19 @@ package com.machinepublishers.jbrowserdriver;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -64,41 +66,35 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
 
-  /**
-   * Use this string on sendKeys functions to delete text.
-   */
-  public static final String KEYBOARD_DELETE;
+  private static final Registry registry;
 
   static {
-    final int CHARS_TO_DELETE = 60;
-    StringBuilder builder = new StringBuilder();
-    String key = Keys.BACK_SPACE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
+    Registry registryTmp = null;
+    try {
+      registryTmp = LocateRegistry.createRegistry(9012);
+    } catch (Throwable t) {
+      Logs.logsFor(1l).exception(t);
     }
-    key = Keys.DELETE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
-    }
-    KEYBOARD_DELETE = builder.toString();
+    registry = registryTmp;
   }
 
-  final Context context;
-
-  /**
-   * Constructs a browser with default settings, UTC timezone, and no proxy.
+  /*
+   * RMI entry point.
    */
-  public JBrowserDriverServer() throws RemoteException {
-    this(Settings.builder().build());
+  public static void main(String[] args) {
+    try {
+      registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
+    } catch (Throwable t) {
+      Logs.logsFor(1l).exception(t);
+    }
   }
 
-  /**
-   * Use Settings.Builder to create settings to pass to this constructor.
-   * 
-   * @param settings
-   */
-  public JBrowserDriverServer(final Settings settings) throws RemoteException {
-    context = new Context(new Settings(settings));
+  final AtomicReference<Context> context = new AtomicReference<Context>();
+
+  public JBrowserDriverServer() throws RemoteException {}
+
+  public void setUp(final Settings settings) {
+    context.set(new Context(new Settings(settings)));
   }
 
   /**
@@ -106,9 +102,7 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
   public void init() {
-    //TODO
-    //FIXME
-    //    context.init(this);
+    context.get().init(this);
   }
 
   /**
@@ -122,18 +116,16 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        context.item().engine.get().getLoadWorker().cancel();
+        context.get().item().engine.get().getLoadWorker().cancel();
         return null;
       }
-    }, context.settingsId.get());
-    Accessor.getPageFor(context.item().engine.get()).stop();
-    context.settings.set(new Settings(settings, context.settingsId.get()));
-    //TODO
-    //FIXME
-    //    context.reset(this);
-    context.settings.get().cookieStore().clear();
-    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
-    context.logs.get().clear();
+    }, context.get().settingsId.get());
+    Accessor.getPageFor(context.get().item().engine.get()).stop();
+    context.get().settings.set(new Settings(settings, context.get().settingsId.get()));
+    context.get().reset(this);
+    context.get().settings.get().cookieStore().clear();
+    StatusMonitor.get(context.get().settings.get().id()).clearStatusMonitor();
+    context.get().logs.get().clear();
   }
 
   /**
@@ -141,244 +133,247 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
    * browser and creating a new instance.
    */
   public void reset() {
-    reset(context.settings.get());
+    reset(context.get().settings.get());
   }
 
   @Override
   public String getPageSource() {
     init();
-    return Element.create(context).findElementByTagName("html").getAttribute("outerHTML");
+    WebElement element = ElementServer.create(context.get()).findElementByTagName("html");
+    return element == null ? null : element.getAttribute("outerHTML");
   }
 
   @Override
   public String getCurrentUrl() {
     init();
-    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
+    return Util.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
-        return context.item().view.get().getEngine().getLocation();
+        return context.get().item().view.get().getEngine().getLocation();
       }
-    }, context.settingsId.get());
+    }, context.get().settingsId.get());
   }
 
   public int getStatusCode() {
     init();
     try {
-      synchronized (context.statusCode) {
-        if (context.statusCode.get() == 0) {
-          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
+      synchronized (context.get().statusCode) {
+        if (context.get().statusCode.get() == 0) {
+          context.get().statusCode.wait(context.get().timeouts.get().getPageLoadTimeoutMS());
         }
       }
     } catch (InterruptedException e) {
-      context.logs.get().exception(e);
+      context.get().logs.get().exception(e);
     }
-    return context.statusCode.get();
+    return context.get().statusCode.get();
   }
 
   @Override
   public String getTitle() {
     init();
-    return Util.exec(Pause.NONE, context.statusCode, new Sync<String>() {
+    return Util.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
-        return context.item().view.get().getEngine().getTitle();
+        return context.get().item().view.get().getEngine().getTitle();
       }
-    }, context.settingsId.get());
+    }, context.get().settingsId.get());
   }
 
   @Override
   public void get(final String url) {
     init();
-    Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
+    Util.exec(Pause.SHORT, context.get().statusCode, new Sync<Object>() {
       public Object perform() {
-        context.item().engine.get().load(url);
+        context.get().item().engine.get().load(url);
         return null;
       }
-    }, context.settingsId.get());
+    }, context.get().settingsId.get());
     try {
-      synchronized (context.statusCode) {
-        if (context.statusCode.get() == 0) {
-          context.statusCode.wait(context.timeouts.get().getPageLoadTimeoutMS());
+      synchronized (context.get().statusCode) {
+        if (context.get().statusCode.get() == 0) {
+          context.get().statusCode.wait(context.get().timeouts.get().getPageLoadTimeoutMS());
         }
       }
     } catch (InterruptedException e) {
-      context.logs.get().exception(e);
+      context.get().logs.get().exception(e);
     }
-    if (context.statusCode.get() == 0) {
+    if (context.get().statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
         @Override
         public Object perform() {
-          context.item().engine.get().getLoadWorker().cancel();
+          context.get().item().engine.get().getLoadWorker().cancel();
           return null;
         }
-      }, context.settingsId.get());
+      }, context.get().settingsId.get());
     }
   }
 
   @Override
-  public WebElement findElement(By by) {
+  public ElementServer findElement(By by) {
     init();
-    return by.findElement(this);
+    //TODO FIXME
+    return null;//by.findElement(this);
   }
 
   @Override
-  public List<WebElement> findElements(By by) {
+  public List findElements(By by) {
     init();
-    return by.findElements(this);
+    //TODO FIXME
+    return null;//by.findElements(this);
   }
 
   @Override
-  public WebElement findElementById(String id) {
+  public ElementServer findElementById(String id) {
     init();
-    return Element.create(context).findElementById(id);
+    return ElementServer.create(context.get()).findElementById(id);
   }
 
   @Override
-  public List<WebElement> findElementsById(String id) {
+  public List findElementsById(String id) {
     init();
-    return Element.create(context).findElementsById(id);
+    return ElementServer.create(context.get()).findElementsById(id);
   }
 
   @Override
-  public WebElement findElementByXPath(String expr) {
+  public ElementServer findElementByXPath(String expr) {
     init();
-    return Element.create(context).findElementByXPath(expr);
+    return ElementServer.create(context.get()).findElementByXPath(expr);
   }
 
   @Override
-  public List<WebElement> findElementsByXPath(String expr) {
+  public List findElementsByXPath(String expr) {
     init();
-    return Element.create(context).findElementsByXPath(expr);
+    return ElementServer.create(context.get()).findElementsByXPath(expr);
   }
 
   @Override
-  public WebElement findElementByLinkText(final String text) {
+  public ElementServer findElementByLinkText(final String text) {
     init();
-    return Element.create(context).findElementByLinkText(text);
+    return ElementServer.create(context.get()).findElementByLinkText(text);
   }
 
   @Override
-  public WebElement findElementByPartialLinkText(String text) {
+  public ElementServer findElementByPartialLinkText(String text) {
     init();
-    return Element.create(context).findElementByPartialLinkText(text);
+    return ElementServer.create(context.get()).findElementByPartialLinkText(text);
   }
 
   @Override
-  public List<WebElement> findElementsByLinkText(String text) {
+  public List findElementsByLinkText(String text) {
     init();
-    return Element.create(context).findElementsByLinkText(text);
+    return ElementServer.create(context.get()).findElementsByLinkText(text);
   }
 
   @Override
-  public List<WebElement> findElementsByPartialLinkText(String text) {
+  public List findElementsByPartialLinkText(String text) {
     init();
-    return Element.create(context).findElementsByPartialLinkText(text);
+    return ElementServer.create(context.get()).findElementsByPartialLinkText(text);
   }
 
   @Override
-  public WebElement findElementByClassName(String cssClass) {
+  public ElementServer findElementByClassName(String cssClass) {
     init();
-    return Element.create(context).findElementByClassName(cssClass);
+    return ElementServer.create(context.get()).findElementByClassName(cssClass);
   }
 
   @Override
-  public List<WebElement> findElementsByClassName(String cssClass) {
+  public List findElementsByClassName(String cssClass) {
     init();
-    return Element.create(context).findElementsByClassName(cssClass);
+    return ElementServer.create(context.get()).findElementsByClassName(cssClass);
   }
 
   @Override
-  public WebElement findElementByName(String name) {
+  public ElementServer findElementByName(String name) {
     init();
-    return Element.create(context).findElementByName(name);
+    return ElementServer.create(context.get()).findElementByName(name);
   }
 
   @Override
-  public List<WebElement> findElementsByName(String name) {
+  public List findElementsByName(String name) {
     init();
-    return Element.create(context).findElementsByName(name);
+    return ElementServer.create(context.get()).findElementsByName(name);
   }
 
   @Override
-  public WebElement findElementByCssSelector(String expr) {
+  public ElementServer findElementByCssSelector(String expr) {
     init();
-    return Element.create(context).findElementByCssSelector(expr);
+    return ElementServer.create(context.get()).findElementByCssSelector(expr);
   }
 
   @Override
-  public List<WebElement> findElementsByCssSelector(String expr) {
+  public List findElementsByCssSelector(String expr) {
     init();
-    return Element.create(context).findElementsByCssSelector(expr);
+    return ElementServer.create(context.get()).findElementsByCssSelector(expr);
   }
 
   @Override
-  public WebElement findElementByTagName(String tagName) {
+  public ElementServer findElementByTagName(String tagName) {
     init();
-    return Element.create(context).findElementByTagName(tagName);
+    return ElementServer.create(context.get()).findElementByTagName(tagName);
   }
 
   @Override
-  public List<WebElement> findElementsByTagName(String tagName) {
+  public List findElementsByTagName(String tagName) {
     init();
-    return Element.create(context).findElementsByTagName(tagName);
+    return ElementServer.create(context.get()).findElementsByTagName(tagName);
   }
 
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     init();
-    return Element.create(context).executeAsyncScript(script, args);
+    return ElementServer.create(context.get()).executeAsyncScript(script, args);
   }
 
   @Override
   public Object executeScript(String script, Object... args) {
     init();
-    return Element.create(context).executeScript(script, args);
+    return ElementServer.create(context.get()).executeScript(script, args);
   }
 
   @Override
-  public Keyboard getKeyboard() {
+  public KeyboardServer getKeyboard() {
     init();
-    return context.keyboard.get();
+    return context.get().keyboard.get();
   }
 
   @Override
-  public Mouse getMouse() {
+  public MouseServer getMouse() {
     init();
-    return context.mouse.get();
+    return context.get().mouse.get();
   }
 
   @Override
-  public Capabilities getCapabilities() {
+  public CapabilitiesServer getCapabilities() {
     init();
-    return context.capabilities.get();
+    return context.get().capabilities.get();
   }
 
   @Override
   public void close() {
     init();
-    context.removeItem();
+    context.get().removeItem();
   }
 
   @Override
   public String getWindowHandle() {
     init();
-    return context.itemId();
+    return context.get().itemId();
   }
 
   @Override
   public Set<String> getWindowHandles() {
     init();
-    return context.itemIds();
+    return context.get().itemIds();
   }
 
   @Override
-  public Options manage() {
+  public OptionsServer manage() {
     init();
-    return context.options.get();
+    return context.get().options.get();
   }
 
   @Override
-  public Navigation navigate() {
+  public NavigationServer navigate() {
     init();
-    return context.item().navigation.get();
+    return context.get().item().navigation.get();
   }
 
   @Override
@@ -386,25 +381,25 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        context.item().engine.get().getLoadWorker().cancel();
+        context.get().item().engine.get().getLoadWorker().cancel();
         return null;
       }
-    }, context.settingsId.get());
-    Accessor.getPageFor(context.item().engine.get()).stop();
+    }, context.get().settingsId.get());
+    Accessor.getPageFor(context.get().item().engine.get()).stop();
     if (Settings.headless()) {
       Platform.exit();
     }
-    SettingsManager.close(context.settings.get().id());
-    context.settings.get().cookieStore().clear();
-    StatusMonitor.get(context.settings.get().id()).clearStatusMonitor();
-    StatusMonitor.remove(context.settings.get().id());
-    Logs.close(context.settingsId.get());
+    SettingsManager.close(context.get().settings.get().id());
+    context.get().settings.get().cookieStore().clear();
+    StatusMonitor.get(context.get().settings.get().id()).clearStatusMonitor();
+    StatusMonitor.remove(context.get().settings.get().id());
+    Logs.close(context.get().settingsId.get());
   }
 
   @Override
-  public TargetLocator switchTo() {
+  public TargetLocatorServer switchTo() {
     init();
-    return context.targetLocator.get();
+    return context.get().targetLocator.get();
   }
 
   @Override
@@ -414,25 +409,30 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
 
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
+    return outputType.convertFromPngBytes(getScreenshot());
+  }
+
+  @Override
+  public byte[] getScreenshot() throws WebDriverException {
     init();
-    BufferedImage image = Util.exec(Pause.NONE, context.statusCode, new Sync<BufferedImage>() {
+    BufferedImage image = Util.exec(Pause.NONE, context.get().statusCode, new Sync<BufferedImage>() {
       public BufferedImage perform() {
         return SwingFXUtils.fromFXImage(
-            context.item().view.get().snapshot(
+            context.get().item().view.get().snapshot(
                 new SnapshotParameters(),
                 new WritableImage(
-                    (int) Math.rint((Double) context.item().view.get().getWidth()),
-                    (int) Math.rint((Double) context.item().view.get().getHeight()))),
+                    (int) Math.rint((Double) context.get().item().view.get().getWidth()),
+                    (int) Math.rint((Double) context.get().item().view.get().getHeight()))),
             null);
       }
-    }, context.settingsId.get());
+    }, context.get().settingsId.get());
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();
       ImageIO.write(image, "png", out);
-      return outputType.convertFromPngBytes(out.toByteArray());
+      return out.toByteArray();
     } catch (Throwable t) {
-      context.logs.get().exception(t);
+      context.get().logs.get().exception(t);
       return null;
     } finally {
       Util.close(out);

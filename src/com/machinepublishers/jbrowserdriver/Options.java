@@ -21,14 +21,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.rmi.RemoteException;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.client.CookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver.ImeHandler;
 import org.openqa.selenium.WebDriver.Timeouts;
@@ -36,123 +31,110 @@ import org.openqa.selenium.WebDriver.Window;
 import org.openqa.selenium.logging.Logs;
 
 class Options implements org.openqa.selenium.WebDriver.Options {
-  private final ImeHandler imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandler();
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs;
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window;
-  private final CookieStore cookieStore;
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts;
+  private final OptionsRemote remote;
 
-  Options(final AtomicReference<com.machinepublishers.jbrowserdriver.Window> window,
-      AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs,
-      final CookieStore cookieStore,
-      final AtomicReference<com.machinepublishers.jbrowserdriver.Timeouts> timeouts) {
-    this.window = window;
-    this.logs = logs;
-    this.cookieStore = cookieStore;
-    this.timeouts = timeouts;
-  }
-
-  private static org.apache.http.cookie.Cookie convert(Cookie in) {
-    BasicClientCookie out = new BasicClientCookie(in.getName(), in.getValue());
-    out.setDomain(in.getDomain());
-    if (in.getExpiry() != null) {
-      out.setExpiryDate(in.getExpiry());
-    }
-    out.setPath(in.getPath());
-    out.setSecure(in.isSecure());
-    out.setValue(in.getValue());
-    out.setVersion(1);
-    return out;
-  }
-
-  private static Cookie convert(org.apache.http.cookie.Cookie in) {
-    return new Cookie(in.getName(),
-        in.getValue(),
-        in.getDomain(),
-        in.getPath(),
-        in.getExpiryDate(),
-        in.isSecure());
+  Options(OptionsRemote remote) {
+    this.remote = remote;
   }
 
   @Override
   public void addCookie(Cookie cookie) {
-    cookieStore.addCookie(convert(cookie));
+    try {
+      remote.addCookie(cookie);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void deleteAllCookies() {
-    cookieStore.clear();
+    try {
+      remote.deleteAllCookies();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void deleteCookie(Cookie cookie) {
-    List<org.apache.http.cookie.Cookie> cookies = cookieStore.getCookies();
-    String toDelete = cookie.getDomain().toLowerCase()
-        + "\n" + cookie.getName().toLowerCase()
-        + "\n" + cookie.getPath().toLowerCase();
-    for (org.apache.http.cookie.Cookie cur : cookies) {
-      String curString = cur.getDomain().toLowerCase()
-          + "\n" + cur.getName().toLowerCase()
-          + "\n" + cur.getPath().toLowerCase();
-      if (toDelete.equals(curString)) {
-        removeFromCookieStore(cur);
-      }
+    try {
+      remote.deleteCookie(cookie);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-  }
-
-  private void removeFromCookieStore(org.apache.http.cookie.Cookie cookie) {
-    BasicClientCookie tmp = new BasicClientCookie(cookie.getName(), "");
-    tmp.setDomain(cookie.getDomain());
-    tmp.setPath(cookie.getPath());
-    tmp.setExpiryDate(new Date(0));
-    cookieStore.addCookie(tmp);
   }
 
   @Override
   public void deleteCookieNamed(String name) {
-    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
-      if (cur.getName().equals(name)) {
-        removeFromCookieStore(cur);
-      }
+    try {
+      remote.deleteCookieNamed(name);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
   }
 
   @Override
   public Cookie getCookieNamed(String name) {
-    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
-      if (cur.getName().equals(name)) {
-        return convert(cur);
-      }
+    try {
+      return remote.getCookieNamed(name);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
     }
-    return null;
   }
 
   @Override
   public Set<Cookie> getCookies() {
-    Set<Cookie> cookies = new LinkedHashSet<Cookie>();
-    for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
-      cookies.add(convert(cur));
+    try {
+      return remote.getCookies();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
     }
-    return cookies;
   }
 
   @Override
   public ImeHandler ime() {
-    return imeHandler;
+    try {
+      return new com.machinepublishers.jbrowserdriver.ImeHandler(remote.ime());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Logs logs() {
-    return logs.get();
+    //TODO FIXME
+    return null;//logs.get();
   }
 
   @Override
   public Timeouts timeouts() {
-    return timeouts.get();
+    try {
+      return new com.machinepublishers.jbrowserdriver.Timeouts(remote.timeouts());
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public Window window() {
-    return window.get();
+    try {
+      return new com.machinepublishers.jbrowserdriver.Window(remote.window());
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 }

@@ -21,48 +21,53 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.openqa.selenium.Keys;
+import java.rmi.RemoteException;
 
 class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
-  private final AtomicReference<Robot> robot;
-  private boolean shiftPressed;
-  private final Object lock = new Object();
+  private final KeyboardRemote remote;
 
-  Keyboard(final AtomicReference<Robot> robot) {
-    this.robot = robot;
+  Keyboard(KeyboardRemote remote) {
+    this.remote = remote;
   }
 
   @Override
   public void pressKey(CharSequence key) {
-    synchronized (lock) {
-      if (!shiftPressed) {
-        shiftPressed = Keys.SHIFT.equals(key) || Keys.LEFT_SHIFT.equals(key);
-      }
+    try {
+      remote.pressKey(key);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().keysPress(key);
   }
 
   @Override
   public void releaseKey(CharSequence key) {
-    synchronized (lock) {
-      if (shiftPressed) {
-        shiftPressed = !Keys.SHIFT.equals(key) && !Keys.LEFT_SHIFT.equals(key);
-      }
+    try {
+      remote.releaseKey(key);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().keysRelease(key);
   }
 
   @Override
   public void sendKeys(CharSequence... keys) {
-    robot.get().keysType(keys);
+    try {
+      remote.sendKeys(keys);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   boolean isShiftPressed() {
-    synchronized (lock) {
-      return shiftPressed;
+    try {
+      return remote.isShiftPressed();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return false;
     }
   }
 }

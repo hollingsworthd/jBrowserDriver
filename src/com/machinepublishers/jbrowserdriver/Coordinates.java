@@ -21,31 +21,57 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-interface TimeoutsRemote extends Remote {
-  TimeoutsRemote implicitlyWait(long duration, TimeUnit unit)
-      throws RemoteException;
+class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates {
+  final CoordinatesRemote remote;
 
-  TimeoutsRemote pageLoadTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  Coordinates(CoordinatesRemote remote) {
+    this.remote = remote;
+  }
 
-  TimeoutsRemote setScriptTimeout(long duration, TimeUnit unit)
-      throws RemoteException;
+  @Override
+  public Point onScreen() {
+    try {
+      return remote.onScreen();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
+  }
 
-  long getImplicitlyWaitMS() throws RemoteException;
+  @Override
+  public Point inViewPort() {
+    try {
+      return remote.inViewPort();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
+  }
 
-  long getPageLoadTimeoutMS() throws RemoteException;
+  @Override
+  public Point onPage() {
+    try {
+      return remote.onPage();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
+  }
 
-  long getScriptTimeoutMS() throws RemoteException;
-
-  AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
-
-  AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
-
-  AtomicLong getScriptTimeoutObjMS() throws RemoteException;
+  @Override
+  public Object getAuxiliary() {
+    try {
+      return remote.getAuxiliary();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
+  }
 
 }

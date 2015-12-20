@@ -24,20 +24,18 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.openqa.selenium.interactions.internal.Coordinates;
-
 interface MouseRemote extends Remote {
-  void click(Coordinates coords) throws RemoteException;
+  void click(CoordinatesRemote coords) throws RemoteException;
 
-  void contextClick(Coordinates coords) throws RemoteException;
+  void contextClick(CoordinatesRemote coords) throws RemoteException;
 
-  void doubleClick(Coordinates coords) throws RemoteException;
+  void doubleClick(CoordinatesRemote coords) throws RemoteException;
 
-  void mouseDown(Coordinates coords) throws RemoteException;
+  void mouseDown(CoordinatesRemote coords) throws RemoteException;
 
-  void mouseMove(Coordinates coords) throws RemoteException;
+  void mouseMove(CoordinatesRemote coords) throws RemoteException;
 
-  void mouseMove(Coordinates coords, long xOffset, long yOffset) throws RemoteException;
+  void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) throws RemoteException;
 
-  void mouseUp(Coordinates coords) throws RemoteException;
+  void mouseUp(CoordinatesRemote coords) throws RemoteException;
 }

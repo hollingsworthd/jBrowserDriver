@@ -21,32 +21,67 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.Arrays;
+import java.rmi.RemoteException;
 import java.util.List;
 
 class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
+  private final ImeHandlerRemote remote;
 
-  ImeHandler() {}
+  ImeHandler(ImeHandlerRemote remote) {
+    this.remote = remote;
+  }
 
   @Override
-  public void activateEngine(String name) {}
+  public void activateEngine(String name) {
+    try {
+      remote.activateEngine(name);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
+  }
 
   @Override
-  public void deactivate() {}
+  public void deactivate() {
+    try {
+      remote.deactivate();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
+  }
 
   @Override
   public String getActiveEngine() {
-    return "default";
+    try {
+      return remote.getActiveEngine();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public List<String> getAvailableEngines() {
-    return Arrays.asList(new String[] { "default" });
+    try {
+      return remote.getAvailableEngines();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return null;
+    }
   }
 
   @Override
   public boolean isActivated() {
-    return true;
+    try {
+      return remote.isActivated();
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+      return false;
+    }
   }
 
 }

@@ -35,7 +35,6 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.openqa.selenium.Dimension;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 

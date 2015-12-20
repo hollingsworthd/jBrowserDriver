@@ -46,11 +46,21 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
+  public void click(CoordinatesRemote coords) {
+    click(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  }
+
+  @Override
   public void contextClick(Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseClick(MouseButton.RIGHT);
+  }
+
+  @Override
+  public void contextClick(CoordinatesRemote coords) {
+    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
   }
 
   @Override
@@ -63,6 +73,11 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
+  public void doubleClick(CoordinatesRemote coords) {
+    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  }
+
+  @Override
   public void mouseDown(Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
@@ -71,8 +86,18 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
+  public void mouseDown(CoordinatesRemote coords) {
+    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  }
+
+  @Override
   public void mouseMove(Coordinates coords) {
     robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+  }
+
+  @Override
+  public void mouseMove(CoordinatesRemote coords) {
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
   }
 
   @Override
@@ -85,11 +110,21 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
+  public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) {
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords), xOffset, yOffset);
+  }
+
+  @Override
   public void mouseUp(Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
     robot.get().mouseRelease(MouseButton.LEFT);
+  }
+
+  @Override
+  public void mouseUp(CoordinatesRemote coords) {
+    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
   }
 
 }

@@ -21,72 +21,84 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.rmi.RemoteException;
 
 import org.openqa.selenium.interactions.internal.Coordinates;
 
-import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
-
 class Mouse implements org.openqa.selenium.interactions.Mouse {
-  private final AtomicReference<Robot> robot;
+  private final MouseRemote remote;
 
-  Mouse(final AtomicReference<Robot> robot) {
-    this.robot = robot;
+  Mouse(MouseRemote remote) {
+    this.remote = remote;
   }
 
   @Override
   public void click(Coordinates coords) {
-    if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.click(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().mouseClick(MouseButton.LEFT);
   }
 
   @Override
   public void contextClick(Coordinates coords) {
-    if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.contextClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().mouseClick(MouseButton.RIGHT);
   }
 
   @Override
   public void doubleClick(Coordinates coords) {
-    if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.doubleClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().mouseClick(MouseButton.LEFT);
-    robot.get().mouseClick(MouseButton.LEFT);
   }
 
   @Override
   public void mouseDown(Coordinates coords) {
-    if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.mouseDown(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().mousePress(MouseButton.LEFT);
   }
 
   @Override
   public void mouseMove(Coordinates coords) {
-    robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.mouseMove(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
+    }
   }
 
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
-    if (coords == null || coords.onPage() == null) {
-      robot.get().mouseMoveBy(xOffset, yOffset);
-    } else {
-      robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
+    try {
+      remote.mouseMove(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, xOffset, yOffset);
+    } catch (RemoteException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
 
   @Override
   public void mouseUp(Coordinates coords) {
-    if (coords != null) {
-      robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
+    try {
+      remote.mouseUp(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+    } catch (RemoteException e) {
+      // TODO
+      e.printStackTrace();
     }
-    robot.get().mouseRelease(MouseButton.LEFT);
   }
-
 }
