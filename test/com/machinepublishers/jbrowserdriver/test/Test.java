@@ -1,4 +1,4 @@
-package com.machinepublishes.jbrowserdriver.test;
+package com.machinepublishers.jbrowserdriver.test;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
