@@ -421,8 +421,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            return (List<ElementServer>) parseScriptResult(
-                node.get().call("getElementsByTagName", new Object[] { tagName }));
+            if (node.get() != null) {
+              return (List<ElementServer>) parseScriptResult(
+                  node.get().call("getElementsByTagName", new Object[] { tagName }));
+            }
+            return null;
           }
         }, context.settingsId.get());
   }
