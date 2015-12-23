@@ -38,6 +38,8 @@ import org.apache.http.impl.client.BasicCookieStore;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
+import javafx.embed.swing.JFXPanel;
+
 /**
  * An immutable class which contains settings for the browser.
  * 
@@ -115,6 +117,7 @@ public class Settings implements Serializable {
       }
     } else {
       headless = false;
+      new JFXPanel();
     }
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
