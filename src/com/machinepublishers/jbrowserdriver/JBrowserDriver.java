@@ -165,6 +165,11 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   private final JBrowserDriverRemote remote;
 
+  /**
+   * Run diagnostic tests.
+   * 
+   * @return Errors or an empty list if no errors found.
+   */
   public static List<String> test() {
     return Test.run();
   }

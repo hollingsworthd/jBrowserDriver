@@ -20,7 +20,7 @@ public class Test {
     } catch (Throwable t) {
       StringWriter writer = new StringWriter();
       t.printStackTrace(new PrintWriter(writer));
-      errors.add("Runtime exception: " + writer.toString());
+      errors.add("Runtime exception: " + writer.toString().replaceAll("\n", " "));
     }
     return errors;
   }
