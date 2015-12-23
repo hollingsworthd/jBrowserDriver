@@ -45,6 +45,8 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 
+import com.machinepublishes.jbrowserdriver.test.Test;
+
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's
  * JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName,
@@ -163,17 +165,15 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   private final JBrowserDriverRemote remote;
 
+  public static List<String> test() {
+    return Test.run();
+  }
+
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
    */
   public JBrowserDriver() {
-    JBrowserDriverRemote instanceTmp = null;
-    try {
-      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverRemote");
-    } catch (Throwable t) {
-      Logs.logsFor(1l).exception(t);
-    }
-    remote = instanceTmp;
+    this(Settings.builder().build());
   }
 
   /**
@@ -182,13 +182,14 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    this();
+    JBrowserDriverRemote instanceTmp = null;
     try {
-      remote.setUp(settings);
-    } catch (RemoteException e) {
-      //TODO
-      e.printStackTrace();
+      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverRemote");
+      instanceTmp.setUp(settings);
+    } catch (Throwable t) {
+      Logs.logsFor(1l).exception(t);
     }
+    remote = instanceTmp;
   }
 
   JBrowserDriver(JBrowserDriverRemote remote) {
