@@ -21,6 +21,8 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.List;
@@ -140,7 +142,16 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   static {
     if (System.getSecurityManager() == null) {
-      System.setSecurityManager(new SecurityManager());
+      try {
+        File policy = File.createTempFile("jbd", ".policy");
+        policy.deleteOnExit();
+        Files.write(policy.toPath(), "grant{permission java.security.AllPermission;};".getBytes("utf-8"));
+        System.setProperty("java.security.policy", policy.getAbsolutePath());
+        System.setSecurityManager(new SecurityManager());
+      } catch (Throwable t) {
+        //TODO
+        t.printStackTrace();
+      }
     }
   }
 
