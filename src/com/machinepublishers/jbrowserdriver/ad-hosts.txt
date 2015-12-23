@@ -153,7 +153,6 @@
 125.6.87.194.dynamic.dol.ru
 126.6.87.194.dynamic.dol.ru
 126.com
-127.0.0.1
 127.6.87.194.dynamic.dol.ru
 1278725189.pub.ezanga.com
 128.6.87.194.dynamic.dol.ru
