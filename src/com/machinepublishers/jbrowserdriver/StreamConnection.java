@@ -326,10 +326,10 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       List<String> valuesIn = reqHeaders.get(name.toLowerCase());
       String valueSettings = https ? settings.get().headers().headerHttps(name)
           : settings.get().headers().headerHttp(name);
-      if (valueSettings == RequestHeaders.DROP_HEADER) {
+      if (valueSettings.equals(RequestHeaders.DROP_HEADER)) {
         continue;
       }
-      if (valueSettings == RequestHeaders.DYNAMIC_HEADER) {
+      if (valueSettings.equals(RequestHeaders.DYNAMIC_HEADER)) {
         if (name.equalsIgnoreCase("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
           req.addHeader(name, settings.get().userAgentString());
         } else if (name.equalsIgnoreCase("host")) {
