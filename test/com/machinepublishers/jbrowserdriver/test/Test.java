@@ -17,6 +17,8 @@ public class Test {
       if (driver.getStatusCode() != 200) {
         errors.add("Status code not 200");
       }
+      driver.quit();
+      HttpServer.stop();
     } catch (Throwable t) {
       StringWriter writer = new StringWriter();
       t.printStackTrace(new PrintWriter(writer));
