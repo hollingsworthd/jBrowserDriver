@@ -44,6 +44,10 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
   private final ElementRemote remote;
 
+  /*
+   * TODO FIXME handle null return vals and remote
+   */
+
   Element(ElementRemote remote) {
     this.remote = remote;
   }
