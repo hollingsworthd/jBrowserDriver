@@ -188,6 +188,8 @@ public class Settings implements Serializable {
                 if (matcher.find()) {
                   injected = ("<html><head>" + settings.get().script() + "</head>"
                       + content + "</html>");
+                } else {
+                  injected = content;
                 }
               }
             }

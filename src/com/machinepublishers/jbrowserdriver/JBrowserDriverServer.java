@@ -55,6 +55,7 @@ import org.openqa.selenium.internal.Killable;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.javafx.webkit.Accessor;
+import com.sun.webkit.WebPage;
 
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -140,7 +141,18 @@ public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowse
   public String getPageSource() {
     init();
     WebElement element = ElementServer.create(context.get()).findElementByTagName("html");
-    return element == null ? null : element.getAttribute("outerHTML");
+    if (element != null) {
+      String outerHtml = element.getAttribute("outerHTML");
+      if (outerHtml != null && !outerHtml.isEmpty()) {
+        return outerHtml;
+      }
+    }
+    WebPage page = Accessor.getPageFor(context.get().item().engine.get());
+    String html = page.getHtml(page.getMainFrame());
+    if (html != null && !html.isEmpty()) {
+      return html;
+    }
+    return page.getInnerText(page.getMainFrame());
   }
 
   @Override
