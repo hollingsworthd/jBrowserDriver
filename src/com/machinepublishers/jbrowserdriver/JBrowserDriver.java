@@ -47,7 +47,7 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 
-import com.machinepublishers.jbrowserdriver.test.Test;
+import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
 /**
  * Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's
