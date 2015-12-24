@@ -62,7 +62,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
 
-public class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriverRemote,
+class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
