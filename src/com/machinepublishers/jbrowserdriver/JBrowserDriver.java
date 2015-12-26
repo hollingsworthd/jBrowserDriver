@@ -150,6 +150,31 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
 
+  /**
+   * Use this string on sendKeys functions to delete text.
+   */
+  public static final String KEYBOARD_DELETE;
+  private static final List<Integer> ports = new ArrayList<Integer>();
+  private static final List<String> args;
+  private static final List<Object> waiting = new ArrayList<Object>();
+  private final Object key = new Object();
+  private final JBrowserDriverRemote remote;
+  private final AtomicReference<Process> process = new AtomicReference<Process>();
+  private final int port;
+
+  static {
+    String property = System.getProperty("jbd.ports", "10000-10007");
+    String[] ranges = property.split(",");
+    for (int i = 0; i < ranges.length; i++) {
+      String[] bounds = ranges[i].split("-");
+      int low = Integer.parseInt(bounds[0]);
+      int high = Integer.parseInt(bounds[1]);
+      for (int j = low; j <= high; j++) {
+        ports.add(j);
+      }
+    }
+  }
+
   static {
     if (System.getSecurityManager() == null) {
       try {
@@ -164,8 +189,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       }
     }
   }
-
-  private static final List<String> args;
 
   static {
     List<String> argsTmp = new ArrayList<String>();
@@ -189,11 +212,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     args = Collections.unmodifiableList(argsTmp);
   }
 
-  /**
-   * Use this string on sendKeys functions to delete text.
-   */
-  public static final String KEYBOARD_DELETE;
-
   static {
     final int CHARS_TO_DELETE = 60;
     StringBuilder builder = new StringBuilder();
@@ -207,9 +225,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
     KEYBOARD_DELETE = builder.toString();
   }
-
-  private final JBrowserDriverRemote remote;
-  private final AtomicReference<Process> process = new AtomicReference<Process>();
 
   /**
    * Run diagnostic tests.
@@ -233,10 +248,25 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    launchProcess();
+    synchronized (ports) {
+      if (ports.isEmpty()) {
+        waiting.add(key);
+        while (true) {
+          try {
+            ports.wait();
+            if (key.equals(waiting.get(0)) && !ports.isEmpty()) {
+              break;
+            }
+          } catch (InterruptedException e) {}
+        }
+        waiting.remove(key);
+      }
+      port = ports.remove(0);
+    }
+    launchProcess(port);
     JBrowserDriverRemote instanceTmp = null;
     try {
-      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverRemote");
+      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port).lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
       Logs.logsFor(1l).exception(t);
@@ -244,15 +274,13 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     remote = instanceTmp;
   }
 
-  JBrowserDriver(JBrowserDriverRemote remote) {
-    this.remote = remote;
-  }
-
-  private void launchProcess() {
+  private void launchProcess(int port) {
     final AtomicBoolean ready = new AtomicBoolean();
     new Thread(new Runnable() {
       @Override
       public void run() {
+        List<String> myArgs = new ArrayList<String>(args);
+        myArgs.add(Integer.toString(port));
         try {
           new ProcessExecutor()
               .environment(System.getenv())
@@ -279,7 +307,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
             }
           })
               .destroyOnExit()
-              .command(args).execute();
+              .command(myArgs).execute();
         } catch (Throwable t) {
           //TODO
           t.printStackTrace();
@@ -699,19 +727,18 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   }
 
   private void endProcess() {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          PidProcess pidProcess = Processes.newPidProcess(process.get());
-          if (!pidProcess.destroyGracefully().waitFor(10, TimeUnit.SECONDS)) {
-            pidProcess.destroyForcefully();
-          }
-        } catch (Throwable t) {
-          process.get().destroyForcibly();
-        }
+    try {
+      PidProcess pidProcess = Processes.newPidProcess(process.get());
+      if (!pidProcess.destroyGracefully().waitFor(10, TimeUnit.SECONDS)) {
+        pidProcess.destroyForcefully();
       }
-    }).start();
+    } catch (Throwable t) {
+      process.get().destroyForcibly();
+    }
+    synchronized (ports) {
+      ports.add(port);
+      ports.notifyAll();
+    }
   }
 
   @Override
@@ -728,7 +755,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public TargetLocator switchTo() {
     try {
-      return new com.machinepublishers.jbrowserdriver.TargetLocator(remote.switchTo());
+      return new com.machinepublishers.jbrowserdriver.TargetLocator(remote.switchTo(), this);
     } catch (RemoteException e) {
       // TODO
       e.printStackTrace();

@@ -67,22 +67,20 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
 
-  private static final Registry registry;
-
-  static {
-    Registry registryTmp = null;
-    try {
-      registryTmp = LocateRegistry.createRegistry(9012);
-    } catch (Throwable t) {
-      Logs.logsFor(1l).exception(t);
-    }
-    registry = registryTmp;
-  }
+  private static Registry registry;
 
   /*
    * RMI entry point.
    */
   public static void main(String[] args) {
+    Registry registryTmp = null;
+    try {
+      registryTmp = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
+    } catch (Throwable t) {
+      Logs.logsFor(1l).exception(t);
+    }
+    registry = registryTmp;
+
     try {
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
       System.out.println("ready");
