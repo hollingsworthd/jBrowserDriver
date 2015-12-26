@@ -85,6 +85,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public static void main(String[] args) {
     try {
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
+      System.out.println("ready");
     } catch (Throwable t) {
       Logs.logsFor(1l).exception(t);
     }

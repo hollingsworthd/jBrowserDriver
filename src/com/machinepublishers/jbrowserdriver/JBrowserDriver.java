@@ -25,8 +25,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.HasCapabilities;
@@ -46,6 +49,8 @@ import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
@@ -155,6 +160,31 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  private static final List<String> args;
+
+  static {
+    List<String> argsTmp = new ArrayList<String>();
+    try {
+      File javaBin = new File(System.getProperty("java.home") + "/bin/java");
+      if (!javaBin.exists()) {
+        //probably means we're on a MS Windows server 
+        javaBin = new File(javaBin.getCanonicalPath() + ".exe");
+      }
+      argsTmp.add(javaBin.getCanonicalPath());
+      for (Object keyObj : System.getProperties().keySet()) {
+        String key = keyObj.toString();
+        argsTmp.add("-D" + key + "=" + System.getProperty(key));
+      }
+      argsTmp.add("-classpath");
+      argsTmp.add(System.getProperty("java.class.path"));
+      argsTmp.add(JBrowserDriverServer.class.getName());
+    } catch (Throwable t) {
+      //TODO
+      t.printStackTrace();
+    }
+    args = Collections.unmodifiableList(argsTmp);
+  }
+
   /**
    * Use this string on sendKeys functions to delete text.
    */
@@ -198,6 +228,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
+    launchProcess();
     JBrowserDriverRemote instanceTmp = null;
     try {
       instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(9012).lookup("JBrowserDriverRemote");
@@ -210,6 +241,48 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   JBrowserDriver(JBrowserDriverRemote remote) {
     this.remote = remote;
+  }
+
+  private static void launchProcess() {
+    final AtomicBoolean ready = new AtomicBoolean();
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          new ProcessExecutor()
+              .environment(System.getenv())
+              .redirectOutput(new LogOutputStream() {
+            boolean done = false;
+
+            @Override
+            protected void processLine(String line) {
+              if (!done) {
+                synchronized (ready) {
+                  if ("ready".equals(line)) {
+                    ready.set(true);
+                    ready.notify();
+                    done = true;
+                  }
+                }
+              }
+            }
+          })
+              .destroyOnExit()
+              .command(args).execute();
+        } catch (Throwable t) {
+          //TODO
+          t.printStackTrace();
+        }
+      }
+    }).start();
+    synchronized (ready) {
+      while (!ready.get()) {
+        try {
+          ready.wait();
+          break;
+        } catch (InterruptedException e) {}
+      }
+    }
   }
 
   /**
