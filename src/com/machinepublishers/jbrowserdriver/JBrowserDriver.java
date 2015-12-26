@@ -29,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.HasCapabilities;
@@ -50,7 +52,10 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.listener.ProcessListener;
 import org.zeroturnaround.exec.stream.LogOutputStream;
+import org.zeroturnaround.process.PidProcess;
+import org.zeroturnaround.process.Processes;
 
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
@@ -167,7 +172,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       File javaBin = new File(System.getProperty("java.home") + "/bin/java");
       if (!javaBin.exists()) {
-        //probably means we're on a MS Windows server 
         javaBin = new File(javaBin.getCanonicalPath() + ".exe");
       }
       argsTmp.add(javaBin.getCanonicalPath());
@@ -205,6 +209,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   }
 
   private final JBrowserDriverRemote remote;
+  private final AtomicReference<Process> process = new AtomicReference<Process>();
 
   /**
    * Run diagnostic tests.
@@ -243,7 +248,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     this.remote = remote;
   }
 
-  private static void launchProcess() {
+  private void launchProcess() {
     final AtomicBoolean ready = new AtomicBoolean();
     new Thread(new Runnable() {
       @Override
@@ -251,6 +256,12 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         try {
           new ProcessExecutor()
               .environment(System.getenv())
+              .addListener(new ProcessListener() {
+            @Override
+            public void afterStart(Process proc, ProcessExecutor executor) {
+              process.set(proc);
+            }
+          })
               .redirectOutput(new LogOutputStream() {
             boolean done = false;
 
@@ -687,14 +698,31 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  private void endProcess() {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          PidProcess pidProcess = Processes.newPidProcess(process.get());
+          if (!pidProcess.destroyGracefully().waitFor(10, TimeUnit.SECONDS)) {
+            pidProcess.destroyForcefully();
+          }
+        } catch (Throwable t) {
+          process.get().destroyForcibly();
+        }
+      }
+    }).start();
+  }
+
   @Override
   public void quit() {
     try {
       remote.quit();
     } catch (RemoteException e) {
-      // TODO
+      //TODO
       e.printStackTrace();
     }
+    endProcess();
   }
 
   @Override
@@ -716,6 +744,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       // TODO 
       e.printStackTrace();
     }
+    endProcess();
   }
 
   @Override
