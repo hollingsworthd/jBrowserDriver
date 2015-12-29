@@ -22,7 +22,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
@@ -159,6 +158,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   private static final List<Object> waiting = new ArrayList<Object>();
   private final Object key = new Object();
   private final JBrowserDriverRemote remote;
+  private final LogsServer logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
   private final int port;
 
@@ -176,18 +176,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   }
 
   static {
-    if (System.getSecurityManager() == null) {
-      try {
-        File policy = File.createTempFile("jbd", ".policy");
-        policy.deleteOnExit();
-        Files.write(policy.toPath(), "grant{permission java.security.AllPermission;};".getBytes("utf-8"));
-        System.setProperty("java.security.policy", policy.getAbsolutePath());
-        System.setSecurityManager(new SecurityManager());
-      } catch (Throwable t) {
-        //TODO
-        t.printStackTrace();
-      }
-    }
+    Policy.init();
   }
 
   static {
@@ -263,6 +252,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       }
       port = ports.remove(0);
     }
+    logs = LogsServer.newInstance(port);
     launchProcess(port);
     JBrowserDriverRemote instanceTmp = null;
     try {
@@ -707,7 +697,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Options manage() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Options(remote.manage());
+      return new com.machinepublishers.jbrowserdriver.Options(remote.manage(), logs);
     } catch (RemoteException e) {
       // TODO
       e.printStackTrace();
@@ -750,6 +740,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       e.printStackTrace();
     }
     endProcess();
+    logs.close();
   }
 
   @Override

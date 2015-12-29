@@ -32,9 +32,11 @@ import org.openqa.selenium.logging.Logs;
 
 class Options implements org.openqa.selenium.WebDriver.Options {
   private final OptionsRemote remote;
+  private final LogsServer logs;
 
-  Options(OptionsRemote remote) {
+  Options(OptionsRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -112,8 +114,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
 
   @Override
   public Logs logs() {
-    //TODO FIXME
-    return null;//logs.get();
+    return logs;
   }
 
   @Override

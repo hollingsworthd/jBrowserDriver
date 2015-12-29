@@ -21,99 +21,90 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.util.Set;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogEntry;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
-  private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
-  private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
-  private static final Logs instance = new Logs();
-  private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
+  private static final AtomicReference<Logs> instance = new AtomicReference<Logs>();
 
-  private Logs() {}
+  static void init(int id) {
+    try {
+      instance.set(new Logs((LogsRemote) LocateRegistry.getRegistry(9999).lookup("Logs" + id)));
+    } catch (Throwable t) {
+      // TODO
+      t.printStackTrace();
+    }
+  }
 
   static Logs instance() {
-    return instance;
+    return instance.get();
+  }
+
+  private final LogsRemote remote;
+
+  private Logs(LogsRemote remote) {
+    this.remote = remote;
   }
 
   void clear() {
-    synchronized (entries) {
-      entries.clear();
+    try {
+      remote.clear();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
     }
   }
 
   void trace(String message) {
-    final LogEntry entry = new LogEntry(Level.FINEST, System.currentTimeMillis(), message);
-    synchronized (entries) {
-      entries.add(entry);
-      if (entries.size() > MAX_LOGS) {
-        entries.removeFirst();
-      }
-    }
-    if (TRACE_CONSOLE) {
-      System.out.println(entry);
+    try {
+      remote.trace(message);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
     }
   }
 
   void warn(String message) {
-    final LogEntry entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), message);
-    synchronized (entries) {
-      entries.add(entry);
-      if (entries.size() > MAX_LOGS) {
-        entries.removeFirst();
-      }
-    }
-    if (WARN_CONSOLE) {
-      System.err.println(entry);
+    try {
+      remote.warn(message);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
     }
   }
 
   void exception(Throwable t) {
-    final LogEntry entry;
-    StringWriter writer = null;
     try {
-      writer = new StringWriter();
-      t.printStackTrace(new PrintWriter(writer));
-      entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), writer.toString());
-      synchronized (entries) {
-        entries.add(entry);
-        if (entries.size() > MAX_LOGS) {
-          entries.removeFirst();
-        }
-      }
-    } catch (Throwable t2) {
-      if (WARN_CONSOLE) {
-        System.err.println("While logging a message, an error occurred: " + t2.getMessage());
-      }
-      return;
-    } finally {
-      Util.close(writer);
-    }
-    if (WARN_CONSOLE) {
-      System.err.println(entry);
+      remote.exception(t);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
     }
   }
 
   @Override
   public LogEntries get(String s) {
-    synchronized (entries) {
-      LogEntries logEntries = new LogEntries(entries);
-      entries.clear();
-      return logEntries;
+    try {
+      return remote.get(s);
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
     }
   }
 
   @Override
   public Set<String> getAvailableLogTypes() {
-    return new HashSet<String>(Arrays.asList(new String[] { "all" }));
+    try {
+      return remote.getAvailableLogTypes();
+    } catch (RemoteException e) {
+      // TODO 
+      e.printStackTrace();
+      return null;
+    }
   }
 }
