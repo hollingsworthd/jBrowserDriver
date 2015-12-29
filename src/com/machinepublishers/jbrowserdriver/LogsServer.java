@@ -43,7 +43,6 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     try {
       registryTmp = LocateRegistry.createRegistry(9999);
     } catch (Throwable t) {
-      //TODO
       t.printStackTrace();
     }
     registry = registryTmp;
@@ -74,8 +73,7 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
       registry.unbind("Logs" + id);
       UnicastRemoteObject.unexportObject(this, true);
     } catch (Throwable t) {
-      //TODO
-      t.printStackTrace();
+      exception(t);
     }
   }
 

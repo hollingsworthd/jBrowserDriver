@@ -734,8 +734,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         }
       });
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      Logs.instance().exception(e);
       return null;
     }
   }

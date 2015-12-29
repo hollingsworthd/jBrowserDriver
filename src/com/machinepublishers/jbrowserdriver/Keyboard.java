@@ -26,9 +26,11 @@ import java.rmi.RemoteException;
 class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final KeyboardRemote remote;
+  private final LogsServer logs;
 
-  Keyboard(KeyboardRemote remote) {
+  Keyboard(KeyboardRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -36,8 +38,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     try {
       remote.pressKey(key);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -46,8 +47,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     try {
       remote.releaseKey(key);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -56,8 +56,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     try {
       remote.sendKeys(keys);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -65,8 +64,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     try {
       return remote.isShiftPressed();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return false;
     }
   }

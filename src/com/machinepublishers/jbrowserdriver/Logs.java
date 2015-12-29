@@ -35,7 +35,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       instance.set(new Logs((LogsRemote) LocateRegistry.getRegistry(9999).lookup("Logs" + id)));
     } catch (Throwable t) {
-      // TODO
       t.printStackTrace();
     }
   }
@@ -54,7 +53,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       remote.clear();
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
     }
   }
@@ -63,7 +61,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       remote.trace(message);
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
     }
   }
@@ -72,7 +69,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       remote.warn(message);
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
     }
   }
@@ -81,7 +77,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       remote.exception(t);
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
     }
   }
@@ -91,7 +86,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       return remote.get(s);
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
       return null;
     }
@@ -102,7 +96,6 @@ class Logs implements org.openqa.selenium.logging.Logs {
     try {
       return remote.getAvailableLogTypes();
     } catch (RemoteException e) {
-      // TODO 
       e.printStackTrace();
       return null;
     }

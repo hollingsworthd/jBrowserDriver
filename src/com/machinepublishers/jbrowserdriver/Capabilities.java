@@ -29,9 +29,11 @@ import org.openqa.selenium.Platform;
 class Capabilities implements org.openqa.selenium.Capabilities {
 
   private final CapabilitiesRemote remote;
+  private final LogsServer logs;
 
-  Capabilities(CapabilitiesRemote remote) {
+  Capabilities(CapabilitiesRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -39,8 +41,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.asMap();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -50,8 +51,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.getBrowserName();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -61,8 +61,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.getCapability(name);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -72,8 +71,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.getPlatform();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -83,8 +81,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.getVersion();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -94,8 +91,7 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.is(name);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return false;
     }
   }
@@ -105,10 +101,8 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     try {
       return remote.isJavascriptEnabled();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return false;
     }
   }
-
 }

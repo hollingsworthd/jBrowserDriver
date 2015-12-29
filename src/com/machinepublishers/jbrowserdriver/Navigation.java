@@ -26,9 +26,11 @@ import java.rmi.RemoteException;
 
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final NavigationRemote remote;
+  private final LogsServer logs;
 
-  Navigation(NavigationRemote remote) {
+  Navigation(NavigationRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -36,8 +38,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     try {
       remote.back();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -46,8 +47,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     try {
       remote.forward();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -56,8 +56,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     try {
       remote.refresh();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -66,8 +65,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     try {
       remote.to(url);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -76,8 +74,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     try {
       remote.to(url);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 }

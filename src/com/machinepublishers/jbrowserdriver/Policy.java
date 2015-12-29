@@ -34,7 +34,6 @@ class Policy {
         System.setProperty("java.security.policy", policy.getAbsolutePath());
         System.setSecurityManager(new SecurityManager());
       } catch (Throwable t) {
-        //TODO
         t.printStackTrace();
       }
     }

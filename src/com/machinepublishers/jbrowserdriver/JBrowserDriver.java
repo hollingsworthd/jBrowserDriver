@@ -195,7 +195,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       argsTmp.add(System.getProperty("java.class.path"));
       argsTmp.add(JBrowserDriverServer.class.getName());
     } catch (Throwable t) {
-      //TODO
       t.printStackTrace();
     }
     args = Collections.unmodifiableList(argsTmp);
@@ -299,8 +298,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
               .destroyOnExit()
               .command(myArgs).execute();
         } catch (Throwable t) {
-          //TODO
-          t.printStackTrace();
+          logs.exception(t);
         }
       }
     }).start();
@@ -322,8 +320,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.init();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -338,8 +335,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.reset(settings);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -351,8 +347,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.reset();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -361,8 +356,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getPageSource();
     } catch (RemoteException e) {
-      //TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -372,8 +366,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getCurrentUrl();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -382,8 +375,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getStatusCode();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return -1;
     }
   }
@@ -393,8 +385,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getTitle();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -404,18 +395,16 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.get(url);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public WebElement findElement(By by) {
     try {
-      return new Element(remote.findElement(by));
+      return new Element(remote.findElement(by), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -423,10 +412,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElements(By by) {
     try {
-      return Element.constructList(remote.findElements(by));
+      return Element.constructList(remote.findElements(by), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -434,10 +422,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementById(String id) {
     try {
-      return new Element(remote.findElementById(id));
+      return new Element(remote.findElementById(id), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -445,10 +432,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsById(String id) {
     try {
-      return Element.constructList(remote.findElementsById(id));
+      return Element.constructList(remote.findElementsById(id), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -456,10 +442,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByXPath(String expr) {
     try {
-      return new Element(remote.findElementByXPath(expr));
+      return new Element(remote.findElementByXPath(expr), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -467,10 +452,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     try {
-      return Element.constructList(remote.findElementsByXPath(expr));
+      return Element.constructList(remote.findElementsByXPath(expr), logs);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -478,10 +462,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
-      return new Element(remote.findElementByLinkText(text));
+      return new Element(remote.findElementByLinkText(text), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -489,10 +472,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
-      return new Element(remote.findElementByPartialLinkText(text));
+      return new Element(remote.findElementByPartialLinkText(text), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -500,10 +482,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByLinkText(text));
+      return Element.constructList(remote.findElementsByLinkText(text), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -511,10 +492,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByPartialLinkText(text));
+      return Element.constructList(remote.findElementsByPartialLinkText(text), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -522,10 +502,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
-      return new Element(remote.findElementByClassName(cssClass));
+      return new Element(remote.findElementByClassName(cssClass), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -533,10 +512,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
-      return Element.constructList(remote.findElementsByClassName(cssClass));
+      return Element.constructList(remote.findElementsByClassName(cssClass), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -544,10 +522,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByName(String name) {
     try {
-      return new Element(remote.findElementByName(name));
+      return new Element(remote.findElementByName(name), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -555,10 +532,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByName(String name) {
     try {
-      return Element.constructList(remote.findElementsByName(name));
+      return Element.constructList(remote.findElementsByName(name), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -566,10 +542,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByCssSelector(String expr) {
     try {
-      return new Element(remote.findElementByCssSelector(expr));
+      return new Element(remote.findElementByCssSelector(expr), logs);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -577,10 +552,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     try {
-      return Element.constructList(remote.findElementsByCssSelector(expr));
+      return Element.constructList(remote.findElementsByCssSelector(expr), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -588,10 +562,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
-      return new Element(remote.findElementByTagName(tagName));
+      return new Element(remote.findElementByTagName(tagName), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -599,10 +572,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
-      return Element.constructList(remote.findElementsByTagName(tagName));
+      return Element.constructList(remote.findElementsByTagName(tagName), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -610,10 +582,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeAsyncScript(script, args));
+      return Element.constructObject(remote.executeAsyncScript(script, args), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -621,10 +592,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Object executeScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeScript(script, args));
+      return Element.constructObject(remote.executeScript(script, args), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -632,10 +602,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public org.openqa.selenium.interactions.Keyboard getKeyboard() {
     try {
-      return new Keyboard(remote.getKeyboard());
+      return new Keyboard(remote.getKeyboard(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -643,10 +612,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public org.openqa.selenium.interactions.Mouse getMouse() {
     try {
-      return new Mouse(remote.getMouse());
+      return new Mouse(remote.getMouse(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -654,10 +622,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public org.openqa.selenium.Capabilities getCapabilities() {
     try {
-      return new Capabilities(remote.getCapabilities());
+      return new Capabilities(remote.getCapabilities(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -667,8 +634,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.close();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -677,8 +643,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getWindowHandle();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -688,8 +653,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return remote.getWindowHandles();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -699,8 +663,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return new com.machinepublishers.jbrowserdriver.Options(remote.manage(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -708,10 +671,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Navigation navigate() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Navigation(remote.navigate());
+      return new com.machinepublishers.jbrowserdriver.Navigation(remote.navigate(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -736,8 +698,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.quit();
     } catch (RemoteException e) {
-      //TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
     endProcess();
     logs.close();
@@ -746,10 +707,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public TargetLocator switchTo() {
     try {
-      return new com.machinepublishers.jbrowserdriver.TargetLocator(remote.switchTo(), this);
+      return new com.machinepublishers.jbrowserdriver.TargetLocator(remote.switchTo(), this, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -759,8 +719,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       remote.kill();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
     }
     endProcess();
   }
@@ -770,8 +729,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     try {
       return outputType.convertFromPngBytes(remote.getScreenshot());
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }

@@ -25,17 +25,17 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 interface MouseRemote extends Remote {
-  void click(CoordinatesRemote coords) throws RemoteException;
+  void click(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 
-  void contextClick(CoordinatesRemote coords) throws RemoteException;
+  void contextClick(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 
-  void doubleClick(CoordinatesRemote coords) throws RemoteException;
+  void doubleClick(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 
-  void mouseDown(CoordinatesRemote coords) throws RemoteException;
+  void mouseDown(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 
-  void mouseMove(CoordinatesRemote coords) throws RemoteException;
+  void mouseMove(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 
-  void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) throws RemoteException;
+  void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset, LogsRemote logs) throws RemoteException;
 
-  void mouseUp(CoordinatesRemote coords) throws RemoteException;
+  void mouseUp(CoordinatesRemote coords, LogsRemote logs) throws RemoteException;
 }

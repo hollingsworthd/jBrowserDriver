@@ -30,10 +30,12 @@ import org.openqa.selenium.WebElement;
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
   private final JBrowserDriver driver;
+  private final LogsServer logs;
 
-  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver) {
+  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver, LogsServer logs) {
     this.remote = remote;
     this.driver = driver;
+    this.logs = logs;
   }
 
   @Override
@@ -84,8 +86,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
       remote.window(windowHandle);
       return driver;
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }

@@ -25,9 +25,11 @@ import java.rmi.RemoteException;
 
 class Window implements org.openqa.selenium.WebDriver.Window {
   private final WindowRemote remote;
+  private final LogsServer logs;
 
-  Window(WindowRemote remote) {
+  Window(WindowRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -35,8 +37,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     try {
       return remote.getPosition();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -46,8 +47,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     try {
       return remote.getSize();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -57,8 +57,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     try {
       remote.maximize();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -67,8 +66,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     try {
       remote.setPosition(new Point(point));
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -77,8 +75,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     try {
       remote.setSize(new Dimension(dimension));
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 

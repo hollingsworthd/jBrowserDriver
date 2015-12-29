@@ -25,9 +25,11 @@ import java.rmi.RemoteException;
 
 class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates {
   final CoordinatesRemote remote;
+  private final LogsRemote logs;
 
-  Coordinates(CoordinatesRemote remote) {
+  Coordinates(CoordinatesRemote remote, LogsRemote logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -35,8 +37,11 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote.onScreen();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      try {
+        logs.exception(e);
+      } catch (RemoteException e2) {
+        e2.printStackTrace();
+      }
       return null;
     }
   }
@@ -46,8 +51,11 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote.inViewPort();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      try {
+        logs.exception(e);
+      } catch (RemoteException e2) {
+        e2.printStackTrace();
+      }
       return null;
     }
   }
@@ -57,8 +65,11 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote.onPage();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      try {
+        logs.exception(e);
+      } catch (RemoteException e2) {
+        e2.printStackTrace();
+      }
       return null;
     }
   }
@@ -68,8 +79,11 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote.getAuxiliary();
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      try {
+        logs.exception(e);
+      } catch (RemoteException e2) {
+        e2.printStackTrace();
+      }
       return null;
     }
   }

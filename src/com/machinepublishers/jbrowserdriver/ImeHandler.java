@@ -26,9 +26,11 @@ import java.util.List;
 
 class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   private final ImeHandlerRemote remote;
+  private final LogsServer logs;
 
-  ImeHandler(ImeHandlerRemote remote) {
+  ImeHandler(ImeHandlerRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
@@ -36,8 +38,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     try {
       remote.activateEngine(name);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -46,8 +47,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     try {
       remote.deactivate();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -56,8 +56,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     try {
       return remote.getActiveEngine();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -67,8 +66,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     try {
       return remote.getAvailableEngines();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -78,10 +76,8 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     try {
       return remote.isActivated();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return false;
     }
   }
-
 }

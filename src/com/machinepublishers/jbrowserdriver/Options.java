@@ -44,8 +44,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       remote.addCookie(cookie);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -54,8 +53,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       remote.deleteAllCookies();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -64,8 +62,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       remote.deleteCookie(cookie);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -74,8 +71,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       remote.deleteCookieNamed(name);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
@@ -84,8 +80,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       return remote.getCookieNamed(name);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -95,8 +90,7 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     try {
       return remote.getCookies();
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -104,10 +98,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public ImeHandler ime() {
     try {
-      return new com.machinepublishers.jbrowserdriver.ImeHandler(remote.ime());
+      return new com.machinepublishers.jbrowserdriver.ImeHandler(remote.ime(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -120,10 +113,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Timeouts timeouts() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Timeouts(remote.timeouts());
+      return new com.machinepublishers.jbrowserdriver.Timeouts(remote.timeouts(), logs);
     } catch (RemoteException e) {
-      // TODO 
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }
@@ -131,10 +123,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Window window() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Window(remote.window());
+      return new com.machinepublishers.jbrowserdriver.Window(remote.window(), logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
       return null;
     }
   }

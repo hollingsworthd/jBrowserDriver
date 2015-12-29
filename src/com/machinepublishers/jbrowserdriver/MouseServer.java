@@ -46,8 +46,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void click(CoordinatesRemote coords) {
-    click(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void click(CoordinatesRemote coords, LogsRemote logs) {
+    click(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
   @Override
@@ -59,8 +59,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void contextClick(CoordinatesRemote coords) {
-    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void contextClick(CoordinatesRemote coords, LogsRemote logs) {
+    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
   @Override
@@ -73,8 +73,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void doubleClick(CoordinatesRemote coords) {
-    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void doubleClick(CoordinatesRemote coords, LogsRemote logs) {
+    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
   @Override
@@ -86,8 +86,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void mouseDown(CoordinatesRemote coords) {
-    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void mouseDown(CoordinatesRemote coords, LogsRemote logs) {
+    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
   @Override
@@ -96,8 +96,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void mouseMove(CoordinatesRemote coords) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void mouseMove(CoordinatesRemote coords, LogsRemote logs) {
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
   @Override
@@ -110,8 +110,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords), xOffset, yOffset);
+  public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset, LogsRemote logs) {
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs), xOffset, yOffset);
   }
 
   @Override
@@ -123,8 +123,8 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
   }
 
   @Override
-  public void mouseUp(CoordinatesRemote coords) {
-    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+  public void mouseUp(CoordinatesRemote coords, LogsRemote logs) {
+    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs));
   }
 
 }

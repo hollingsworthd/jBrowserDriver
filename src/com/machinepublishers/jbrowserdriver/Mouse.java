@@ -27,78 +27,74 @@ import org.openqa.selenium.interactions.internal.Coordinates;
 
 class Mouse implements org.openqa.selenium.interactions.Mouse {
   private final MouseRemote remote;
+  private final LogsServer logs;
 
-  Mouse(MouseRemote remote) {
+  Mouse(MouseRemote remote, LogsServer logs) {
     this.remote = remote;
+    this.logs = logs;
   }
 
   @Override
   public void click(Coordinates coords) {
     try {
-      remote.click(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.click(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void contextClick(Coordinates coords) {
     try {
-      remote.contextClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.contextClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void doubleClick(Coordinates coords) {
     try {
-      remote.doubleClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.doubleClick(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void mouseDown(Coordinates coords) {
     try {
-      remote.mouseDown(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.mouseDown(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void mouseMove(Coordinates coords) {
     try {
-      remote.mouseMove(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.mouseMove(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
     try {
-      remote.mouseMove(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, xOffset, yOffset);
+      remote.mouseMove(
+          ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, xOffset, yOffset, logs);
     } catch (RemoteException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 
   @Override
   public void mouseUp(Coordinates coords) {
     try {
-      remote.mouseUp(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      remote.mouseUp(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote, logs);
     } catch (RemoteException e) {
-      // TODO
-      e.printStackTrace();
+      logs.exception(e);
     }
   }
 }
