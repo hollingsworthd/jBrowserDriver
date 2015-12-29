@@ -37,18 +37,15 @@ import org.openqa.selenium.logging.Logs;
 class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window;
   private final CookieStore cookieStore;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
 
   OptionsServer(final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window,
-      AtomicReference<com.machinepublishers.jbrowserdriver.Logs> logs,
       final CookieStore cookieStore,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
           throws RemoteException {
     this.window = window;
-    this.logs = logs;
     this.cookieStore = cookieStore;
     this.timeouts = timeouts;
   }
@@ -144,7 +141,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
 
   @Override
   public Logs logs() {
-    return logs.get();
+    return com.machinepublishers.jbrowserdriver.Logs.instance();
   }
 
   @Override

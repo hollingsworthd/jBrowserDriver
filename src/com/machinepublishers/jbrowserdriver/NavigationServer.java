@@ -37,15 +37,13 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
   private final AtomicReference<JBrowserDriverServer> driver;
   private final AtomicReference<WebView> view;
   private final AtomicInteger statusCode;
-  private final long settingsId;
 
   NavigationServer(final AtomicReference<JBrowserDriverServer> driver,
-      final AtomicReference<WebView> view, final AtomicInteger statusCode, final long settingsId)
+      final AtomicReference<WebView> view, final AtomicInteger statusCode)
           throws RemoteException {
     this.driver = driver;
     this.view = view;
     this.statusCode = statusCode;
-    this.settingsId = settingsId;
   }
 
   @Override
@@ -56,11 +54,11 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
             try {
               view.get().getEngine().getHistory().go(-1);
             } catch (IndexOutOfBoundsException e) {
-              driver.get().context.get().logs.get().exception(e);
+              Logs.instance().exception(e);
             }
             return null;
           }
-        }, settingsId);
+        });
   }
 
   @Override
@@ -71,11 +69,11 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
             try {
               view.get().getEngine().getHistory().go(1);
             } catch (IndexOutOfBoundsException e) {
-              driver.get().context.get().logs.get().exception(e);
+              Logs.instance().exception(e);
             }
             return null;
           }
-        }, settingsId);
+        });
   }
 
   @Override
@@ -86,7 +84,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
             view.get().getEngine().reload();
             return null;
           }
-        }, settingsId);
+        });
   }
 
   @Override

@@ -145,7 +145,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final URL url;
   private final String urlString;
   private final AtomicBoolean skip = new AtomicBoolean();
-  private final AtomicLong settingsId = new AtomicLong();
   private final AtomicInteger connectTimeout = new AtomicInteger();
   private final AtomicInteger readTimeout = new AtomicInteger();
   private final AtomicReference<String> method = new AtomicReference<String>();
@@ -172,7 +171,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           adHosts.add(line);
         }
       } catch (Throwable t) {
-        Logs.logsFor(1l).exception(t);
+        Logs.instance().exception(t);
       } finally {
         Util.close(reader);
       }
@@ -191,7 +190,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
                 }
               }).build();
         } catch (Throwable t) {
-          Logs.logsFor(1l).exception(t);
+          Logs.instance().exception(t);
         }
       } else {
         try {
@@ -243,7 +242,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             return context;
           }
         } catch (Throwable t) {
-          Logs.logsFor(1l).exception(t);
+          Logs.instance().exception(t);
         }
       }
     }
@@ -286,7 +285,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       host = host.toLowerCase();
       while (host.contains(".")) {
         if (adHosts.contains(host)) {
-          Logs.logsFor(settingsId.get()).trace("Ad blocked: " + host);
+          Logs.instance().trace("Ad blocked: " + host);
           host = null;
           return true;
         }
@@ -318,20 +317,20 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     this.urlString = url.toExternalForm();
   }
 
-  private void processHeaders(AtomicReference<Settings> settings, HttpRequestBase req, String host) {
+  private void processHeaders(Settings settings, HttpRequestBase req, String host) {
     boolean https = urlString.startsWith("https://");
-    Collection<String> names = https ? settings.get().headers().namesHttps()
-        : settings.get().headers().namesHttp();
+    Collection<String> names = https ? settings.headers().namesHttps()
+        : settings.headers().namesHttp();
     for (String name : names) {
       List<String> valuesIn = reqHeaders.get(name.toLowerCase());
-      String valueSettings = https ? settings.get().headers().headerHttps(name)
-          : settings.get().headers().headerHttp(name);
+      String valueSettings = https ? settings.headers().headerHttps(name)
+          : settings.headers().headerHttp(name);
       if (valueSettings.equals(RequestHeaders.DROP_HEADER)) {
         continue;
       }
       if (valueSettings.equals(RequestHeaders.DYNAMIC_HEADER)) {
         if (name.equalsIgnoreCase("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
-          req.addHeader(name, settings.get().userAgentString());
+          req.addHeader(name, settings.userAgentString());
         } else if (name.equalsIgnoreCase("host")) {
           req.addHeader(name, host);
         } else if (valuesIn != null && !valuesIn.isEmpty()) {
@@ -353,10 +352,10 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   public void connect() throws IOException {
     try {
       if (connected.compareAndSet(false, true)) {
-        if (StatusMonitor.get(settingsId.get()).isDiscarded(urlString)
+        if (StatusMonitor.instance().isDiscarded(urlString)
             || isBlocked(url.getHost())) {
           skip.set(true);
-        } else if (SettingsManager.get(settingsId.get()) != null) {
+        } else if (SettingsManager.settings() != null) {
           config.get()
               .setCookieSpec(CookieSpecs.STANDARD)
               .setConnectTimeout(connectTimeout.get())
@@ -392,8 +391,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("TRACE".equals(method.get())) {
             req.set(new HttpTrace(uri));
           }
-          processHeaders(SettingsManager.get(settingsId.get()), req.get(), url.getHost());
-          ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
+          processHeaders(SettingsManager.settings(), req.get(), url.getHost());
+          ProxyConfig proxy = SettingsManager.settings().proxy();
           if (proxy != null && !proxy.directConnection()) {
             config.get().setExpectContinueEnabled(proxy.expectContinue());
             InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
@@ -403,9 +402,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               config.get().setProxy(new HttpHost(proxy.host(), proxy.port()));
             }
           }
-          context.get().setCookieStore(SettingsManager.get(settingsId.get()).get().cookieStore());
+          context.get().setCookieStore(SettingsManager.settings().cookieStore());
           context.get().setRequestConfig(config.get().build());
-          StatusMonitor.get(settingsId.get()).addStatusMonitor(url, this);
+          StatusMonitor.instance().addStatusMonitor(url, this);
         }
       }
     } catch (Throwable t) {
@@ -478,9 +477,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             if (header != null && !header.isEmpty()) {
               Matcher matcher = downloadHeader.matcher(header);
               if (matcher.matches()) {
-                AtomicReference<Settings> settings = SettingsManager.get(settingsId.get());
+                Settings settings = SettingsManager.settings();
                 if (settings != null) {
-                  File downloadFile = new File(settings.get().downloadDir(),
+                  File downloadFile = new File(settings.downloadDir(),
                       matcher.group(1) == null || matcher.group(1).isEmpty()
                           ? Long.toString(System.nanoTime()) : matcher.group(1));
                   downloadFile.deleteOnExit();
@@ -490,8 +489,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               }
             }
             if (!skip.get()) {
-              return StreamInjectors.injectedStream(
-                  this, entityStream, urlString, settingsId.get());
+              return StreamInjectors.injectedStream(this, entityStream, urlString);
             }
           }
         } finally {
@@ -509,7 +507,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         return getInputStream();
       }
     } catch (IOException e) {
-      Logs.logsFor(settingsId.get()).exception(e);
+      Logs.instance().exception(e);
     }
     return null;
   }
@@ -523,7 +521,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public int getResponseCode() throws IOException {
     exec();
-    StatusMonitor.get(settingsId.get()).addRedirect(urlString, getHeaderField("location"));
+    StatusMonitor.instance().addRedirect(urlString, getHeaderField("location"));
     if (skip.get()) {
       return 204;
     }
@@ -720,7 +718,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   @Override
   public boolean usingProxy() {
-    ProxyConfig proxy = SettingsManager.get(settingsId.get()).get().proxy();
+    ProxyConfig proxy = SettingsManager.settings().proxy();
     return proxy != null && !proxy.directConnection();
   }
 
@@ -751,9 +749,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     if (!"cookie".equals(key)
         && !"pragma".equals(key)
         && !"cache-control".equals(key)) {
-      if (key.equalsIgnoreCase("user-agent")) {
-        settingsId.set(Long.parseLong(value));
-      }
       reqHeaders.remove(key);
       List<String> list = new ArrayList<String>();
       list.add(value);
@@ -767,9 +762,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     if (!"cookie".equals(key)
         && !"pragma".equals(key)
         && !"cache-control".equals(key)) {
-      if (key.equalsIgnoreCase("user-agent")) {
-        settingsId.set(Long.parseLong(value));
-      }
       if (reqHeaders.get(key) == null) {
         reqHeaders.put(key, new ArrayList<String>());
       }

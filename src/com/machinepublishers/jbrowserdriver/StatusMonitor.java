@@ -28,28 +28,16 @@ import java.util.Map;
 import java.util.Set;
 
 class StatusMonitor {
-  private static final Map<Long, StatusMonitor> instances = new HashMap<Long, StatusMonitor>();
+  private static final StatusMonitor instance = new StatusMonitor();
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
-  private final long settingsId;
   private boolean monitoring;
 
-  private StatusMonitor(long settingsId) {
-    this.settingsId = settingsId;
-  }
-
-  static synchronized StatusMonitor get(long settingsId) {
-    if (!instances.containsKey(settingsId)) {
-      instances.put(settingsId, new StatusMonitor(settingsId));
-    }
-    return instances.get(settingsId);
-  }
-
-  static synchronized void remove(long settingsId) {
-    instances.remove(settingsId);
+  static StatusMonitor instance() {
+    return instance;
   }
 
   boolean isPrimaryDocument(String url) {
@@ -113,7 +101,7 @@ class StatusMonitor {
         code = conn.getResponseCode();
         code = code <= 0 ? 499 : code;
       } catch (Throwable t) {
-        Logs.logsFor(settingsId).exception(t);
+        Logs.instance().exception(t);
       }
     }
     return code;

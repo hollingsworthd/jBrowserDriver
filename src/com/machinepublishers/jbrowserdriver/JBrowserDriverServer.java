@@ -77,7 +77,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     try {
       registryTmp = LocateRegistry.createRegistry(Integer.parseInt(args[0]));
     } catch (Throwable t) {
-      Logs.logsFor(1l).exception(t);
+      Logs.instance().exception(t);
     }
     registry = registryTmp;
 
@@ -85,7 +85,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
       System.out.println("ready");
     } catch (Throwable t) {
-      Logs.logsFor(1l).exception(t);
+      Logs.instance().exception(t);
     }
   }
 
@@ -94,7 +94,8 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public JBrowserDriverServer() throws RemoteException {}
 
   public void setUp(final Settings settings) {
-    context.set(new Context(new Settings(settings)));
+    context.set(new Context(settings));
+    SettingsManager.register(settings);
   }
 
   /**
@@ -119,13 +120,13 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         context.get().item().engine.get().getLoadWorker().cancel();
         return null;
       }
-    }, context.get().settingsId.get());
+    });
     Accessor.getPageFor(context.get().item().engine.get()).stop();
-    context.get().settings.set(new Settings(settings, context.get().settingsId.get()));
+    SettingsManager.settings().cookieStore().clear();
+    StatusMonitor.instance().clearStatusMonitor();
+    Logs.instance().clear();
+    SettingsManager.register(settings);
     context.get().reset(this);
-    context.get().settings.get().cookieStore().clear();
-    StatusMonitor.get(context.get().settings.get().id()).clearStatusMonitor();
-    context.get().logs.get().clear();
   }
 
   /**
@@ -133,7 +134,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * browser and creating a new instance.
    */
   public void reset() {
-    reset(context.get().settings.get());
+    reset(SettingsManager.settings());
   }
 
   @Override
@@ -161,7 +162,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       public String perform() {
         return context.get().item().view.get().getEngine().getLocation();
       }
-    }, context.get().settingsId.get());
+    });
   }
 
   public int getStatusCode() {
@@ -173,7 +174,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         }
       }
     } catch (InterruptedException e) {
-      context.get().logs.get().exception(e);
+      Logs.instance().exception(e);
     }
     return context.get().statusCode.get();
   }
@@ -185,7 +186,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       public String perform() {
         return context.get().item().view.get().getEngine().getTitle();
       }
-    }, context.get().settingsId.get());
+    });
   }
 
   @Override
@@ -196,7 +197,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         context.get().item().engine.get().load(url);
         return null;
       }
-    }, context.get().settingsId.get());
+    });
     try {
       synchronized (context.get().statusCode) {
         if (context.get().statusCode.get() == 0) {
@@ -204,7 +205,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         }
       }
     } catch (InterruptedException e) {
-      context.get().logs.get().exception(e);
+      Logs.instance().exception(e);
     }
     if (context.get().statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -213,7 +214,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
           context.get().item().engine.get().getLoadWorker().cancel();
           return null;
         }
-      }, context.get().settingsId.get());
+      });
     }
   }
 
@@ -395,16 +396,14 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         context.get().item().engine.get().getLoadWorker().cancel();
         return null;
       }
-    }, context.get().settingsId.get());
+    });
     Accessor.getPageFor(context.get().item().engine.get()).stop();
+    SettingsManager.settings().cookieStore().clear();
+    SettingsManager.register(null);
     if (Settings.headless()) {
       Platform.exit();
     }
-    SettingsManager.close(context.get().settings.get().id());
-    context.get().settings.get().cookieStore().clear();
-    StatusMonitor.get(context.get().settings.get().id()).clearStatusMonitor();
-    StatusMonitor.remove(context.get().settings.get().id());
-    Logs.close(context.get().settingsId.get());
+    StatusMonitor.instance().clearStatusMonitor();
   }
 
   @Override
@@ -436,14 +435,14 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
                     (int) Math.rint((Double) context.get().item().view.get().getHeight()))),
             null);
       }
-    }, context.get().settingsId.get());
+    });
     ByteArrayOutputStream out = null;
     try {
       out = new ByteArrayOutputStream();
       ImageIO.write(image, "png", out);
       return out.toByteArray();
     } catch (Throwable t) {
-      context.get().logs.get().exception(t);
+      Logs.instance().exception(t);
       return null;
     } finally {
       Util.close(out);

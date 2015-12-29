@@ -33,27 +33,24 @@ class AjaxListener implements Runnable {
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
-  private final long settingsId;
   private final Map<String, Long> resources;
   private final AtomicBoolean superseded;
   private final long timeoutMS;
 
   AjaxListener(final int newStatusCode,
-      final AtomicInteger statusCode, final long settingsId,
+      final AtomicInteger statusCode,
       final Map<String, Long> resources, final long timeoutMS) {
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
-    this.settingsId = settingsId;
     this.resources = resources;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
     this.superseded = new AtomicBoolean();
   }
 
-  AjaxListener(final AtomicInteger statusCode, final long settingsId,
+  AjaxListener(final AtomicInteger statusCode,
       final Map<String, Long> resources,
       final AtomicBoolean superseded, final long timeoutMS) {
     this.statusCode = statusCode;
-    this.settingsId = settingsId;
     this.resources = resources;
     this.superseded = superseded;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
@@ -101,7 +98,7 @@ class AjaxListener implements Runnable {
         resources.clear();
         statusCode.set(newStatusCode);
         try {
-          StatusMonitor.get(settingsId).clearStatusMonitor();
+          StatusMonitor.instance().clearStatusMonitor();
         } catch (Throwable t) {
           t.printStackTrace();
         }

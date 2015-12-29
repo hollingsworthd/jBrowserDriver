@@ -38,7 +38,6 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 class Context {
   final AtomicBoolean initialized = new AtomicBoolean();
-  final AtomicReference<Logs> logs = new AtomicReference();
   final AtomicReference<TimeoutsServer> timeouts = new AtomicReference<TimeoutsServer>();
   final AtomicReference<TargetLocatorServer> targetLocator = new AtomicReference<TargetLocatorServer>();
   final AtomicReference<OptionsServer> options = new AtomicReference<OptionsServer>();
@@ -47,8 +46,6 @@ class Context {
   final AtomicReference<CapabilitiesServer> capabilities = new AtomicReference<CapabilitiesServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
-  final AtomicReference<Settings> settings = new AtomicReference<Settings>();
-  final AtomicLong settingsId = new AtomicLong();
   final AtomicLong latestThread = new AtomicLong();
   final AtomicLong curThread = new AtomicLong();
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
@@ -61,13 +58,10 @@ class Context {
       ContextItem newContext = new ContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
-      this.settings.set(settings);
-      settingsId.set(settings.id());
-      logs.set(Logs.newInstance(settingsId.get()));
       try {
         timeouts.set(new TimeoutsServer());
       } catch (RemoteException e) {
-        logs.get().exception(e);
+        Logs.instance().exception(e);
       }
     }
   }
@@ -96,7 +90,7 @@ class Context {
           mouse.set(new MouseServer(robot));
           capabilities.set(new CapabilitiesServer());
         } catch (RemoteException e) {
-          logs.get().exception(e);
+          Logs.instance().exception(e);
         }
       }
     }
@@ -119,7 +113,7 @@ class Context {
               return items.get(current).itemId.get();
             }
           }
-        }, settingsId.get());
+        });
   }
 
   Set<String> itemIds() {
@@ -131,7 +125,7 @@ class Context {
               return new LinkedHashSet<String>(itemMap.keySet());
             }
           }
-        }, settingsId.get());
+        });
   }
 
   ContextItem spawn(final JBrowserDriverServer driver) {
@@ -149,7 +143,7 @@ class Context {
               return newContext;
             }
           }
-        }, settingsId.get());
+        });
   }
 
   void setCurrent(final String id) {
@@ -163,7 +157,7 @@ class Context {
               return null;
             }
           }
-        }, settingsId.get());
+        });
   }
 
   void removeItem() {
@@ -177,7 +171,7 @@ class Context {
           return null;
         }
       }
-    }, settingsId.get());
+    });
   }
 
   void removeItem(final String itemId) {
@@ -191,7 +185,7 @@ class Context {
           return null;
         }
       }
-    }, settingsId.get());
+    });
   }
 
   void removeItems() {
@@ -208,6 +202,6 @@ class Context {
           return null;
         }
       }
-    }, settingsId.get());
+    });
   }
 }

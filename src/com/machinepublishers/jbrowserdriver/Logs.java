@@ -24,10 +24,8 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -38,29 +36,13 @@ class Logs implements org.openqa.selenium.logging.Logs {
   private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
   private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
   private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
+  private static final Logs instance = new Logs();
   private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
-  private static final Map<Long, Logs> logMap = new HashMap<Long, Logs>();
 
   private Logs() {}
 
-  static Logs newInstance(long settingsId) {
-    Logs logs = new Logs();
-    synchronized (logMap) {
-      logMap.put(settingsId, logs);
-    }
-    return logs;
-  }
-
-  static Logs logsFor(long settingsId) {
-    synchronized (logMap) {
-      return logMap.get(settingsId);
-    }
-  }
-
-  static void close(long settingsId) {
-    synchronized (logMap) {
-      logMap.remove(settingsId).clear();
-    }
+  static Logs instance() {
+    return instance;
   }
 
   void clear() {

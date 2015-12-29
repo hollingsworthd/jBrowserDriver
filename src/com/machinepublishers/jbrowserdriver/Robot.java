@@ -229,7 +229,6 @@ class Robot {
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final Context context;
-  private final long settingsId;
   private final AtomicInteger statusCode;
   private final KeyCode keyUndefined;
 
@@ -238,10 +237,9 @@ class Robot {
       public com.sun.glass.ui.Robot perform() {
         return Application.GetApplication().createRobot();
       }
-    }, context.settingsId.get()));
+    }));
     this.context = context;
     this.statusCode = context.statusCode;
-    this.settingsId = context.settingsId.get();
     this.keyUndefined = KeyCode.UNDEFINED;
   }
 
@@ -285,7 +283,7 @@ class Robot {
         try {
           curThread.wait();
         } catch (Exception e) {
-          context.logs.get().exception(e);
+          Logs.instance().exception(e);
         }
       }
     }
@@ -326,7 +324,7 @@ class Robot {
             }
             return null;
           }
-        }, settingsId);
+        });
       }
     } finally {
       if (doLocking) {
@@ -365,7 +363,7 @@ class Robot {
             }
             return null;
           }
-        }, settingsId);
+        });
       }
     } finally {
       if (doLocking) {
@@ -421,7 +419,7 @@ class Robot {
                         false, false, false, false));
                 return null;
               }
-            }, settingsId);
+            });
           } else {
             keysPress(myChar, false, false);
             keysRelease(myChar, false, delay);
@@ -449,7 +447,7 @@ class Robot {
                   + (Double) stage.getScene().getY()));
           return null;
         }
-      }, settingsId);
+      });
     } finally {
       unlock();
     }
@@ -468,7 +466,7 @@ class Robot {
                   + new Double((Integer) robot.get().getMouseY())));
           return null;
         }
-      }, settingsId);
+      });
     } finally {
       unlock();
     }
@@ -499,7 +497,7 @@ class Robot {
           robot.get().mousePress(button.getValue());
           return null;
         }
-      }, settingsId);
+      });
     } finally {
       if (doLocking) {
         unlock();
@@ -525,7 +523,7 @@ class Robot {
           robot.get().mouseRelease(button.getValue());
           return null;
         }
-      }, settingsId);
+      });
     } finally {
       if (doLocking) {
         unlock();
@@ -542,7 +540,7 @@ class Robot {
           robot.get().mouseWheel(wheelAmt);
           return null;
         }
-      }, settingsId);
+      });
     } finally {
       unlock();
     }

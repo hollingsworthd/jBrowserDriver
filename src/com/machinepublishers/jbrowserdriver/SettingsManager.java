@@ -21,8 +21,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,12 +32,19 @@ import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
 class SettingsManager {
-  private static final Map<Long, AtomicReference<Settings>> registry = new HashMap<Long, AtomicReference<Settings>>();
+  private static final AtomicReference<Settings> settings = new AtomicReference<Settings>();
+
+  static Settings settings() {
+    return settings.get();
+  }
+
+  static void register(final Settings settings) {
+    SettingsManager.settings.set(settings);
+  }
 
   static void register(
       final AtomicReference<Stage> stage,
-      final AtomicReference<WebView> view,
-      final AtomicReference<Settings> settings) {
+      final AtomicReference<WebView> view) {
     ProxyAuth.add(settings.get().proxy());
     if (Settings.headless() &&
         com.sun.glass.ui.Application.GetApplication() == null) {
@@ -51,10 +56,9 @@ class SettingsManager {
                 new String[] {
                     Integer.toString(settings.get().screenWidth()),
                     Integer.toString(settings.get().screenHeight()),
-                    Boolean.toString(Settings.headless()),
-                    Long.toString(settings.get().id()) });
+                    Boolean.toString(Settings.headless()) });
           } catch (Throwable t) {
-            Logs.logsFor(settings.get().id()).exception(t);
+            Logs.instance().exception(t);
           }
         }
       }).start();
@@ -62,35 +66,19 @@ class SettingsManager {
       final App app = new App();
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
-          Settings.headless(), settings.get().id());
+          Settings.headless());
       Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
         public Object perform() {
           try {
             app.start();
           } catch (Throwable t) {
-            Logs.logsFor(settings.get().id());
+            Logs.instance().exception(t);
           }
           return null;
         }
-      }, settings.get().id());
+      });
     }
     stage.set(App.getStage());
     view.set(App.getView());
-
-    synchronized (registry) {
-      registry.put(settings.get().id(), settings);
-    }
-  }
-
-  static void close(long settingsId) {
-    synchronized (registry) {
-      registry.remove(settingsId);
-    }
-  }
-
-  static AtomicReference<Settings> get(long settingsId) {
-    synchronized (registry) {
-      return registry.get(settingsId);
-    }
   }
 }

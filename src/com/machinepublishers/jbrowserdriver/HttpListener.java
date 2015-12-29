@@ -81,24 +81,22 @@ class HttpListener implements LoadListenerClient {
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final Map<String, Long> resources = new HashMap<String, Long>();
   private final AtomicInteger statusCode;
-  private final long settingsId;
   private final AtomicLong frame = new AtomicLong();
   private final AtomicLong timeoutMS;
   private final StatusMonitor statusMonitor;
   private final Logs logs;
 
-  HttpListener(AtomicInteger statusCode, AtomicLong timeoutMS, long settingsId) {
+  HttpListener(AtomicInteger statusCode, AtomicLong timeoutMS) {
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
-    this.settingsId = settingsId;
-    this.statusMonitor = StatusMonitor.get(settingsId);
-    this.logs = Logs.logsFor(settingsId);
+    this.statusMonitor = StatusMonitor.instance();
+    this.logs = Logs.instance();
   }
 
   private void trace(String label, long frame, int state, String url,
       String contentType, double progress, int errorCode) {
     logs.trace(new StringBuilder()
-        .append(settingsId).append("-").append(label).append("-> ")
+        .append("-").append(label).append("-> ")
         .append(url)
         .append(" ** {timestamp: ").append(System.currentTimeMillis())
         .append(", state: ").append(states.get(state))
@@ -111,7 +109,7 @@ class HttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (SettingsManager.get(settingsId) == null) {
+    if (SettingsManager.settings() == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
     synchronized (statusCode) {
@@ -148,7 +146,7 @@ class HttpListener implements LoadListenerClient {
       statusCode.set(0);
       resources.clear();
       Thread thread = new Thread(new AjaxListener(
-          statusCode, settingsId, resources, superseded, timeoutMS.get()));
+          statusCode, resources, superseded, timeoutMS.get()));
       threadsFromReset.add(thread);
       thread.start();
     }
@@ -157,7 +155,7 @@ class HttpListener implements LoadListenerClient {
   @Override
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
-    if (SettingsManager.get(settingsId) == null) {
+    if (SettingsManager.settings() == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
     try {
@@ -178,7 +176,7 @@ class HttpListener implements LoadListenerClient {
                   || state == LoadListenerClient.LOAD_FAILED)) {
             final int newStatusCode = statusMonitor.stopStatusMonitor(url);
             resources.remove(frame + url);
-            new Thread(new AjaxListener(newStatusCode, statusCode, settingsId,
+            new Thread(new AjaxListener(newStatusCode, statusCode,
                 resources, timeoutMS.get())).start();
           }
         }

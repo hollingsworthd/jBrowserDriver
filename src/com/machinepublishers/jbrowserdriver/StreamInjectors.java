@@ -31,7 +31,7 @@ import java.util.zip.InflaterInputStream;
 
 class StreamInjectors {
   public static interface Injector {
-    byte[] inject(StreamConnection connection, byte[] inflatedContent, String originalUrl, long settingsId);
+    byte[] inject(StreamConnection connection, byte[] inflatedContent, String originalUrl);
   }
 
   private static final Object lock = new Object();
@@ -56,7 +56,7 @@ class StreamInjectors {
   }
 
   static InputStream injectedStream(StreamConnection conn, InputStream inputStream,
-      String originalUrl, long settingsId) throws IOException {
+      String originalUrl) throws IOException {
     byte[] bytes = new byte[0];
     try {
       if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) {
@@ -70,14 +70,14 @@ class StreamInjectors {
       synchronized (lock) {
         for (Injector injector : injectors) {
           conn.setContentLength(bytes.length);
-          byte[] newContent = injector.inject(conn, bytes, originalUrl, settingsId);
+          byte[] newContent = injector.inject(conn, bytes, originalUrl);
           if (newContent != null) {
             bytes = newContent;
           }
         }
       }
     } catch (Throwable t) {
-      Logs.logsFor(settingsId).exception(t);
+      Logs.instance().exception(t);
     } finally {
       Util.close(inputStream);
     }

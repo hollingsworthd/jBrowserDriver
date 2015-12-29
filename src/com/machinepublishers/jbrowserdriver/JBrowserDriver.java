@@ -269,7 +269,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port).lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
-      Logs.logsFor(1l).exception(t);
+      Logs.instance().exception(t);
     }
     remote = instanceTmp;
   }

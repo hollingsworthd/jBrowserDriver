@@ -53,23 +53,22 @@ class ContextItem {
 
   void init(final JBrowserDriverServer driver, final Context context) {
     if (initialized.compareAndSet(false, true)) {
-      SettingsManager.register(stage, view, context.settings);
+      SettingsManager.register(stage, view);
       engine.set(view.get().getEngine());
       try {
-        window.set(new WindowServer(stage, context.statusCode, context.settingsId.get()));
+        window.set(new WindowServer(stage, context.statusCode));
         navigation.set(new NavigationServer(
-            new AtomicReference<JBrowserDriverServer>(driver), view, context.statusCode, context.settingsId.get()));
+            new AtomicReference<JBrowserDriverServer>(driver), view, context.statusCode));
         context.options.set(new OptionsServer(
-            window, context.logs, context.settings.get().cookieStore(), context.timeouts));
+            window, SettingsManager.settings().cookieStore(), context.timeouts));
       } catch (RemoteException e) {
-        context.logs.get().exception(e);
+        Logs.instance().exception(e);
       }
       Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           httpListener.set(new HttpListener(
-              context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS(),
-              context.settingsId.get()));
+              context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
           Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
           engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
           //TODO engine.get().call("setConfirmHandler",
@@ -78,7 +77,7 @@ class ContextItem {
           //TODO JavaFx.getNew(DynamicPromptHandler.class, context.settingsId.get(), driver, context));
           return null;
         }
-      }, context.settingsId.get());
+      });
     }
   }
 }

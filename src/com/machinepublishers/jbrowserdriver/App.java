@@ -49,7 +49,6 @@ public class App extends Application {
   private int width;
   private int height;
   private boolean headless;
-  private long settingsId;
 
   /**
    * Internal use only.
@@ -80,11 +79,10 @@ public class App extends Application {
     }
   }
 
-  void init(int width, int height, boolean headless, long settingsId) {
+  void init(int width, int height, boolean headless) {
     this.width = width;
     this.height = height;
     this.headless = headless;
-    this.settingsId = settingsId;
   }
 
   @Override
@@ -93,7 +91,6 @@ public class App extends Application {
     width = Integer.parseInt(params.get(0));
     height = Integer.parseInt(params.get(1));
     headless = Boolean.parseBoolean(params.get(2));
-    settingsId = Long.parseLong(params.get(3));
   }
 
   void start() throws Exception {
@@ -123,7 +120,6 @@ public class App extends Application {
     }
     WebEngine engine = view.getEngine();
     engine.getHistory().setMaxSize(HISTORY_SIZE);
-    engine.setUserAgent(Long.toString(settingsId));
     Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
     Accessor.getPageFor(engine).setUsePageCache(false);
     root.getChildren().add(view);

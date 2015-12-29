@@ -28,8 +28,6 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +110,7 @@ public class Settings implements Serializable {
         headlessPlatform.setAccessible(true);
         field.set(platformFactory, headlessPlatform.newInstance());
       } catch (Throwable t) {
-        Logs.logsFor(1l).exception(t);
+        Logs.instance().exception(t);
       }
     } else {
       headless = false;
@@ -144,18 +142,18 @@ public class Settings implements Serializable {
     StreamInjectors.add(new Injector() {
       @Override
       public byte[] inject(StreamConnection connection,
-          byte[] inflatedContent, String originalUrl, long settingsId) {
-        AtomicReference<Settings> settings = SettingsManager.get(settingsId);
+          byte[] inflatedContent, String originalUrl) {
+        final Settings settings = SettingsManager.settings();
         try {
-          if (settings.get().saveMedia()
+          if (settings.saveMedia()
               && connection.isMedia()) {
             String filename = Long.toString(System.nanoTime());
-            File contentFile = new File(settings.get().mediaDir(), filename + ".content");
-            File metaFile = new File(settings.get().mediaDir(), filename + ".metadata");
+            File contentFile = new File(settings.mediaDir(), filename + ".content");
+            File metaFile = new File(settings.mediaDir(), filename + ".metadata");
             while (contentFile.exists() || metaFile.exists()) {
               filename = Long.toString(Math.abs(rand.nextLong()));
-              contentFile = new File(settings.get().mediaDir(), filename + ".content");
-              metaFile = new File(settings.get().mediaDir(), filename + ".metadata");
+              contentFile = new File(settings.mediaDir(), filename + ".content");
+              metaFile = new File(settings.mediaDir(), filename + ".metadata");
             }
             contentFile.deleteOnExit();
             metaFile.deleteOnExit();
@@ -167,26 +165,26 @@ public class Settings implements Serializable {
         try {
           if (!"false".equals(System.getProperty("jbd.quickrender"))
               && connection.isMedia()) {
-            Logs.logsFor(settingsId).trace("Media discarded: " + connection.getURL().toExternalForm());
-            StatusMonitor.get(settingsId).addDiscarded(connection.getURL().toExternalForm());
+            Logs.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
+            StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
           } else if ((connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
-              && StatusMonitor.get(settingsId).isPrimaryDocument(connection.getURL().toExternalForm())) {
+              && StatusMonitor.instance().isPrimaryDocument(connection.getURL().toExternalForm())) {
             String injected = null;
             String charset = Util.charset(connection);
             String content = new String(inflatedContent, charset);
             Matcher matcher = head.matcher(content);
             if (matcher.find()) {
-              injected = matcher.replaceFirst(matcher.group(0) + settings.get().script());
+              injected = matcher.replaceFirst(matcher.group(0) + settings.script());
             } else {
               matcher = html.matcher(content);
               if (matcher.find()) {
                 injected = matcher.replaceFirst(
-                    matcher.group(0) + "<head>" + settings.get().script() + "</head>");
+                    matcher.group(0) + "<head>" + settings.script() + "</head>");
               } else {
                 matcher = body.matcher(content);
                 if (matcher.find()) {
-                  injected = ("<html><head>" + settings.get().script() + "</head>"
+                  injected = ("<html><head>" + settings.script() + "</head>"
                       + content + "</html>");
                 } else {
                   injected = content;
@@ -384,23 +382,13 @@ public class Settings implements Serializable {
   private final File downloadDir;
   private final File mediaDir;
   private final boolean saveMedia;
-  private static final AtomicLong settingsId = new AtomicLong();
-  private final long mySettingsId;
   private final String script;
-  private transient final CookieStore cookieStore = new BasicCookieStore();
-
-  /**
-   * Do not call this constructor. Instead, see {@link Settings#builder()}.
-   */
-  Settings() {
-    this(new Builder().build());
-  }
+  private final BasicCookieStore cookieStore;
 
   private Settings(final RequestHeaders requestHeaders, final Dimension screen,
       final UserAgent userAgent, final Timezone timezone,
       final String headScript, final ProxyConfig proxy,
       final File downloadDir, final File mediaDir, final boolean saveMedia) {
-    mySettingsId = -1;
     this.requestHeaders = requestHeaders;
     this.screenWidth = screen.getWidth();
     this.screenHeight = screen.getHeight();
@@ -417,6 +405,7 @@ public class Settings implements Serializable {
       this.mediaDir.deleteOnExit();
     }
     this.saveMedia = saveMedia;
+    this.cookieStore = new BasicCookieStore();
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -436,36 +425,6 @@ public class Settings implements Serializable {
     script = scriptBuilder.toString();
   }
 
-  Settings(Settings original) {
-    requestHeaders = original.requestHeaders;
-    screenWidth = original.screenWidth;
-    screenHeight = original.screenHeight;
-    userAgentString = original.userAgentString;
-    proxy = original.proxy;
-    downloadDir = original.downloadDir;
-    mediaDir = original.mediaDir;
-    saveMedia = original.saveMedia;
-    mySettingsId = settingsId.incrementAndGet();
-    script = original.script;
-  }
-
-  Settings(Settings original, long settingsId) {
-    requestHeaders = original.requestHeaders;
-    screenWidth = original.screenWidth;
-    screenHeight = original.screenHeight;
-    userAgentString = original.userAgentString;
-    proxy = original.proxy;
-    downloadDir = original.downloadDir;
-    mediaDir = original.mediaDir;
-    saveMedia = original.saveMedia;
-    mySettingsId = settingsId;
-    script = original.script;
-  }
-
-  long id() {
-    return mySettingsId;
-  }
-
   RequestHeaders headers() {
     return requestHeaders;
   }
@@ -475,7 +434,7 @@ public class Settings implements Serializable {
   }
 
   int screenHeight() {
-    return screenWidth;
+    return screenHeight;
   }
 
   String userAgentString() {

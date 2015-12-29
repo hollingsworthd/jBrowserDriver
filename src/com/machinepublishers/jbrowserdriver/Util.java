@@ -68,16 +68,14 @@ class Util {
   private static class Runner<T> implements Runnable {
     private final Sync<T> action;
     private final AtomicInteger statusCode;
-    private final long id;
     private final AtomicBoolean done = new AtomicBoolean();
     private final AtomicReference<T> returned = new AtomicReference<T>();
     private final AtomicReference<RuntimeException> fatal = new AtomicReference<RuntimeException>();
     private final AtomicReference<RuntimeException> retry = new AtomicReference<RuntimeException>();
 
-    public Runner(Sync<T> action, AtomicInteger statusCode, long id) {
+    public Runner(Sync<T> action, AtomicInteger statusCode) {
       this.action = action;
       this.statusCode = statusCode;
-      this.id = id;
     }
 
     @Override
@@ -88,7 +86,7 @@ class Util {
           return;
         }
         if (statusCode.get() != 200) {
-          Logs.logsFor(id).trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+          Logs.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
         }
       }
       T result = null;
@@ -112,7 +110,7 @@ class Util {
     }
   }
 
-  private static void pause(final Pause pauseLength, final long settingsId) {
+  private static void pause(final Pause pauseLength) {
     Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -125,15 +123,15 @@ class Util {
         } catch (Throwable t) {}
         return null;
       }
-    }, settingsId);
+    });
   }
 
-  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action, final long id) {
-    return exec(pauseAfterExec, statusCode, 0, action, id);
+  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action) {
+    return exec(pauseAfterExec, statusCode, 0, action);
   }
 
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
-      final Sync<T> action, final long id) {
+      final Sync<T> action) {
     try {
       if ((boolean) Platform.isFxApplicationThread()) {
         try {
@@ -144,7 +142,7 @@ class Util {
           throw t;
         }
       }
-      final Runner<T> runner = new Runner<T>(action, statusCode, id);
+      final Runner<T> runner = new Runner<T>(action, statusCode);
       synchronized (runner.done) {
         Platform.runLater(runner);
       }
@@ -153,10 +151,10 @@ class Util {
           try {
             runner.done.wait(timeout);
           } catch (InterruptedException e) {
-            Logs.logsFor(id).exception(e);
+            Logs.instance().exception(e);
           }
           if (!runner.done.get()) {
-            Logs.logsFor(id).exception(new RuntimeException("Action never completed."));
+            Logs.instance().exception(new RuntimeException("Action never completed."));
           }
         }
         if (runner.fatal.get() != null) {
@@ -169,7 +167,7 @@ class Util {
       }
     } finally {
       if (pauseAfterExec != Pause.NONE) {
-        pause(pauseAfterExec, id);
+        pause(pauseAfterExec);
       }
     }
   }

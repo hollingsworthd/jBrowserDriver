@@ -135,7 +135,6 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   static ElementServer create(final Context context) {
-    final long settingsId = Long.parseLong(context.item().engine.get().getUserAgent());
     final AtomicReference<JSObject> doc = new AtomicReference<JSObject>(
         Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<JSObject>() {
@@ -143,11 +142,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               public JSObject perform() {
                 return (JSObject) context.item().engine.get().getDocument();
               }
-            }, settingsId));
+            }));
     try {
       return new ElementServer(doc, context);
     } catch (RemoteException e) {
-      context.logs.get().exception(e);
+      Logs.instance().exception(e);
       return null;
     }
   }
@@ -177,7 +176,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             return null;
           }
-        }, context.settingsId.get());
+        });
 
     Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
@@ -192,7 +191,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -209,7 +208,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -222,7 +221,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             node.get().call("focus");
             return null;
           }
-        }, context.settingsId.get());
+        });
     context.robot.get().keysType(keys);
   }
 
@@ -238,7 +237,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             node.get().call("setValue", new Object[] { "" });
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -258,7 +257,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                 + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
                 + "})();")));
           }
-        }, context.settingsId.get());
+        });
   }
 
   private static String cleanUpCssVal(String rgbStr) {
@@ -283,7 +282,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
             return new Point(x + 1, y + 1);
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -299,7 +298,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
             return new Dimension(x2 - x, y2 - y);
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -325,7 +324,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               return false;
             }
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -337,7 +336,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             String val = node.get().getMember("disabled").toString();
             return val == null || "undefined".equals(val) || val.isEmpty();
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -351,7 +350,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
                 || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -376,11 +375,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               return new ElementServer(new AtomicReference(XPathFactory.newInstance().newXPath().evaluate(
                   expr, node.get(), XPathConstants.NODE)), context);
             } catch (Throwable t) {
-              Logs.logsFor(context.settingsId.get()).exception(t);
+              Logs.instance().exception(t);
             }
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -398,11 +397,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               }
               return elements;
             } catch (Throwable t) {
-              Logs.logsFor(context.settingsId.get()).exception(t);
+              Logs.instance().exception(t);
             }
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -427,7 +426,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             return null;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -443,11 +442,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             try {
               return new ElementServer(new AtomicReference(result), context);
             } catch (RemoteException e) {
-              context.logs.get().exception(e);
+              Logs.instance().exception(e);
               return null;
             }
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -464,7 +463,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                 try {
                   elements.add(new ElementServer(new AtomicReference(cur), context));
                 } catch (RemoteException e) {
-                  context.logs.get().exception(e);
+                  Logs.instance().exception(e);
                   return null;
                 }
               } else {
@@ -473,7 +472,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             return elements;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -527,7 +526,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             return elements;
           }
-        }, context.settingsId.get());
+        });
   }
 
   @Override
@@ -575,7 +574,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               public Object perform() {
                 return node.get().eval("(function(){return this.screenslicerCallbackVal;})();");
               }
-            }, context.settingsId.get());
+            });
         if (!(result instanceof String) || !"undefined".equals(result.toString())) {
           Object parsed = parseScriptResult(result);
           if (parsed instanceof List) {
@@ -611,7 +610,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         try {
           context.curThread.wait();
         } catch (Exception e) {
-          context.logs.get().exception(e);
+          Logs.instance().exception(e);
         }
       }
     }
@@ -652,7 +651,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             context.item().httpListener.get().resetStatusCode();
             return node.get().call("screenslicerJS", argList.toArray(new Object[0]));
           }
-        }, context.settingsId.get()));
+        }));
   }
 
   private Object parseScriptResult(Object obj) {
@@ -663,7 +662,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       try {
         return new ElementServer(new AtomicReference(obj), context);
       } catch (RemoteException e) {
-        context.logs.get().exception(e);
+        Logs.instance().exception(e);
         return null;
       }
     }
@@ -709,7 +708,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               node.get().call("scrollIntoView");
               return null;
             }
-          }, context.settingsId.get());
+          });
           return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<Point>() {
             @Override
@@ -721,7 +720,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               x = x < 0d ? 0d : x;
               return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
             }
-          }, context.settingsId.get());
+          });
         }
 
         @Override
@@ -743,13 +742,13 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   @Override
   public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
-    context.logs.get().warn("Screenshot not supported on jBrowserDriver WebElements");
+    Logs.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 
   @Override
   public byte[] getScreenshot() throws WebDriverException {
-    context.logs.get().warn("Screenshot not supported on jBrowserDriver WebElements");
+    Logs.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 }

@@ -35,14 +35,12 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     org.openqa.selenium.WebDriver.Window {
   private final AtomicReference<Stage> stage;
   private final AtomicInteger statusCode;
-  private final long settingsId;
 
   WindowServer(final AtomicReference<Stage> stage,
-      final AtomicInteger statusCode, final long settingsId)
+      final AtomicInteger statusCode)
           throws RemoteException {
     this.stage = stage;
     this.statusCode = statusCode;
-    this.settingsId = settingsId;
   }
 
   @Override
@@ -53,7 +51,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         stage.get().close();
         return null;
       }
-    }, settingsId);
+    });
   }
 
   @Override
@@ -64,7 +62,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         return new Point((int) Math.rint((Double) stage.get().getX()),
             (int) Math.rint((Double) stage.get().getY()));
       }
-    }, settingsId);
+    });
   }
 
   @Override
@@ -75,7 +73,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
             (int) Math.rint((Double) stage.get().getHeight()));
       }
-    }, settingsId);
+    });
   }
 
   @Override
@@ -86,7 +84,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         stage.get().setMaximized(true);
         return null;
       }
-    }, settingsId);
+    });
   }
 
   @Override
@@ -104,7 +102,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         stage.get().setY(point.getY());
         return null;
       }
-    }, settingsId);
+    });
   }
 
   @Override
@@ -122,6 +120,6 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
         stage.get().setHeight(dimension.getHeight());
         return null;
       }
-    }, settingsId);
+    });
   }
 }
