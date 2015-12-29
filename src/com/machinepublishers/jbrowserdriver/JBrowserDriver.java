@@ -290,9 +290,19 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
                     ready.set(true);
                     ready.notify();
                     done = true;
+                  } else {
+                    System.out.println(line);
                   }
                 }
+              } else {
+                System.out.println(line);
               }
+            }
+          })
+              .redirectError(new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              System.err.println(line);
             }
           })
               .destroyOnExit()
