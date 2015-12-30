@@ -25,9 +25,9 @@ import java.rmi.RemoteException;
 
 class Window implements org.openqa.selenium.WebDriver.Window {
   private final WindowRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  Window(WindowRemote remote, LogsServer logs) {
+  Window(WindowRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

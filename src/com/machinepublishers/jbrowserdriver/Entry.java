@@ -21,51 +21,29 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
+import java.io.Serializable;
+import java.util.logging.Level;
 
-class Keyboard implements org.openqa.selenium.interactions.Keyboard {
+import org.openqa.selenium.logging.LogEntry;
 
-  private final KeyboardRemote remote;
-  private final Logs logs;
+class Entry implements Serializable {
 
-  Keyboard(KeyboardRemote remote, Logs logs) {
-    this.remote = remote;
-    this.logs = logs;
+  private final Level level;
+  private final long timestamp;
+  private final String message;
+
+  Entry(Level level, long timestamp, String message) {
+    this.level = level;
+    this.timestamp = timestamp;
+    this.message = message;
+  }
+
+  LogEntry toLogEntry() {
+    return new LogEntry(level, timestamp, message);
   }
 
   @Override
-  public void pressKey(CharSequence key) {
-    try {
-      remote.pressKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
-    }
-  }
-
-  @Override
-  public void releaseKey(CharSequence key) {
-    try {
-      remote.releaseKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
-    }
-  }
-
-  @Override
-  public void sendKeys(CharSequence... keys) {
-    try {
-      remote.sendKeys(keys);
-    } catch (RemoteException e) {
-      logs.exception(e);
-    }
-  }
-
-  boolean isShiftPressed() {
-    try {
-      return remote.isShiftPressed();
-    } catch (RemoteException e) {
-      logs.exception(e);
-      return false;
-    }
+  public String toString() {
+    return toLogEntry().toString();
   }
 }

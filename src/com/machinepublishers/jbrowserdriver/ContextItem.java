@@ -62,7 +62,7 @@ class ContextItem {
         context.options.set(new OptionsServer(
             window, SettingsManager.settings().cookieStore(), context.timeouts));
       } catch (RemoteException e) {
-        Logs.instance().exception(e);
+        LogsServer.instance().exception(e);
       }
       Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override

@@ -30,9 +30,9 @@ import org.openqa.selenium.WebElement;
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
   private final JBrowserDriver driver;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver, LogsServer logs) {
+  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver, Logs logs) {
     this.remote = remote;
     this.driver = driver;
     this.logs = logs;

@@ -58,7 +58,7 @@ class SettingsManager {
                     Integer.toString(settings.get().screenHeight()),
                     Boolean.toString(Settings.headless()) });
           } catch (Throwable t) {
-            Logs.instance().exception(t);
+            LogsServer.instance().exception(t);
           }
         }
       }).start();
@@ -72,7 +72,7 @@ class SettingsManager {
           try {
             app.start();
           } catch (Throwable t) {
-            Logs.instance().exception(t);
+            LogsServer.instance().exception(t);
           }
           return null;
         }

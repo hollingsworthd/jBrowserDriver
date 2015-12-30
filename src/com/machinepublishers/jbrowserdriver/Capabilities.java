@@ -29,9 +29,9 @@ import org.openqa.selenium.Platform;
 class Capabilities implements org.openqa.selenium.Capabilities {
 
   private final CapabilitiesRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  Capabilities(CapabilitiesRemote remote, LogsServer logs) {
+  Capabilities(CapabilitiesRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

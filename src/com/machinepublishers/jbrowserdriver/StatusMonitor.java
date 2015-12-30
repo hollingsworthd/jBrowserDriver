@@ -101,7 +101,7 @@ class StatusMonitor {
         code = conn.getResponseCode();
         code = code <= 0 ? 499 : code;
       } catch (Throwable t) {
-        Logs.instance().exception(t);
+        LogsServer.instance().exception(t);
       }
     }
     return code;

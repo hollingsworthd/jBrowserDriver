@@ -43,18 +43,18 @@ import org.openqa.selenium.internal.Locatable;
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
   private final ElementRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
   /*
    * TODO FIXME handle null return vals and remote
    */
 
-  Element(ElementRemote remote, LogsServer logs) {
+  Element(ElementRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }
 
-  static List<WebElement> constructList(List<ElementRemote> elements, LogsServer logs) {
+  static List<WebElement> constructList(List<ElementRemote> elements, Logs logs) {
     List<WebElement> ret = new ArrayList<WebElement>(elements.size());
     for (ElementRemote element : elements) {
       ret.add(new Element(element, logs));
@@ -62,7 +62,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     return ret;
   }
 
-  static Object constructObject(Object obj, LogsServer logs) {
+  static Object constructObject(Object obj, Logs logs) {
     if (obj instanceof ElementRemote) {
       return new Element((ElementRemote) obj, logs);
     }

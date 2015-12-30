@@ -32,9 +32,9 @@ import org.openqa.selenium.logging.Logs;
 
 class Options implements org.openqa.selenium.WebDriver.Options {
   private final OptionsRemote remote;
-  private final LogsServer logs;
+  private final com.machinepublishers.jbrowserdriver.Logs logs;
 
-  Options(OptionsRemote remote, LogsServer logs) {
+  Options(OptionsRemote remote, com.machinepublishers.jbrowserdriver.Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

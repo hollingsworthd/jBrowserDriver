@@ -79,16 +79,15 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     try {
       registryTmp = LocateRegistry.createRegistry(port);
     } catch (Throwable t) {
-      Logs.instance().exception(t);
+      LogsServer.instance().exception(t);
     }
     registry = registryTmp;
 
     try {
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
-      Logs.init(port);
       System.out.println("ready");
     } catch (Throwable t) {
-      Logs.instance().exception(t);
+      LogsServer.instance().exception(t);
     }
   }
 
@@ -127,7 +126,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     Accessor.getPageFor(context.get().item().engine.get()).stop();
     SettingsManager.settings().cookieStore().clear();
     StatusMonitor.instance().clearStatusMonitor();
-    Logs.instance().clear();
+    LogsServer.instance().clear();
     SettingsManager.register(settings);
     context.get().reset(this);
   }
@@ -177,7 +176,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         }
       }
     } catch (InterruptedException e) {
-      Logs.instance().exception(e);
+      LogsServer.instance().exception(e);
     }
     return context.get().statusCode.get();
   }
@@ -208,7 +207,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
         }
       }
     } catch (InterruptedException e) {
-      Logs.instance().exception(e);
+      LogsServer.instance().exception(e);
     }
     if (context.get().statusCode.get() == 0) {
       Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -386,6 +385,11 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   }
 
   @Override
+  public LogsServer logs() {
+    return LogsServer.instance();
+  }
+
+  @Override
   public NavigationServer navigate() {
     init();
     return context.get().item().navigation.get();
@@ -445,7 +449,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       ImageIO.write(image, "png", out);
       return out.toByteArray();
     } catch (Throwable t) {
-      Logs.instance().exception(t);
+      LogsServer.instance().exception(t);
       return null;
     } finally {
       Util.close(out);

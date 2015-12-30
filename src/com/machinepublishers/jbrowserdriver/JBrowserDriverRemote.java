@@ -112,4 +112,6 @@ interface JBrowserDriverRemote extends Remote {
 
   OptionsRemote manage() throws RemoteException;
 
+  LogsRemote logs() throws RemoteException;
+
 }

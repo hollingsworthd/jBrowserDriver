@@ -25,8 +25,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Set;
 
-import org.openqa.selenium.logging.LogEntries;
-
 interface LogsRemote extends Remote {
   void clear() throws RemoteException;
 
@@ -36,7 +34,7 @@ interface LogsRemote extends Remote {
 
   void exception(Throwable t) throws RemoteException;
 
-  LogEntries get(String s) throws RemoteException;
+  Entries getRemote(String s) throws RemoteException;
 
   Set<String> getAvailableLogTypes() throws RemoteException;
 }

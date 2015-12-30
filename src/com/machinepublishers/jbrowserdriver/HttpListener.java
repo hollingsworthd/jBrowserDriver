@@ -84,13 +84,13 @@ class HttpListener implements LoadListenerClient {
   private final AtomicLong frame = new AtomicLong();
   private final AtomicLong timeoutMS;
   private final StatusMonitor statusMonitor;
-  private final Logs logs;
+  private final LogsServer logs;
 
   HttpListener(AtomicInteger statusCode, AtomicLong timeoutMS) {
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
     this.statusMonitor = StatusMonitor.instance();
-    this.logs = Logs.instance();
+    this.logs = LogsServer.instance();
   }
 
   private void trace(String label, long frame, int state, String url,

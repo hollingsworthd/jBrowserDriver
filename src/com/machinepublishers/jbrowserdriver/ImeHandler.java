@@ -26,9 +26,9 @@ import java.util.List;
 
 class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   private final ImeHandlerRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  ImeHandler(ImeHandlerRemote remote, LogsServer logs) {
+  ImeHandler(ImeHandlerRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

@@ -110,7 +110,7 @@ public class Settings implements Serializable {
         headlessPlatform.setAccessible(true);
         field.set(platformFactory, headlessPlatform.newInstance());
       } catch (Throwable t) {
-        Logs.instance().exception(t);
+        LogsServer.instance().exception(t);
       }
     } else {
       headless = false;
@@ -165,7 +165,7 @@ public class Settings implements Serializable {
         try {
           if (!"false".equals(System.getProperty("jbd.quickrender"))
               && connection.isMedia()) {
-            Logs.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
+            LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
             StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
           } else if ((connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)

@@ -158,7 +158,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   private static final List<Object> waiting = new ArrayList<Object>();
   private final Object key = new Object();
   private final JBrowserDriverRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
   private final int port;
 
@@ -251,16 +251,22 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       }
       port = ports.remove(0);
     }
-    logs = LogsServer.newInstance(port);
     launchProcess(port);
     JBrowserDriverRemote instanceTmp = null;
     try {
       instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port).lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
-      Logs.instance().exception(t);
+      LogsServer.instance().exception(t);
     }
     remote = instanceTmp;
+    LogsRemote logsRemote = null;
+    try {
+      logsRemote = remote.logs();
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
+    logs = new Logs(logsRemote);
   }
 
   private void launchProcess(int port) {
@@ -711,7 +717,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       logs.exception(e);
     }
     endProcess();
-    logs.close();
   }
 
   @Override

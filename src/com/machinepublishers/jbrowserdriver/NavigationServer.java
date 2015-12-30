@@ -54,7 +54,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
             try {
               view.get().getEngine().getHistory().go(-1);
             } catch (IndexOutOfBoundsException e) {
-              Logs.instance().exception(e);
+              LogsServer.instance().exception(e);
             }
             return null;
           }
@@ -69,7 +69,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
             try {
               view.get().getEngine().getHistory().go(1);
             } catch (IndexOutOfBoundsException e) {
-              Logs.instance().exception(e);
+              LogsServer.instance().exception(e);
             }
             return null;
           }

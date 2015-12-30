@@ -21,72 +21,67 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 
 import org.openqa.selenium.logging.LogEntries;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  private static final AtomicReference<Logs> instance = new AtomicReference<Logs>();
+  final LogsRemote remote;
 
-  static void init(int id) {
-    try {
-      instance.set(new Logs((LogsRemote) LocateRegistry.getRegistry(9999).lookup("Logs" + id)));
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-  }
-
-  static Logs instance() {
-    return instance.get();
-  }
-
-  private final LogsRemote remote;
-
-  private Logs(LogsRemote remote) {
+  Logs(LogsRemote remote) {
     this.remote = remote;
   }
 
   void clear() {
     try {
       remote.clear();
-    } catch (RemoteException e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
   }
 
   void trace(String message) {
     try {
       remote.trace(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      t.printStackTrace();
+      System.out.println(new Entry(Level.FINEST, System.currentTimeMillis(), message));
     }
   }
 
   void warn(String message) {
     try {
       remote.warn(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      t.printStackTrace();
+      System.err.println(new Entry(Level.WARNING, System.currentTimeMillis(), message));
     }
   }
 
-  void exception(Throwable t) {
+  void exception(Throwable throwable) {
     try {
-      remote.exception(t);
-    } catch (RemoteException e) {
-      e.printStackTrace();
+      remote.exception(throwable);
+    } catch (Throwable t) {
+      t.printStackTrace();
+      try (StringWriter writer = new StringWriter()) {
+        throwable.printStackTrace(new PrintWriter(writer));
+        System.err.println(new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
   @Override
   public LogEntries get(String s) {
     try {
-      return remote.get(s);
-    } catch (RemoteException e) {
-      e.printStackTrace();
+      return remote.getRemote(s).toLogEntries();
+    } catch (Throwable t) {
+      t.printStackTrace();
       return null;
     }
   }
@@ -95,8 +90,8 @@ class Logs implements org.openqa.selenium.logging.Logs {
   public Set<String> getAvailableLogTypes() {
     try {
       return remote.getAvailableLogTypes();
-    } catch (RemoteException e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      t.printStackTrace();
       return null;
     }
   }

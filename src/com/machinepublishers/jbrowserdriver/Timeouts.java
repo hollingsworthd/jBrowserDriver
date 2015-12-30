@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   private final TimeoutsRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  Timeouts(TimeoutsRemote remote, LogsServer logs) {
+  Timeouts(TimeoutsRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

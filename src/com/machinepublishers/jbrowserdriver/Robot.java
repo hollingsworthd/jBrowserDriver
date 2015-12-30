@@ -283,7 +283,7 @@ class Robot {
         try {
           curThread.wait();
         } catch (Exception e) {
-          Logs.instance().exception(e);
+          LogsServer.instance().exception(e);
         }
       }
     }

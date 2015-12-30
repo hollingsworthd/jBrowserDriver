@@ -26,9 +26,9 @@ import java.rmi.RemoteException;
 
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final NavigationRemote remote;
-  private final LogsServer logs;
+  private final Logs logs;
 
-  Navigation(NavigationRemote remote, LogsServer logs) {
+  Navigation(NavigationRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }

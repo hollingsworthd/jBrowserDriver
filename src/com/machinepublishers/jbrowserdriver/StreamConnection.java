@@ -171,7 +171,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           adHosts.add(line);
         }
       } catch (Throwable t) {
-        Logs.instance().exception(t);
+        LogsServer.instance().exception(t);
       } finally {
         Util.close(reader);
       }
@@ -190,7 +190,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
                 }
               }).build();
         } catch (Throwable t) {
-          Logs.instance().exception(t);
+          LogsServer.instance().exception(t);
         }
       } else {
         try {
@@ -242,7 +242,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             return context;
           }
         } catch (Throwable t) {
-          Logs.instance().exception(t);
+          LogsServer.instance().exception(t);
         }
       }
     }
@@ -285,7 +285,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       host = host.toLowerCase();
       while (host.contains(".")) {
         if (adHosts.contains(host)) {
-          Logs.instance().trace("Ad blocked: " + host);
+          LogsServer.instance().trace("Ad blocked: " + host);
           host = null;
           return true;
         }
@@ -507,7 +507,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         return getInputStream();
       }
     } catch (IOException e) {
-      Logs.instance().exception(e);
+      LogsServer.instance().exception(e);
     }
     return null;
   }

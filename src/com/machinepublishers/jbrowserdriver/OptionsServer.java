@@ -141,7 +141,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
 
   @Override
   public Logs logs() {
-    return com.machinepublishers.jbrowserdriver.Logs.instance();
+    return com.machinepublishers.jbrowserdriver.LogsServer.instance();
   }
 
   @Override

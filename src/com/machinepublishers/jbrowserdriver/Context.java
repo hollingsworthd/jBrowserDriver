@@ -61,7 +61,7 @@ class Context {
       try {
         timeouts.set(new TimeoutsServer());
       } catch (RemoteException e) {
-        Logs.instance().exception(e);
+        LogsServer.instance().exception(e);
       }
     }
   }
@@ -90,7 +90,7 @@ class Context {
           mouse.set(new MouseServer(robot));
           capabilities.set(new CapabilitiesServer());
         } catch (RemoteException e) {
-          Logs.instance().exception(e);
+          LogsServer.instance().exception(e);
         }
       }
     }

@@ -86,7 +86,7 @@ class Util {
           return;
         }
         if (statusCode.get() != 200) {
-          Logs.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+          LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
         }
       }
       T result = null;
@@ -151,10 +151,10 @@ class Util {
           try {
             runner.done.wait(timeout);
           } catch (InterruptedException e) {
-            Logs.instance().exception(e);
+            LogsServer.instance().exception(e);
           }
           if (!runner.done.get()) {
-            Logs.instance().exception(new RuntimeException("Action never completed."));
+            LogsServer.instance().exception(new RuntimeException("Action never completed."));
           }
         }
         if (runner.fatal.get() != null) {

@@ -77,7 +77,7 @@ class StreamInjectors {
         }
       }
     } catch (Throwable t) {
-      Logs.instance().exception(t);
+      LogsServer.instance().exception(t);
     } finally {
       Util.close(inputStream);
     }

@@ -24,8 +24,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,48 +32,28 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogEntry;
 
 class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
-  private static Registry registry;
-  static {
-    Registry registryTmp = null;
-    try {
-      registryTmp = LocateRegistry.createRegistry(9999);
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-    registry = registryTmp;
-  }
   private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
   private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
   private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
-  private final LinkedList<LogEntry> entries = new LinkedList<LogEntry>();
-  private final int id;
-
-  public static LogsServer newInstance(int id) {
+  private final LinkedList<Entry> entries = new LinkedList<Entry>();
+  private static final LogsServer instance;
+  static {
+    LogsServer instanceTmp = null;
     try {
-      LogsServer instance = new LogsServer(id);
-      registry.rebind("Logs" + id, instance);
-      return instance;
+      instanceTmp = new LogsServer();
     } catch (Throwable t) {
-      Logs.instance().exception(t);
-      return null;
+      t.printStackTrace();
     }
+    instance = instanceTmp;
   }
 
-  private LogsServer(int id) throws RemoteException {
-    this.id = id;
+  static LogsServer instance() {
+    return instance;
   }
 
-  void close() {
-    try {
-      registry.unbind("Logs" + id);
-      UnicastRemoteObject.unexportObject(this, true);
-    } catch (Throwable t) {
-      exception(t);
-    }
-  }
+  LogsServer() throws RemoteException {}
 
   public void clear() {
     synchronized (entries) {
@@ -84,7 +62,7 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   public void trace(String message) {
-    final LogEntry entry = new LogEntry(Level.FINEST, System.currentTimeMillis(), message);
+    final Entry entry = new Entry(Level.FINEST, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
       if (entries.size() > MAX_LOGS) {
@@ -97,7 +75,7 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   public void warn(String message) {
-    final LogEntry entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), message);
+    final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
       if (entries.size() > MAX_LOGS) {
@@ -110,12 +88,12 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   public void exception(Throwable t) {
-    final LogEntry entry;
+    final Entry entry;
     StringWriter writer = null;
     try {
       writer = new StringWriter();
       t.printStackTrace(new PrintWriter(writer));
-      entry = new LogEntry(Level.WARNING, System.currentTimeMillis(), writer.toString());
+      entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
       synchronized (entries) {
         entries.add(entry);
         if (entries.size() > MAX_LOGS) {
@@ -136,11 +114,22 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   @Override
-  public LogEntries get(String s) {
+  public Entries getRemote(String s) {
     synchronized (entries) {
-      LogEntries logEntries = new LogEntries(entries);
+      Entries logEntries = new Entries(entries);
       entries.clear();
       return logEntries;
+    }
+  }
+
+  @Override
+  public LogEntries get(String s) {
+    synchronized (entries) {
+      try {
+        return new Entries(entries).toLogEntries();
+      } finally {
+        entries.clear();
+      }
     }
   }
 

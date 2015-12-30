@@ -21,51 +21,30 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-class Keyboard implements org.openqa.selenium.interactions.Keyboard {
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogEntry;
 
-  private final KeyboardRemote remote;
-  private final Logs logs;
+class Entries implements Serializable {
 
-  Keyboard(KeyboardRemote remote, Logs logs) {
-    this.remote = remote;
-    this.logs = logs;
-  }
+  private final List<Entry> entries = new ArrayList<Entry>();
 
-  @Override
-  public void pressKey(CharSequence key) {
-    try {
-      remote.pressKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
+  Entries(Iterable<Entry> iterable) {
+    Iterator<Entry> iter = iterable.iterator();
+    while (iter.hasNext()) {
+      entries.add(iter.next());
     }
   }
 
-  @Override
-  public void releaseKey(CharSequence key) {
-    try {
-      remote.releaseKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
+  LogEntries toLogEntries() {
+    List<LogEntry> list = new ArrayList<LogEntry>();
+    for (Entry entry : entries) {
+      list.add(entry.toLogEntry());
     }
-  }
-
-  @Override
-  public void sendKeys(CharSequence... keys) {
-    try {
-      remote.sendKeys(keys);
-    } catch (RemoteException e) {
-      logs.exception(e);
-    }
-  }
-
-  boolean isShiftPressed() {
-    try {
-      return remote.isShiftPressed();
-    } catch (RemoteException e) {
-      logs.exception(e);
-      return false;
-    }
+    return new LogEntries(list);
   }
 }

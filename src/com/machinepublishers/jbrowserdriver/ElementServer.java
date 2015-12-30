@@ -146,7 +146,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     try {
       return new ElementServer(doc, context);
     } catch (RemoteException e) {
-      Logs.instance().exception(e);
+      LogsServer.instance().exception(e);
       return null;
     }
   }
@@ -375,7 +375,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               return new ElementServer(new AtomicReference(XPathFactory.newInstance().newXPath().evaluate(
                   expr, node.get(), XPathConstants.NODE)), context);
             } catch (Throwable t) {
-              Logs.instance().exception(t);
+              LogsServer.instance().exception(t);
             }
             return null;
           }
@@ -397,7 +397,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               }
               return elements;
             } catch (Throwable t) {
-              Logs.instance().exception(t);
+              LogsServer.instance().exception(t);
             }
             return null;
           }
@@ -442,7 +442,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             try {
               return new ElementServer(new AtomicReference(result), context);
             } catch (RemoteException e) {
-              Logs.instance().exception(e);
+              LogsServer.instance().exception(e);
               return null;
             }
           }
@@ -463,7 +463,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                 try {
                   elements.add(new ElementServer(new AtomicReference(cur), context));
                 } catch (RemoteException e) {
-                  Logs.instance().exception(e);
+                  LogsServer.instance().exception(e);
                   return null;
                 }
               } else {
@@ -610,7 +610,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         try {
           context.curThread.wait();
         } catch (Exception e) {
-          Logs.instance().exception(e);
+          LogsServer.instance().exception(e);
         }
       }
     }
@@ -662,7 +662,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       try {
         return new ElementServer(new AtomicReference(obj), context);
       } catch (RemoteException e) {
-        Logs.instance().exception(e);
+        LogsServer.instance().exception(e);
         return null;
       }
     }
@@ -734,20 +734,20 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         }
       });
     } catch (RemoteException e) {
-      Logs.instance().exception(e);
+      LogsServer.instance().exception(e);
       return null;
     }
   }
 
   @Override
   public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
-    Logs.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
+    LogsServer.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 
   @Override
   public byte[] getScreenshot() throws WebDriverException {
-    Logs.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
+    LogsServer.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 }
