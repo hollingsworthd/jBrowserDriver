@@ -653,8 +653,10 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public void close() {
     try {
-      //TODO if closing last window, quit browser
       remote.close();
+      if (getWindowHandles().isEmpty()) {
+        quit();
+      }
     } catch (RemoteException e) {
       logs.exception(e);
     }

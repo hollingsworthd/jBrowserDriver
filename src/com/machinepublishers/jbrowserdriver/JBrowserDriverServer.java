@@ -397,14 +397,17 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
 
   @Override
   public void quit() {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        context.get().item().engine.get().getLoadWorker().cancel();
-        return null;
-      }
-    });
-    Accessor.getPageFor(context.get().item().engine.get()).stop();
+    final ContextItem item = context.get().item();
+    if (item != null) {
+      Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+        @Override
+        public Object perform() {
+          item.engine.get().getLoadWorker().cancel();
+          return null;
+        }
+      });
+      Accessor.getPageFor(item.engine.get()).stop();
+    }
     SettingsManager.register(null);
     if (Settings.headless()) {
       Platform.exit();

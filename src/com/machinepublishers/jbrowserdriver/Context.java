@@ -97,7 +97,10 @@ class Context {
   }
 
   ContextItem item() {
-    return items.get(current);
+    if (current < items.size()) {
+      return items.get(current);
+    }
+    return null;
   }
 
   List<ContextItem> items() {
