@@ -53,7 +53,7 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     return instance;
   }
 
-  LogsServer() throws RemoteException {}
+  private LogsServer() throws RemoteException {}
 
   public void clear() {
     synchronized (entries) {

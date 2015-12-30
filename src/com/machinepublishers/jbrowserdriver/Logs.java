@@ -30,7 +30,7 @@ import java.util.logging.Level;
 import org.openqa.selenium.logging.LogEntries;
 
 class Logs implements org.openqa.selenium.logging.Logs {
-  final LogsRemote remote;
+  private final LogsRemote remote;
 
   Logs(LogsRemote remote) {
     this.remote = remote;
