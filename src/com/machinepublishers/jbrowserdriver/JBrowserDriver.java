@@ -721,8 +721,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
-  @Override
-  public void quit() {
+  private void saveData() {
     try {
       OptionsRemote optionsRemote = remote.manage();
       Set<Cookie> cookiesLocal = optionsRemote.getCookies();
@@ -744,6 +743,11 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     } catch (RemoteException e) {
       logs.exception(e);
     }
+  }
+
+  @Override
+  public void quit() {
+    saveData();
     try {
       remote.quit();
     } catch (RemoteException e) {
@@ -764,6 +768,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   @Override
   public void kill() {
+    saveData();
     try {
       remote.kill();
     } catch (RemoteException e) {
