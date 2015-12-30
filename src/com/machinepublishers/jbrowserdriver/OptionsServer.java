@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.logging.Logs;
 
 class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
@@ -140,7 +139,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
   }
 
   @Override
-  public Logs logs() {
+  public LogsServer logs() {
     return com.machinepublishers.jbrowserdriver.LogsServer.instance();
   }
 

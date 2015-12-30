@@ -405,7 +405,6 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       }
     });
     Accessor.getPageFor(context.get().item().engine.get()).stop();
-    SettingsManager.settings().cookieStore().clear();
     SettingsManager.register(null);
     if (Settings.headless()) {
       Platform.exit();

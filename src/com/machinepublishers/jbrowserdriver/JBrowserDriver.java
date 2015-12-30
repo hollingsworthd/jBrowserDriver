@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
@@ -50,6 +51,7 @@ import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
+import org.openqa.selenium.logging.LogEntries;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.listener.ProcessListener;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -149,6 +151,8 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
 
+  //TODO handle jbd.fork=false
+
   /**
    * Use this string on sendKeys functions to delete text.
    */
@@ -161,6 +165,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   private final Logs logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
   private final int port;
+  private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
 
   static {
     String property = System.getProperty("jbd.ports", "10000-10007");
@@ -648,6 +653,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public void close() {
     try {
+      //TODO if closing last window, quit browser
       remote.close();
     } catch (RemoteException e) {
       logs.exception(e);
@@ -676,11 +682,15 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   @Override
   public Options manage() {
-    try {
-      return new com.machinepublishers.jbrowserdriver.Options(remote.manage(), logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
-      return null;
+    if (options.get() == null) {
+      try {
+        return new com.machinepublishers.jbrowserdriver.Options(remote.manage(), logs);
+      } catch (RemoteException e) {
+        logs.exception(e);
+        return null;
+      }
+    } else {
+      return options.get();
     }
   }
 
@@ -711,6 +721,27 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   @Override
   public void quit() {
+    try {
+      OptionsRemote optionsRemote = remote.manage();
+      Set<Cookie> cookiesLocal = optionsRemote.getCookies();
+      LogsRemote logsRemote = optionsRemote.logs();
+      final LogEntries entries = logsRemote.getRemote(null).toLogEntries();
+      final Set<String> types = logsRemote.getAvailableLogTypes();
+      org.openqa.selenium.logging.Logs logsLocal = new org.openqa.selenium.logging.Logs() {
+        @Override
+        public Set<String> getAvailableLogTypes() {
+          return types;
+        }
+
+        @Override
+        public LogEntries get(String logType) {
+          return entries;
+        }
+      };
+      options.set(new OptionsLocal(cookiesLocal, logsLocal));
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
     try {
       remote.quit();
     } catch (RemoteException e) {
