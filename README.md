@@ -1,7 +1,7 @@
 # jBrowserDriver
 A programmable embedded browser compatible with the WebDriver Selenium spec -- fast, headless, WebKit-based, 100% pure Java, and no browser dependencies
 
-Licensed under Apache License v2.0 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
+Licensed under the Apache License v2.0 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
 Sales and support: ops@machinepublishers.com
 
@@ -80,4 +80,4 @@ Iframes and alert dialogs are not yet handled. Stay tuned.
 
 - - -
 
-Copyright (C) 2014-2015 [Machine Publishers, LLC](https://machinepublishers.com)
+Copyright (C) 2014-2016 [Machine Publishers, LLC](https://machinepublishers.com)
