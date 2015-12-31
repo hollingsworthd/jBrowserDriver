@@ -208,24 +208,22 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   @Override
   public WebElement findElement(By by) {
-    //    try {
-    //TODO FIXME
-    return null;//remote.findElement(by);
-    //    } catch (RemoteException e) {
-    //    logs.exception(e);
-    //      return null;
-    //    }
+    try {
+      return new Element(remote.findElement(by), logs);
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   @Override
   public List<WebElement> findElements(By by) {
-    //    try{
-    //TODO FIXME
-    return null;//remote.findElements(by);
-    //    } catch (RemoteException e) {
-    //    logs.exception(e);
-    //      return null;
-    //    }
+    try {
+      return constructList(remote.findElements(by), logs);
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   @Override

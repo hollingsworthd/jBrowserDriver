@@ -223,15 +223,13 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public ElementServer findElement(By by) {
     init();
-    //TODO FIXME
-    return null;//by.findElement(this);
+    return ElementServer.create(context.get()).findElement(by);
   }
 
   @Override
   public List findElements(By by) {
     init();
-    //TODO FIXME
-    return null;//by.findElements(this);
+    return ElementServer.create(context.get()).findElements(by);
   }
 
   @Override

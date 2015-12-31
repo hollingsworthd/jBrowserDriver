@@ -26,7 +26,10 @@ public class HttpServer {
                   BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 for (String line; (line = reader.readLine()) != null;) {
                   if (line.startsWith("GET")) {
-                    byte[] body = "<html><head></head><body>test</body></html>".getBytes("utf-8");
+                    byte[] body = new String("<html><head></head><body>"
+                        + "<div id=\"divtext\" name=\"divs\">test1</div>"
+                        + "<div id=\"divtext\" name=\"divs\">test2</div>"
+                        + "</body></html>").getBytes("utf-8");
                     byte[] content = new String("HTTP/1.1 200 OK\n"
                         + "Content-Length: " + body.length + "\n"
                         + "Content-Type: text/html; charset=utf-8\n"

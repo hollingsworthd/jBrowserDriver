@@ -26,7 +26,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -122,10 +121,10 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
-  private final AtomicReference<JSObject> node;
+  private final JSObject node;
   private final Context context;
 
-  ElementServer(final AtomicReference<JSObject> node, final Context context) throws RemoteException {
+  ElementServer(JSObject node, final Context context) throws RemoteException {
     try {
       this.node = node;
       this.context = context;
@@ -135,14 +134,15 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   static ElementServer create(final Context context) {
-    final AtomicReference<JSObject> doc = new AtomicReference<JSObject>(
-        Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<JSObject>() {
-              @Override
-              public JSObject perform() {
-                return (JSObject) context.item().engine.get().getDocument();
-              }
-            }));
+    final JSObject doc = Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<JSObject>() {
+          @Override
+          public JSObject perform() {
+            JSObject node = (JSObject) context.item().engine.get().getDocument();
+            node.getMember("");
+            return node;
+          }
+        });
     try {
       return new ElementServer(doc, context);
     } catch (RemoteException e) {
@@ -157,9 +157,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Object>() {
           @Override
           public Object perform() {
-            node.get().call("scrollIntoView");
+            node.call("scrollIntoView");
             if (context.keyboard.get().isShiftPressed()) {
-              node.get().eval(
+              node.eval(
                   "this.origOnclick = this.onclick;"
                       + "this.onclick=function(event){"
                       + "  this.target='_blank';"
@@ -182,7 +182,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Object>() {
           @Override
           public Object perform() {
-            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
             double y = Double.parseDouble(obj.getMember("top").toString());
             double x = Double.parseDouble(obj.getMember("left").toString());
             y = y < 0d ? 0d : y;
@@ -201,10 +201,10 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public Object perform() {
             context.item().httpListener.get().resetStatusCode();
-            if (node.get() instanceof HTMLInputElement) {
-              ((HTMLInputElement) node.get()).getForm().submit();
-            } else if (node.get() instanceof HTMLFormElement) {
-              ((HTMLFormElement) node.get()).submit();
+            if (node instanceof HTMLInputElement) {
+              ((HTMLInputElement) node).getForm().submit();
+            } else if (node instanceof HTMLFormElement) {
+              ((HTMLFormElement) node).submit();
             }
             return null;
           }
@@ -217,8 +217,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Object>() {
           @Override
           public Object perform() {
-            node.get().call("scrollIntoView");
-            node.get().call("focus");
+            node.call("scrollIntoView");
+            node.call("focus");
             return null;
           }
         });
@@ -232,9 +232,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public Object perform() {
             context.item().httpListener.get().resetStatusCode();
-            node.get().call("scrollIntoView");
-            node.get().call("focus");
-            node.get().call("setValue", new Object[] { "" });
+            node.call("scrollIntoView");
+            node.call("focus");
+            node.call("setValue", new Object[] { "" });
             return null;
           }
         });
@@ -242,7 +242,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   @Override
   public String getAttribute(final String attrName) {
-    String val = (String) (node.get().getMember(attrName));
+    String val = (String) (node.getMember(attrName));
     return val == null || val.equals("undefined") ? "" : val;
   }
 
@@ -252,7 +252,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<String>() {
           @Override
           public String perform() {
-            return cleanUpCssVal((String) (node.get().eval("var me = this;"
+            return cleanUpCssVal((String) (node.eval("var me = this;"
                 + "(function(){"
                 + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
                 + "})();")));
@@ -277,7 +277,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Point>() {
           @Override
           public Point perform() {
-            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
             int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
             int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
             return new Point(x + 1, y + 1);
@@ -291,7 +291,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Dimension>() {
           @Override
           public Dimension perform() {
-            JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
             int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
             int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
             int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
@@ -319,7 +319,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           public Boolean perform() {
             try {
               //a fast approximation of whether this element is visible
-              return (Boolean) node.get().eval(IS_DISPLAYED);
+              return (Boolean) node.eval(IS_DISPLAYED);
             } catch (Throwable t) {
               return false;
             }
@@ -333,7 +333,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            String val = node.get().getMember("disabled").toString();
+            String val = node.getMember("disabled").toString();
             return val == null || "undefined".equals(val) || val.isEmpty();
           }
         });
@@ -345,8 +345,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            String selected = node.get().getMember("selected").toString();
-            String checked = node.get().getMember("checked").toString();
+            String selected = node.getMember("selected").toString();
+            String checked = node.getMember("checked").toString();
             return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
                 || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
           }
@@ -355,14 +355,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   @Override
   public ElementServer findElement(By by) {
-    //TODO FIXME
-    return null;//by.findElement(this);
+    return (ElementServer) by.findElement(this);
   }
 
   @Override
   public List findElements(By by) {
-    //TODO FIXME
-    return null;//by.findElements(this);
+    return by.findElements(this);
   }
 
   @Override
@@ -372,8 +370,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public ElementServer perform() {
             try {
-              return new ElementServer(new AtomicReference(XPathFactory.newInstance().newXPath().evaluate(
-                  expr, node.get(), XPathConstants.NODE)), context);
+              return new ElementServer((JSObject) XPathFactory.newInstance().newXPath().evaluate(
+                  expr, node, XPathConstants.NODE), context);
             } catch (Throwable t) {
               LogsServer.instance().exception(t);
             }
@@ -391,9 +389,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             try {
               List<ElementServer> elements = new ArrayList<ElementServer>();
               NodeList list = (NodeList) XPathFactory.newInstance().newXPath().evaluate(
-                  expr, node.get(), XPathConstants.NODESET);
+                  expr, node, XPathConstants.NODESET);
               for (int i = 0; i < list.getLength(); i++) {
-                elements.add(new ElementServer(new AtomicReference(list.item(i)), context));
+                elements.add(new ElementServer((JSObject) list.item(i), context));
               }
               return elements;
             } catch (Throwable t) {
@@ -420,9 +418,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            if (node.get() != null) {
+            if (node != null) {
               return (List<ElementServer>) parseScriptResult(
-                  node.get().call("getElementsByTagName", new Object[] { tagName }));
+                  node.call("getElementsByTagName", new Object[] { tagName }));
             }
             return null;
           }
@@ -435,12 +433,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<ElementServer>() {
           @Override
           public ElementServer perform() {
-            JSObject result = (JSObject) node.get().call("querySelector", new Object[] { expr });
+            JSObject result = (JSObject) node.call("querySelector", new Object[] { expr });
             if (result == null) {
               return null;
             }
             try {
-              return new ElementServer(new AtomicReference(result), context);
+              return new ElementServer(result, context);
             } catch (RemoteException e) {
               LogsServer.instance().exception(e);
               return null;
@@ -456,12 +454,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public List<ElementServer> perform() {
             List<ElementServer> elements = new ArrayList<ElementServer>();
-            JSObject result = (JSObject) node.get().call("querySelectorAll", new Object[] { expr });
+            JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
             for (int i = 0;; i++) {
               Object cur = result.getSlot(i);
               if (cur instanceof Node) {
                 try {
-                  elements.add(new ElementServer(new AtomicReference(cur), context));
+                  elements.add(new ElementServer((JSObject) cur, context));
                 } catch (RemoteException e) {
                   LogsServer.instance().exception(e);
                   return null;
@@ -572,7 +570,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             new Sync<Object>() {
               @Override
               public Object perform() {
-                return node.get().eval("(function(){return this.screenslicerCallbackVal;})();");
+                return node.eval("(function(){return this.screenslicerCallbackVal;})();");
               }
             });
         if (!(result instanceof String) || !"undefined".equals(result.toString())) {
@@ -634,7 +632,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             if (callback) {
               argList.add(null);
-              node.get().eval("(function(){"
+              node.eval("(function(){"
                   + "          this.screenslicerCallback = function(){"
                   + "            this.screenslicerCallbackVal = arguments;"
                   + "          }"
@@ -644,12 +642,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             } else {
-              node.get().eval("this.screenslicerJS = function(){"
+              node.eval("this.screenslicerJS = function(){"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             }
             context.item().httpListener.get().resetStatusCode();
-            return node.get().call("screenslicerJS", argList.toArray(new Object[0]));
+            return node.call("screenslicerJS", argList.toArray(new Object[0]));
           }
         }));
   }
@@ -660,7 +658,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
     if (obj instanceof Node) {
       try {
-        return new ElementServer(new AtomicReference(obj), context);
+        return new ElementServer((JSObject) obj, context);
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
         return null;
@@ -705,7 +703,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               new Sync<Object>() {
             @Override
             public Point perform() {
-              node.get().call("scrollIntoView");
+              node.call("scrollIntoView");
               return null;
             }
           });
@@ -713,7 +711,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               new Sync<Point>() {
             @Override
             public Point perform() {
-              JSObject obj = (JSObject) node.get().call("getBoundingClientRect");
+              JSObject obj = (JSObject) node.call("getBoundingClientRect");
               double y = Double.parseDouble(obj.getMember("top").toString());
               double x = Double.parseDouble(obj.getMember("left").toString());
               y = y < 0d ? 0d : y;
