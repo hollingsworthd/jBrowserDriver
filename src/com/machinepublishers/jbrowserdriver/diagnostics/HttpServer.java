@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,12 +33,12 @@ public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
   private static final AtomicReference<Closeable> listener = new AtomicReference<Closeable>();
 
-  public static void launch() {
+  public static void launch(int port) {
     if (loop.compareAndSet(false, true)) {
       new Thread(new Runnable() {
         @Override
         public void run() {
-          try (ServerSocket serverSocket = new ServerSocket(9000)) {
+          try (ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getLoopbackAddress())) {
             listener.set(serverSocket);
             while (loop.get()) {
               try (Socket socket = serverSocket.accept();

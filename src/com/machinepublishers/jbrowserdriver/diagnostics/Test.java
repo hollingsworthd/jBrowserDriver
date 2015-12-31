@@ -21,6 +21,7 @@ package com.machinepublishers.jbrowserdriver.diagnostics;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +30,15 @@ import org.openqa.selenium.By;
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 
 public class Test {
+  private static final int TEST_PORT = Integer.parseInt(System.getProperty("jbd.testport", "9000"));
+
   public static List<String> run() {
     List<String> errors = new ArrayList<String>();
     JBrowserDriver driver = null;
     try {
-      HttpServer.launch();
+      HttpServer.launch(TEST_PORT);
       driver = new JBrowserDriver();
-      driver.get("http://127.0.0.1:9000");
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
       if (driver.getStatusCode() != 200) {
         errors.add("Status code not 200");
       }
