@@ -89,20 +89,29 @@ reserve all right, title, and interest in and to Your Contributions.
    Point of Contact with Us.
 
 
+          Signature: ______________________________ Date: ___________
 
-Please sign: __________________________________ Date: _______________
+              Title: ______________________________
 
-Title:       __________________________________
+   Corporation name: ________________________________________________
 
-Corporation: __________________________________
+Corporation address: ________________________________________________
+
+                     ________________________________________________
+
+                     ________________________________________________
+
+   Point of Contact: ________________________________________________
+
+             E-Mail: ________________________________________________
+
+          Telephone: _____________________ Fax: _____________________
 
 
 Schedule A
 
 [Initial list of designated employees.  NB: authorization is not
 tied to particular Contributions.]
-
-
 
 
 Schedule B
