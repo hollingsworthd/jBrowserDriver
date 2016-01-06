@@ -43,24 +43,34 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   private final ElementRemote remote;
   private final Logs logs;
 
-  /*
-   * TODO FIXME handle null return vals and remote
-   */
-
-  Element(ElementRemote remote, Logs logs) {
+  private Element(ElementRemote remote, Logs logs) {
     this.remote = remote;
     this.logs = logs;
   }
 
   static List<WebElement> constructList(List<ElementRemote> elements, Logs logs) {
-    List<WebElement> ret = new ArrayList<WebElement>(elements.size());
-    for (ElementRemote element : elements) {
-      ret.add(new Element(element, logs));
+    List<WebElement> ret = new ArrayList<WebElement>();
+    if (elements != null) {
+      for (ElementRemote element : elements) {
+        if (element != null) {
+          ret.add(new Element(element, logs));
+        }
+      }
     }
     return ret;
   }
 
+  static WebElement constructElement(ElementRemote element, Logs logs) {
+    if (element == null) {
+      return null;
+    }
+    return new Element(element, logs);
+  }
+
   static Object constructObject(Object obj, Logs logs) {
+    if (obj == null) {
+      return null;
+    }
     if (obj instanceof ElementRemote) {
       return new Element((ElementRemote) obj, logs);
     }
@@ -207,7 +217,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElement(By by) {
     try {
-      return new Element(remote.findElement(by), logs);
+      return constructElement(remote.findElement(by), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -220,14 +230,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElements(by), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByXPath(final String expr) {
     try {
-      return new Element(remote.findElementByXPath(expr), logs);
+      return constructElement(remote.findElementByXPath(expr), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -240,14 +250,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByXPath(expr), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
-      return new Element(remote.findElementByTagName(tagName), logs);
+      return constructElement(remote.findElementByTagName(tagName), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -260,14 +270,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByTagName(tagName), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByCssSelector(final String expr) {
     try {
-      return new Element(remote.findElementByCssSelector(expr), logs);
+      return constructElement(remote.findElementByCssSelector(expr), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -280,14 +290,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByCssSelector(expr), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByName(String name) {
     try {
-      return new Element(remote.findElementByName(name), logs);
+      return constructElement(remote.findElementByName(name), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -300,14 +310,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByName(name), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
-      return new Element(remote.findElementByLinkText(text), logs);
+      return constructElement(remote.findElementByLinkText(text), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -317,7 +327,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
-      return new Element(remote.findElementByPartialLinkText(text), logs);
+      return constructElement(remote.findElementByPartialLinkText(text), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -330,7 +340,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByLinkText(text), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
@@ -340,14 +350,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByPartialLinkText(text), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
-      return new Element(remote.findElementByClassName(cssClass), logs);
+      return constructElement(remote.findElementByClassName(cssClass), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -360,14 +370,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsByClassName(cssClass), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
   @Override
   public WebElement findElementById(final String id) {
     try {
-      return new Element(remote.findElementById(id), logs);
+      return constructElement(remote.findElementById(id), logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -380,7 +390,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
       return constructList(remote.findElementsById(id), logs);
     } catch (RemoteException e) {
       logs.exception(e);
-      return null;
+      return new ArrayList<WebElement>();
     }
   }
 
@@ -407,7 +417,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public Coordinates getCoordinates() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Coordinates(remote.getCoordinates(), logs);
+      CoordinatesRemote coords = remote.getCoordinates();
+      if (coords == null) {
+        return null;
+      }
+      return new com.machinepublishers.jbrowserdriver.Coordinates(coords, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -417,7 +431,11 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public <X> X getScreenshotAs(OutputType<X> outputType) throws WebDriverException {
     try {
-      return outputType.convertFromPngBytes(remote.getScreenshot());
+      byte[] bytes = remote.getScreenshot();
+      if (bytes == null) {
+        return null;
+      }
+      return outputType.convertFromPngBytes(bytes);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

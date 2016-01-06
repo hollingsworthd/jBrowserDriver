@@ -34,7 +34,11 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
     try {
-      return new Timeouts(remote.implicitlyWait(duration, unit), logs);
+      TimeoutsRemote timeouts = remote.implicitlyWait(duration, unit);
+      if (timeouts == null) {
+        return null;
+      }
+      return new Timeouts(timeouts, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -44,7 +48,11 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
     try {
-      return new Timeouts(remote.pageLoadTimeout(duration, unit), logs);
+      TimeoutsRemote timeouts = remote.pageLoadTimeout(duration, unit);
+      if (timeouts == null) {
+        return null;
+      }
+      return new Timeouts(timeouts, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -54,7 +62,11 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts setScriptTimeout(long duration, TimeUnit unit) {
     try {
-      return new Timeouts(remote.setScriptTimeout(duration, unit), logs);
+      TimeoutsRemote timeouts = remote.setScriptTimeout(duration, unit);
+      if (timeouts == null) {
+        return null;
+      }
+      return new Timeouts(timeouts, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

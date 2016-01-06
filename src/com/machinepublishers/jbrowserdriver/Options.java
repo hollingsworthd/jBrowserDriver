@@ -96,7 +96,11 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public ImeHandler ime() {
     try {
-      return new com.machinepublishers.jbrowserdriver.ImeHandler(remote.ime(), logs);
+      ImeHandlerRemote imeHandler = remote.ime();
+      if (imeHandler == null) {
+        return null;
+      }
+      return new com.machinepublishers.jbrowserdriver.ImeHandler(imeHandler, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -111,7 +115,11 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Timeouts timeouts() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Timeouts(remote.timeouts(), logs);
+      TimeoutsRemote timeouts = remote.timeouts();
+      if (timeouts == null) {
+        return null;
+      }
+      return new com.machinepublishers.jbrowserdriver.Timeouts(timeouts, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -121,7 +129,11 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Window window() {
     try {
-      return new com.machinepublishers.jbrowserdriver.Window(remote.window(), logs);
+      WindowRemote window = remote.window();
+      if (window == null) {
+        return null;
+      }
+      return new com.machinepublishers.jbrowserdriver.Window(window, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
