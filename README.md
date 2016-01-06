@@ -18,9 +18,9 @@ Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
 
-You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L209) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L201) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
+You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L208) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L164) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
-Also, you can run as many instances of JBrowserDriver as you want (it's thread safe), and the browser sessions will be fully isolated from each other when run in headless mode, which is the default (when it's run with the GUI shown, some of the memory between instances is shared out of necessity).
+Each instance of JBrowserDriver is backed by a separate Java process, so any native browser crashes will not take down your app.
 
 Example:
 
@@ -60,6 +60,8 @@ Example:
 The following Java system properties can be set:
 * `jbd.traceconsole` Mirror trace-level log messages to standard out. Otherwise these logs are only available through the Selenium APIs. Defaults to `false`.
 * `jbd.warnconsole` Mirror warning-level log messages to standard error. Otherwise these logs are only available through the Selenium APIs. Defaults to `true`.
+* `jbd.ports` Ports and port ranges available to run browser processes over RMI. Separate values with comma. Defaults to `10000-10007` (a max of 8 processes).
+* `jbd.testport` Port over which a loopback-only webserver is run when testing is performed. Defaults to `9000`.
 * `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.
 * `jbd.browsergui` Show the browser GUI window. Defaults to `false`.
 * `jbd.quickrender` Exclude web page images and binary data from rendering. These resources are still requested and can optionally be saved to disk (see the Settings options). Some versions of Java are inefficient (memory-wise) in rendering images. Defaults to `true`.
