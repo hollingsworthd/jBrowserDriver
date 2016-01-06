@@ -91,7 +91,6 @@ public class Settings implements Serializable {
       System.setProperty("glass.platform", "Monocle");
       System.setProperty("monocle.platform", "Headless");
       System.setProperty("prism.order", "sw");
-      System.setProperty("prism.useFontConfig", "false");
       System.setProperty("prism.subpixeltext", "false");
       System.setProperty("prism.allowhidpi", "false");
       try {
