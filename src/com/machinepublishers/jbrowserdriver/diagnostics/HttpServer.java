@@ -32,6 +32,28 @@ import java.util.concurrent.atomic.AtomicReference;
 public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
   private static final AtomicReference<Closeable> listener = new AtomicReference<Closeable>();
+  private static final byte[] body;
+  private static final byte[] content;
+  static {
+    final char[] chars = new char[8192];
+    StringBuilder builder = new StringBuilder(chars.length);
+    byte[] bodyTmp = null;
+    byte[] contentTmp = null;
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(HttpServer.class.getResourceAsStream(
+            "/com/machinepublishers/jbrowserdriver/diagnostics/test.htm")))) {
+      for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
+      bodyTmp = builder.toString().getBytes("utf-8");
+      contentTmp = new String("HTTP/1.1 200 OK\n"
+          + "Content-Length: " + bodyTmp.length + "\n"
+          + "Content-Type: text/html; charset=utf-8\n"
+          + "Connection: close\n\n").getBytes("utf-8");
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+    body = bodyTmp;
+    content = contentTmp;
+  }
 
   public static void launch(int port) {
     if (loop.compareAndSet(false, true)) {
@@ -46,14 +68,6 @@ public class HttpServer {
                   BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 for (String line; (line = reader.readLine()) != null;) {
                   if (line.startsWith("GET")) {
-                    byte[] body = new String("<html><head></head><body>"
-                        + "<div id=\"divtext\" name=\"divs\">test1</div>"
-                        + "<div id=\"divtext\" name=\"divs\">test2</div>"
-                        + "</body></html>").getBytes("utf-8");
-                    byte[] content = new String("HTTP/1.1 200 OK\n"
-                        + "Content-Length: " + body.length + "\n"
-                        + "Content-Type: text/html; charset=utf-8\n"
-                        + "Connection: close\n\n").getBytes("utf-8");
                     output.write(content, 0, content.length);
                     output.write(body, 0, body.length);
                   }
