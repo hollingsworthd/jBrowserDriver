@@ -120,7 +120,7 @@ class HttpListener implements LoadListenerClient {
           try {
             original = statusMonitor.originalFromRedirect(url);
           } catch (Throwable t) {
-            t.printStackTrace();
+            LogsServer.instance().exception(t);
           }
           resources.remove(frame + url);
           if (original != null) {
@@ -180,7 +180,7 @@ class HttpListener implements LoadListenerClient {
         }
       }
     } catch (Throwable t) {
-      t.printStackTrace();
+      LogsServer.instance().exception(t);
     }
     trace("Page", frame, state, url, contentType, progress, errorCode);
   }
