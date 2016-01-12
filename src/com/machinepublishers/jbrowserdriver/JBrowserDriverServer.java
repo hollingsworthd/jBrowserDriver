@@ -71,7 +71,6 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * RMI entry point.
    */
   public static void main(String[] args) {
-    Policy.init();
     final int port = Integer.parseInt(args[0]);
     Registry registryTmp = null;
     try {
