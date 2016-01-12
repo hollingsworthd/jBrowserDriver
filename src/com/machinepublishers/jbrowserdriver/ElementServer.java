@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -44,7 +41,6 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Locatable;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
@@ -301,7 +297,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   @Override
   public String getTagName() {
-    return getAttribute("tagName");
+    return getAttribute("tagName").toLowerCase();
   }
 
   @Override
@@ -363,19 +359,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   @Override
   public ElementServer findElementByXPath(final String expr) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<ElementServer>() {
-          @Override
-          public ElementServer perform() {
-            try {
-              return new ElementServer((JSObject) XPathFactory.newInstance().newXPath().evaluate(
-                  expr, node, XPathConstants.NODE), context);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-            }
-            return null;
-          }
-        });
+    List list = findElementsByXPath(expr);
+    return list.isEmpty() ? null : (ElementServer) list.get(0);
   }
 
   @Override
@@ -385,13 +370,15 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public List<ElementServer> perform() {
             try {
-              List<ElementServer> elements = new ArrayList<ElementServer>();
-              NodeList list = (NodeList) XPathFactory.newInstance().newXPath().evaluate(
-                  expr, node, XPathConstants.NODESET);
-              for (int i = 0; i < list.getLength(); i++) {
-                elements.add(new ElementServer((JSObject) list.item(i), context));
-              }
-              return elements;
+              return (List<ElementServer>) executeScript(""
+                  + "var iter = "
+                  + "  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);"
+                  + "var items = [];"
+                  + "var cur = null;"
+                  + "while(cur = iter.iterateNext()){"
+                  + "  items.push(cur);"
+                  + "}"
+                  + "return items;", expr, node);
             } catch (Throwable t) {
               LogsServer.instance().exception(t);
             }
