@@ -31,28 +31,51 @@ import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 
 public class Test {
   private static final int TEST_PORT = Integer.parseInt(System.getProperty("jbd.testport", "9000"));
+  private List<String> errors = new ArrayList<String>();
+  private int curTest = 0;
+
+  public static void main(String[] args) {
+    List<String> errors = new Test().errors;
+    System.out.println("Tests Passed: " + errors.isEmpty());
+    for (String error : errors) {
+      System.out.println("    " + error);
+    }
+  }
 
   public static List<String> run() {
-    List<String> errors = new ArrayList<String>();
+    return new Test().errors;
+  }
+
+  private Test() {
     JBrowserDriver driver = null;
     try {
       HttpServer.launch(TEST_PORT);
       driver = new JBrowserDriver();
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
-      if (driver.getStatusCode() != 200) {
-        errors.add("Status code not 200");
-      }
-      if (!driver.findElement(By.id("divtext")).getAttribute("innerText").equals("test1")) {
-        errors.add("Finding div by ID and getting innerText failed");
-      }
-      if (driver.findElements(By.name("divs")).size() != 2) {
-        errors.add("Could not find elements by name");
-      }
-      if (!driver.findElements(By.name("divs")).get(1).getAttribute("innerText").equals("test2")) {
-        errors.add("Finding div by name and getting innerText failed");
-      }
+      test(driver.getStatusCode() == 200);
+      test(driver.findElement(By.id("divtext1")).getAttribute("innerText").equals("test1"));
+      test(driver.findElements(By.name("divs")).size() == 2);
+      test(driver.findElements(By.name("divs")).get(1).getAttribute("innerText").equals("test2"));
+      test(driver.findElementByClassName("divclass").getAttribute("id").equals("divtext1"));
+      test(driver.findElementsByClassName("divclass").get(1).getAttribute("id").equals("divtext2"));
+      test(driver.findElementByCssSelector("#divtext1").getAttribute("id").equals("divtext1"));
+      test(driver.findElementsByCssSelector("html > *").get(1).getAttribute("id").equals("testbody"));
+      test(driver.findElementById("divtext1").getTagName().equals("div"));
+      test(driver.findElementsById("divtext1").get(0).getTagName().equals("div"));
+      test(driver.findElementByLinkText("anchor").getAttribute("id").equals("anchor1"));
+      test(driver.findElementsByLinkText("anchor").get(1).getAttribute("id").equals("anchor2"));
+      test(driver.findElementByName("divs").getAttribute("id").equals("divtext1"));
+      test(driver.findElementsByName("divs").get(1).getAttribute("id").equals("divtext2"));
+      test(driver.findElementByPartialLinkText("anch").getAttribute("id").equals("anchor1"));
+      test(driver.findElementsByPartialLinkText("anch").get(1).getAttribute("id").equals("anchor2"));
+      test(driver.findElementByTagName("div").getAttribute("id").equals("divtext1"));
+      test(driver.findElementsByTagName("div").get(1).getAttribute("id").equals("divtext2"));
+      test(driver.findElementByXPath("//*[@id='divtext1']").getAttribute("id").equals("divtext1"));
+      test(driver.findElementByTagName("body").findElement(By.xpath("//*[@id='divtext1']")).getAttribute("id").equals("divtext1"));
+      test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
+      test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
     } catch (Throwable t) {
-      errors.add(toString(t));
+      errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
       try {
         driver.quit();
@@ -61,20 +84,18 @@ public class Test {
         errors.add(toString(t));
       }
     }
-    return errors;
+  }
+
+  private void test(boolean bool) {
+    ++curTest;
+    if (!bool) {
+      errors.add("Test #" + curTest + " -- " + toString(new Throwable()));
+    }
   }
 
   private static String toString(Throwable t) {
     StringWriter writer = new StringWriter();
     t.printStackTrace(new PrintWriter(writer));
     return "Runtime exception: " + writer.toString().replaceAll("\n", " ");
-  }
-
-  public static void main(String[] args) {
-    List<String> errors = JBrowserDriver.test();
-    System.out.println("Tests Passed: " + errors.isEmpty());
-    for (String error : errors) {
-      System.out.println("    " + error);
-    }
   }
 }
