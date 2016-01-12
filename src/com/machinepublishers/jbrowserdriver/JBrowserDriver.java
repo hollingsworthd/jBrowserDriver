@@ -128,8 +128,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       argsTmp.add("-classpath");
       String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
       List<String> childJars = new ArrayList<String>();
-      File tmpDir = Files.createTempDirectory("jbd").toFile();
-      tmpDir.deleteOnExit();
+      File tmpDir = null;
       Random rand = new SecureRandom();
       for (int i = 0; i < items.length; i++) {
         if (items[i].endsWith(".jar")) {
@@ -139,6 +138,10 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
               ZipEntry entry = entries.nextElement();
               if (entry.getName().endsWith(".jar")) {
                 try (InputStream in = jar.getInputStream(entry)) {
+                  if (tmpDir == null) {
+                    tmpDir = Files.createTempDirectory("jbd").toFile();
+                    tmpDir.deleteOnExit();
+                  }
                   File childJar = new File(tmpDir,
                       Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
                   Files.copy(in, childJar.toPath());
