@@ -140,7 +140,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
               if (entry.getName().endsWith(".jar")) {
                 try (InputStream in = jar.getInputStream(entry)) {
                   File childJar = new File(tmpDir,
-                      Long.toString(Math.abs(rand.nextLong()), Character.MAX_RADIX) + ".jar");
+                      Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
                   Files.copy(in, childJar.toPath());
                   childJars.add(childJar.getCanonicalPath());
                   childJar.deleteOnExit();
