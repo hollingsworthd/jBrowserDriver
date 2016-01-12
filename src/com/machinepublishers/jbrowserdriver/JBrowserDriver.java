@@ -20,15 +20,22 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -117,8 +124,39 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         String key = keyObj.toString();
         argsTmp.add("-D" + key + "=" + System.getProperty(key));
       }
+
       argsTmp.add("-classpath");
-      argsTmp.add(System.getProperty("java.class.path"));
+      String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
+      List<String> childJars = new ArrayList<String>();
+      File tmpDir = Files.createTempDirectory("jbd").toFile();
+      tmpDir.deleteOnExit();
+      Random rand = new SecureRandom();
+      for (int i = 0; i < items.length; i++) {
+        if (items[i].endsWith(".jar")) {
+          try (ZipFile jar = new ZipFile(items[i])) {
+            Enumeration<? extends ZipEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+              ZipEntry entry = entries.nextElement();
+              if (entry.getName().endsWith(".jar")) {
+                try (InputStream in = jar.getInputStream(entry)) {
+                  File childJar = new File(tmpDir,
+                      Long.toString(Math.abs(rand.nextLong()), Character.MAX_RADIX) + ".jar");
+                  Files.copy(in, childJar.toPath());
+                  childJars.add(childJar.getCanonicalPath());
+                  childJar.deleteOnExit();
+                }
+              }
+            }
+          }
+        }
+      }
+      StringBuilder classpath = new StringBuilder();
+      classpath.append(System.getProperty("java.class.path"));
+      for (String childJar : childJars) {
+        classpath.append(File.pathSeparator);
+        classpath.append(childJar);
+      }
+      argsTmp.add(classpath.toString());
       argsTmp.add(JBrowserDriverServer.class.getName());
     } catch (Throwable t) {
       t.printStackTrace();
