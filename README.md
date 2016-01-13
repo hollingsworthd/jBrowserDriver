@@ -8,7 +8,7 @@ Sales and support: ops@machinepublishers.com
 - - -
 
 #### Download
-Get ZIP archives of the [latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest).
+Get a ZIP archive of the [latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest).
 
 Or install via Maven:
 
