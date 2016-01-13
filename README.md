@@ -18,7 +18,7 @@ Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-
 #### Usage
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
 
-You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L208) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L164) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
+You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/Settings.java#L209) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/master/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L205) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
 Each instance of JBrowserDriver is backed by a separate Java process, so any native browser crashes will not take down your app.
 
