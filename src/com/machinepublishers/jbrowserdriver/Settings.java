@@ -93,6 +93,7 @@ public class Settings implements Serializable {
       System.setProperty("prism.order", "sw");
       System.setProperty("prism.subpixeltext", "false");
       System.setProperty("prism.allowhidpi", "false");
+      System.setProperty("prism.text", "t2k");
       try {
         Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
         Field field = platformFactory.getDeclaredField("instance");
