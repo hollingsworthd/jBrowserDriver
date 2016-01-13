@@ -10,6 +10,14 @@ Sales and support: ops@machinepublishers.com
 #### Download
 [Latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest)
 
+Or install via Maven:
+
+    <dependency>
+      <groupId>com.machinepublishers</groupId>
+      <artifactId>jbrowserdriver</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+
 #### Pre-requisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
 
