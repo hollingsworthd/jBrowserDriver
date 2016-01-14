@@ -15,7 +15,7 @@ Or install via Maven:
     <dependency>
       <groupId>com.machinepublishers</groupId>
       <artifactId>jbrowserdriver</artifactId>
-      <version>0.7.0</version>
+      <version>[0.7.1, 2.0)</version>
     </dependency>
 
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.7.0|jar).
@@ -26,6 +26,8 @@ There's no need to install any web browser and this works fine on a server (head
 Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-jdk openjfx`
 
 #### Usage
+For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
+
 Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
 
 You can optionally pass a [Settings](https://github.com/MachinePublishers/jBrowserDriver/blob/035a1e2e5d1a2fda9c61fa976b5d4249e68b1b4e/src/com/machinepublishers/jbrowserdriver/Settings.java#L209) object to the [JBrowserDriver](https://github.com/MachinePublishers/jBrowserDriver/blob/2572b21baece2873089c5c6bab34a21f19dd4f01/src/com/machinepublishers/jbrowserdriver/JBrowserDriver.java#L205) constructor to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
