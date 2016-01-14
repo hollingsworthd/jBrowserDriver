@@ -5,7 +5,7 @@
   <artifactId>jbrowserdriver</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A programmable, embedded web browser driver compatible with the Selenium WebDriver spec -- fast, headless, WebKit-based, 100% pure Java, and no browser dependencies</description>
-  <version>0.7.1-SNAPSHOT</version>
+  <version>0.7.1</version>
   <packaging>jar</packaging>
   <url>https://github.com/machinepublishers/jbrowserdriver</url>
   <scm>
@@ -129,6 +129,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.9.1</version>
+        <configuration>
+          <includeDependencySources>true</includeDependencySources>
+          <excludePackageNames>
+            org.apache.*,org.slf4j.*,com.sun.*,org.zeroturnaround.*,com.thoughtworks.*,com.machinepublishers.jbrowserdriver.App,com.machinepublishers.jbrowserdriver.diagnostics,org.openqa.selenium.html5,org.openqa.selenium.interactions.touch,org.openqa.selenium.interactions.internal,org.openqa.selenium.logging.profiler,org.openqa.selenium.remote,org.openqa.selenium.security,
+          </excludePackageNames>
+          <bottom>
+            <![CDATA[Copyright &copy; 2014-2016 Machine Publishers, LLC.<br>Project homepage: <a target="_blank" href="https://github.com/machinepublishers/jbrowserdriver">https://github.com/machinepublishers/jbrowserdriver<a>]]>
+          </bottom>
+        </configuration>
         <executions>
           <execution>
             <id>attach-javadocs</id>
