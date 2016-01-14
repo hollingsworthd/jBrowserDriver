@@ -1,3 +1,5 @@
 com.machinepublishers.jbrowserdriver
-com.machinepublishers.jbrowserdriver.diagnostics
-com.sun.glass.ui.monocle
+org.openqa.selenium
+org.openqa.selenium.interactions
+org.openqa.selenium.internal
+org.openqa.selenium.logging
