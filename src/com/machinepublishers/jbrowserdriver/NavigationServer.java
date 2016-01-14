@@ -44,6 +44,9 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
     this.statusCode = statusCode;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void back() {
     Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
@@ -59,6 +62,9 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void forward() {
     Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
@@ -74,6 +80,9 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void refresh() {
     Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
@@ -85,11 +94,17 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void to(String url) {
     driver.get().get(url);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void to(URL url) {
     driver.get().get(url.toExternalForm());

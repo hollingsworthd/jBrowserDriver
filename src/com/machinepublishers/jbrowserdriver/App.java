@@ -83,6 +83,9 @@ public class App extends Application {
     this.headless = headless;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void init() throws Exception {
     List<String> params = getParameters().getRaw();
@@ -95,6 +98,9 @@ public class App extends Application {
     start(null);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void start(Stage stage) throws Exception {
     if (headless) {

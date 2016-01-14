@@ -55,6 +55,9 @@ class AjaxListener implements Runnable {
     this.newStatusCode = null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void run() {
     int size = 0;

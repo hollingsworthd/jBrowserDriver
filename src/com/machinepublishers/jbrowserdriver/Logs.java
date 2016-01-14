@@ -74,6 +74,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogEntries get(String s) {
     try {
@@ -84,6 +87,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<String> getAvailableLogTypes() {
     try {

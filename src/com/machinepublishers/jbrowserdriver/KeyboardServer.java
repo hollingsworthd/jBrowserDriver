@@ -36,6 +36,9 @@ class KeyboardServer extends UnicastRemoteObject implements KeyboardRemote,
     this.robot = robot;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void pressKey(CharSequence key) {
     synchronized (lock) {
@@ -46,6 +49,9 @@ class KeyboardServer extends UnicastRemoteObject implements KeyboardRemote,
     robot.get().keysPress(key);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void releaseKey(CharSequence key) {
     synchronized (lock) {
@@ -56,11 +62,17 @@ class KeyboardServer extends UnicastRemoteObject implements KeyboardRemote,
     robot.get().keysRelease(key);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void sendKeys(CharSequence... keys) {
     robot.get().keysType(keys);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isShiftPressed() {
     synchronized (lock) {

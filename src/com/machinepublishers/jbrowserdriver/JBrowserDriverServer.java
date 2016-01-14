@@ -136,6 +136,9 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     reset(SettingsManager.settings());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getPageSource() {
     init();
@@ -154,6 +157,9 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     return page.getInnerText(page.getMainFrame());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getCurrentUrl() {
     init();
@@ -178,6 +184,9 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     return context.get().statusCode.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getTitle() {
     init();
@@ -188,6 +197,9 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void get(final String url) {
     init();
@@ -217,179 +229,269 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElement(By by) {
     init();
     return ElementServer.create(context.get()).findElement(by);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElements(By by) {
     init();
     return ElementServer.create(context.get()).findElements(by);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementById(String id) {
     init();
     return ElementServer.create(context.get()).findElementById(id);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsById(String id) {
     init();
     return ElementServer.create(context.get()).findElementsById(id);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByXPath(expr);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByXPath(expr);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByLinkText(final String text) {
     init();
     return ElementServer.create(context.get()).findElementByLinkText(text);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementByPartialLinkText(text);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByLinkText(text);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByPartialLinkText(text);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementByClassName(cssClass);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementsByClassName(cssClass);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementByName(name);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementsByName(name);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByCssSelector(expr);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByCssSelector(expr);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementByTagName(tagName);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementsByTagName(tagName);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeAsyncScript(script, args);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeScript(script, args);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public KeyboardServer getKeyboard() {
     init();
     return context.get().keyboard.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public MouseServer getMouse() {
     init();
     return context.get().mouse.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CapabilitiesServer getCapabilities() {
     init();
     return context.get().capabilities.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void close() {
     init();
     context.get().removeItem();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getWindowHandle() {
     init();
     return context.get().itemId();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<String> getWindowHandles() {
     init();
     return context.get().itemIds();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public OptionsServer manage() {
     init();
     return context.get().options.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogsServer logs() {
     return LogsServer.instance();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public NavigationServer navigate() {
     init();
     return context.get().item().navigation.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void quit() {
     final ContextItem item = context.get().item();
@@ -410,22 +512,34 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     StatusMonitor.instance().clearStatusMonitor();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TargetLocatorServer switchTo() {
     init();
     return context.get().targetLocator.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void kill() {
     quit();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     return outputType.convertFromPngBytes(getScreenshot());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public byte[] getScreenshot() throws WebDriverException {
     init();

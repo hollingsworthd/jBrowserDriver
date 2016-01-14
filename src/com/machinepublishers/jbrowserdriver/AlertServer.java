@@ -31,32 +31,50 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
     super();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void accept() {
     // TODO Auto-generated method stub
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void authenticateUsing(Credentials arg0) {
     // TODO Auto-generated method stub
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void dismiss() {
     // TODO Auto-generated method stub
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getText() {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void sendKeys(String arg0) {
     // TODO Auto-generated method stub
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setCredentials(Credentials credentials) {
     // TODO Auto-generated method stub

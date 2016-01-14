@@ -32,6 +32,9 @@ class PopupHandler implements Callback<PopupFeatures, WebEngine> {
     this.context = context;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebEngine call(PopupFeatures features) {
     return context.spawn(driver).engine.get();

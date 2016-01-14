@@ -40,6 +40,9 @@ class Entry implements Serializable {
     return new LogEntry(level, timestamp, message);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String toString() {
     return toLogEntry().toString();

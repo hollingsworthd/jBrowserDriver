@@ -31,22 +31,37 @@ class ImeHandlerServer extends UnicastRemoteObject implements ImeHandlerRemote,
     super();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void activateEngine(String name) {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deactivate() {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getActiveEngine() {
     return "default";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getAvailableEngines() {
     return Arrays.asList(new String[] { "default" });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isActivated() {
     return true;

@@ -24,6 +24,9 @@ import javafx.util.Callback;
 
 class PromptHandler implements Callback<PromptData, String> {
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String call(PromptData arg0) {
     return null;

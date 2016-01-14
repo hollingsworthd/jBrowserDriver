@@ -145,6 +145,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void click() {
     Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -188,6 +191,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void submit() {
     Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -205,6 +211,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void sendKeys(final CharSequence... keys) {
     Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -219,6 +228,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     context.robot.get().keysType(keys);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void clear() {
     Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -234,12 +246,18 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getAttribute(final String attrName) {
     String val = (String) (node.getMember(attrName));
     return val == null || val.equals("undefined") ? "" : val;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getCssValue(final String name) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -265,6 +283,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     return rgbStr == null ? "" : rgbStr;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point getLocation() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -279,6 +300,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Dimension getSize() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -295,16 +319,25 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getTagName() {
     return getAttribute("tagName").toLowerCase();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getText() {
     return getAttribute("textContent");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isDisplayed() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -321,6 +354,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isEnabled() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -333,6 +369,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isSelected() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -347,22 +386,34 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElement(By by) {
     return (ElementServer) by.findElement(this);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElements(By by) {
     return by.findElements(this);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByXPath(final String expr) {
     List list = findElementsByXPath(expr);
     return list.isEmpty() ? null : (ElementServer) list.get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByXPath(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -387,12 +438,18 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByTagName(String tagName) {
     List<ElementServer> list = byTagName(tagName);
     return list == null || list.isEmpty() ? null : list.get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByTagName(String tagName) {
     return byTagName(tagName);
@@ -412,6 +469,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByCssSelector(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -432,6 +492,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByCssSelector(final String expr) {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -458,33 +521,51 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByName(String name) {
     return findElementByCssSelector("*[name='" + name + "']");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByName(String name) {
     return findElementsByCssSelector("*[name='" + name + "']");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByLinkText(final String text) {
     List<ElementServer> list = byLinkText(text, false, false);
     return list.isEmpty() ? null : list.get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByPartialLinkText(String text) {
     List<ElementServer> list = byLinkText(text, false, true);
     return list.isEmpty() ? null : list.get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByLinkText(String text) {
     return byLinkText(text, true, false);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByPartialLinkText(String text) {
     return byLinkText(text, true, true);
@@ -512,12 +593,18 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementByClassName(String cssClass) {
     List<ElementServer> list = byCssClass(cssClass);
     return list.isEmpty() ? null : list.get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsByClassName(String cssClass) {
     return byCssClass(cssClass);
@@ -527,16 +614,25 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     return (List<ElementServer>) executeScript("return this.getElementsByClassName('" + cssClass + "');");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ElementServer findElementById(final String id) {
     return findElementByCssSelector("*[id='" + id + "']");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List findElementsById(String id) {
     return findElementsByCssSelector("*[id='" + id + "']");
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeAsyncScript(final String script, final Object... args) {
     lock();
@@ -576,6 +672,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeScript(final String script, final Object... args) {
     lock();
@@ -672,6 +771,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     return obj.toString();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CoordinatesServer getCoordinates() {
     try {
@@ -722,12 +824,18 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <X> X getScreenshotAs(OutputType<X> arg0) throws WebDriverException {
     LogsServer.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public byte[] getScreenshot() throws WebDriverException {
     LogsServer.instance().warn("Screenshot not supported on jBrowserDriver WebElements");

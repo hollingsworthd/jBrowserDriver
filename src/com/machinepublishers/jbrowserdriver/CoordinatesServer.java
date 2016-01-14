@@ -32,21 +32,33 @@ class CoordinatesServer extends UnicastRemoteObject
     this.coordinates = coordinates;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point onScreen() {
     return new Point(coordinates.onScreen());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point inViewPort() {
     return new Point(coordinates.inViewPort());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point onPage() {
     return new Point(coordinates.onPage());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getAuxiliary() {
     return coordinates.getAuxiliary();

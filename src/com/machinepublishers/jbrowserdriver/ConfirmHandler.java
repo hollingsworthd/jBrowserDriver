@@ -30,6 +30,9 @@ class ConfirmHandler implements Callback<String, Boolean> {
     //this.browserContext = browserContext;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Boolean call(String arg0) {
     return null;

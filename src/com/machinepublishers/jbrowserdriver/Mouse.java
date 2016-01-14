@@ -32,6 +32,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void click(Coordinates coords) {
     try {
@@ -41,6 +44,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void contextClick(Coordinates coords) {
     try {
@@ -50,6 +56,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void doubleClick(Coordinates coords) {
     try {
@@ -59,6 +68,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseDown(Coordinates coords) {
     try {
@@ -68,6 +80,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(Coordinates coords) {
     try {
@@ -77,6 +92,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
     try {
@@ -87,6 +105,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseUp(Coordinates coords) {
     try {

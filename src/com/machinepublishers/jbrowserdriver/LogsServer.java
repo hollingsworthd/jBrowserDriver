@@ -111,6 +111,9 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Entries getRemote(String s) {
     synchronized (entries) {
@@ -120,6 +123,9 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogEntries get(String s) {
     synchronized (entries) {
@@ -131,6 +137,9 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<String> getAvailableLogTypes() {
     return new HashSet<String>(Arrays.asList(new String[] { "all" }));

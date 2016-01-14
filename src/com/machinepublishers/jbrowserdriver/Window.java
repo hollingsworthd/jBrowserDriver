@@ -30,6 +30,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point getPosition() {
     try {
@@ -40,6 +43,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Dimension getSize() {
     try {
@@ -50,6 +56,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void maximize() {
     try {
@@ -59,6 +68,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setPosition(final org.openqa.selenium.Point point) {
     try {
@@ -68,6 +80,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setSize(final org.openqa.selenium.Dimension dimension) {
     try {

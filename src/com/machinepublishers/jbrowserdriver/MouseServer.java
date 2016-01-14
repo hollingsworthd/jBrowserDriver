@@ -35,6 +35,9 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     this.robot = robot;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void click(Coordinates coords) {
     if (coords != null) {
@@ -43,12 +46,18 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     robot.get().mouseClick(MouseButton.LEFT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void click(CoordinatesRemote coords) {
     click(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void contextClick(Coordinates coords) {
     if (coords != null) {
@@ -57,12 +66,18 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     robot.get().mouseClick(MouseButton.RIGHT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void contextClick(CoordinatesRemote coords) {
     contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void doubleClick(Coordinates coords) {
     if (coords != null) {
@@ -72,12 +87,18 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     robot.get().mouseClick(MouseButton.LEFT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void doubleClick(CoordinatesRemote coords) {
     doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseDown(Coordinates coords) {
     if (coords != null) {
@@ -86,23 +107,35 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     robot.get().mousePress(MouseButton.LEFT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseDown(CoordinatesRemote coords) {
     mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(Coordinates coords) {
     robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(CoordinatesRemote coords) {
     mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
     if (coords == null || coords.onPage() == null) {
@@ -112,12 +145,18 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) {
     mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
         new Logs(LogsServer.instance())), xOffset, yOffset);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseUp(Coordinates coords) {
     if (coords != null) {
@@ -126,6 +165,9 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
     robot.get().mouseRelease(MouseButton.LEFT);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void mouseUp(CoordinatesRemote coords) {
     mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords,

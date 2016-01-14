@@ -32,49 +32,76 @@ class TimeoutsServer extends UnicastRemoteObject implements TimeoutsRemote,
 
   TimeoutsServer() throws RemoteException {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TimeoutsServer implicitlyWait(long duration, TimeUnit unit) {
     implicit.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TimeoutsServer pageLoadTimeout(long duration, TimeUnit unit) {
     load.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TimeoutsServer setScriptTimeout(long duration, TimeUnit unit) {
     script.set(unit.convert(duration, TimeUnit.MILLISECONDS));
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getImplicitlyWaitMS() {
     return implicit.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getPageLoadTimeoutMS() {
     return load.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getScriptTimeoutMS() {
     return script.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public AtomicLong getImplicitlyWaitObjMS() {
     return implicit;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public AtomicLong getPageLoadTimeoutObjMS() {
     return load;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public AtomicLong getScriptTimeoutObjMS() {
     return script;

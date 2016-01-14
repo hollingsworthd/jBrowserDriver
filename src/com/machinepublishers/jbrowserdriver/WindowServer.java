@@ -41,6 +41,9 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     this.statusCode = statusCode;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void close() {
     Util.exec(Pause.SHORT, statusCode, new Sync<Object>() {
@@ -52,6 +55,9 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point getPosition() {
     return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Point>() {
@@ -63,6 +69,9 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Dimension getSize() {
     return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Dimension>() {
@@ -74,6 +83,9 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void maximize() {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -85,11 +97,17 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setPosition(final Point point) {
     setPosition(point);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setPosition(final org.openqa.selenium.Point point) {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -103,11 +121,17 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setSize(final Dimension dimension) {
     setSize(dimension);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setSize(final org.openqa.selenium.Dimension dimension) {
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {

@@ -31,6 +31,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void pressKey(CharSequence key) {
     try {
@@ -40,6 +43,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void releaseKey(CharSequence key) {
     try {
@@ -49,6 +55,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void sendKeys(CharSequence... keys) {
     try {

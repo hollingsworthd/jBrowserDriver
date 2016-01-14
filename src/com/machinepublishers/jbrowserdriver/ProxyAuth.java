@@ -55,6 +55,9 @@ class ProxyAuth implements CredentialsProvider {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Credentials getCredentials(AuthScope authScope) {
     synchronized (lock) {
@@ -62,11 +65,17 @@ class ProxyAuth implements CredentialsProvider {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setCredentials(AuthScope authscope, Credentials credentials) {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void clear() {
     throw new UnsupportedOperationException();

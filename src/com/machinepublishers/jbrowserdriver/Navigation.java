@@ -31,6 +31,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void back() {
     try {
@@ -40,6 +43,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void forward() {
     try {
@@ -49,6 +55,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void refresh() {
     try {
@@ -58,6 +67,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void to(String url) {
     try {
@@ -67,6 +79,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void to(URL url) {
     try {

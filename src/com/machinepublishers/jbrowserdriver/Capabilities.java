@@ -34,6 +34,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, ?> asMap() {
     try {
@@ -44,6 +47,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getBrowserName() {
     try {
@@ -54,6 +60,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getCapability(String name) {
     try {
@@ -64,6 +73,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Platform getPlatform() {
     try {
@@ -74,6 +86,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getVersion() {
     try {
@@ -84,6 +99,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean is(String name) {
     try {
@@ -94,6 +112,9 @@ class Capabilities implements org.openqa.selenium.Capabilities {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isJavascriptEnabled() {
     try {

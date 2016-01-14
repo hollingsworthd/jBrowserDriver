@@ -30,6 +30,9 @@ class TitleListener implements ChangeListener<String> {
     this.stage = stage;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void changed(ObservableValue<? extends String> observable,
       String oldValue, final String newValue) {

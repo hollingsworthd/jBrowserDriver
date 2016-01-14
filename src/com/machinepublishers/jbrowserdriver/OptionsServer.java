@@ -69,16 +69,25 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
         in.isSecure());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addCookie(Cookie cookie) {
     cookieStore.addCookie(convert(cookie));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteAllCookies() {
     cookieStore.clear();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookie(Cookie cookie) {
     List<org.apache.http.cookie.Cookie> cookies = cookieStore.getCookies();
@@ -103,6 +112,9 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     cookieStore.addCookie(tmp);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookieNamed(String name) {
     for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
@@ -112,6 +124,9 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Cookie getCookieNamed(String name) {
     for (org.apache.http.cookie.Cookie cur : cookieStore.getCookies()) {
@@ -122,6 +137,9 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Cookie> getCookies() {
     Set<Cookie> cookies = new LinkedHashSet<Cookie>();
@@ -131,21 +149,33 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     return cookies;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ImeHandlerServer ime() {
     return imeHandler;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public LogsServer logs() {
     return com.machinepublishers.jbrowserdriver.LogsServer.instance();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TimeoutsServer timeouts() {
     return timeouts.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WindowServer window() {
     return window.get();

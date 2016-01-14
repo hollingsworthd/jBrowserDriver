@@ -33,36 +33,57 @@ class CapabilitiesServer extends UnicastRemoteObject implements CapabilitiesRemo
     super();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, ?> asMap() {
     return new HashMap<String, String>();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getBrowserName() {
     return "jBrowserDriver (WebKit-based) by Machine Publishers, LLC";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getCapability(String name) {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Platform getPlatform() {
     return Platform.ANY;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getVersion() {
     return Runtime.class.getPackage().getImplementationVersion();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean is(String name) {
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isJavascriptEnabled() {
     return true;

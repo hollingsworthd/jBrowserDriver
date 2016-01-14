@@ -36,48 +36,72 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement activeElement() {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Alert alert() {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver defaultContent() {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver frame(int arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver frame(String arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver frame(WebElement arg0) {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver parentFrame() {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver window(String windowHandle) {
     try {

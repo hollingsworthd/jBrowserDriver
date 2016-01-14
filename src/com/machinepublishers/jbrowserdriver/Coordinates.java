@@ -30,6 +30,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point onScreen() {
     try {
@@ -40,6 +43,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point inViewPort() {
     try {
@@ -50,6 +56,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point onPage() {
     try {
@@ -60,6 +69,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getAuxiliary() {
     try {

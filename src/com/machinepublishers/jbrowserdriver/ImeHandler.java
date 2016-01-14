@@ -31,6 +31,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void activateEngine(String name) {
     try {
@@ -40,6 +43,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deactivate() {
     try {
@@ -49,6 +55,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getActiveEngine() {
     try {
@@ -59,6 +68,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getAvailableEngines() {
     try {
@@ -69,6 +81,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isActivated() {
     try {

@@ -88,6 +88,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     return obj;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void click() {
     try {
@@ -97,6 +100,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void submit() {
     try {
@@ -106,6 +112,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void sendKeys(final CharSequence... keys) {
     try {
@@ -115,6 +124,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void clear() {
     try {
@@ -124,6 +136,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getAttribute(final String attrName) {
     try {
@@ -134,6 +149,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getCssValue(final String name) {
     try {
@@ -144,6 +162,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Point getLocation() {
     try {
@@ -154,6 +175,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Dimension getSize() {
     try {
@@ -164,6 +188,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getTagName() {
     try {
@@ -174,6 +201,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getText() {
     try {
@@ -184,6 +214,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isDisplayed() {
     try {
@@ -194,6 +227,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isEnabled() {
     try {
@@ -204,6 +240,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isSelected() {
     try {
@@ -214,6 +253,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElement(By by) {
     try {
@@ -224,6 +266,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElements(By by) {
     try {
@@ -234,6 +279,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByXPath(final String expr) {
     try {
@@ -244,6 +292,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByXPath(final String expr) {
     try {
@@ -254,6 +305,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
@@ -264,6 +318,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
@@ -274,6 +331,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByCssSelector(final String expr) {
     try {
@@ -284,6 +344,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByCssSelector(final String expr) {
     try {
@@ -294,6 +357,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByName(String name) {
     try {
@@ -304,6 +370,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByName(String name) {
     try {
@@ -314,6 +383,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
@@ -324,6 +396,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
@@ -334,6 +409,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     try {
@@ -344,6 +422,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
@@ -354,6 +435,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
@@ -364,6 +448,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
@@ -374,6 +461,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementById(final String id) {
     try {
@@ -384,6 +474,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsById(String id) {
     try {
@@ -394,6 +487,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeAsyncScript(final String script, final Object... args) {
     try {
@@ -404,6 +500,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeScript(final String script, final Object... args) {
     try {
@@ -414,6 +513,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Coordinates getCoordinates() {
     try {
@@ -428,6 +530,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <X> X getScreenshotAs(OutputType<X> outputType) throws WebDriverException {
     try {

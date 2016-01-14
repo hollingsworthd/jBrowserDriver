@@ -346,6 +346,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   // Connection Functionality
   ///////////////////////////////////////////////////////////
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void connect() throws IOException {
     try {
@@ -432,11 +435,17 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void disconnect() {
     //Do nothing. Let this lib and the underlying lib handle this.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void close() throws IOException {
     if (closed.compareAndSet(false, true)) {
@@ -463,6 +472,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     manager.closeIdleConnections(30, TimeUnit.SECONDS);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public InputStream getInputStream() throws IOException {
     exec();
@@ -498,6 +510,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return new ByteArrayInputStream(new byte[0]);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public InputStream getErrorStream() {
     try {
@@ -510,12 +525,18 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getResponseMessage() throws IOException {
     exec();
     return response.get() == null || response.get().getStatusLine() == null ? null : response.get().getStatusLine().getReasonPhrase();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int getResponseCode() throws IOException {
     exec();
@@ -526,11 +547,17 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return response.get() == null || response.get().getStatusLine() == null ? 499 : response.get().getStatusLine().getStatusCode();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getContent() throws IOException {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getContent(Class[] classes) throws IOException {
     throw new UnsupportedOperationException();
@@ -540,6 +567,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   // Response Attributes
   ///////////////////////////////////////////////////////////
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getContentEncoding() {
     if (contentEncodingRemoved.get()) {
@@ -553,6 +583,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     contentEncodingRemoved.set(true);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int getContentLength() {
     if (contentLength.get() != -1) {
@@ -561,6 +594,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return entity.get() == null || skip.get() ? 0 : (int) entity.get().getContentLength();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getContentLengthLong() {
     if (contentLength.get() != -1) {
@@ -574,32 +610,50 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     response.get().setHeader("content-length", Long.toString(contentLength));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Permission getPermission() throws IOException {
     //TODO
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getContentType() {
     return entity.get() == null || entity.get().getContentType() == null || skip.get() ? null : entity.get().getContentType().getValue();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getDate() {
     return getHeaderFieldLong("date", 0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getExpiration() {
     return getHeaderFieldLong("expires", 0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getLastModified() {
     return getHeaderFieldLong("last-modified", 0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, List<String>> getHeaderFields() {
     Map<String, List<String>> map = new HashMap<String, List<String>>();
@@ -616,6 +670,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return map;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getHeaderField(String name) {
     if (response.get() != null) {
@@ -627,6 +684,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int getHeaderFieldInt(String name, int defaultValue) {
     if (response.get() != null) {
@@ -638,6 +698,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return defaultValue;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getHeaderFieldLong(String name, long defaultValue) {
     if (response.get() != null) {
@@ -649,11 +712,17 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     return defaultValue;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getHeaderFieldDate(String name, long defaultValue) {
     return getHeaderFieldLong(name, defaultValue);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getHeaderFieldKey(int n) {
     return response.get() == null
@@ -662,6 +731,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         || response.get().getAllHeaders()[n] == null ? null : response.get().getAllHeaders()[n].getName();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getHeaderField(int n) {
     return response.get() == null
@@ -674,73 +746,115 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   // Request Attributes
   ///////////////////////////////////////////////////////////
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public OutputStream getOutputStream() throws IOException {
     return skip.get() ? new ByteArrayOutputStream() : reqData.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public URL getURL() {
     return url;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getRequestMethod() {
     return method.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setRequestMethod(String method) throws ProtocolException {
     this.method.set(method.toUpperCase());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int getConnectTimeout() {
     return connectTimeout.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setConnectTimeout(int timeout) {
     this.connectTimeout.set(timeout);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int getReadTimeout() {
     return readTimeout.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setReadTimeout(int timeout) {
     this.readTimeout.set(timeout);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean usingProxy() {
     ProxyConfig proxy = SettingsManager.settings().proxy();
     return proxy != null && !proxy.directConnection();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public long getIfModifiedSince() {
     return getRequestProperty("if-modified-since") == null ? 0 : Long.parseLong(getRequestProperty("if-modified-since"));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setIfModifiedSince(long ifmodifiedsince) {
     setRequestProperty("if-modified-since", Long.toString(ifmodifiedsince));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, List<String>> getRequestProperties() {
     return reqHeaders;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getRequestProperty(String key) {
     key = key.toLowerCase();
     return reqHeaders.get(key) == null || reqHeaders.get(key).isEmpty() ? null : reqHeaders.get(key).get(0);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setRequestProperty(String key, String value) {
     key = key.toLowerCase();
@@ -754,6 +868,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addRequestProperty(String key, String value) {
     key = key.toLowerCase();
@@ -767,82 +884,127 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setFixedLengthStreamingMode(int contentLength) {
     //Do nothing. Let HTTP lib handle this.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setFixedLengthStreamingMode(long contentLength) {
     //Do nothing. Let HTTP lib handle this.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setChunkedStreamingMode(int chunklen) {
     //Do nothing. Let HTTP lib handle this.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getAllowUserInteraction() {
     //Always allow interaction
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setAllowUserInteraction(boolean allowuserinteraction) {
     //Always allow interaction
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getDoInput() {
     //Always allow input
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setDoInput(boolean doinput) {
     //Always allow input
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getDoOutput() {
     //Always allow output
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setDoOutput(boolean dooutput) {
     //Always allow output
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getInstanceFollowRedirects() {
     //Never follow redirects. JavaFX handles them.
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setInstanceFollowRedirects(boolean followRedirects) {
     //Never follow redirects. JavaFX handles them.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getDefaultUseCaches() {
     //Don't cache. TODO let caching be configurable.
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setDefaultUseCaches(boolean defaultusecaches) {
     //Don't cache. TODO let caching be configurable.
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean getUseCaches() {
     //Don't cache. TODO let caching be configurable.
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void setUseCaches(boolean usecaches) {
     //Don't cache. TODO let caching be configurable.

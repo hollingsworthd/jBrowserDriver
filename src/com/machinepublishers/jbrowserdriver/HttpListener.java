@@ -104,6 +104,9 @@ class HttpListener implements LoadListenerClient {
         .append(", frame: ").append(frame).append("}").toString());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
@@ -150,6 +153,9 @@ class HttpListener implements LoadListenerClient {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void dispatchLoadEvent(long frame, final int state, String url,
       String contentType, double progress, int errorCode) {

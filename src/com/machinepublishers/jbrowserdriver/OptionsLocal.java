@@ -36,11 +36,17 @@ class OptionsLocal implements org.openqa.selenium.WebDriver.Options {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addCookie(Cookie cookie) {
     cookies.add(cookie);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookieNamed(String name) {
     Cookie toRemove = null;
@@ -55,22 +61,34 @@ class OptionsLocal implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookie(Cookie cookie) {
     cookies.remove(cookie);
 
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteAllCookies() {
     cookies.clear();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Cookie> getCookies() {
     return new LinkedHashSet<Cookie>(cookies);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Cookie getCookieNamed(String name) {
     for (Cookie cookie : cookies) {
@@ -81,21 +99,33 @@ class OptionsLocal implements org.openqa.selenium.WebDriver.Options {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public org.openqa.selenium.WebDriver.Timeouts timeouts() {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ImeHandler ime() {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Window window() {
     return null;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Logs logs() {
     return logs;

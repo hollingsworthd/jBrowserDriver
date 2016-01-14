@@ -334,6 +334,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getPageSource() {
     try {
@@ -344,6 +347,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getCurrentUrl() {
     try {
@@ -363,6 +369,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getTitle() {
     try {
@@ -373,6 +382,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void get(final String url) {
     try {
@@ -382,6 +394,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElement(By by) {
     try {
@@ -392,6 +407,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElements(By by) {
     try {
@@ -402,6 +420,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementById(String id) {
     try {
@@ -412,6 +433,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsById(String id) {
     try {
@@ -422,6 +446,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByXPath(String expr) {
     try {
@@ -432,6 +459,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     try {
@@ -442,6 +472,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
@@ -452,6 +485,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
@@ -462,6 +498,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     try {
@@ -472,6 +511,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
@@ -482,6 +524,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
@@ -492,6 +537,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
@@ -502,6 +550,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByName(String name) {
     try {
@@ -512,6 +563,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByName(String name) {
     try {
@@ -522,6 +576,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByCssSelector(String expr) {
     try {
@@ -532,6 +589,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     try {
@@ -542,6 +602,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
@@ -552,6 +615,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
@@ -562,6 +628,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     try {
@@ -572,6 +641,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object executeScript(String script, Object... args) {
     try {
@@ -582,6 +654,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public org.openqa.selenium.interactions.Keyboard getKeyboard() {
     try {
@@ -596,6 +671,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public org.openqa.selenium.interactions.Mouse getMouse() {
     try {
@@ -610,6 +688,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public org.openqa.selenium.Capabilities getCapabilities() {
     try {
@@ -624,6 +705,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void close() {
     try {
@@ -637,6 +721,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getWindowHandle() {
     try {
@@ -647,6 +734,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<String> getWindowHandles() {
     try {
@@ -657,6 +747,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Options manage() {
     if (options.get() == null) {
@@ -675,6 +768,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Navigation navigate() {
     try {
@@ -728,6 +824,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void quit() {
     saveData();
@@ -739,6 +838,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     endProcess();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TargetLocator switchTo() {
     try {
@@ -753,6 +855,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void kill() {
     saveData();
@@ -764,6 +869,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     endProcess();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     try {

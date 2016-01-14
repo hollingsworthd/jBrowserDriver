@@ -31,6 +31,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
     try {
@@ -45,6 +48,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
     try {
@@ -59,6 +65,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Timeouts setScriptTimeout(long duration, TimeUnit unit) {
     try {

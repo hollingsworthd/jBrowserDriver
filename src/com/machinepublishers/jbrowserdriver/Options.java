@@ -37,6 +37,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     this.logs = logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addCookie(Cookie cookie) {
     try {
@@ -46,6 +49,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteAllCookies() {
     try {
@@ -55,6 +61,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookie(Cookie cookie) {
     try {
@@ -64,6 +73,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteCookieNamed(String name) {
     try {
@@ -73,6 +85,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Cookie getCookieNamed(String name) {
     try {
@@ -83,6 +98,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Cookie> getCookies() {
     try {
@@ -93,6 +111,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ImeHandler ime() {
     try {
@@ -107,11 +128,17 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Logs logs() {
     return logs;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Timeouts timeouts() {
     try {
@@ -126,6 +153,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Window window() {
     try {
