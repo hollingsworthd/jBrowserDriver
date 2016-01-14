@@ -11,13 +11,13 @@ Sales and support: ops@machinepublishers.com
 Get a ZIP archive of the [latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest).
 
 Or install via Maven:
-
-    <dependency>
-      <groupId>com.machinepublishers</groupId>
-      <artifactId>jbrowserdriver</artifactId>
-      <version>[0.7.1, 2.0)</version>
-    </dependency>
-
+```xml
+<dependency>
+  <groupId>com.machinepublishers</groupId>
+  <artifactId>jbrowserdriver</artifactId>
+  <version>[0.7.1, 2.0)</version>
+</dependency>
+```
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.7.1|jar).
 
 #### Pre-requisites
@@ -35,38 +35,38 @@ You can optionally create a [Settings](http://machinepublishers.github.io/jBrows
 Each instance of JBrowserDriver is backed by a separate Java process, so any native browser crashes will not take down your app.
 
 Example:
-
-    import org.openqa.selenium.WebDriver;
-    import com.machinepublishers.jbrowserdriver.Timezone;
-    import com.machinepublishers.jbrowserdriver.JBrowserDriver;
-    import com.machinepublishers.jbrowserdriver.Settings;
+```java
+import org.openqa.selenium.WebDriver;
+import com.machinepublishers.jbrowserdriver.Timezone;
+import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+import com.machinepublishers.jbrowserdriver.Settings;
     
-    public class Example {
-      public static void main(String[] args) {
+public class Example {
+  public static void main(String[] args) {
 
-        // You can optionally pass a Settings object here,
-        // constructed using Settings.Builder
-        JBrowserDriver driver = new JBrowserDriver(Settings.builder().
-          timezone(Timezone.AMERICA_NEWYORK).build());
+    // You can optionally pass a Settings object here,
+    // constructed using Settings.Builder
+    JBrowserDriver driver = new JBrowserDriver(Settings.builder().
+      timezone(Timezone.AMERICA_NEWYORK).build());
 
-        // This will block for the page load and any
-        // associated AJAX requests
-        driver.get("http://example.com");
+    // This will block for the page load and any
+    // associated AJAX requests
+    driver.get("http://example.com");
 
-        // You can get status code unlike other Selenium drivers.
-        // It blocks for AJAX requests and page loads after clicks 
-        // and keyboard events.
-        System.out.println(driver.getStatusCode());
+    // You can get status code unlike other Selenium drivers.
+    // It blocks for AJAX requests and page loads after clicks 
+    // and keyboard events.
+    System.out.println(driver.getStatusCode());
 
-        // Returns the page source in its current state, including
-        // any DOM updates that occurred after page load
-        System.out.println(driver.getPageSource());
-        
-        // Close the browser. Allows this thread to terminate.
-        driver.quit();
-      }
-    }
+    // Returns the page source in its current state, including
+    // any DOM updates that occurred after page load
+    System.out.println(driver.getPageSource());
     
+    // Close the browser. Allows this thread to terminate.
+    driver.quit();
+  }
+}
+```
 
 #### Global Properties
 The following Java system properties can be set:
