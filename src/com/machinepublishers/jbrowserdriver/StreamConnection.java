@@ -69,7 +69,6 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -86,18 +85,21 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.cookie.LaxCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
+
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
@@ -117,10 +119,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
     manager.setMaxTotal(CONNECTIONS);
   }
-
+  private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
+      .register("custom", new LaxCookieSpecProvider())
+      .build();
   private static final CloseableHttpClient client = HttpClients.custom()
       .disableRedirectHandling()
       .disableAutomaticRetries()
+      .setDefaultCookieSpecRegistry(cookieProvider)
       .setConnectionManager(manager)
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
@@ -130,6 +135,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
       .disableRedirectHandling()
       .disableAutomaticRetries()
+      .setDefaultCookieSpecRegistry(cookieProvider)
       .setConnectionManager(manager)
       .setMaxConnPerRoute(ROUTE_CONNECTIONS)
       .setMaxConnTotal(CONNECTIONS)
@@ -358,7 +364,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           skip.set(true);
         } else if (SettingsManager.settings() != null) {
           config.get()
-              .setCookieSpec(CookieSpecs.STANDARD)
+              .setCookieSpec("custom")
               .setConnectTimeout(connectTimeout.get())
               .setConnectionRequestTimeout(readTimeout.get());
           URI uri = null;

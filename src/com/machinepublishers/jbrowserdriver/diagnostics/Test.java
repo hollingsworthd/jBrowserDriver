@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 
@@ -52,7 +53,9 @@ public class Test {
       HttpServer.launch(TEST_PORT);
       driver = new JBrowserDriver();
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
+
       test(driver.getStatusCode() == 200);
+
       test(driver.findElement(By.id("divtext1")).getAttribute("innerText").equals("test1"));
       test(driver.findElements(By.name("divs")).size() == 2);
       test(driver.findElements(By.name("divs")).get(1).getAttribute("innerText").equals("test2"));
@@ -74,6 +77,9 @@ public class Test {
       test(driver.findElementByTagName("body").findElement(By.xpath("//*[@id='divtext1']")).getAttribute("id").equals("divtext1"));
       test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
+
+      driver.manage().addCookie(new Cookie("testname", "testvalue"));
+      test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
