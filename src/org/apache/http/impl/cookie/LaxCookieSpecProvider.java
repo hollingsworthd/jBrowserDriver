@@ -39,10 +39,11 @@ package org.apache.http.impl.cookie;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
+import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.protocol.HttpContext;
 
-public class LaxCookieSpecProvider extends DefaultCookieSpecProvider {
+public class LaxCookieSpecProvider implements CookieSpecProvider {
   private static final String[] DATE_PATTERNS = new String[] {
       "EEE, MMM dd HH:mm:ss yyyy zzz", "EEE MMM dd HH:mm:ss yyyy zzz", "EEE, MMM dd HH:mm:ss yyyy",
       "EEE MMM dd HH:mm:ss yyyy", "MMM dd HH:mm:ss yyyy zzz", "MMM dd HH:mm:ss yyyy",
@@ -69,10 +70,6 @@ public class LaxCookieSpecProvider extends DefaultCookieSpecProvider {
       "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd",
   };
   private volatile CookieSpec cookieSpec;
-
-  public LaxCookieSpecProvider() {
-    super(CompatibilityLevel.DEFAULT, null, DATE_PATTERNS, false);
-  }
 
   @Override
   public CookieSpec create(final HttpContext context) {
