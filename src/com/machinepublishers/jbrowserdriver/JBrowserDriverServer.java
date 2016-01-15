@@ -19,8 +19,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -29,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.imageio.ImageIO;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.HasCapabilities;
@@ -56,9 +52,6 @@ import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
 
 import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.image.WritableImage;
 
 class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
@@ -543,27 +536,6 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public byte[] getScreenshot() throws WebDriverException {
     init();
-    BufferedImage image = Util.exec(Pause.NONE, context.get().statusCode, new Sync<BufferedImage>() {
-      public BufferedImage perform() {
-        return SwingFXUtils.fromFXImage(
-            context.get().item().view.get().snapshot(
-                new SnapshotParameters(),
-                new WritableImage(
-                    (int) Math.rint((Double) context.get().item().view.get().getWidth()),
-                    (int) Math.rint((Double) context.get().item().view.get().getHeight()))),
-            null);
-      }
-    });
-    ByteArrayOutputStream out = null;
-    try {
-      out = new ByteArrayOutputStream();
-      ImageIO.write(image, "png", out);
-      return out.toByteArray();
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    } finally {
-      Util.close(out);
-    }
+    return context.get().robot.get().screenshot();
   }
 }

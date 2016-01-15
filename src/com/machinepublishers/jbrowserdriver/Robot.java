@@ -19,7 +19,17 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.awt.Transparency;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -28,12 +38,19 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import javax.imageio.ImageIO;
+
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.glass.ui.Application;
+import com.sun.glass.ui.Pixels;
 
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
@@ -544,4 +561,69 @@ class Robot {
     }
   }
 
+  byte[] screenshot() {
+    lock();
+    try {
+      return Util.exec(Pause.NONE, statusCode, new Sync<byte[]>() {
+        @Override
+        public byte[] perform() {
+          BufferedImage image = null;
+          if (Settings.headless()) {
+            try {
+              final Stage stage = context.item().stage.get();
+              final Scene scene = stage.getScene();
+              final Pixels pixels = robot.get().getScreenCapture(
+                  (int) Math.rint(stage.getX() + scene.getX()),
+                  (int) Math.rint(stage.getY() + scene.getY()),
+                  (int) Math.rint(scene.getWidth()),
+                  (int) Math.rint(scene.getHeight()),
+                  false);
+              final ByteBuffer pixelBuffer = pixels.asByteBuffer();
+              final byte[] bytes = new byte[pixelBuffer.remaining()];
+              pixelBuffer.get(bytes);
+              final int bytesPerComponent = pixels.getBytesPerComponent();
+              final int width = pixels.getWidth();
+              final int height = pixels.getHeight();
+              final DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
+              final WritableRaster raster = Raster.createInterleavedRaster(buffer, width, height,
+                  bytesPerComponent * width, bytesPerComponent, new int[] { 2, 1, 0 }, null);
+              final ColorModel colorModel = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
+                  false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+              image = new BufferedImage(colorModel, raster, true, null);
+            } catch (Throwable t) {
+              LogsServer.instance().exception(t);
+            }
+          }
+          if (image == null) {
+            try {
+              image = SwingFXUtils.fromFXImage(
+                  context.item().view.get().snapshot(
+                      new SnapshotParameters(),
+                      new WritableImage(
+                          (int) Math.rint((Double) context.item().view.get().getWidth()),
+                          (int) Math.rint((Double) context.item().view.get().getHeight()))),
+                  null);
+            } catch (Throwable t) {
+              LogsServer.instance().exception(t);
+            }
+          }
+          if (image != null) {
+            ByteArrayOutputStream out = null;
+            try {
+              out = new ByteArrayOutputStream();
+              ImageIO.write(image, "png", out);
+              return out.toByteArray();
+            } catch (Throwable t) {
+              LogsServer.instance().exception(t);
+            } finally {
+              Util.close(out);
+            }
+          }
+          return null;
+        }
+      });
+    } finally {
+      unlock();
+    }
+  }
 }
