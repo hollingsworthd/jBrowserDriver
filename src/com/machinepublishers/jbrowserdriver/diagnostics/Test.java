@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.OutputType;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 
@@ -80,6 +81,8 @@ public class Test {
 
       driver.manage().addCookie(new Cookie("testname", "testvalue"));
       test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
+
+      test(driver.getScreenshotAs(OutputType.BYTES).length > 0);
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
