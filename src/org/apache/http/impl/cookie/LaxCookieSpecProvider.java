@@ -46,29 +46,23 @@ import org.apache.http.protocol.HttpContext;
 
 public class LaxCookieSpecProvider implements CookieSpecProvider {
   private static final String[] DATE_PATTERNS = new String[] {
-      "EEE, MMM dd HH:mm:ss yyyy zzz", "EEE MMM dd HH:mm:ss yyyy zzz", "EEE, MMM dd HH:mm:ss yyyy",
-      "EEE MMM dd HH:mm:ss yyyy", "MMM dd HH:mm:ss yyyy zzz", "MMM dd HH:mm:ss yyyy",
+      "EEE, MMM dd HH:mm:ss yy zzz", "EEE MMM dd HH:mm:ss yy zzz", "EEE, MMM dd HH:mm:ss yy",
+      "EEE MMM dd HH:mm:ss yy", "MMM dd HH:mm:ss yy zzz", "MMM dd HH:mm:ss yy",
 
-      "EEE, dd MMM yyyy HH:mm:ss zzz", "EEE dd MMM yyyy HH:mm:ss zzz", "EEE, dd MMM yyyy HH:mm:ss",
-      "EEE dd MMM yyyy HH:mm:ss", "dd MMM yyyy HH:mm:ss zzz", "dd MMM yyyy HH:mm:ss",
+      "EEE, dd MMM yy HH:mm:ss zzz", "EEE dd MMM yy HH:mm:ss zzz", "EEE, dd MMM yy HH:mm:ss",
+      "EEE dd MMM yy HH:mm:ss", "dd MMM yy HH:mm:ss zzz", "dd MMM yy HH:mm:ss",
 
       "EEE, MMM-dd-yy HH:mm:ss zzz", "EEE MMM-dd-yy HH:mm:ss zzz", "EEE, MMM-dd-yy HH:mm:ss",
       "EEE MMM-dd-yy HH:mm:ss", "MMM-dd-yy HH:mm:ss zzz", "MMM-dd-yy HH:mm:ss",
 
-      "EEE, MMM-dd-yyyy HH:mm:ss zzz", "EEE MMM-dd-yyyy HH:mm:ss zzz", "EEE, MMM-dd-yyyy HH:mm:ss",
-      "EEE MMM-dd-yyyy HH:mm:ss", "MMM-dd-yyyy HH:mm:ss zzz", "MMM-dd-yyyy HH:mm:ss",
-
-      "EEE MMM dd yyyy HH:mm:ss zzz", "EEE MMM dd yyyy HH:mm:ss",
-      "MMM dd yyyy HH:mm:ss zzz", "MMM dd yyyy HH:mm:ss",
+      "EEE MMM dd yy HH:mm:ss zzz", "EEE MMM dd yy HH:mm:ss",
+      "MMM dd yy HH:mm:ss zzz", "MMM dd yy HH:mm:ss",
 
       "EEE, dd-MMM-yy HH:mm:ss zzz", "EEE dd-MMM-yy HH:mm:ss zzz", "EEE, dd-MMM-yy HH:mm:ss",
       "EEE dd-MMM-yy HH:mm:ss", "dd-MMM-yy HH:mm:ss zzz", "dd-MMM-yy HH:mm:ss",
 
-      "EEE, dd-MMM-yyyy HH:mm:ss zzz", "EEE dd-MMM-yyyy HH:mm:ss zzz", "EEE, dd-MMM-yyyy HH:mm:ss",
-      "EEE dd-MMM-yyyy HH:mm:ss", "dd-MMM-yyyy HH:mm:ss zzz", "dd-MMM-yyyy HH:mm:ss",
-
-      "yyyy-MM-dd'T'HH:mm:ssz", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ssz",
-      "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd",
+      "yy-MM-dd'T'HH:mm:ssz", "yy-MM-dd'T'HH:mm:ss", "yy-MM-dd HH:mm:ssz",
+      "yy-MM-dd HH:mm:ss", "yy-MM-dd",
   };
   private volatile CookieSpec cookieSpec;
 
