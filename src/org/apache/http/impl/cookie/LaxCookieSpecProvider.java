@@ -36,6 +36,7 @@
  */
 package org.apache.http.impl.cookie;
 
+import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
@@ -51,20 +52,20 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
       "EEE, dd MMM yyyy HH:mm:ss zzz", "EEE dd MMM yyyy HH:mm:ss zzz", "EEE, dd MMM yyyy HH:mm:ss",
       "EEE dd MMM yyyy HH:mm:ss", "dd MMM yyyy HH:mm:ss zzz", "dd MMM yyyy HH:mm:ss",
 
-      "EEE, MMM-dd-yyyy HH:mm:ss zzz", "EEE MMM-dd-yyyy HH:mm:ss zzz", "EEE, MMM-dd-yyyy HH:mm:ss",
-      "EEE MMM-dd-yyyy HH:mm:ss", "MMM-dd-yyyy HH:mm:ss zzz", "MMM-dd-yyyy HH:mm:ss",
-
       "EEE, MMM-dd-yy HH:mm:ss zzz", "EEE MMM-dd-yy HH:mm:ss zzz", "EEE, MMM-dd-yy HH:mm:ss",
       "EEE MMM-dd-yy HH:mm:ss", "MMM-dd-yy HH:mm:ss zzz", "MMM-dd-yy HH:mm:ss",
+
+      "EEE, MMM-dd-yyyy HH:mm:ss zzz", "EEE MMM-dd-yyyy HH:mm:ss zzz", "EEE, MMM-dd-yyyy HH:mm:ss",
+      "EEE MMM-dd-yyyy HH:mm:ss", "MMM-dd-yyyy HH:mm:ss zzz", "MMM-dd-yyyy HH:mm:ss",
 
       "EEE MMM dd yyyy HH:mm:ss zzz", "EEE MMM dd yyyy HH:mm:ss",
       "MMM dd yyyy HH:mm:ss zzz", "MMM dd yyyy HH:mm:ss",
 
-      "EEE, dd-MMM-yyyy HH:mm:ss zzz", "EEE dd-MMM-yyyy HH:mm:ss zzz", "EEE, dd-MMM-yyyy HH:mm:ss",
-      "EEE dd-MMM-yyyy HH:mm:ss", "dd-MMM-yyyy HH:mm:ss zzz", "dd-MMM-yyyy HH:mm:ss",
-
       "EEE, dd-MMM-yy HH:mm:ss zzz", "EEE dd-MMM-yy HH:mm:ss zzz", "EEE, dd-MMM-yy HH:mm:ss",
       "EEE dd-MMM-yy HH:mm:ss", "dd-MMM-yy HH:mm:ss zzz", "dd-MMM-yy HH:mm:ss",
+
+      "EEE, dd-MMM-yyyy HH:mm:ss zzz", "EEE dd-MMM-yyyy HH:mm:ss zzz", "EEE, dd-MMM-yyyy HH:mm:ss",
+      "EEE dd-MMM-yyyy HH:mm:ss", "dd-MMM-yyyy HH:mm:ss zzz", "dd-MMM-yyyy HH:mm:ss",
 
       "yyyy-MM-dd'T'HH:mm:ssz", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ssz",
       "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd",
@@ -86,13 +87,13 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
                   // No validation
                 }
               },
-              PublicSuffixDomainFilter.decorate(
+              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new RFC2965DomainAttributeHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
                       // No validation
                     }
-                  }, null),
+                  }, PublicSuffixMatcherLoader.getDefault())),
               new RFC2965PortAttributeHandler(),
               new BasicMaxAgeHandler(),
               new BasicSecureHandler(),
@@ -109,24 +110,24 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
                   // No validation
                 }
               },
-              PublicSuffixDomainFilter.decorate(
+              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new RFC2109DomainHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
                       // No validation
                     }
-                  }, null),
+                  }, PublicSuffixMatcherLoader.getDefault())),
               new BasicMaxAgeHandler(),
               new BasicSecureHandler(),
               new BasicCommentHandler());
           final NetscapeDraftSpec netscapeDraft = new NetscapeDraftSpec(
-              PublicSuffixDomainFilter.decorate(
+              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new BasicDomainHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
                       // No validation 
                     }
-                  }, null),
+                  }, PublicSuffixMatcherLoader.getDefault())),
               new BasicPathHandler() {
                 @Override
                 public void validate(

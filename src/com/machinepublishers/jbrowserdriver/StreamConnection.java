@@ -346,6 +346,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         req.addHeader(name, valueSettings);
       }
     }
+    for (Map.Entry<String, List<String>> entry : reqHeaders.entrySet()) {
+      if (!names.contains(entry.getKey())) {
+        for (String val : entry.getValue()) {
+          req.addHeader(entry.getKey(), val);
+        }
+      }
+    }
   }
 
   ///////////////////////////////////////////////////////////
