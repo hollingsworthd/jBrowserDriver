@@ -28,19 +28,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
-import javafx.scene.web.WebView;
-
 class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
     org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriverServer> driver;
-  private final AtomicReference<WebView> view;
+  private final Context context;
   private final AtomicInteger statusCode;
 
   NavigationServer(final AtomicReference<JBrowserDriverServer> driver,
-      final AtomicReference<WebView> view, final AtomicInteger statusCode)
+      final Context context, final AtomicInteger statusCode)
           throws RemoteException {
     this.driver = driver;
-    this.view = view;
+    this.context = context;
     this.statusCode = statusCode;
   }
 
@@ -53,7 +51,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
         new Sync<Object>() {
           public Object perform() {
             try {
-              view.get().getEngine().getHistory().go(-1);
+              context.item().view.get().getEngine().getHistory().go(-1);
             } catch (IndexOutOfBoundsException e) {
               LogsServer.instance().exception(e);
             }
@@ -71,7 +69,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
         new Sync<Object>() {
           public Object perform() {
             try {
-              view.get().getEngine().getHistory().go(1);
+              context.item().view.get().getEngine().getHistory().go(1);
             } catch (IndexOutOfBoundsException e) {
               LogsServer.instance().exception(e);
             }
@@ -88,7 +86,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
     Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
-            view.get().getEngine().reload();
+            context.item().view.get().getEngine().reload();
             return null;
           }
         });

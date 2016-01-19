@@ -83,6 +83,16 @@ public class Test {
       test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
 
       test(driver.getScreenshotAs(OutputType.BYTES).length > 0);
+
+      driver.findElement(By.tagName("button")).click();
+      test(driver.switchTo().alert().getText().equals("test-alert"));
+      driver.switchTo().alert().dismiss();
+      test(driver.switchTo().alert().getText().equals("test-confirm"));
+      driver.switchTo().alert().dismiss();
+      test(driver.switchTo().alert().getText().equals("test-prompt"));
+      driver.switchTo().alert().sendKeys("test-input");
+      driver.switchTo().alert().accept();
+      test(driver.findElement(By.id("testspan")).getAttribute("innerHTML").equals("test-input"));
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {

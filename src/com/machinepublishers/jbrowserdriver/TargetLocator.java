@@ -21,7 +21,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
 
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -49,9 +48,13 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    * {@inheritDoc}
    */
   @Override
-  public Alert alert() {
-    // TODO Auto-generated method stub
-    return null;
+  public org.openqa.selenium.Alert alert() {
+    try {
+      return new Alert(remote.alert(), logs);
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**

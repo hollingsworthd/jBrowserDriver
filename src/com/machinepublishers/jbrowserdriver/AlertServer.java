@@ -27,8 +27,11 @@ import org.openqa.selenium.security.Credentials;
 class AlertServer extends UnicastRemoteObject implements AlertRemote,
     org.openqa.selenium.Alert {
 
-  protected AlertServer() throws RemoteException {
+  private final Context context;
+
+  protected AlertServer(Context context) throws RemoteException {
     super();
+    this.context = context;
   }
 
   /**
@@ -36,15 +39,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public void accept() {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
+    context.item().dialog.get().accept();
   }
 
   /**
@@ -52,7 +47,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public void dismiss() {
-    // TODO Auto-generated method stub
+    context.item().dialog.get().dismiss();
   }
 
   /**
@@ -60,16 +55,15 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public String getText() {
-    // TODO Auto-generated method stub
-    return null;
+    return context.item().dialog.get().text();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
+  public void sendKeys(String text) {
+    context.item().dialog.get().sendKeys(text);
   }
 
   /**
@@ -78,5 +72,13 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
   @Override
   public void setCredentials(Credentials credentials) {
     // TODO Auto-generated method stub
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void authenticateUsing(Credentials arg0) {
+    //TODO handle basic auth
   }
 }

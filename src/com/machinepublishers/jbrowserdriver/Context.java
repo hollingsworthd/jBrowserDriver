@@ -42,6 +42,8 @@ class Context {
   final AtomicReference<KeyboardServer> keyboard = new AtomicReference<KeyboardServer>();
   final AtomicReference<MouseServer> mouse = new AtomicReference<MouseServer>();
   final AtomicReference<CapabilitiesServer> capabilities = new AtomicReference<CapabilitiesServer>();
+  final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
+  final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicLong latestThread = new AtomicLong();
@@ -87,6 +89,9 @@ class Context {
           keyboard.set(new KeyboardServer(robot));
           mouse.set(new MouseServer(robot));
           capabilities.set(new CapabilitiesServer());
+          navigation.set(new NavigationServer(
+              new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
+          alert.set(new AlertServer(this));
         } catch (RemoteException e) {
           LogsServer.instance().exception(e);
         }

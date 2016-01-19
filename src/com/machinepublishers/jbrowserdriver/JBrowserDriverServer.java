@@ -479,7 +479,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public NavigationServer navigate() {
     init();
-    return context.get().item().navigation.get();
+    return context.get().navigation.get();
   }
 
   /**

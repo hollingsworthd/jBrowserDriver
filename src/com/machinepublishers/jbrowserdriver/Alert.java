@@ -19,26 +19,30 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.rmi.RemoteException;
+
 import org.openqa.selenium.security.Credentials;
 
 class Alert implements org.openqa.selenium.Alert {
 
-  Alert() {}
+  private final AlertRemote remote;
+  private final Logs logs;
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void accept() {
-    // TODO Auto-generated method stub
+  Alert(AlertRemote remote, Logs logs) {
+    this.remote = remote;
+    this.logs = logs;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void authenticateUsing(Credentials arg0) {
-    // TODO Auto-generated method stub
+  public void accept() {
+    try {
+      remote.accept();
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
   }
 
   /**
@@ -46,7 +50,11 @@ class Alert implements org.openqa.selenium.Alert {
    */
   @Override
   public void dismiss() {
-    // TODO Auto-generated method stub
+    try {
+      remote.dismiss();
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
   }
 
   /**
@@ -54,16 +62,32 @@ class Alert implements org.openqa.selenium.Alert {
    */
   @Override
   public String getText() {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      return remote.getText();
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void sendKeys(String arg0) {
-    // TODO Auto-generated method stub
+  public void sendKeys(String text) {
+    try {
+      remote.sendKeys(text);
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void authenticateUsing(Credentials credentials) {
+    //TODO handle basic auth
   }
 
   /**
@@ -71,6 +95,6 @@ class Alert implements org.openqa.selenium.Alert {
    */
   @Override
   public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
+    // TODO handle basic auth
   }
 }

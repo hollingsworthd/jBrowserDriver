@@ -49,8 +49,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public AlertServer alert() {
-    // TODO Auto-generated method stub
-    return null;
+    return context.alert.get();
   }
 
   /**

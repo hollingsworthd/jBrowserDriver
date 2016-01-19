@@ -36,11 +36,10 @@ class ContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
 
   final AtomicReference<WindowServer> window = new AtomicReference<WindowServer>();
-  final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
-  //TODO final AtomicReference<Alert> alert = new AtomicReference<Alert>();
   final AtomicReference<Stage> stage = new AtomicReference<Stage>();
   final AtomicReference<WebView> view = new AtomicReference<WebView>();
   final AtomicReference<WebEngine> engine = new AtomicReference<WebEngine>();
+  final AtomicReference<DialogHandler> dialog = new AtomicReference<DialogHandler>();
   final AtomicReference<HttpListener> httpListener = new AtomicReference<HttpListener>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
@@ -55,10 +54,9 @@ class ContextItem {
       engine.set(view.get().getEngine());
       try {
         window.set(new WindowServer(stage, context.statusCode));
-        navigation.set(new NavigationServer(
-            new AtomicReference<JBrowserDriverServer>(driver), view, context.statusCode));
         context.options.set(new OptionsServer(
             window, SettingsManager.settings().cookieStore(), context.timeouts));
+        dialog.set(new DialogHandler(this));
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
       }
@@ -69,10 +67,6 @@ class ContextItem {
               context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
           Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
           engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
-          //TODO engine.get().call("setConfirmHandler",
-          //TODO JavaFx.getNew(DynamicConfirmHandler.class, context.settingsId.get(), driver, context));
-          //TODO engine.get().call("setPromptHandler",
-          //TODO JavaFx.getNew(DynamicPromptHandler.class, context.settingsId.get(), driver, context));
           return null;
         }
       });
