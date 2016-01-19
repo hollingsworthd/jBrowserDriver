@@ -95,11 +95,11 @@ class DialogHandler {
 
     @Override
     public void handle(WebEvent<String> event) {
+      synchronized (text) {
+        text.set(event.getData());
+        text.notify();
+      }
       synchronized (lock) {
-        synchronized (text) {
-          text.set(event.getData());
-          text.notify();
-        }
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -113,9 +113,9 @@ class DialogHandler {
             lock.wait();
           } catch (InterruptedException e) {}
         }
-        synchronized (text) {
-          text.set(NO_TEXT_VALUE);
-        }
+      }
+      synchronized (text) {
+        text.set(NO_TEXT_VALUE);
       }
     }
   }
@@ -136,11 +136,11 @@ class DialogHandler {
     @Override
     public Boolean call(String param) {
       boolean accept = false;
+      synchronized (text) {
+        text.set(param);
+        text.notify();
+      }
       synchronized (lock) {
-        synchronized (text) {
-          text.set(param);
-          text.notify();
-        }
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -156,9 +156,9 @@ class DialogHandler {
             lock.wait();
           } catch (InterruptedException e) {}
         }
-        synchronized (text) {
-          text.set(NO_TEXT_VALUE);
-        }
+      }
+      synchronized (text) {
+        text.set(NO_TEXT_VALUE);
       }
       return accept;
     }
@@ -183,11 +183,11 @@ class DialogHandler {
     @Override
     public String call(PromptData param) {
       boolean accept = false;
+      synchronized (text) {
+        text.set(param.getMessage());
+        text.notify();
+      }
       synchronized (lock) {
-        synchronized (text) {
-          text.set(param.getMessage());
-          text.notify();
-        }
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -203,9 +203,9 @@ class DialogHandler {
             lock.wait();
           } catch (InterruptedException e) {}
         }
-        synchronized (text) {
-          text.set(NO_TEXT_VALUE);
-        }
+      }
+      synchronized (text) {
+        text.set(NO_TEXT_VALUE);
       }
       synchronized (inputs) {
         return accept && !inputs.isEmpty() ? inputs.removeFirst() : null;
