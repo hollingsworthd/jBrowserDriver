@@ -31,15 +31,20 @@ import javafx.util.Callback;
 class DialogHandler {
   private static final String NO_TEXT_VALUE = "jbrowserdriver-internal-no-text-value";
   private final Object lock = new Object();
+  private final AtomicReference<TimeoutsServer> timeouts;
   private final AtomicReference<String> text = new AtomicReference<String>(NO_TEXT_VALUE);
   private final LinkedList<String> inputs = new LinkedList<String>();
   private final AtomicInteger dismissQueue = new AtomicInteger();
   private final AtomicInteger acceptQueue = new AtomicInteger();
-  private final AlertHandler alertHandler = new AlertHandler(lock, text, dismissQueue, acceptQueue);
-  private final ConfirmHandler confirmHandler = new ConfirmHandler(lock, text, dismissQueue, acceptQueue);
-  private final PromptHandler promptHandler = new PromptHandler(lock, text, dismissQueue, acceptQueue, inputs);
+  private final AlertHandler alertHandler = new AlertHandler();
+  private final ConfirmHandler confirmHandler = new ConfirmHandler();
+  private final PromptHandler promptHandler = new PromptHandler();
 
-  DialogHandler(ContextItem item) {
+  DialogHandler(AtomicReference<TimeoutsServer> timeouts) {
+    this.timeouts = timeouts;
+  }
+
+  void listen(ContextItem item) {
     item.engine.get().setOnAlert(alertHandler);
     item.engine.get().setConfirmHandler(confirmHandler);
     item.engine.get().setPromptHandler(promptHandler);
@@ -47,6 +52,7 @@ class DialogHandler {
 
   void dismiss() {
     synchronized (lock) {
+      text.set(NO_TEXT_VALUE);
       dismissQueue.incrementAndGet();
       lock.notifyAll();
     }
@@ -54,16 +60,17 @@ class DialogHandler {
 
   void accept() {
     synchronized (lock) {
+      text.set(NO_TEXT_VALUE);
       acceptQueue.incrementAndGet();
       lock.notifyAll();
     }
   }
 
-  String text(long timeoutMS) {
-    synchronized (text) {
+  String text() {
+    synchronized (lock) {
       if (text.get() == NO_TEXT_VALUE) {
         try {
-          text.wait(timeoutMS);
+          lock.wait(timeouts.get().getScriptTimeoutMS());
         } catch (InterruptedException e) {}
       }
       return text.get() == NO_TEXT_VALUE ? null : text.get();
@@ -71,31 +78,17 @@ class DialogHandler {
   }
 
   void sendKeys(String text) {
-    synchronized (inputs) {
+    synchronized (lock) {
       inputs.add(text);
     }
   }
 
-  private static class AlertHandler implements EventHandler<WebEvent<String>> {
-    private final Object lock;
-    private final AtomicReference<String> text;
-    private final AtomicInteger dismissQueue;
-    private final AtomicInteger acceptQueue;
-
-    AlertHandler(Object lock, AtomicReference<String> text, AtomicInteger dismissQueue, AtomicInteger acceptQueue) {
-      this.lock = lock;
-      this.text = text;
-      this.dismissQueue = dismissQueue;
-      this.acceptQueue = acceptQueue;
-    }
-
+  private final class AlertHandler implements EventHandler<WebEvent<String>> {
     @Override
     public void handle(WebEvent<String> event) {
-      synchronized (text) {
-        text.set(event.getData());
-        text.notify();
-      }
       synchronized (lock) {
+        text.set(event.getData());
+        lock.notifyAll();
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -106,37 +99,21 @@ class DialogHandler {
               acceptQueue.decrementAndGet();
               break;
             }
-            lock.wait();
+            lock.wait(timeouts.get().getScriptTimeoutMS());
           } catch (InterruptedException e) {}
         }
-      }
-      synchronized (text) {
         text.set(NO_TEXT_VALUE);
       }
     }
   }
 
-  private static class ConfirmHandler implements Callback<String, Boolean> {
-    private final Object lock;
-    private final AtomicReference<String> text;
-    private final AtomicInteger dismissQueue;
-    private final AtomicInteger acceptQueue;
-
-    ConfirmHandler(Object lock, AtomicReference<String> text, AtomicInteger dismissQueue, AtomicInteger acceptQueue) {
-      this.lock = lock;
-      this.text = text;
-      this.dismissQueue = dismissQueue;
-      this.acceptQueue = acceptQueue;
-    }
-
+  private final class ConfirmHandler implements Callback<String, Boolean> {
     @Override
     public Boolean call(String param) {
       boolean accept = false;
-      synchronized (text) {
-        text.set(param);
-        text.notify();
-      }
       synchronized (lock) {
+        text.set(param);
+        lock.notifyAll();
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -149,41 +126,22 @@ class DialogHandler {
               accept = true;
               break;
             }
-            lock.wait();
+            lock.wait(timeouts.get().getScriptTimeoutMS());
           } catch (InterruptedException e) {}
         }
-      }
-      synchronized (text) {
         text.set(NO_TEXT_VALUE);
       }
       return accept;
     }
   }
 
-  private static class PromptHandler implements Callback<PromptData, String> {
-    private final Object lock;
-    private final AtomicReference<String> text;
-    private final AtomicInteger dismissQueue;
-    private final AtomicInteger acceptQueue;
-    private final LinkedList<String> inputs;
-
-    PromptHandler(Object lock, AtomicReference<String> text,
-        AtomicInteger dismissQueue, AtomicInteger acceptQueue, LinkedList<String> inputs) {
-      this.lock = lock;
-      this.text = text;
-      this.dismissQueue = dismissQueue;
-      this.acceptQueue = acceptQueue;
-      this.inputs = inputs;
-    }
-
+  private final class PromptHandler implements Callback<PromptData, String> {
     @Override
     public String call(PromptData param) {
       boolean accept = false;
-      synchronized (text) {
-        text.set(param.getMessage());
-        text.notify();
-      }
       synchronized (lock) {
+        text.set(param.getMessage());
+        lock.notifyAll();
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -196,14 +154,10 @@ class DialogHandler {
               accept = true;
               break;
             }
-            lock.wait();
+            lock.wait(timeouts.get().getScriptTimeoutMS());
           } catch (InterruptedException e) {}
         }
-      }
-      synchronized (text) {
         text.set(NO_TEXT_VALUE);
-      }
-      synchronized (inputs) {
         return accept && !inputs.isEmpty() ? inputs.removeFirst() : null;
       }
     }

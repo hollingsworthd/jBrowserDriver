@@ -39,7 +39,6 @@ class ContextItem {
   final AtomicReference<Stage> stage = new AtomicReference<Stage>();
   final AtomicReference<WebView> view = new AtomicReference<WebView>();
   final AtomicReference<WebEngine> engine = new AtomicReference<WebEngine>();
-  final AtomicReference<DialogHandler> dialog = new AtomicReference<DialogHandler>();
   final AtomicReference<HttpListener> httpListener = new AtomicReference<HttpListener>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
@@ -56,7 +55,7 @@ class ContextItem {
         window.set(new WindowServer(stage, context.statusCode));
         context.options.set(new OptionsServer(
             window, SettingsManager.settings().cookieStore(), context.timeouts));
-        dialog.set(new DialogHandler(this));
+        context.dialog.get().listen(this);
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
       }

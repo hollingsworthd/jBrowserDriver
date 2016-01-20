@@ -39,7 +39,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public void accept() {
-    context.item().dialog.get().accept();
+    context.dialog.get().accept();
   }
 
   /**
@@ -47,7 +47,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public void dismiss() {
-    context.item().dialog.get().dismiss();
+    context.dialog.get().dismiss();
   }
 
   /**
@@ -55,7 +55,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public String getText() {
-    return context.item().dialog.get().text(this.context.timeouts.get().getScriptTimeoutMS());
+    return context.dialog.get().text();
   }
 
   /**
@@ -63,7 +63,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public void sendKeys(String text) {
-    context.item().dialog.get().sendKeys(text);
+    context.dialog.get().sendKeys(text);
   }
 
   /**
