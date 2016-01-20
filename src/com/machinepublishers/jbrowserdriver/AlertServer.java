@@ -55,7 +55,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
    */
   @Override
   public String getText() {
-    return context.item().dialog.get().text();
+    return context.item().dialog.get().text(this.context.timeouts.get().getScriptTimeoutMS());
   }
 
   /**

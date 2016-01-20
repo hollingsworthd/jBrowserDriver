@@ -59,18 +59,14 @@ class DialogHandler {
     }
   }
 
-  String text() {
+  String text(long timeoutMS) {
     synchronized (text) {
-      while (true) {
-        if (text.get() == NO_TEXT_VALUE) {
-          try {
-            text.wait();
-          } catch (InterruptedException e) {}
-        } else {
-          break;
-        }
+      if (text.get() == NO_TEXT_VALUE) {
+        try {
+          text.wait(timeoutMS);
+        } catch (InterruptedException e) {}
       }
-      return text.get();
+      return text.get() == NO_TEXT_VALUE ? null : text.get();
     }
   }
 
