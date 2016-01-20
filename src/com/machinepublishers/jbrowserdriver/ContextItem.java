@@ -53,8 +53,6 @@ class ContextItem {
       engine.set(view.get().getEngine());
       try {
         window.set(new WindowServer(stage, context.statusCode));
-        context.options.set(new OptionsServer(
-            window, SettingsManager.settings().cookieStore(), context.timeouts));
         context.dialog.get().listen(this);
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);

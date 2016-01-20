@@ -33,16 +33,15 @@ import org.openqa.selenium.Cookie;
 
 class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
+  private final Context context;
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
-  private final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window;
   private final CookieStore cookieStore;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
 
-  OptionsServer(final AtomicReference<com.machinepublishers.jbrowserdriver.WindowServer> window,
-      final CookieStore cookieStore,
+  OptionsServer(final Context context, final CookieStore cookieStore,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
           throws RemoteException {
-    this.window = window;
+    this.context = context;
     this.cookieStore = cookieStore;
     this.timeouts = timeouts;
   }
@@ -178,7 +177,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
    */
   @Override
   public WindowServer window() {
-    return window.get();
+    return context.item().window.get();
   }
 
 }

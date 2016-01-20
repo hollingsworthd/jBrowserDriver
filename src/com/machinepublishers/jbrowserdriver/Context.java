@@ -94,6 +94,7 @@ class Context {
           navigation.set(new NavigationServer(
               new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
           alert.set(new AlertServer(this));
+          options.set(new OptionsServer(this, SettingsManager.settings().cookieStore(), timeouts));
         } catch (RemoteException e) {
           LogsServer.instance().exception(e);
         }
