@@ -162,7 +162,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       argsTmp.add(classpath.toString());
       argsTmp.add(JBrowserDriverServer.class.getName());
     } catch (Throwable t) {
-      t.printStackTrace();
+      Logs.fatal(t);
     }
     args = Collections.unmodifiableList(argsTmp);
   }
@@ -224,14 +224,14 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port).lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      Logs.fatal(t);
     }
     remote = instanceTmp;
     LogsRemote logsRemote = null;
     try {
       logsRemote = remote.logs();
     } catch (RemoteException e) {
-      e.printStackTrace();
+      Logs.fatal(e);
     }
     logs = new Logs(logsRemote);
   }
@@ -281,7 +281,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
               .destroyOnExit()
               .command(myArgs).execute();
         } catch (Throwable t) {
-          logs.exception(t);
+          Logs.fatal(t);
         }
       }
     }).start();

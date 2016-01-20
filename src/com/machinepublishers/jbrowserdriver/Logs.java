@@ -74,6 +74,16 @@ class Logs implements org.openqa.selenium.logging.Logs {
     }
   }
 
+  static void fatal(Throwable throwable) {
+    try (StringWriter writer = new StringWriter()) {
+      throwable.printStackTrace(new PrintWriter(writer));
+      System.err.println(new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString()));
+    } catch (Throwable t) {
+      System.err.println("While logging a message, an error occurred: " + t.getMessage());
+      return;
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
