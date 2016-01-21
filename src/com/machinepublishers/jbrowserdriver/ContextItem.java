@@ -53,7 +53,7 @@ class ContextItem {
       engine.set(view.get().getEngine());
       try {
         window.set(new WindowServer(stage, context.statusCode));
-        context.dialog.get().listen(this);
+        context.alert.get().listen(this);
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
       }

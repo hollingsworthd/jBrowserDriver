@@ -44,7 +44,6 @@ class Context {
   final AtomicReference<CapabilitiesServer> capabilities = new AtomicReference<CapabilitiesServer>();
   final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
-  final AtomicReference<DialogHandler> dialog = new AtomicReference<DialogHandler>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicLong latestThread = new AtomicLong();
@@ -61,10 +60,10 @@ class Context {
       itemMap.put(newContext.itemId.get(), newContext);
       try {
         timeouts.set(new TimeoutsServer());
+        alert.set(new AlertServer(timeouts));
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
       }
-      dialog.set(new DialogHandler(timeouts));
     }
   }
 
@@ -93,7 +92,6 @@ class Context {
           capabilities.set(new CapabilitiesServer());
           navigation.set(new NavigationServer(
               new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
-          alert.set(new AlertServer(this));
           options.set(new OptionsServer(this, SettingsManager.settings().cookieStore(), timeouts));
         } catch (RemoteException e) {
           LogsServer.instance().exception(e);
