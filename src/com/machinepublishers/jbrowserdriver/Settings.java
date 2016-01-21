@@ -229,6 +229,8 @@ public class Settings implements Serializable {
     private boolean ignoreDialogs;
     private boolean cache;
     private File cacheDir;
+    private int cacheEntries = 10 * 1000;
+    private long cacheEntrySize = 1000 * 1000;
 
     /**
      * @param requestHeaders
@@ -385,6 +387,29 @@ public class Settings implements Serializable {
     }
 
     /**
+     * Set maximum number of cached files on disk. Defaults to 10000.
+     * 
+     * @param cacheEntries
+     * @return this Builder
+     */
+    public Builder cacheEntries(int cacheEntries) {
+      this.cacheEntries = cacheEntries;
+      return this;
+    }
+
+    /**
+     * Set maximum size of a file to be cached. If it's greater than this max, it will not be cached.
+     * Defaults to 1 MB.
+     * 
+     * @param bytes
+     * @return this Builder
+     */
+    public Builder cacheEntrySize(long bytes) {
+      this.cacheEntrySize = bytes;
+      return this;
+    }
+
+    /**
      * @return A Settings object created from this builder.
      * @see JBrowserDriver#JBrowserDriver(Settings)
      */
@@ -405,6 +430,8 @@ public class Settings implements Serializable {
   private final boolean ignoreDialogs;
   private final boolean cache;
   private final File cacheDir;
+  private final int cacheEntries;
+  private final long cacheEntrySize;
 
   private Settings(Settings.Builder builder) {
     this.requestHeaders = builder.requestHeaders;
@@ -418,6 +445,8 @@ public class Settings implements Serializable {
     this.ignoreDialogs = builder.ignoreDialogs;
     this.cache = builder.cache;
     this.cacheDir = builder.cacheDir;
+    this.cacheEntries = builder.cacheEntries;
+    this.cacheEntrySize = builder.cacheEntrySize;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -483,6 +512,14 @@ public class Settings implements Serializable {
 
   File cacheDir() {
     return cacheDir;
+  }
+
+  int cacheEntries() {
+    return cacheEntries;
+  }
+
+  long cacheEntrySize() {
+    return cacheEntrySize;
   }
 
   static boolean headless() {

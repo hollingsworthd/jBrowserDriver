@@ -165,8 +165,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
   private static final CacheConfig cacheConfig = CacheConfig.custom()
-      .setMaxCacheEntries(Integer.MAX_VALUE)
-      .setMaxObjectSize(10 * 1000 * 1000)
+      .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
+      .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
       .build();
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
       .setCacheConfig(cacheConfig)
