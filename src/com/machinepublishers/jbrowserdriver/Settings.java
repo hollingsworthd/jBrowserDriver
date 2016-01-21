@@ -228,6 +228,7 @@ public class Settings implements Serializable {
     private File mediaDir = new File("./media_cache");
     private boolean saveMedia;
     private boolean saveMediaInit;
+    private boolean ignoreDialogs;
 
     /**
      * @param requestHeaders
@@ -363,12 +364,30 @@ public class Settings implements Serializable {
     }
 
     /**
+     * Whether JavaScript alerts, prompts, and confirm dialogs should be auto-dismissed
+     * and ignored. Otherwise, you will need to use JBrowserDriver.switchTo().alert()
+     * to accept/dismiss these dialogs. Note that if dialogs are not ignored and you are handling them,
+     * that calls to alert.accept(), alert.dismiss(), and alert.sendKeys(String) are queued,
+     * so there is no need to wait for the dialog to actually be displayed and these calls will not block.
+     * Calls to alert.getText() block until an alert is shown (unless a script timeout is reached first).
+     * 
+     * @param ignoreDialogs
+     *          <code>True</code> to auto-dismiss alert/prompt/confirm dialogs and relieve the
+     *          user from having to handle them. <code>False</code> to allow these dialogs to have an effect on the page
+     *          and force the user to accept/dismiss them. Defaults to <code>false</code>.
+     * @return
+     */
+    public Builder ignoreDialogs(boolean ignoreDialogs) {
+      this.ignoreDialogs = ignoreDialogs;
+      return this;
+    }
+
+    /**
      * @return A Settings object created from this builder.
      * @see JBrowserDriver#JBrowserDriver(Settings)
      */
     public Settings build() {
-      return new Settings(this.requestHeaders, this.screen, this.userAgent, this.timezone,
-          this.headScript, this.proxy, this.downloadDir, this.mediaDir, this.saveMedia);
+      return new Settings(this);
     }
   }
 
@@ -382,28 +401,27 @@ public class Settings implements Serializable {
   private final boolean saveMedia;
   private final String script;
   private final BasicCookieStore cookieStore;
+  private final boolean ignoreDialogs;
 
-  private Settings(final RequestHeaders requestHeaders, final Dimension screen,
-      final UserAgent userAgent, final Timezone timezone,
-      final String headScript, final ProxyConfig proxy,
-      final File downloadDir, final File mediaDir, final boolean saveMedia) {
-    this.requestHeaders = requestHeaders;
-    this.screenWidth = screen.getWidth();
-    this.screenHeight = screen.getHeight();
-    this.userAgentString = userAgent.userAgentString();
-    this.proxy = proxy;
-    this.downloadDir = downloadDir;
+  private Settings(Settings.Builder builder) {
+    this.requestHeaders = builder.requestHeaders;
+    this.screenWidth = builder.screen.getWidth();
+    this.screenHeight = builder.screen.getHeight();
+    this.userAgentString = builder.userAgent.userAgentString();
+    this.proxy = builder.proxy;
+    this.downloadDir = builder.downloadDir;
     if (!this.downloadDir.exists()) {
       this.downloadDir.mkdirs();
       this.downloadDir.deleteOnExit();
     }
-    this.mediaDir = mediaDir;
+    this.mediaDir = builder.mediaDir;
     if (!this.mediaDir.exists()) {
       this.mediaDir.mkdirs();
       this.mediaDir.deleteOnExit();
     }
-    this.saveMedia = saveMedia;
+    this.saveMedia = builder.saveMedia;
     this.cookieStore = new BasicCookieStore();
+    this.ignoreDialogs = builder.ignoreDialogs;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -412,15 +430,15 @@ public class Settings implements Serializable {
     }
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
     scriptBuilder.append("try{");
-    scriptBuilder.append(userAgent.script());
-    scriptBuilder.append(timezone.script());
-    if (headScript != null) {
-      scriptBuilder.append(headScript);
+    scriptBuilder.append(builder.userAgent.script());
+    scriptBuilder.append(builder.timezone.script());
+    if (builder.headScript != null) {
+      scriptBuilder.append(builder.headScript);
     }
     scriptBuilder.append("}catch(e){}");
     scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + scriptId + "'));");
     scriptBuilder.append("</script>");
-    script = scriptBuilder.toString();
+    this.script = scriptBuilder.toString();
   }
 
   RequestHeaders headers() {
@@ -461,6 +479,10 @@ public class Settings implements Serializable {
 
   CookieStore cookieStore() {
     return cookieStore;
+  }
+
+  boolean ignoreDialogs() {
+    return ignoreDialogs;
   }
 
   static boolean headless() {

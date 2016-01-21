@@ -51,9 +51,11 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
   }
 
   void listen(ContextItem item) {
-    item.engine.get().setOnAlert(alertHandler);
-    item.engine.get().setConfirmHandler(confirmHandler);
-    item.engine.get().setPromptHandler(promptHandler);
+    if (!SettingsManager.settings().ignoreDialogs()) {
+      item.engine.get().setOnAlert(alertHandler);
+      item.engine.get().setConfirmHandler(confirmHandler);
+      item.engine.get().setPromptHandler(promptHandler);
+    }
   }
 
   /**
