@@ -127,6 +127,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
       synchronized (lock) {
         text.set(event.getData());
         lock.notifyAll();
+        boolean initial = true;
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -137,7 +138,12 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
               acceptQueue.decrementAndGet();
               break;
             }
-            lock.wait(timeouts.get().getScriptTimeoutMS());
+            if (initial) {
+              initial = false;
+              lock.wait(timeouts.get().getScriptTimeoutMS());
+            } else {
+              break;
+            }
           } catch (InterruptedException e) {}
         }
         text.set(NO_TEXT_VALUE);
@@ -148,10 +154,11 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
   private final class ConfirmHandler implements Callback<String, Boolean> {
     @Override
     public Boolean call(String param) {
-      boolean accept = false;
+      boolean accept = true;
       synchronized (lock) {
         text.set(param);
         lock.notifyAll();
+        boolean initial = true;
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -164,7 +171,12 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
               accept = true;
               break;
             }
-            lock.wait(timeouts.get().getScriptTimeoutMS());
+            if (initial) {
+              initial = false;
+              lock.wait(timeouts.get().getScriptTimeoutMS());
+            } else {
+              break;
+            }
           } catch (InterruptedException e) {}
         }
         text.set(NO_TEXT_VALUE);
@@ -180,6 +192,7 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
       synchronized (lock) {
         text.set(param.getMessage());
         lock.notifyAll();
+        boolean initial = true;
         while (true) {
           try {
             if (dismissQueue.get() > 0) {
@@ -192,7 +205,12 @@ class AlertServer extends UnicastRemoteObject implements AlertRemote,
               accept = true;
               break;
             }
-            lock.wait(timeouts.get().getScriptTimeoutMS());
+            if (initial) {
+              initial = false;
+              lock.wait(timeouts.get().getScriptTimeoutMS());
+            } else {
+              break;
+            }
           } catch (InterruptedException e) {}
         }
         text.set(NO_TEXT_VALUE);
