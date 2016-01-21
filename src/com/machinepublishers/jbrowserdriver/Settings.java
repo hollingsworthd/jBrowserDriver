@@ -359,6 +359,9 @@ public class Settings implements Serializable {
 
     /**
      * Whether to cache web pages like a desktop browser would. Defaults to <code>false</code>.
+     * <p>
+     * The temporary directory where these files are saved is availble from
+     * {@link JBrowserDriver#cacheDir()}
      * 
      * @param cache
      * @return this Builder
