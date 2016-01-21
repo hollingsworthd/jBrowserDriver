@@ -219,7 +219,7 @@ public class Settings implements Serializable {
    */
   public static class Builder {
     private RequestHeaders requestHeaders = RequestHeaders.TOR;
-    private Dimension screen = new Dimension(1000, 600);
+    private org.openqa.selenium.Dimension screen = new org.openqa.selenium.Dimension(1000, 600);
     private UserAgent userAgent = UserAgent.TOR;
     private Timezone timezone = Timezone.UTC;
     private String headScript = HEAD_SCRIPT;
@@ -250,7 +250,7 @@ public class Settings implements Serializable {
      *          size such as 1366x768.
      * @return this Builder
      */
-    public Builder screen(Dimension screen) {
+    public Builder screen(org.openqa.selenium.Dimension screen) {
       this.screen = screen;
       return this;
     }
