@@ -125,7 +125,7 @@ public class App extends Application {
     WebEngine engine = view.getEngine();
     engine.getHistory().setMaxSize(HISTORY_SIZE);
     Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
-    Accessor.getPageFor(engine).setUsePageCache(false);
+    Accessor.getPageFor(engine).setUsePageCache(SettingsManager.settings().cache());
     root.getChildren().add(view);
     stage.setScene(new Scene(root, width, height));
     stage.sizeToScene();

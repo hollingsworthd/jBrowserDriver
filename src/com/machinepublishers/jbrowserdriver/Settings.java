@@ -229,6 +229,7 @@ public class Settings implements Serializable {
     private boolean saveMedia;
     private boolean saveMediaInit;
     private boolean ignoreDialogs;
+    private boolean cache;
 
     /**
      * @param requestHeaders
@@ -375,10 +376,21 @@ public class Settings implements Serializable {
      *          <code>True</code> to auto-dismiss alert/prompt/confirm dialogs and relieve the
      *          user from having to handle them. <code>False</code> to allow these dialogs to have an effect on the page
      *          and force the user to accept/dismiss them. Defaults to <code>false</code>.
-     * @return
+     * @return this Builder
      */
     public Builder ignoreDialogs(boolean ignoreDialogs) {
       this.ignoreDialogs = ignoreDialogs;
+      return this;
+    }
+
+    /**
+     * Whether to cache web pages like a desktop browser would. Defaults to <code>false</code>.
+     * 
+     * @param cache
+     * @return this Builder
+     */
+    public Builder cache(boolean cache) {
+      this.cache = cache;
       return this;
     }
 
@@ -402,6 +414,7 @@ public class Settings implements Serializable {
   private final String script;
   private final BasicCookieStore cookieStore;
   private final boolean ignoreDialogs;
+  private final boolean cache;
 
   private Settings(Settings.Builder builder) {
     this.requestHeaders = builder.requestHeaders;
@@ -422,6 +435,7 @@ public class Settings implements Serializable {
     this.saveMedia = builder.saveMedia;
     this.cookieStore = new BasicCookieStore();
     this.ignoreDialogs = builder.ignoreDialogs;
+    this.cache = builder.cache;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -483,6 +497,10 @@ public class Settings implements Serializable {
 
   boolean ignoreDialogs() {
     return ignoreDialogs;
+  }
+
+  boolean cache() {
+    return cache;
   }
 
   static boolean headless() {

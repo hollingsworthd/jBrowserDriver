@@ -90,6 +90,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.LaxCookieSpecProvider;
@@ -132,7 +133,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setDefaultCredentialsProvider(ProxyAuth.instance())
       .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
+  private static final CacheConfig cacheConfig = CacheConfig.custom()
+      .setMaxCacheEntries(Integer.MAX_VALUE)
+      .setMaxObjectSize(10 * 1000 * 1000)
+      .build();
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
+      .setCacheConfig(cacheConfig)
+      .setHttpCacheStorage(new HttpCache())
       .disableRedirectHandling()
       .disableAutomaticRetries()
       .setDefaultCookieSpecRegistry(cookieProvider)
@@ -142,7 +149,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setDefaultCredentialsProvider(ProxyAuth.instance())
       .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
-  private static final AtomicBoolean cacheByDefault = new AtomicBoolean();
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final AtomicReference<RequestConfig.Builder> config = new AtomicReference<RequestConfig.Builder>(RequestConfig.custom());
@@ -152,7 +158,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final AtomicInteger connectTimeout = new AtomicInteger();
   private final AtomicInteger readTimeout = new AtomicInteger();
   private final AtomicReference<String> method = new AtomicReference<String>();
-  private final AtomicBoolean cache = new AtomicBoolean(cacheByDefault.get());
+  private final AtomicBoolean cache = new AtomicBoolean(SettingsManager.settings().cache());
   private final AtomicBoolean connected = new AtomicBoolean();
   private final AtomicBoolean exec = new AtomicBoolean();
   private final AtomicReference<CloseableHttpResponse> response = new AtomicReference<CloseableHttpResponse>();
@@ -439,7 +445,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           response.set(cache.get() ? cachingClient.execute(req.get(), context.get()) : client.execute(req.get(), context.get()));
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
-            response.get().setHeader("cache-control", "no-store");
+            if (!cache.get()) {
+              response.get().setHeader("cache-control", "no-store");
+            }
           }
         }
       }
@@ -994,8 +1002,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public boolean getDefaultUseCaches() {
-    //Don't cache. TODO let caching be configurable.
-    return true;
+    return cache.get();
   }
 
   /**
@@ -1003,7 +1010,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setDefaultUseCaches(boolean defaultusecaches) {
-    //Don't cache. TODO let caching be configurable.
+    //Caching is configured by Settings. Ignore this call.
   }
 
   /**
@@ -1011,8 +1018,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public boolean getUseCaches() {
-    //Don't cache. TODO let caching be configurable.
-    return true;
+    return cache.get();
   }
 
   /**
@@ -1020,6 +1026,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setUseCaches(boolean usecaches) {
-    //Don't cache. TODO let caching be configurable.
+    //Caching is configured by Settings. Ignore this call.
   }
 }

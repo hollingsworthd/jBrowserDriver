@@ -86,7 +86,7 @@ class Util {
           Platform.runLater(this);
           return;
         }
-        if (statusCode.get() != 200) {
+        if (statusCode.get() > 299) {
           LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
         }
       }
