@@ -108,7 +108,7 @@ public class Settings implements Serializable {
         headlessPlatform.setAccessible(true);
         field.set(platformFactory, headlessPlatform.newInstance());
       } catch (Throwable t) {
-        LogsServer.instance().exception(t);
+        Logs.fatal(t);
       }
     } else {
       headless = false;
@@ -146,12 +146,12 @@ public class Settings implements Serializable {
           if (settings.saveMedia()
               && connection.isMedia()) {
             String filename = Long.toString(System.nanoTime());
-            File contentFile = new File(settings.mediaDir(), filename + ".content");
-            File metaFile = new File(settings.mediaDir(), filename + ".metadata");
+            File contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
+            File metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
             while (contentFile.exists() || metaFile.exists()) {
               filename = Long.toString(Math.abs(rand.nextLong()));
-              contentFile = new File(settings.mediaDir(), filename + ".content");
-              metaFile = new File(settings.mediaDir(), filename + ".metadata");
+              contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
+              metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
             }
             contentFile.deleteOnExit();
             metaFile.deleteOnExit();
@@ -224,12 +224,11 @@ public class Settings implements Serializable {
     private Timezone timezone = Timezone.UTC;
     private String headScript = HEAD_SCRIPT;
     private ProxyConfig proxy = new ProxyConfig();
-    private File downloadDir = new File("./download_cache");
-    private File mediaDir = new File("./media_cache");
     private boolean saveMedia;
-    private boolean saveMediaInit;
+    private boolean saveAttachments;
     private boolean ignoreDialogs;
     private boolean cache;
+    private File cacheDir;
 
     /**
      * @param requestHeaders
@@ -300,24 +299,7 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Specifies the directory to save downloaded files. If not specified then
-     * ./download_cache is created and used. Downloaded files are deleted when the
-     * JVM exits, so copy them to a different location to persist them permanently.
-     * 
-     * @param downloadDir
-     *          Where to save downloaded files
-     * @return this Builder
-     */
-    public Builder downloadDir(File downloadDir) {
-      this.downloadDir = downloadDir;
-      return this;
-    }
-
-    /**
-     * Specifies the directory to save media files. Calling this method with a non-null
-     * File implicitly calls Builder.saveMedia(true) unless you've already called
-     * Builder.saveMedia(false). If you do not set a directory here and you've called
-     * Builder.saveMedia(true) then the directory ./media_cache is created and used.
+     * Whether to save media (e.g., images) to disk. Defaults to <code>false</code>.
      * <p>
      * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
      * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
@@ -327,32 +309,8 @@ public class Settings implements Serializable {
      * Saved media files are deleted when the JVM exits, so copy them to a different
      * location to persist them permanently.
      * <p>
-     * 
-     * @param mediaDir
-     *          Where to save media files.
-     * @return this Builder
-     */
-    public Builder mediaDir(File mediaDir) {
-      this.mediaDir = mediaDir;
-      if (mediaDir != null && !saveMediaInit) {
-        this.saveMedia = true;
-      }
-      return this;
-    }
-
-    /**
-     * Whether to save media (e.g., images) to disk. Defaults to false but calls to
-     * Builder.mediaDir(File) implicitly call Builder.saveMedia(true) unless
-     * the File is null or Builder.saveMedia(false) was previously called by you.
-     * <p>
-     * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
-     * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
-     * file is the original URL of the request for this media, and the second line is
-     * the mime type).
-     * <p>
-     * Saved media files are deleted when the JVM exits, so copy them to a different
-     * location to persist them permanently.
-     * <p>
+     * The temporary directory where these files are saved is availble from
+     * {@link JBrowserDriver#mediaDir()}
      * 
      * @param saveMedia
      *          Whether to save media (e.g., images) to disk.
@@ -360,7 +318,23 @@ public class Settings implements Serializable {
      */
     public Builder saveMedia(boolean saveMedia) {
       this.saveMedia = saveMedia;
-      this.saveMediaInit = true;
+      return this;
+    }
+
+    /**
+     * Whether to save links to disk when prompted by the browser. Defaults to <code>false</code>.
+     * <p>
+     * Saved files are deleted when the JVM exits, so copy them to a different
+     * location to persist them permanently.
+     * <p>
+     * The temporary directory where these files are saved is availble from
+     * {@link JBrowserDriver#attachmentsDir()}
+     * 
+     * @param saveAttachments
+     * @return
+     */
+    public Builder saveAttachments(boolean saveAttachments) {
+      this.saveAttachments = saveAttachments;
       return this;
     }
 
@@ -395,6 +369,19 @@ public class Settings implements Serializable {
     }
 
     /**
+     * Directory where te web cache resides. This enables sharing a cache across instances
+     * and after JVM restarts.
+     * 
+     * @param cacheDir
+     *          cache directory
+     * @return this Builder
+     */
+    public Builder cacheDir(File cacheDir) {
+      this.cacheDir = cacheDir;
+      return this;
+    }
+
+    /**
      * @return A Settings object created from this builder.
      * @see JBrowserDriver#JBrowserDriver(Settings)
      */
@@ -408,13 +395,13 @@ public class Settings implements Serializable {
   private final int screenHeight;
   private final String userAgentString;
   private final ProxyConfig proxy;
-  private final File downloadDir;
-  private final File mediaDir;
   private final boolean saveMedia;
+  private final boolean saveAttachments;
   private final String script;
   private final BasicCookieStore cookieStore;
   private final boolean ignoreDialogs;
   private final boolean cache;
+  private final File cacheDir;
 
   private Settings(Settings.Builder builder) {
     this.requestHeaders = builder.requestHeaders;
@@ -422,20 +409,12 @@ public class Settings implements Serializable {
     this.screenHeight = builder.screen.getHeight();
     this.userAgentString = builder.userAgent.userAgentString();
     this.proxy = builder.proxy;
-    this.downloadDir = builder.downloadDir;
-    if (!this.downloadDir.exists()) {
-      this.downloadDir.mkdirs();
-      this.downloadDir.deleteOnExit();
-    }
-    this.mediaDir = builder.mediaDir;
-    if (!this.mediaDir.exists()) {
-      this.mediaDir.mkdirs();
-      this.mediaDir.deleteOnExit();
-    }
     this.saveMedia = builder.saveMedia;
+    this.saveAttachments = builder.saveAttachments;
     this.cookieStore = new BasicCookieStore();
     this.ignoreDialogs = builder.ignoreDialogs;
     this.cache = builder.cache;
+    this.cacheDir = builder.cacheDir;
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -475,16 +454,12 @@ public class Settings implements Serializable {
     return proxy;
   }
 
-  File downloadDir() {
-    return downloadDir;
-  }
-
-  File mediaDir() {
-    return mediaDir;
-  }
-
   boolean saveMedia() {
     return saveMedia;
+  }
+
+  boolean saveAttachments() {
+    return saveAttachments;
   }
 
   String script() {
@@ -501,6 +476,10 @@ public class Settings implements Serializable {
 
   boolean cache() {
     return cache;
+  }
+
+  File cacheDir() {
+    return cacheDir;
   }
 
   static boolean headless() {

@@ -26,7 +26,7 @@ class Policy {
   static void init() {
     if (System.getSecurityManager() == null) {
       try {
-        File policy = File.createTempFile("jbd", ".policy");
+        File policy = File.createTempFile("jbd_policy_", ".config");
         policy.deleteOnExit();
         Files.write(policy.toPath(), "grant{permission java.security.AllPermission;};".getBytes("utf-8"));
         System.setProperty("java.security.policy", policy.getAbsolutePath());

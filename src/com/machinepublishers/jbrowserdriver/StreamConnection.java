@@ -66,6 +66,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -100,7 +101,37 @@ import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
-
+  private static final File attachmentsDir;
+  private static final File mediaDir;
+  private static final File cacheDir;
+  static {
+    File attachmentsDirTmp = null;
+    File mediaDirTmp = null;
+    File cacheDirTmp = SettingsManager.settings().cacheDir();
+    try {
+      attachmentsDirTmp = Files.createTempDirectory("jbd_attachments_").toFile();
+      mediaDirTmp = Files.createTempDirectory("jbd_media_").toFile();
+      cacheDirTmp = cacheDirTmp == null ? Files.createTempDirectory("jbd_webcache_").toFile() : cacheDirTmp;
+      attachmentsDirTmp.deleteOnExit();
+      mediaDirTmp.deleteOnExit();
+      if (SettingsManager.settings().cacheDir() == null) {
+        final File finalCacheDir = cacheDirTmp;
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+          @Override
+          public void run() {
+            FileUtils.deleteQuietly(finalCacheDir);
+          }
+        }));
+      } else {
+        cacheDirTmp.mkdirs();
+      }
+    } catch (Throwable t) {
+      LogsServer.instance().exception(t);
+    }
+    attachmentsDir = attachmentsDirTmp;
+    mediaDir = mediaDirTmp;
+    cacheDir = cacheDirTmp;
+  }
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
@@ -139,7 +170,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .build();
   private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
       .setCacheConfig(cacheConfig)
-      .setHttpCacheStorage(new HttpCache())
+      .setHttpCacheStorage(new HttpCache(cacheDir))
       .disableRedirectHandling()
       .disableAutomaticRetries()
       .setDefaultCookieSpecRegistry(cookieProvider)
@@ -288,6 +319,18 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     socket.setTcpNoDelay(true);
     socket.setKeepAlive(true);
     return socket;
+  }
+
+  static File cacheDir() {
+    return cacheDir;
+  }
+
+  static File attachmentsDir() {
+    return attachmentsDir;
+  }
+
+  static File mediaDir() {
+    return mediaDir;
   }
 
   private boolean isBlocked(String host) {
@@ -509,8 +552,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               Matcher matcher = downloadHeader.matcher(header);
               if (matcher.matches()) {
                 Settings settings = SettingsManager.settings();
-                if (settings != null) {
-                  File downloadFile = new File(settings.downloadDir(),
+                if (settings != null && settings.saveAttachments()) {
+                  File downloadFile = new File(attachmentsDir,
                       matcher.group(1) == null || matcher.group(1).isEmpty()
                           ? Long.toString(System.nanoTime()) : matcher.group(1));
                   downloadFile.deleteOnExit();

@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.HasCapabilities;
@@ -139,8 +140,14 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
               if (entry.getName().endsWith(".jar")) {
                 try (InputStream in = jar.getInputStream(entry)) {
                   if (tmpDir == null) {
-                    tmpDir = Files.createTempDirectory("jbd").toFile();
-                    tmpDir.deleteOnExit();
+                    tmpDir = Files.createTempDirectory("jbd_classpath_").toFile();
+                    final File finalTmpDir = tmpDir;
+                    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                      @Override
+                      public void run() {
+                        FileUtils.deleteQuietly(finalTmpDir);
+                      }
+                    }));
                   }
                   File childJar = new File(tmpDir,
                       Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
@@ -160,7 +167,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         classpath.append(childJar);
       }
       argsTmp.add(classpath.toString());
-      argsTmp.add(JBrowserDriverServer.class.getName());
     } catch (Throwable t) {
       Logs.fatal(t);
     }
@@ -190,6 +196,8 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     return Test.run();
   }
 
+  private final File tmpDir;
+
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
    */
@@ -203,6 +211,21 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
+    File tmpDir = null;
+    try {
+      tmpDir = Files.createTempDirectory("jbd_tmp_").toFile();
+    } catch (Throwable t) {
+      Logs.fatal(t);
+    }
+    this.tmpDir = tmpDir;
+    final File thisTmpDir = this.tmpDir;
+    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+      @Override
+      public void run() {
+        FileUtils.deleteQuietly(thisTmpDir);
+      }
+    }));
+
     synchronized (ports) {
       if (ports.isEmpty()) {
         waiting.add(key);
@@ -242,6 +265,8 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       @Override
       public void run() {
         List<String> myArgs = new ArrayList<String>(args);
+        myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
+        myArgs.add(JBrowserDriverServer.class.getName());
         myArgs.add(Integer.toString(port));
         try {
           new ProcessExecutor()
@@ -283,6 +308,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         } catch (Throwable t) {
           Logs.fatal(t);
         }
+        FileUtils.deleteQuietly(tmpDir);
       }
     }).start();
     synchronized (ready) {
@@ -880,6 +906,42 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         return null;
       }
       return outputType.convertFromPngBytes(bytes);
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
+  }
+
+  /**
+   * @return Temporary directory where cached pages are saved.
+   */
+  public File cacheDir() {
+    try {
+      return remote.cacheDir();
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
+  }
+
+  /**
+   * @return Temporary directory where downloaded files are saved.
+   */
+  public File attachmentsDir() {
+    try {
+      return remote.attachmentsDir();
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
+  }
+
+  /**
+   * @return Temporary directory where media files are saved.
+   */
+  public File mediaDir() {
+    try {
+      return remote.mediaDir();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

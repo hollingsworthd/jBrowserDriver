@@ -21,13 +21,16 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Files;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.client.cache.HttpCacheEntry;
@@ -38,15 +41,8 @@ import org.apache.http.client.cache.HttpCacheUpdateException;
 class HttpCache implements HttpCacheStorage {
   private final File cacheDir;
 
-  HttpCache() {
-    File cacheDirTmp = null;
-    try {
-      cacheDirTmp = Files.createTempDirectory("jbdwebcache").toFile();
-      cacheDirTmp.deleteOnExit();
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-    }
-    cacheDir = cacheDirTmp;
+  HttpCache(File cacheDir) {
+    this.cacheDir = cacheDir;
   }
 
   @Override
@@ -58,17 +54,25 @@ class HttpCache implements HttpCacheStorage {
 
   @Override
   public void removeEntry(String key) throws IOException {
-    new File(cacheDir, DigestUtils.sha1Hex(key)).delete();
+    File file = new File(cacheDir, DigestUtils.sha1Hex(key));
+    if (file.exists()) {
+      try (Lock lock = new Lock(file, false)) {
+        file.delete();
+      }
+    }
   }
 
   @Override
   public void putEntry(String key, HttpCacheEntry entry) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
-    file.deleteOnExit();
-    FileOutputStream fileOut = new FileOutputStream(file);
-    BufferedOutputStream bufferOut = new BufferedOutputStream(fileOut);
-    try (ObjectOutputStream objectOut = new ObjectOutputStream(bufferOut)) {
-      objectOut.writeObject(entry);
+    if (!file.exists()) {
+      try (Lock lock = new Lock(file, false)) {
+        FileOutputStream fileOut = new FileOutputStream(file);
+        BufferedOutputStream bufferOut = new BufferedOutputStream(fileOut);
+        try (ObjectOutputStream objectOut = new ObjectOutputStream(bufferOut)) {
+          objectOut.writeObject(entry);
+        }
+      }
     }
   }
 
@@ -76,14 +80,59 @@ class HttpCache implements HttpCacheStorage {
   public HttpCacheEntry getEntry(String key) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
     if (file.exists()) {
-      FileInputStream fileIn = new FileInputStream(file);
-      BufferedInputStream bufferIn = new BufferedInputStream(fileIn);
-      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
-        return (HttpCacheEntry) objectIn.readObject();
-      } catch (Throwable t) {
-        LogsServer.instance().exception(t);
+      try (Lock lock = new Lock(file, true)) {
+        FileInputStream fileIn = new FileInputStream(file);
+        BufferedInputStream bufferIn = new BufferedInputStream(fileIn);
+        try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
+          return (HttpCacheEntry) objectIn.readObject();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
       }
     }
     return null;
+  }
+
+  private static class Lock implements Closeable {
+    private FileLock fileLock;
+    private RandomAccessFile randAccessFile;
+
+    Lock(File file, boolean shared) {
+      try {
+        randAccessFile = new RandomAccessFile(file, shared ? "r" : "rw");
+        FileChannel channel = randAccessFile.getChannel();
+        while (true) {
+          try {
+            fileLock = channel.lock(0, Long.MAX_VALUE, shared);
+            break;
+          } catch (Throwable t) {
+            try {
+              Thread.sleep(50);
+            } catch (InterruptedException e) {}
+          }
+        }
+      } catch (Throwable t) {
+        LogsServer.instance().exception(t);
+        close();
+      }
+    }
+
+    @Override
+    public void close() {
+      if (fileLock != null) {
+        try {
+          fileLock.release();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
+      }
+      if (randAccessFile != null) {
+        try {
+          randAccessFile.close();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
+      }
+    }
   }
 }

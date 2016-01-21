@@ -19,6 +19,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -537,5 +538,29 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public byte[] getScreenshot() throws WebDriverException {
     init();
     return context.get().robot.get().screenshot();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public File cacheDir() {
+    return StreamConnection.cacheDir();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public File attachmentsDir() {
+    return StreamConnection.attachmentsDir();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public File mediaDir() {
+    return StreamConnection.mediaDir();
   }
 }

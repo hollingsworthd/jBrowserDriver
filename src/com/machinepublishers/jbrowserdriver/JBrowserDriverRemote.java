@@ -19,6 +19,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
@@ -112,4 +113,9 @@ interface JBrowserDriverRemote extends Remote {
 
   LogsRemote logs() throws RemoteException;
 
+  File cacheDir() throws RemoteException;
+
+  File attachmentsDir() throws RemoteException;
+
+  File mediaDir() throws RemoteException;
 }
