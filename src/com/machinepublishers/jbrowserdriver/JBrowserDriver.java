@@ -123,9 +123,14 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       argsTmp.add(javaBin.getCanonicalPath());
       for (Object keyObj : System.getProperties().keySet()) {
         String key = keyObj.toString();
-        argsTmp.add("-D" + key + "=" + System.getProperty(key));
+        if (key != null && key.startsWith("jbd.rmi.")) {
+          argsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
+        } else if (key != null && key.startsWith("jbd.")) {
+          argsTmp.add("-D" + key + "=" + System.getProperty(key));
+        }
       }
 
+      //TODO use an empty jar with classpath in manifest to shorten length of args
       argsTmp.add("-classpath");
       String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
       List<String> childJars = new ArrayList<String>();
