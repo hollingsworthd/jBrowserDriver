@@ -20,6 +20,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
@@ -34,10 +35,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.jar.Attributes;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.HasCapabilities;
@@ -130,34 +135,31 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         }
       }
 
-      //TODO use an empty jar with classpath in manifest to shorten length of args
-      argsTmp.add("-classpath");
       String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
-      List<String> childJars = new ArrayList<String>();
-      File tmpDir = null;
+      final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
+      Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+        @Override
+        public void run() {
+          FileUtils.deleteQuietly(classpathDir);
+        }
+      }));
       Random rand = new SecureRandom();
+      List<String> paths = new ArrayList<String>();
       for (int i = 0; i < items.length; i++) {
-        if (items[i].endsWith(".jar")) {
+        File curItem = new File(items[i]);
+        paths.add(curItem.getCanonicalPath().replace(File.separatorChar, '/')
+            + (curItem.isDirectory() ? "/" : ""));
+        if (curItem.isFile() && items[i].endsWith(".jar")) {
           try (ZipFile jar = new ZipFile(items[i])) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
               ZipEntry entry = entries.nextElement();
               if (entry.getName().endsWith(".jar")) {
                 try (InputStream in = jar.getInputStream(entry)) {
-                  if (tmpDir == null) {
-                    tmpDir = Files.createTempDirectory("jbd_classpath_").toFile();
-                    final File finalTmpDir = tmpDir;
-                    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-                      @Override
-                      public void run() {
-                        FileUtils.deleteQuietly(finalTmpDir);
-                      }
-                    }));
-                  }
-                  File childJar = new File(tmpDir,
+                  File childJar = new File(classpathDir,
                       Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
                   Files.copy(in, childJar.toPath());
-                  childJars.add(childJar.getCanonicalPath());
+                  paths.add(childJar.getCanonicalPath().replace(File.separatorChar, '/'));
                   childJar.deleteOnExit();
                 }
               }
@@ -165,13 +167,14 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
           }
         }
       }
-      StringBuilder classpath = new StringBuilder();
-      classpath.append(System.getProperty("java.class.path"));
-      for (String childJar : childJars) {
-        classpath.append(File.pathSeparator);
-        classpath.append(childJar);
-      }
-      argsTmp.add(classpath.toString());
+      Manifest manifest = new Manifest();
+      manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+      manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, StringUtils.join(paths, ' '));
+      File classpathJar = new File(classpathDir, "classpath.jar");
+      classpathJar.deleteOnExit();
+      new JarOutputStream(new FileOutputStream(classpathJar), manifest).close();
+      argsTmp.add("-classpath");
+      argsTmp.add(classpathJar.getCanonicalPath());
     } catch (Throwable t) {
       Logs.fatal(t);
     }
@@ -346,6 +349,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    *          New settings to take effect, superseding the original ones
    */
   public void reset(final Settings settings) {
+    //TODO clear out tmp files except cache
     try {
       remote.reset(settings);
     } catch (RemoteException e) {
