@@ -32,6 +32,7 @@ class StreamHandler implements URLStreamHandlerFactory {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       StackTraceElement[] trace = new Throwable().getStackTrace();
+      //TODO now that this is RMI might not need this stack trace logic
       if (trace.length > 2
           && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
         return new StreamConnection(url);
