@@ -374,7 +374,7 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Directory where te web cache resides. This enables sharing a cache across instances
+     * Directory where the web cache resides. This enables sharing a cache across instances
      * and after JVM restarts.
      * 
      * @param cacheDir
