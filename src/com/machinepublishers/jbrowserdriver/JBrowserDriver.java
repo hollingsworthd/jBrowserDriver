@@ -107,7 +107,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     for (int i = 0; i < ranges.length; i++) {
       String[] bounds = ranges[i].split("-");
       int low = Integer.parseInt(bounds[0]);
-      int high = Integer.parseInt(bounds[1]);
+      int high = bounds.length > 1 ? Integer.parseInt(bounds[1]) : low;
       for (int j = low; j <= high; j++) {
         ports.add(j);
       }
