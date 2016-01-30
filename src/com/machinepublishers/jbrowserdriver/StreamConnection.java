@@ -375,28 +375,29 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     Collection<String> names = https ? settings.headers().namesHttps()
         : settings.headers().namesHttp();
     for (String name : names) {
-      List<String> valuesIn = reqHeaders.get(name.toLowerCase());
+      final String nameProperCase = settings.headers().nameFromLowercase(name, https);
+      List<String> valuesIn = reqHeaders.get(name);
       String valueSettings = https ? settings.headers().headerHttps(name)
           : settings.headers().headerHttp(name);
       if (valueSettings.equals(RequestHeaders.DROP_HEADER)) {
         continue;
       }
       if (valueSettings.equals(RequestHeaders.DYNAMIC_HEADER)) {
-        if (name.equalsIgnoreCase("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
-          req.addHeader(name, settings.userAgentString());
-        } else if (name.equalsIgnoreCase("host")) {
-          req.addHeader(name, host);
+        if (name.equals("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
+          req.addHeader(nameProperCase, settings.userAgentString());
+        } else if (name.equals("host")) {
+          req.addHeader(nameProperCase, host);
         } else if (valuesIn != null && !valuesIn.isEmpty()) {
           for (String curVal : valuesIn) {
-            req.addHeader(name, curVal);
+            req.addHeader(nameProperCase, curVal);
           }
         }
       } else {
-        req.addHeader(name, valueSettings);
+        req.addHeader(nameProperCase, valueSettings);
       }
     }
     for (Map.Entry<String, List<String>> entry : reqHeaders.entrySet()) {
-      if (!names.contains(entry.getKey())) {
+      if (!names.contains(entry.getKey().toLowerCase())) {
         for (String val : entry.getValue()) {
           req.addHeader(entry.getKey(), val);
         }

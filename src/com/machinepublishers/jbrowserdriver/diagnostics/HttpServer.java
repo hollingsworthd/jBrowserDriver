@@ -26,12 +26,15 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
   private static final AtomicReference<Closeable> listener = new AtomicReference<Closeable>();
+  private static final AtomicReference<List<String>> previousRequest = new AtomicReference<List<String>>();
   private static final byte[] body;
   private static final byte[] content;
   static {
@@ -55,6 +58,10 @@ public class HttpServer {
     content = contentTmp;
   }
 
+  public static List<String> previousRequest() {
+    return previousRequest.get();
+  }
+
   public static void launch(int port) {
     if (loop.compareAndSet(false, true)) {
       new Thread(new Runnable() {
@@ -66,12 +73,15 @@ public class HttpServer {
               try (Socket socket = serverSocket.accept();
                   DataOutputStream output = new DataOutputStream(socket.getOutputStream());
                   BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                List<String> request = new ArrayList<String>();
                 for (String line; (line = reader.readLine()) != null;) {
+                  request.add(line);
                   if (line.startsWith("GET")) {
                     output.write(content, 0, content.length);
                     output.write(body, 0, body.length);
                   }
                 }
+                previousRequest.set(request);
               }
             }
           } catch (Throwable t) {}

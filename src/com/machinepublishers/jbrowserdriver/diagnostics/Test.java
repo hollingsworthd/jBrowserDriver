@@ -23,7 +23,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -93,6 +95,16 @@ public class Test {
       driver.switchTo().alert().sendKeys("test-input");
       driver.switchTo().alert().accept();
       test(driver.findElement(By.id("testspan")).getAttribute("innerHTML").equals("test-input"));
+
+      List<String> request = HttpServer.previousRequest();
+      test(request.size() > 1);
+      Set<String> headers = new HashSet<String>();
+      for (String line : request) {
+        if (line.contains(":")) {
+          headers.add(line.split(":")[0].toLowerCase());
+        }
+      }
+      test(request.size() - 2 == headers.size());
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
