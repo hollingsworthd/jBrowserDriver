@@ -69,6 +69,7 @@ public class RequestHeaders implements Serializable {
     headersTmp.put("Accept-Encoding", "gzip, deflate");
     headersTmp.put("Cookie", DYNAMIC_HEADER);
     headersTmp.put("DNT", "1");
+    headersTmp.put("Referer", DYNAMIC_HEADER);
     headersTmp.put("Connection", "keep-alive");
     TOR = new RequestHeaders(headersTmp);
   }
@@ -87,6 +88,7 @@ public class RequestHeaders implements Serializable {
     headersTmp.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
     headersTmp.put("Upgrade-Insecure-Requests", "1");
     headersTmp.put("User-Agent", DYNAMIC_HEADER);
+    headersTmp.put("Referer", DYNAMIC_HEADER);
     headersTmp.put("Accept-Encoding", "gzip, deflate, sdch");
     headersTmp.put("Accept-Language", "en-US,en;q=0.8");
     headersTmp.put("Cookie", DYNAMIC_HEADER);
