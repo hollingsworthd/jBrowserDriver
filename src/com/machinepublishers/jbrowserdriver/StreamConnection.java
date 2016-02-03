@@ -67,6 +67,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -92,7 +93,7 @@ import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.CachingHttpClients;
+import org.apache.http.impl.client.cache.CustomCachingHttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.LaxCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
@@ -168,7 +169,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
       .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
       .build();
-  private static final CloseableHttpClient cachingClient = CachingHttpClients.custom()
+  private static final CloseableHttpClient cachingClient = CustomCachingHttpClientBuilder.create()
       .setCacheConfig(cacheConfig)
       .setHttpCacheStorage(new HttpCache(cacheDir))
       .disableRedirectHandling()
@@ -399,10 +400,18 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     for (Map.Entry<String, List<String>> entry : reqHeaders.entrySet()) {
       if (!names.contains(entry.getKey().toLowerCase())) {
         for (String val : entry.getValue()) {
-          req.addHeader(entry.getKey(), val);
+          req.addHeader(capitalizeHeader(entry.getKey()), val);
         }
       }
     }
+  }
+
+  private static final String capitalizeHeader(String str) {
+    String[] parts = str.split("-");
+    for (int i = 0; i < parts.length; i++) {
+      parts[i] = StringUtils.capitalize(parts[i]);
+    }
+    return StringUtils.join(parts, '-');
   }
 
   ///////////////////////////////////////////////////////////
