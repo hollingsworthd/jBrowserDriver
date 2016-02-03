@@ -35,16 +35,27 @@ public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
   private static final AtomicReference<Closeable> listener = new AtomicReference<Closeable>();
   private static final AtomicReference<List<String>> previousRequest = new AtomicReference<List<String>>();
-  private static final byte[] body;
-  private static final byte[] content;
+  private static final byte[] indexBody;
+  private static final byte[] indexContent;
+  private static final byte[] iframeBody;
+  private static final byte[] iframeContent;
   static {
+    byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm");
+    indexBody = resource[0];
+    indexContent = resource[1];
+
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm");
+    iframeBody = resource[0];
+    iframeContent = resource[1];
+  }
+
+  private static byte[][] resource(String path) {
     final char[] chars = new char[8192];
     StringBuilder builder = new StringBuilder(chars.length);
     byte[] bodyTmp = null;
     byte[] contentTmp = null;
     try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(HttpServer.class.getResourceAsStream(
-            "/com/machinepublishers/jbrowserdriver/diagnostics/test.htm")))) {
+        new InputStreamReader(HttpServer.class.getResourceAsStream(path)))) {
       for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
       bodyTmp = builder.toString().getBytes("utf-8");
       contentTmp = new String("HTTP/1.1 200 OK\n"
@@ -54,8 +65,7 @@ public class HttpServer {
     } catch (Throwable t) {
       t.printStackTrace();
     }
-    body = bodyTmp;
-    content = contentTmp;
+    return new byte[][] { bodyTmp, contentTmp };
   }
 
   public static List<String> previousRequest() {
@@ -76,9 +86,12 @@ public class HttpServer {
                 List<String> request = new ArrayList<String>();
                 for (String line; (line = reader.readLine()) != null;) {
                   request.add(line);
-                  if (line.startsWith("GET")) {
-                    output.write(content, 0, content.length);
-                    output.write(body, 0, body.length);
+                  if (line.startsWith("GET / ")) {
+                    output.write(indexContent, 0, indexContent.length);
+                    output.write(indexBody, 0, indexBody.length);
+                  } else if (line.startsWith("GET /iframe.htm ")) {
+                    output.write(iframeContent, 0, iframeContent.length);
+                    output.write(iframeBody, 0, iframeBody.length);
                   }
                 }
                 previousRequest.set(request);
