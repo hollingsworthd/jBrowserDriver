@@ -40,8 +40,12 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    */
   @Override
   public WebElement activeElement() {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      return Element.constructElement(remote.activeElement(), logs);
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
@@ -62,35 +66,55 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    */
   @Override
   public WebDriver defaultContent() {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      remote.defaultContent();
+      return driver;
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WebDriver frame(int arg0) {
-    // TODO Auto-generated method stub
-    return null;
+  public WebDriver frame(int index) {
+    try {
+      remote.frame(index);
+      return driver;
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WebDriver frame(String arg0) {
-    // TODO Auto-generated method stub
-    return null;
+  public WebDriver frame(String nameOrId) {
+    try {
+      remote.frame(nameOrId);
+      return driver;
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WebDriver frame(WebElement arg0) {
-    // TODO Auto-generated method stub
-    return null;
+  public WebDriver frame(WebElement element) {
+    try {
+      remote.frame((ElementRemote) element);
+      return driver;
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
@@ -98,8 +122,13 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    */
   @Override
   public WebDriver parentFrame() {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      remote.parentFrame();
+      return driver;
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
   }
 
   /**
