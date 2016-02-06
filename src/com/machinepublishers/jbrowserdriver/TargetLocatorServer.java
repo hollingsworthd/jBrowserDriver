@@ -65,7 +65,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    * {@inheritDoc}
    */
   @Override
-  public JBrowserDriverServer frame(int arg0) {
+  public JBrowserDriverServer frame(int index) {
     // TODO Auto-generated method stub
     return null;
   }
@@ -74,7 +74,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    * {@inheritDoc}
    */
   @Override
-  public JBrowserDriverServer frame(String arg0) {
+  public JBrowserDriverServer frame(String nameOrId) {
     // TODO Auto-generated method stub
     return null;
   }
@@ -83,7 +83,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    * {@inheritDoc}
    */
   @Override
-  public JBrowserDriverServer frame(WebElement arg0) {
+  public JBrowserDriverServer frame(WebElement element) {
     // TODO Auto-generated method stub
     return null;
   }
@@ -92,7 +92,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    * {@inheritDoc}
    */
   @Override
-  public JBrowserDriverServer frame(ElementRemote arg0) {
+  public JBrowserDriverServer frame(ElementRemote element) {
     // TODO Auto-generated method stub
     return null;
   }
