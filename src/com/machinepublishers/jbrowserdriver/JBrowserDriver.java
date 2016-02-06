@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.security.SecureRandom;
@@ -146,12 +145,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       }));
       Random rand = new SecureRandom();
       List<String> paths = new ArrayList<String>();
-      Path basePath = classpathDir.toPath().toAbsolutePath();
       for (int i = 0; i < items.length; i++) {
         File curItem = new File(items[i]);
-        paths.add(basePath.relativize(
-            curItem.toPath().toAbsolutePath()).toString().replace(File.separatorChar, '/')
-            + (curItem.isDirectory() ? "/" : ""));
+        paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
         if (curItem.isFile() && items[i].endsWith(".jar")) {
           try (ZipFile jar = new ZipFile(items[i])) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
@@ -162,8 +158,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
                   File childJar = new File(classpathDir,
                       Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
                   Files.copy(in, childJar.toPath());
-                  paths.add(basePath.relativize(
-                      childJar.toPath().toAbsolutePath()).toString().replace(File.separatorChar, '/'));
+                  paths.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
                   childJar.deleteOnExit();
                 }
               }
