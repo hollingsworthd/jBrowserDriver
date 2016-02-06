@@ -105,6 +105,8 @@ public class Test {
         }
       }
       test(request.size() - 2 == headers.size());
+
+      //TODO handle cookies set by JS
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
