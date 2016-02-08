@@ -72,6 +72,7 @@ public class Example {
 The following Java system properties can be set:
 * `jbd.traceconsole` Mirror trace-level log messages to standard out. Otherwise these logs are only available through the Selenium APIs. Defaults to `false`.
 * `jbd.warnconsole` Mirror warning-level log messages to standard error. Otherwise these logs are only available through the Selenium APIs. Defaults to `true`.
+* `jbd.wireconsole` Log full requests to standard out. This produces an enormous amount of output and logs potentially sensistive data--use only as needed. Defaults to `false`.
 * `jbd.ports` Ports and port ranges available to run browser processes over RMI. Separate values with comma. Defaults to `10000-10007` (a max of 8 processes).
 * `jbd.testport` Port over which a loopback-only webserver is run when testing is performed. Defaults to `9000`.
 * `jbd.maxlogs` Maximum number of log entries to store in memory, accessible via the Selenium APIs. Oldest log entry is dropped once max is reached. Regardless of this setting, logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String). Defaults to `5000`.
