@@ -46,8 +46,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -133,6 +135,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     mediaDir = mediaDirTmp;
     cacheDir = cacheDirTmp;
   }
+  private static final Set<String> ignoredHeaders = Collections.unmodifiableSet(new HashSet(Arrays.asList(new String[] {
+      "cookie", "pragma", "cache-control", "content-length" })));
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
@@ -932,9 +936,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public void setRequestProperty(String key, String value) {
     key = key.toLowerCase();
-    if (!"cookie".equals(key)
-        && !"pragma".equals(key)
-        && !"cache-control".equals(key)) {
+    if (!ignoredHeaders.contains(key)) {
       reqHeaders.remove(key);
       List<String> list = new ArrayList<String>();
       list.add(value);
@@ -948,9 +950,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public void addRequestProperty(String key, String value) {
     key = key.toLowerCase();
-    if (!"cookie".equals(key)
-        && !"pragma".equals(key)
-        && !"cache-control".equals(key)) {
+    if (!ignoredHeaders.contains(key)) {
       if (reqHeaders.get(key) == null) {
         reqHeaders.put(key, new ArrayList<String>());
       }
