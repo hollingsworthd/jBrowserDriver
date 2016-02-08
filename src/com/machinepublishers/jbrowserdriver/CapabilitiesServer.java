@@ -46,7 +46,7 @@ class CapabilitiesServer extends UnicastRemoteObject implements CapabilitiesRemo
    */
   @Override
   public String getBrowserName() {
-    return "jBrowserDriver (WebKit-based) by Machine Publishers, LLC";
+    return "jBrowserDriver";
   }
 
   /**
