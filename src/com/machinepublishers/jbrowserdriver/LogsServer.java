@@ -34,6 +34,14 @@ import org.openqa.selenium.logging.LogEntries;
 class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
   private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
   private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
+  private static final boolean WIRE_CONSOLE = "true".equals(System.getProperty("jbd.wireconsole"));
+
+  static {
+    if (WIRE_CONSOLE) {
+      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
+    }
+  }
   private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
   private final LinkedList<Entry> entries = new LinkedList<Entry>();
   private static final LogsServer instance;
