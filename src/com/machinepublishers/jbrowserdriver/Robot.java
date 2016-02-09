@@ -568,7 +568,22 @@ class Robot {
         @Override
         public byte[] perform() {
           BufferedImage image = null;
-          if (Settings.headless()) {
+
+          Throwable attempt1 = null;
+          try {
+            image = SwingFXUtils.fromFXImage(
+                context.item().view.get().snapshot(
+                    new SnapshotParameters(),
+                    new WritableImage(
+                        (int) Math.rint((Double) context.item().view.get().getWidth()),
+                        (int) Math.rint((Double) context.item().view.get().getHeight()))),
+                null);
+          } catch (Throwable t) {
+            attempt1 = t;
+          }
+
+          Throwable attempt2 = null;
+          if (image == null && Settings.headless()) {
             try {
               final Stage stage = context.item().stage.get();
               final Scene scene = stage.getScene();
@@ -591,20 +606,7 @@ class Robot {
                   false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
               image = new BufferedImage(colorModel, raster, true, null);
             } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-            }
-          }
-          if (image == null) {
-            try {
-              image = SwingFXUtils.fromFXImage(
-                  context.item().view.get().snapshot(
-                      new SnapshotParameters(),
-                      new WritableImage(
-                          (int) Math.rint((Double) context.item().view.get().getWidth()),
-                          (int) Math.rint((Double) context.item().view.get().getHeight()))),
-                  null);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
+              attempt2 = t;
             }
           }
           if (image != null) {
@@ -619,6 +621,8 @@ class Robot {
               Util.close(out);
             }
           }
+          LogsServer.instance().exception(attempt1);
+          LogsServer.instance().exception(attempt2);
           return null;
         }
       });
