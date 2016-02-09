@@ -178,7 +178,7 @@ public class Settings implements Serializable {
     private ProxyConfig proxy = new ProxyConfig();
     private boolean saveMedia;
     private boolean saveAttachments;
-    private boolean ignoreDialogs;
+    private boolean ignoreDialogs = true;
     private boolean cache;
     private File cacheDir;
     private int cacheEntries = 10 * 1000;
@@ -303,7 +303,7 @@ public class Settings implements Serializable {
      * @param ignoreDialogs
      *          <code>True</code> to auto-dismiss alert/prompt/confirm dialogs and relieve the
      *          user from having to handle them. <code>False</code> to allow these dialogs to have an effect on the page
-     *          and force the user to accept/dismiss them. Defaults to <code>false</code>.
+     *          and force the user to accept/dismiss them. Defaults to <code>true</code>.
      * @return this Builder
      */
     public Builder ignoreDialogs(boolean ignoreDialogs) {
