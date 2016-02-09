@@ -169,6 +169,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
       .build();
   private static final CacheConfig cacheConfig = CacheConfig.custom()
+      .setSharedCache(false)
       .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
       .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
       .build();
@@ -493,7 +494,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
             if (!cache.get()) {
-              response.get().setHeader("Cache-Control", "no-store");
+              response.get().setHeader("Cache-Control", "no-store, no-cache");
             }
           }
         }
