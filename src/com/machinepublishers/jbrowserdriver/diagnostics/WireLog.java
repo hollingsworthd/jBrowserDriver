@@ -21,19 +21,32 @@ package com.machinepublishers.jbrowserdriver.diagnostics;
 
 import java.io.Serializable;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.openqa.selenium.logging.LogEntry;
 
 public class WireLog implements Log, Serializable {
+  private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.*)\"$");
+  private static final Pattern response = Pattern.compile("^http-outgoing-[0-9]+\\s<<\\s\"(.*)\"$");
+
   public WireLog(String s) {}
 
   @Override
   public void debug(Object objMessage) {
     if (objMessage != null) {
       String message = objMessage.toString();
-      if (message != null && message.startsWith("http-outgoing")) {
-        System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(), message));
+      if (message != null) {
+        Matcher matcher = request.matcher(message);
+        if (matcher.matches()) {
+          System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(), "----->> " + matcher.group(1)));
+        } else {
+          matcher = response.matcher(message);
+          if (matcher.matches()) {
+            System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(), "<<----- " + matcher.group(1)));
+          }
+        }
       }
     }
   }

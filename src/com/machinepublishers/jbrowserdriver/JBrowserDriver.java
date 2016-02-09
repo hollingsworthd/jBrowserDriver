@@ -268,6 +268,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
 
   private void launchProcess(int port) {
     final AtomicBoolean ready = new AtomicBoolean();
+    final String logPrefix = "[Port " + port + "] ";
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -296,18 +297,18 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
                     ready.notify();
                     done = true;
                   } else {
-                    System.out.println(line);
+                    System.out.println(logPrefix + line);
                   }
                 }
               } else {
-                System.out.println(line);
+                System.out.println(logPrefix + line);
               }
             }
           })
               .redirectError(new LogOutputStream() {
             @Override
             protected void processLine(String line) {
-              System.err.println(line);
+              System.err.println(logPrefix + line);
             }
           })
               .destroyOnExit()
