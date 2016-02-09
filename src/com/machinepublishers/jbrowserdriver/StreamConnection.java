@@ -69,7 +69,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -187,6 +186,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .build();
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
+  private final Map<String, String> reqHeadersCasing = new HashMap<String, String>();
   private final AtomicReference<RequestConfig.Builder> config = new AtomicReference<RequestConfig.Builder>(RequestConfig.custom());
   private final URL url;
   private final String urlString;
@@ -376,14 +376,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   private void processHeaders(Settings settings, HttpRequestBase req, String host) {
-    boolean https = urlString.startsWith("https://");
-    Collection<String> names = https ? settings.headers().namesHttps()
-        : settings.headers().namesHttp();
+    boolean https = urlString.toLowerCase().startsWith("https://");
+    Collection<String> names = settings.headers().headerNames(https);
     for (String name : names) {
       final String nameProperCase = settings.headers().nameFromLowercase(name, https);
       List<String> valuesIn = reqHeaders.get(name);
-      String valueSettings = https ? settings.headers().headerHttps(name)
-          : settings.headers().headerHttp(name);
+      String valueSettings = settings.headers().headerValue(name, https);
       if (valueSettings.equals(RequestHeaders.DROP_HEADER)) {
         continue;
       }
@@ -402,20 +400,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       }
     }
     for (Map.Entry<String, List<String>> entry : reqHeaders.entrySet()) {
-      if (!names.contains(entry.getKey().toLowerCase())) {
+      if (!names.contains(entry.getKey())) {
         for (String val : entry.getValue()) {
-          req.addHeader(capitalizeHeader(entry.getKey()), val);
+          req.addHeader(reqHeadersCasing.get(entry.getKey()), val);
         }
       }
     }
-  }
-
-  private static final String capitalizeHeader(String str) {
-    String[] parts = str.split("-");
-    for (int i = 0; i < parts.length; i++) {
-      parts[i] = StringUtils.capitalize(parts[i]);
-    }
-    return StringUtils.join(parts, '-');
   }
 
   ///////////////////////////////////////////////////////////
@@ -503,7 +493,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
             if (!cache.get()) {
-              response.get().setHeader("cache-control", "no-store");
+              response.get().setHeader("Cache-Control", "no-store");
             }
           }
         }
@@ -561,7 +551,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         try {
           InputStream entityStream = entity.get().getContent();
           if (entityStream != null && !skip.get()) {
-            String header = getHeaderField("content-disposition");
+            String header = getHeaderField("Content-Disposition");
             if (header != null && !header.isEmpty()) {
               Matcher matcher = downloadHeader.matcher(header);
               if (matcher.matches()) {
@@ -618,7 +608,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public int getResponseCode() throws IOException {
     exec();
-    StatusMonitor.instance().addRedirect(urlString, getHeaderField("location"));
+    StatusMonitor.instance().addRedirect(urlString, getHeaderField("Location"));
     if (skip.get()) {
       return 204;
     }
@@ -657,7 +647,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   public void removeContentEncoding() {
-    response.get().removeHeaders("content-encoding");
+    response.get().removeHeaders("Content-Encoding");
     contentEncodingRemoved.set(true);
   }
 
@@ -685,7 +675,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   public void setContentLength(long contentLength) {
     this.contentLength.set(contentLength);
-    response.get().setHeader("content-length", Long.toString(contentLength));
+    response.get().setHeader("Content-Length", Long.toString(contentLength));
   }
 
   /**
@@ -710,7 +700,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public long getDate() {
-    return getHeaderFieldLong("date", 0);
+    return getHeaderFieldLong("Date", 0);
   }
 
   /**
@@ -718,7 +708,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public long getExpiration() {
-    return getHeaderFieldLong("expires", 0);
+    return getHeaderFieldLong("Expires", 0);
   }
 
   /**
@@ -726,7 +716,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public long getLastModified() {
-    return getHeaderFieldLong("last-modified", 0);
+    return getHeaderFieldLong("Last-Modified", 0);
   }
 
   /**
@@ -902,7 +892,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public long getIfModifiedSince() {
-    return getRequestProperty("if-modified-since") == null ? 0 : Long.parseLong(getRequestProperty("if-modified-since"));
+    return getRequestProperty("If-Modified-Since") == null ? 0 : Long.parseLong(getRequestProperty("If-Modified-Since"));
   }
 
   /**
@@ -910,7 +900,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setIfModifiedSince(long ifmodifiedsince) {
-    setRequestProperty("if-modified-since", Long.toString(ifmodifiedsince));
+    setRequestProperty("If-Modified-Since", Long.toString(ifmodifiedsince));
   }
 
   /**
@@ -926,8 +916,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public String getRequestProperty(String key) {
-    key = key.toLowerCase();
-    return reqHeaders.get(key) == null || reqHeaders.get(key).isEmpty() ? null : reqHeaders.get(key).get(0);
+    final String keyLowercase = key.toLowerCase();
+    return reqHeaders.get(keyLowercase) == null || reqHeaders.get(keyLowercase).isEmpty()
+        ? null : reqHeaders.get(keyLowercase).get(0);
   }
 
   /**
@@ -935,12 +926,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setRequestProperty(String key, String value) {
-    key = key.toLowerCase();
-    if (!ignoredHeaders.contains(key)) {
-      reqHeaders.remove(key);
+    final String keyLowercase = key.toLowerCase();
+    if (!ignoredHeaders.contains(keyLowercase)) {
+      reqHeaders.remove(keyLowercase);
       List<String> list = new ArrayList<String>();
       list.add(value);
-      reqHeaders.put(key, list);
+      reqHeaders.put(keyLowercase, list);
+      reqHeadersCasing.put(keyLowercase, key);
     }
   }
 
@@ -949,12 +941,13 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void addRequestProperty(String key, String value) {
-    key = key.toLowerCase();
-    if (!ignoredHeaders.contains(key)) {
-      if (reqHeaders.get(key) == null) {
-        reqHeaders.put(key, new ArrayList<String>());
+    final String keyLowercase = key.toLowerCase();
+    if (!ignoredHeaders.contains(keyLowercase)) {
+      if (reqHeaders.get(keyLowercase) == null) {
+        reqHeaders.put(keyLowercase, new ArrayList<String>());
       }
-      reqHeaders.get(key).add(value);
+      reqHeaders.get(keyLowercase).add(value);
+      reqHeadersCasing.put(keyLowercase, key);
     }
   }
 

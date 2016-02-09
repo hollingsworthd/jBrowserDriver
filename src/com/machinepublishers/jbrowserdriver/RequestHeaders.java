@@ -36,9 +36,9 @@ import java.util.Map;
 public class RequestHeaders implements Serializable {
 
   private final LinkedHashMap<String, String> headersHttp;
-  private final Map<String, String> httpCaseMap;
+  private final Map<String, String> headersHttpCasing;
   private final LinkedHashMap<String, String> headersHttps;
-  private final Map<String, String> httpsCaseMap;
+  private final Map<String, String> headersHttpsCasing;
   /**
    * Use this as a header value to force the header to be dropped from the request. For instance,
    * JavaFX WebKit will always add the Cookie header but adding the header map entry
@@ -115,52 +115,44 @@ public class RequestHeaders implements Serializable {
    */
   public RequestHeaders(LinkedHashMap<String, String> headersHttp, LinkedHashMap<String, String> headersHttps) {
     LinkedHashMap<String, String> headersHttpTmp = new LinkedHashMap<String, String>();
-    Map<String, String> httpCaseMapTmp = new HashMap<String, String>();
+    Map<String, String> headersHttpCasingTmp = new HashMap<String, String>();
     LinkedHashMap<String, String> headersHttpsTmp = new LinkedHashMap<String, String>();
-    Map<String, String> httpsCaseMapTmp = new HashMap<String, String>();
-    createHeaders(headersHttp, headersHttpTmp, httpCaseMapTmp);
-    createHeaders(headersHttps, headersHttpsTmp, httpsCaseMapTmp);
+    Map<String, String> headersHttpsCasingTmp = new HashMap<String, String>();
+    createHeaders(headersHttp, headersHttpTmp, headersHttpCasingTmp);
+    createHeaders(headersHttps, headersHttpsTmp, headersHttpsCasingTmp);
     this.headersHttp = headersHttpTmp;
-    this.httpCaseMap = httpCaseMapTmp;
+    this.headersHttpCasing = headersHttpCasingTmp;
     this.headersHttps = headersHttpsTmp;
-    this.httpsCaseMap = httpsCaseMapTmp;
+    this.headersHttpsCasing = headersHttpsCasingTmp;
   }
 
   private static void createHeaders(
       LinkedHashMap<String, String> headersIn,
       LinkedHashMap<String, String> headersOut,
-      Map<String, String> caseMap) {
+      Map<String, String> headersCasing) {
     for (Map.Entry<String, String> cur : headersIn.entrySet()) {
       headersOut.put(cur.getKey().toLowerCase(), cur.getValue());
-      caseMap.put(cur.getKey().toLowerCase(), cur.getKey());
+      headersCasing.put(cur.getKey().toLowerCase(), cur.getKey());
     }
     if (!headersOut.containsKey("accept-charset")) {
       headersOut.put("accept-charset", DROP_HEADER);
-      caseMap.put("accept-charset", "Accept-Charset");
+      headersCasing.put("accept-charset", "Accept-Charset");
     }
     if (!headersOut.containsKey("pragma")) {
       headersOut.put("pragma", DROP_HEADER);
-      caseMap.put("pragma", "Pragma");
+      headersCasing.put("pragma", "Pragma");
     }
   }
 
   String nameFromLowercase(String headerNameLowercase, boolean https) {
-    return https ? httpsCaseMap.get(headerNameLowercase) : httpCaseMap.get(headerNameLowercase);
+    return https ? headersHttpsCasing.get(headerNameLowercase) : headersHttpCasing.get(headerNameLowercase);
   }
 
-  Collection<String> namesHttp() {
-    return headersHttp.keySet();
+  Collection<String> headerNames(boolean https) {
+    return https ? headersHttps.keySet() : headersHttp.keySet();
   }
 
-  String headerHttp(String name) {
-    return headersHttp.get(name);
-  }
-
-  Collection<String> namesHttps() {
-    return headersHttps.keySet();
-  }
-
-  String headerHttps(String name) {
-    return headersHttps.get(name);
+  String headerValue(String name, boolean https) {
+    return https ? headersHttps.get(name) : headersHttp.get(name);
   }
 }
