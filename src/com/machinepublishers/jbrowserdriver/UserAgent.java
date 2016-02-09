@@ -191,9 +191,15 @@ public class UserAgent {
         builder.append("Object.defineProperty(window.navigator." + parent + ",'" + child + "',");
         builder.append("{value:" + entry.getValue() + "});");
       } else {
-        builder.append("Object.defineProperty(window.navigator,'" + entry.getKey() + "',{value:");
-        builder.append(entry.getValue());
+        builder.append("try{");
+        builder.append("Object.defineProperty(window.navigator,'" + entry.getKey());
+        builder.append("',{value:" + entry.getValue());
         builder.append("});");
+        builder.append("}catch(e){");
+        builder.append("window.navigator = Object.create(navigator, {" + entry.getKey());
+        builder.append(":{value:" + entry.getValue() + "}");
+        builder.append("});");
+        builder.append("}");
       }
     }
     return builder.toString();
