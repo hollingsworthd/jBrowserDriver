@@ -55,10 +55,16 @@ public class Test {
     try {
       HttpServer.launch(TEST_PORT);
       driver = new JBrowserDriver();
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
 
+      /*
+       * Load a page
+       */
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
       test(driver.getStatusCode() == 200);
 
+      /*
+       * Select DOM elements
+       */
       test(driver.findElement(By.id("divtext1")).getAttribute("innerText").equals("test1"));
       test(driver.findElements(By.name("divs")).size() == 2);
       test(driver.findElements(By.name("divs")).get(1).getAttribute("innerText").equals("test2"));
@@ -81,11 +87,20 @@ public class Test {
       test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
 
+      /*
+       * Set cookies
+       */
       driver.manage().addCookie(new Cookie("testname", "testvalue"));
       test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
 
+      /*
+       * Screenshots
+       */
       test(driver.getScreenshotAs(OutputType.BYTES).length > 0);
 
+      /*
+       * Javascript alerts
+       */
       driver.findElement(By.tagName("button")).click();
       test(driver.switchTo().alert().getText().equals("test-alert"));
       driver.switchTo().alert().dismiss();
@@ -96,6 +111,9 @@ public class Test {
       driver.switchTo().alert().accept();
       test(driver.findElement(By.id("testspan")).getAttribute("innerHTML").equals("test-input"));
 
+      /*
+       * Request headers
+       */
       List<String> request = HttpServer.previousRequest();
       test(request.size() > 1);
       Set<String> headers = new HashSet<String>();
@@ -105,6 +123,14 @@ public class Test {
         }
       }
       test(request.size() - 2 == headers.size());
+
+      /*
+       * Redirects and cookies
+       */
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT + "/redirect/site1");
+      test(driver.getStatusCode() == 200);
+      test(driver.getCurrentUrl().endsWith("/redirect/site2"));
+      test(driver.manage().getCookieNamed("JSESSIONID").getValue().equals("ABC123"));
 
       //TODO handle cookies set by JS
     } catch (Throwable t) {

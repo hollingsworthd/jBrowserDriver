@@ -39,6 +39,7 @@ public class HttpServer {
   private static final byte[] indexContent;
   private static final byte[] iframeBody;
   private static final byte[] iframeContent;
+  private static final byte[] redirectContent;
   static {
     byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm");
     indexBody = resource[0];
@@ -47,6 +48,26 @@ public class HttpServer {
     resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm");
     iframeBody = resource[0];
     iframeContent = resource[1];
+
+    byte[] redirectContentTmp = null;
+    try {
+      redirectContentTmp = new String(""
+          + "HTTP/1.1 302 Found\n"
+          + "Server: Initech/1.1\n"
+          + "X-FRAME-OPTIONS: SAMEORIGIN\n"
+          + "Set-Cookie: JSESSIONID=ABC123; Path=/redirect/; HttpOnly\n"
+          + "Expires: 0\n"
+          + "Cache-Control: no-store, no-cache\n"
+          + "Cache-Control: post-check=0, pre-check=0\n"
+          + "Pragma: no-cache\n"
+          + "Location: /redirect/site2\n"
+          + "Content-Type: text/html;charset=UTF-8\n"
+          + "Content-Length: 0\n"
+          + "Date: Tue, 09 Feb 2016 12:50:13 GMT\n\n").getBytes("utf-8");
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+    redirectContent = redirectContentTmp;
   }
 
   private static byte[][] resource(String path) {
@@ -90,6 +111,11 @@ public class HttpServer {
                     output.write(indexContent, 0, indexContent.length);
                     output.write(indexBody, 0, indexBody.length);
                   } else if (line.startsWith("GET /iframe.htm ")) {
+                    output.write(iframeContent, 0, iframeContent.length);
+                    output.write(iframeBody, 0, iframeBody.length);
+                  } else if (line.startsWith("GET /redirect/site1 ")) {
+                    output.write(redirectContent);
+                  } else if (line.startsWith("GET /redirect/site2 ")) {
                     output.write(iframeContent, 0, iframeContent.length);
                     output.write(iframeBody, 0, iframeBody.length);
                   }
