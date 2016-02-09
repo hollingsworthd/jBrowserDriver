@@ -166,24 +166,26 @@ class HttpListener implements LoadListenerClient {
     try {
       synchronized (statusCode) {
         this.frame.compareAndSet(0l, frame);
-        if (this.frame.get() == frame) {
-          if (state == LoadListenerClient.PAGE_STARTED
-              || state == LoadListenerClient.PAGE_REDIRECTED
-              || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
+        if (state == LoadListenerClient.PAGE_STARTED
+            || state == LoadListenerClient.PAGE_REDIRECTED
+            || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
+          if (this.frame.get() == frame) {
             statusCode.set(0);
             superseded.set(true);
             resources.clear();
             resources.put(frame + url, System.currentTimeMillis());
             statusMonitor.startStatusMonitor(url);
-          } else if (statusCode.get() == 0
-              && (state == LoadListenerClient.PAGE_FINISHED
-                  || state == LoadListenerClient.LOAD_STOPPED
-                  || state == LoadListenerClient.LOAD_FAILED)) {
-            final int newStatusCode = statusMonitor.stopStatusMonitor(url);
-            resources.remove(frame + url);
-            new Thread(new AjaxListener(newStatusCode, statusCode,
-                resources, timeoutMS.get())).start();
           }
+          statusMonitor.addPrimaryDocument(url);
+        } else if (statusCode.get() == 0
+            && this.frame.get() == frame
+            && (state == LoadListenerClient.PAGE_FINISHED
+                || state == LoadListenerClient.LOAD_STOPPED
+                || state == LoadListenerClient.LOAD_FAILED)) {
+          final int newStatusCode = statusMonitor.stopStatusMonitor(url);
+          resources.remove(frame + url);
+          new Thread(new AjaxListener(newStatusCode, statusCode,
+              resources, timeoutMS.get())).start();
         }
       }
     } catch (Throwable t) {

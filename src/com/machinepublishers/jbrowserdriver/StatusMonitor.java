@@ -69,6 +69,11 @@ class StatusMonitor {
   void startStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = true;
+    }
+  }
+
+  void addPrimaryDocument(String url) {
+    synchronized (lock) {
       primaryDocuments.add(url);
     }
   }
