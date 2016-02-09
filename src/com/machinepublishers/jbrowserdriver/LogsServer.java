@@ -94,28 +94,30 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   public void exception(Throwable t) {
-    final Entry entry;
-    StringWriter writer = null;
-    try {
-      writer = new StringWriter();
-      t.printStackTrace(new PrintWriter(writer));
-      entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
-      synchronized (entries) {
-        entries.add(entry);
-        if (entries.size() > MAX_LOGS) {
-          entries.removeFirst();
+    if (t != null) {
+      final Entry entry;
+      StringWriter writer = null;
+      try {
+        writer = new StringWriter();
+        t.printStackTrace(new PrintWriter(writer));
+        entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
+        synchronized (entries) {
+          entries.add(entry);
+          if (entries.size() > MAX_LOGS) {
+            entries.removeFirst();
+          }
         }
+      } catch (Throwable t2) {
+        if (WARN_CONSOLE) {
+          System.err.println("While logging a message, an error occurred: " + t2.getMessage());
+        }
+        return;
+      } finally {
+        Util.close(writer);
       }
-    } catch (Throwable t2) {
       if (WARN_CONSOLE) {
-        System.err.println("While logging a message, an error occurred: " + t2.getMessage());
+        System.err.println(entry);
       }
-      return;
-    } finally {
-      Util.close(writer);
-    }
-    if (WARN_CONSOLE) {
-      System.err.println(entry);
     }
   }
 
