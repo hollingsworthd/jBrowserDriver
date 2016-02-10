@@ -31,7 +31,7 @@ public class WireLog implements Log, Serializable {
   private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.+)\"$");
   private static final Pattern response = Pattern.compile(
       "^http-outgoing-[0-9]+\\s<<\\s\"((?:HTTP/.+)|(?:[^:]+:\\s.+))\"$");
-  private static final int MAX_LEN = 150;
+  private static final int MAX_LEN = 500;
 
   public WireLog(String s) {}
 
