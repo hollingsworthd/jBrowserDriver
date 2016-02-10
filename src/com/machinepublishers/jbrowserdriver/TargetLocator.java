@@ -41,7 +41,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebElement activeElement() {
     try {
-      return Element.constructElement(remote.activeElement(), logs);
+      return Element.constructElement(remote.activeElement(), driver, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

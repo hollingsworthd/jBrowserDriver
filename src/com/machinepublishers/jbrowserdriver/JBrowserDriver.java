@@ -435,7 +435,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElement(By by) {
     try {
-      return Element.constructElement(remote.findElement(by), logs);
+      return Element.constructElement(remote.findElement(by), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -448,7 +448,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElements(By by) {
     try {
-      return Element.constructList(remote.findElements(by), logs);
+      return Element.constructList(remote.findElements(by), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -461,7 +461,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementById(String id) {
     try {
-      return Element.constructElement(remote.findElementById(id), logs);
+      return Element.constructElement(remote.findElementById(id), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -474,7 +474,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsById(String id) {
     try {
-      return Element.constructList(remote.findElementsById(id), logs);
+      return Element.constructList(remote.findElementsById(id), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -487,7 +487,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByXPath(String expr) {
     try {
-      return Element.constructElement(remote.findElementByXPath(expr), logs);
+      return Element.constructElement(remote.findElementByXPath(expr), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -500,7 +500,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     try {
-      return Element.constructList(remote.findElementsByXPath(expr), logs);
+      return Element.constructList(remote.findElementsByXPath(expr), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -513,7 +513,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
-      return Element.constructElement(remote.findElementByLinkText(text), logs);
+      return Element.constructElement(remote.findElementByLinkText(text), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -526,7 +526,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
-      return Element.constructElement(remote.findElementByPartialLinkText(text), logs);
+      return Element.constructElement(remote.findElementByPartialLinkText(text), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -539,7 +539,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByLinkText(text), logs);
+      return Element.constructList(remote.findElementsByLinkText(text), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -552,7 +552,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByPartialLinkText(text), logs);
+      return Element.constructList(remote.findElementsByPartialLinkText(text), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -565,7 +565,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
-      return Element.constructElement(remote.findElementByClassName(cssClass), logs);
+      return Element.constructElement(remote.findElementByClassName(cssClass), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -578,7 +578,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
-      return Element.constructList(remote.findElementsByClassName(cssClass), logs);
+      return Element.constructList(remote.findElementsByClassName(cssClass), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -591,7 +591,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByName(String name) {
     try {
-      return Element.constructElement(remote.findElementByName(name), logs);
+      return Element.constructElement(remote.findElementByName(name), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -604,7 +604,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByName(String name) {
     try {
-      return Element.constructList(remote.findElementsByName(name), logs);
+      return Element.constructList(remote.findElementsByName(name), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -617,7 +617,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByCssSelector(String expr) {
     try {
-      return Element.constructElement(remote.findElementByCssSelector(expr), logs);
+      return Element.constructElement(remote.findElementByCssSelector(expr), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -630,7 +630,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     try {
-      return Element.constructList(remote.findElementsByCssSelector(expr), logs);
+      return Element.constructList(remote.findElementsByCssSelector(expr), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -643,7 +643,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
-      return Element.constructElement(remote.findElementByTagName(tagName), logs);
+      return Element.constructElement(remote.findElementByTagName(tagName), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -656,7 +656,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
-      return Element.constructList(remote.findElementsByTagName(tagName), logs);
+      return Element.constructList(remote.findElementsByTagName(tagName), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return new ArrayList<WebElement>();
@@ -669,7 +669,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeAsyncScript(script, args), logs);
+      return Element.constructObject(remote.executeAsyncScript(script, args), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -682,7 +682,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   @Override
   public Object executeScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeScript(script, args), logs);
+      return Element.constructObject(remote.executeScript(script, args), this, logs);
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

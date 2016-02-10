@@ -97,3 +97,4 @@ The following have accepted and agreed to these terms and conditions,
 as evidenced by their digital signatures and information below.
 
 [Full Name] [GitHub profile URL] [YYYY-MM-DD]
+Philipp Katz, https://github.com/qqilihq, 2016-02-10
