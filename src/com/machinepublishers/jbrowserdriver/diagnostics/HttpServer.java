@@ -29,12 +29,14 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
   private static final AtomicReference<Closeable> listener = new AtomicReference<Closeable>();
   private static final AtomicReference<List<String>> previousRequest = new AtomicReference<List<String>>();
+  private static final AtomicLong previousRequestId = new AtomicLong();
   private static final byte[] indexBody;
   private static final byte[] indexContent;
   private static final byte[] iframeBody;
@@ -62,8 +64,7 @@ public class HttpServer {
           + "Pragma: no-cache\n"
           + "Location: /redirect/site2\n"
           + "Content-Type: text/html;charset=UTF-8\n"
-          + "Content-Length: 0\n"
-          + "Date: Tue, 09 Feb 2016 12:50:13 GMT\n\n").getBytes("utf-8");
+          + "Content-Length: 0\n\n").getBytes("utf-8");
     } catch (Throwable t) {
       t.printStackTrace();
     }
@@ -82,6 +83,7 @@ public class HttpServer {
       contentTmp = new String("HTTP/1.1 200 OK\n"
           + "Content-Length: " + bodyTmp.length + "\n"
           + "Content-Type: text/html; charset=utf-8\n"
+          + "Expires: Sun, 09 Feb 2116 01:01:01 GMT\n"
           + "Connection: close\n\n").getBytes("utf-8");
     } catch (Throwable t) {
       t.printStackTrace();
@@ -91,6 +93,10 @@ public class HttpServer {
 
   public static List<String> previousRequest() {
     return previousRequest.get();
+  }
+
+  public static long previousRequestId() {
+    return previousRequestId.get();
   }
 
   public static void launch(int port) {
@@ -121,6 +127,7 @@ public class HttpServer {
                   }
                 }
                 previousRequest.set(request);
+                previousRequestId.incrementAndGet();
               }
             }
           } catch (Throwable t) {}

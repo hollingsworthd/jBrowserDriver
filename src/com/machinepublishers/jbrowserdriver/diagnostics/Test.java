@@ -32,6 +32,7 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.OutputType;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
+import com.machinepublishers.jbrowserdriver.Settings;
 
 public class Test {
   private static final int TEST_PORT = Integer.parseInt(System.getProperty("jbd.testport", "9000"));
@@ -54,13 +55,21 @@ public class Test {
     JBrowserDriver driver = null;
     try {
       HttpServer.launch(TEST_PORT);
-      driver = new JBrowserDriver();
+      driver = new JBrowserDriver(Settings.builder().cache(true).ignoreDialogs(false).build());
 
       /*
        * Load a page
        */
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
       test(driver.getStatusCode() == 200);
+      long initialRequestId = HttpServer.previousRequestId();
+
+      /*
+       * Load page from cache
+       */
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
+      test(driver.getStatusCode() == 200);
+      test(HttpServer.previousRequestId() == initialRequestId);
 
       /*
        * Select DOM elements
@@ -128,6 +137,7 @@ public class Test {
        * Redirects and cookies
        */
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT + "/redirect/site1");
+      test(HttpServer.previousRequestId() != initialRequestId);
       test(driver.getStatusCode() == 200);
       test(driver.getCurrentUrl().endsWith("/redirect/site2"));
       test(driver.manage().getCookieNamed("JSESSIONID").getValue().equals("ABC123"));
