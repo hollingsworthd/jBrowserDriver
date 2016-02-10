@@ -28,8 +28,10 @@ import org.apache.commons.logging.Log;
 import org.openqa.selenium.logging.LogEntry;
 
 public class WireLog implements Log, Serializable {
-  private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.*)\"$");
-  private static final Pattern response = Pattern.compile("^http-outgoing-[0-9]+\\s<<\\s\"(.*)\"$");
+  private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.+)\"$");
+  private static final Pattern response = Pattern.compile(
+      "^http-outgoing-[0-9]+\\s<<\\s\"((?:HTTP/.+)|(?:[^:]+:\\s.+))\"$");
+  private static final int MAX_LEN = 150;
 
   public WireLog(String s) {}
 
@@ -37,14 +39,22 @@ public class WireLog implements Log, Serializable {
   public void debug(Object objMessage) {
     if (objMessage != null) {
       String message = objMessage.toString();
-      if (message != null) {
+      if (message != null && message.length() < MAX_LEN) {
         Matcher matcher = request.matcher(message);
         if (matcher.matches()) {
-          System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(), "----->> " + matcher.group(1)));
+          message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
+          if (!message.isEmpty()) {
+            System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(),
+                "----->> " + message));
+          }
         } else {
           matcher = response.matcher(message);
           if (matcher.matches()) {
-            System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(), "<<----- " + matcher.group(1)));
+            message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
+            if (!message.isEmpty()) {
+              System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(),
+                  "<<----- " + message));
+            }
           }
         }
       }
