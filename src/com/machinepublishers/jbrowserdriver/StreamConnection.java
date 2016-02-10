@@ -94,7 +94,7 @@ import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.CustomCachingHttpClientBuilder;
+import org.apache.http.impl.client.cache.CustomClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.LaxCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
@@ -173,7 +173,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
       .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
       .build();
-  private static final CloseableHttpClient cachingClient = CustomCachingHttpClientBuilder.create()
+  private static final CloseableHttpClient cachingClient = new CustomClientBuilder()
       .setCacheConfig(cacheConfig)
       .setHttpCacheStorage(new HttpCache(cacheDir))
       .disableRedirectHandling()
@@ -195,7 +195,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final AtomicInteger connectTimeout = new AtomicInteger();
   private final AtomicInteger readTimeout = new AtomicInteger();
   private final AtomicReference<String> method = new AtomicReference<String>();
-  private final AtomicBoolean cache = new AtomicBoolean(SettingsManager.settings().cache());
   private final AtomicBoolean connected = new AtomicBoolean();
   private final AtomicBoolean exec = new AtomicBoolean();
   private final AtomicReference<CloseableHttpResponse> response = new AtomicReference<CloseableHttpResponse>();
@@ -490,12 +489,11 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("PUT".equals(method.get())) {
             ((HttpPut) req.get()).setEntity(new ByteArrayEntity(reqData.get().toByteArray()));
           }
-          response.set(cache.get() ? cachingClient.execute(req.get(), context.get()) : client.execute(req.get(), context.get()));
+          response.set(SettingsManager.settings().cache()
+              ? cachingClient.execute(req.get(), context.get()) : client.execute(req.get(), context.get()));
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
-            if (!cache.get()) {
-              response.get().setHeader("Cache-Control", "no-store, no-cache");
-            }
+            response.get().setHeader("Cache-Control", "no-store, no-cache");
           }
         }
       }
@@ -509,7 +507,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void disconnect() {
-    //Do nothing. Let this lib and the underlying lib handle this.
+    //Do nothing. Let jBrowserDriver and Apache HttpComponents handle this.
   }
 
   /**
@@ -957,7 +955,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setFixedLengthStreamingMode(int contentLength) {
-    //Do nothing. Let HTTP lib handle this.
+    //Do nothing. Let Apache HttpComponents handle this.
   }
 
   /**
@@ -965,7 +963,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setFixedLengthStreamingMode(long contentLength) {
-    //Do nothing. Let HTTP lib handle this.
+    //Do nothing. Let Apache HttpComponents handle this.
   }
 
   /**
@@ -973,7 +971,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setChunkedStreamingMode(int chunklen) {
-    //Do nothing. Let HTTP lib handle this.
+    //Do nothing. Let Apache HttpComponents handle this.
   }
 
   /**
@@ -1049,7 +1047,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public boolean getDefaultUseCaches() {
-    return cache.get();
+    //Caching is handled by Apache HttpComponents. Disable caching by JavaFX/WebKit.
+    return false;
   }
 
   /**
@@ -1065,7 +1064,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public boolean getUseCaches() {
-    return cache.get();
+    //Caching is handled by Apache HttpComponents. Disable caching by JavaFX/WebKit.
+    return false;
   }
 
   /**

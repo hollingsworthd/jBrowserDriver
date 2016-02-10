@@ -22,8 +22,6 @@ package org.apache.http.impl.client.cache;
 import java.io.IOException;
 
 import org.apache.http.HttpException;
-import org.apache.http.client.cache.HttpCacheStorage;
-import org.apache.http.client.cache.ResourceFactory;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpExecutionAware;
 import org.apache.http.client.methods.HttpRequestWrapper;
@@ -31,41 +29,21 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.execchain.ClientExecChain;
 
-public class CustomCachingExec extends CachingExec {
-  public CustomCachingExec(
-      final ClientExecChain backend,
-      final HttpCache cache,
-      final CacheConfig config) {
-    super(backend, cache, config);
-  }
+public class CustomExecChain implements ClientExecChain {
 
-  public CustomCachingExec(
-      final ClientExecChain backend,
-      final HttpCache cache,
-      final CacheConfig config,
-      final AsynchronousValidator asynchRevalidator) {
-    super(backend, cache, config, asynchRevalidator);
-  }
+  private final ClientExecChain execChain;
 
-  public CustomCachingExec(
-      final ClientExecChain backend,
-      final ResourceFactory resourceFactory,
-      final HttpCacheStorage storage,
-      final CacheConfig config) {
-    super(backend, resourceFactory, storage, config);
-  }
-
-  public CustomCachingExec(final ClientExecChain backend) {
-    super(backend);
+  public CustomExecChain(final ClientExecChain execChain) {
+    this.execChain = execChain;
   }
 
   @Override
-  CloseableHttpResponse callBackend(
-      final HttpRoute route,
-      final HttpRequestWrapper request,
-      final HttpClientContext context,
-      final HttpExecutionAware execAware) throws IOException, HttpException {
-    request.removeHeaders("Via");
-    return super.callBackend(route, request, context, execAware);
+  public CloseableHttpResponse execute(
+      HttpRoute route,
+      HttpRequestWrapper request,
+      HttpClientContext clientContext,
+      HttpExecutionAware execAware) throws IOException, HttpException {
+    return new CustomResponse(execChain.execute(
+        route, HttpRequestWrapper.wrap(new CustomRequest(request)), clientContext, execAware));
   }
 }
