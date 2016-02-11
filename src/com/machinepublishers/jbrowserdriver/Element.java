@@ -41,7 +41,7 @@ import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.internal.WrapsDriver;
 
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
-    FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable, 
+    FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable,
     WrapsDriver {
   private final ElementRemote remote;
   private final Logs logs;
@@ -554,7 +554,6 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   @Override
   public WebDriver getWrappedDriver() {
-	return driver;
+    return driver;
   }
-
 }
