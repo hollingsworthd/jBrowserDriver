@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.w3c.dom.html.HTMLElement;
-
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
@@ -50,7 +48,6 @@ class Context {
   final AtomicInteger statusCode = new AtomicInteger(-1);
   final AtomicLong latestThread = new AtomicLong();
   final AtomicLong curThread = new AtomicLong();
-  final AtomicReference<HTMLElement> frame = new AtomicReference<HTMLElement>(); //TODO support iframes
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
   private int current = 0;

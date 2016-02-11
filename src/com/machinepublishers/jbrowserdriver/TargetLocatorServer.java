@@ -21,6 +21,8 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openqa.selenium.WebElement;
 
@@ -40,8 +42,9 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public ElementServer activeElement() {
-    // TODO Auto-generated method stub
-    return null;
+    ElementServer element = (ElementServer) driver.executeScript("return document.activeElement;");
+    context.item().frame.set(element);
+    return element;
   }
 
   /**
@@ -57,8 +60,8 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer defaultContent() {
-    // TODO Auto-generated method stub
-    return null;
+    context.item().frame.set(null);
+    return driver;
   }
 
   /**
@@ -66,8 +69,10 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer frame(int index) {
-    // TODO Auto-generated method stub
-    return null;
+    context.item().frame.set(
+        (ElementServer) driver.executeScript(
+            "return window.frames[arguments[0]].document;", new Object[] { index }));
+    return driver;
   }
 
   /**
@@ -75,8 +80,19 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer frame(String nameOrId) {
-    // TODO Auto-generated method stub
-    return null;
+    List<ElementServer> byName = driver.findElementsByName(nameOrId);
+    List<ElementServer> byId = driver.findElementsById(nameOrId);
+    List<ElementServer> elements = new ArrayList<ElementServer>();
+    elements.addAll(byName);
+    elements.addAll(byId);
+    for (ElementServer element : elements) {
+      if (element.getTagName().equals("frame")
+          || element.getTagName().equals("iframe")) {
+        element.activate();
+        return driver;
+      }
+    }
+    return driver;
   }
 
   /**
@@ -84,8 +100,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer frame(WebElement element) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new IllegalStateException();
   }
 
   /**
@@ -93,8 +108,7 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer frame(ElementRemote element) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new IllegalStateException();
   }
 
   /**
@@ -102,8 +116,9 @@ class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRe
    */
   @Override
   public JBrowserDriverServer parentFrame() {
-    // TODO Auto-generated method stub
-    return null;
+    context.item().frame.set(
+        (ElementServer) driver.executeScript("return window.parent.document;"));
+    return driver;
   }
 
   /**

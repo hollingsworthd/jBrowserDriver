@@ -42,6 +42,7 @@ class ContextItem {
   final AtomicReference<HttpListener> httpListener = new AtomicReference<HttpListener>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
+  final AtomicReference<ElementServer> frame = new AtomicReference<ElementServer>();
 
   ContextItem() {
     itemId.set(Long.toString(currentItemId.getAndIncrement()));

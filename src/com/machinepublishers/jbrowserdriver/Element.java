@@ -93,6 +93,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     return obj;
   }
 
+  void activate() {
+    try {
+      remote.activate();
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
+
   /**
    * {@inheritDoc}
    */

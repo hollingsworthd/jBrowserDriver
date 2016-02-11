@@ -134,6 +134,19 @@ public class Test {
       test(request.size() - 2 == headers.size());
 
       /*
+       * Frames
+       */
+      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      test(driver.findElementById("iframebody") != null);
+      driver.switchTo().parentFrame();
+      test(driver.findElementById("testbody") != null);
+      driver.switchTo().frame(0);
+      test(driver.findElementById("iframebody") != null);
+      driver.switchTo().defaultContent();
+      driver.switchTo().frame("testiframe");
+      test(driver.findElementById("iframebody") != null);
+
+      /*
        * Redirects and cookies
        */
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT + "/redirect/site1");

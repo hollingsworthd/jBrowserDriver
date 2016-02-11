@@ -132,7 +132,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<JSObject>() {
           @Override
           public JSObject perform() {
-            JSObject node = (JSObject) context.item().engine.get().getDocument();
+            JSObject node;
+            if (context.item().frame.get() == null) {
+              node = (JSObject) context.item().engine.get().getDocument();
+            } else {
+              node = context.item().frame.get().node;
+            }
             node.getMember("");
             return node;
           }
@@ -142,6 +147,26 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     } catch (RemoteException e) {
       LogsServer.instance().exception(e);
       return null;
+    }
+  }
+
+  @Override
+  public void activate() {
+    try {
+      boolean set = false;
+      Object contentWindow = node.getMember("contentWindow");
+      if (contentWindow instanceof JSObject) {
+        Object document = ((JSObject) contentWindow).getMember("document");
+        if (document instanceof JSObject) {
+          context.item().frame.set(new ElementServer((JSObject) document, context));
+          set = true;
+        }
+      }
+      if (!set) {
+        context.item().frame.set(this);
+      }
+    } catch (Throwable t) {
+      LogsServer.instance().exception(t);
     }
   }
 

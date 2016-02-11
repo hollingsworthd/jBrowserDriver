@@ -27,6 +27,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 
 interface ElementRemote extends Remote {
+  void activate() throws RemoteException;
+
   void click() throws RemoteException;
 
   void submit() throws RemoteException;
