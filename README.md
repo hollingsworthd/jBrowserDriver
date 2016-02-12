@@ -3,7 +3,7 @@ A programmable, embedded web browser driver compatible with the Selenium WebDriv
 
 Licensed under the Apache License v2.0 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
-Sales and support: ops@machinepublishers.com
+*Contact ops@machinepublishers.com to sponsor development of new features, have jBrowserDriver integrated into your project, or get warranty & support.*
 
 - - -
 
