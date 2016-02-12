@@ -3,7 +3,7 @@ A programmable, embedded web browser driver compatible with the Selenium WebDriv
 
 Licensed under the Apache License v2.0 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
-*Contact ops@machinepublishers.com to sponsor development of new features, have jBrowserDriver integrated into your project, or get warranty & support.*
+**_Contact ops@machinepublishers.com to sponsor development of new features, have jBrowserDriver integrated into your project, or get warranty & support._**
 
 - - -
 
@@ -89,9 +89,6 @@ Example: `java -Djbd.browsergui=true -Djbd.quickrender=false -jar myapp.jar`
 
 #### Building
 Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the pom.xml file via the [M2E plugin](https://marketplace.eclipse.org/content/maven-integration-eclipse-luna-and-newer). However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section. Pull requests are welcome, and we ask contributors to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-individual.txt). Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
-
-#### To-do
-Iframes are not yet handled. Stay tuned.
 
 - - -
 
