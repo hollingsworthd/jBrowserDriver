@@ -92,7 +92,7 @@ class Context {
           capabilities.set(new CapabilitiesServer());
           navigation.set(new NavigationServer(
               new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
-          options.set(new OptionsServer(this, SettingsManager.settings().cookieStore(), timeouts));
+          options.set(new OptionsServer(this, timeouts));
         } catch (RemoteException e) {
           LogsServer.instance().exception(e);
         }

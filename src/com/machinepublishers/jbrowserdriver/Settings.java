@@ -26,9 +26,6 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.client.CookieStore;
-import org.apache.http.impl.client.BasicCookieStore;
-
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
 /**
@@ -378,7 +375,6 @@ public class Settings implements Serializable {
   private final boolean saveMedia;
   private final boolean saveAttachments;
   private final String script;
-  private final BasicCookieStore cookieStore;
   private final boolean ignoreDialogs;
   private final boolean cache;
   private final File cacheDir;
@@ -393,7 +389,6 @@ public class Settings implements Serializable {
     this.proxy = builder.proxy;
     this.saveMedia = builder.saveMedia;
     this.saveAttachments = builder.saveAttachments;
-    this.cookieStore = new BasicCookieStore();
     this.ignoreDialogs = builder.ignoreDialogs;
     this.cache = builder.cache;
     this.cacheDir = builder.cacheDir;
@@ -448,10 +443,6 @@ public class Settings implements Serializable {
 
   String script() {
     return script;
-  }
-
-  CookieStore cookieStore() {
-    return cookieStore;
   }
 
   boolean ignoreDialogs() {

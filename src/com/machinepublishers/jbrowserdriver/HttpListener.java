@@ -29,14 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.webkit.LoadListenerClient;
-import com.sun.webkit.network.CookieManager;
 
 class HttpListener implements LoadListenerClient {
-  static {
-    //TODO set a cookie manager that extends Java's CookieHandler and implements Apache's CookieStore
-    CookieManager.setDefault(null);
-  }
-
   private static final Map<Integer, String> states;
   private static final Map<Integer, String> errors;
 

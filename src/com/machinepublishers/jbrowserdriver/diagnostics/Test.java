@@ -97,7 +97,7 @@ public class Test {
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
 
       /*
-       * Set cookies
+       * Cookie manager
        */
       driver.manage().addCookie(new Cookie("testname", "testvalue"));
       test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
@@ -155,7 +155,14 @@ public class Test {
       test(driver.getCurrentUrl().endsWith("/redirect/site2"));
       test(driver.manage().getCookieNamed("JSESSIONID").getValue().equals("ABC123"));
 
-      //TODO handle cookies set by JS
+      /*
+       * Cookies set by Javascript
+       */
+      test("jsCookieValue1".equals(driver.manage().getCookieNamed("jsCookieName1").getValue()));
+      test("jsCookieValue2".equals(driver.manage().getCookieNamed("jsCookieName2").getValue()));
+      test("jsCookieValue3".equals(driver.manage().getCookieNamed("jsCookieName3").getValue()));
+      test("jsCookieValue4".equals(driver.manage().getCookieNamed("jsCookieName4").getValue()));
+
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {

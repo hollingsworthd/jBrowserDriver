@@ -102,7 +102,10 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
+import com.sun.webkit.network.CookieManager;
+
 class StreamConnection extends HttpURLConnection implements Closeable {
+  private static final CookieStore cookieStore = (CookieStore) CookieManager.getDefault();
   private static final File attachmentsDir;
   private static final File mediaDir;
   private static final File cacheDir;
@@ -469,7 +472,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               config.get().setProxy(new HttpHost(proxy.host(), proxy.port()));
             }
           }
-          context.get().setCookieStore(SettingsManager.settings().cookieStore());
+          context.get().setCookieStore(cookieStore);
           context.get().setRequestConfig(config.get().build());
           StatusMonitor.instance().addStatusMonitor(url, this);
         }

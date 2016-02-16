@@ -54,6 +54,7 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
+import com.sun.webkit.network.CookieManager;
 
 import javafx.embed.swing.JFXPanel;
 
@@ -68,6 +69,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * RMI entry point.
    */
   public static void main(String[] args) {
+    CookieManager.setDefault(new CookieStore());
     if (Settings.headless()) {
       System.setProperty("glass.platform", "Monocle");
       System.setProperty("monocle.platform", "Headless");
@@ -165,7 +167,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       }
     });
     Accessor.getPageFor(context.get().item().engine.get()).stop();
-    SettingsManager.settings().cookieStore().clear();
+    ((CookieStore) CookieManager.getDefault()).clear();
     StatusMonitor.instance().clearStatusMonitor();
     LogsServer.instance().clear();
     SettingsManager.register(settings);

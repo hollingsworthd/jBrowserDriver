@@ -27,22 +27,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.http.client.CookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
 
+import com.sun.webkit.network.CookieManager;
+
 class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
+  private static final CookieStore cookieStore = (CookieStore) CookieManager.getDefault();
   private final Context context;
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
-  private final CookieStore cookieStore;
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
 
-  OptionsServer(final Context context, final CookieStore cookieStore,
+  OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
           throws RemoteException {
     this.context = context;
-    this.cookieStore = cookieStore;
     this.timeouts = timeouts;
   }
 
