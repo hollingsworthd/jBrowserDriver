@@ -22,6 +22,8 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -135,36 +137,42 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         }
       }
 
-      String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
+   // peform good in both J2SE and J2EE
+      ClassLoader c = JBrowserDriver.class.getClassLoader();
+      @SuppressWarnings("resource")
+      URLClassLoader u = (URLClassLoader) c;
+      URL[] urls = u.getURLs();
+      
+      // String[] items =
+      // System.getProperty("java.class.path").split(File.pathSeparator);
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-        @Override
-        public void run() {
-          FileUtils.deleteQuietly(classpathDir);
-        }
+       @Override
+       public void run() {
+        FileUtils.deleteQuietly(classpathDir);
+       }
       }));
       Random rand = new SecureRandom();
       List<String> paths = new ArrayList<String>();
-      for (int i = 0; i < items.length; i++) {
-        File curItem = new File(items[i]);
-        paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
-        if (curItem.isFile() && items[i].endsWith(".jar")) {
-          try (ZipFile jar = new ZipFile(items[i])) {
-            Enumeration<? extends ZipEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-              ZipEntry entry = entries.nextElement();
-              if (entry.getName().endsWith(".jar")) {
-                try (InputStream in = jar.getInputStream(entry)) {
-                  File childJar = new File(classpathDir,
-                      Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
-                  Files.copy(in, childJar.toPath());
-                  paths.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
-                  childJar.deleteOnExit();
-                }
-              }
-            }
+      for (int i = 0; i < urls.length; i++) {
+       File curItem = new File(urls[i].getPath());
+       paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
+       if (curItem.isFile() && urls[i].getPath().endsWith(".jar")) {
+        try (ZipFile jar = new ZipFile(urls[i].getPath())) {
+         Enumeration<? extends ZipEntry> entries = jar.entries();
+         while (entries.hasMoreElements()) {
+          ZipEntry entry = entries.nextElement();
+          if (entry.getName().endsWith(".jar")) {
+           try (InputStream in = jar.getInputStream(entry)) {
+            File childJar = new File(classpathDir, Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
+            Files.copy(in, childJar.toPath());
+            paths.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
+            childJar.deleteOnExit();
+           }
           }
+         }
         }
+       }
       }
       Manifest manifest = new Manifest();
       manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
