@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
@@ -87,7 +88,11 @@ public class CookieStore extends CookieHandler implements org.apache.http.client
         for (String value : entry.getValue()) {
           try {
             List<Cookie> cookies = spec.parse(new BasicHeader(entry.getKey(), value),
-                new CookieOrigin(uri.getHost(), uri.getPort(), uri.getPath(), isSecure(uri.getScheme())));
+                new CookieOrigin(
+                    uri.getHost(),
+                    canonicalPort(uri.getScheme(), uri.getPort()),
+                    canonicalPath(uri.getPath()),
+                    isSecure(uri.getScheme())));
             for (Cookie cookie : cookies) {
               synchronized (store) {
                 store.addCookie(cookie);
@@ -110,6 +115,13 @@ public class CookieStore extends CookieHandler implements org.apache.http.client
     return "javascripts".equalsIgnoreCase(scheme) || "javascript".equalsIgnoreCase(scheme);
   }
 
+  private static int canonicalPort(String scheme, int port) {
+    if (port > -1) {
+      return port;
+    }
+    return isSecure(scheme) ? 443 : 80;
+  }
+
   private static String canonicalHost(String host) {
     if (host == null || host.isEmpty()) {
       return "";
@@ -118,10 +130,7 @@ public class CookieStore extends CookieHandler implements org.apache.http.client
   }
 
   private static String canonicalPath(String path) {
-    if (path == null || path.isEmpty()) {
-      return "";
-    }
-    String canonical = path;
+    String canonical = StringUtils.isEmpty(path) ? "/" : path;
     canonical = canonical.startsWith("/") ? canonical : "/" + canonical;
     canonical = canonical.endsWith("/") ? canonical : canonical + "/";
     return canonical.toLowerCase();
