@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class AjaxListener implements Runnable {
-  private static final long WAIT_INTERVAL = Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
-  private static final long RESOURCE_TIMEOUT = Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
   private static final long MAX_WAIT_DEFAULT = 15000;
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
@@ -65,7 +63,7 @@ class AjaxListener implements Runnable {
     long time = start;
     while (time - start < timeoutMS) {
       try {
-        Thread.sleep(WAIT_INTERVAL);
+        Thread.sleep(SettingsManager.settings().waitInterval());
       } catch (InterruptedException e) {}
       time = System.currentTimeMillis();
       synchronized (statusCode) {
@@ -74,7 +72,7 @@ class AjaxListener implements Runnable {
         }
         final Set<String> remove = new HashSet<String>();
         for (Map.Entry<String, Long> entry : resources.entrySet()) {
-          if (time - entry.getValue() > RESOURCE_TIMEOUT) {
+          if (time - entry.getValue() > SettingsManager.settings().resourceTimeout()) {
             remove.add(entry.getKey());
           }
         }

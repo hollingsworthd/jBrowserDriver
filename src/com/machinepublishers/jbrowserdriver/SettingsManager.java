@@ -44,7 +44,7 @@ class SettingsManager {
       final AtomicReference<Stage> stage,
       final AtomicReference<WebView> view) {
     ProxyAuth.add(settings.get().proxy());
-    if (Settings.headless() &&
+    if (settings().headless() &&
         com.sun.glass.ui.Application.GetApplication() == null) {
       new Thread(new Runnable() {
         @Override
@@ -54,7 +54,7 @@ class SettingsManager {
                 new String[] {
                     Integer.toString(settings.get().screenWidth()),
                     Integer.toString(settings.get().screenHeight()),
-                    Boolean.toString(Settings.headless()) });
+                    Boolean.toString(settings().headless()) });
           } catch (Throwable t) {
             LogsServer.instance().exception(t);
           }
@@ -64,7 +64,7 @@ class SettingsManager {
       final App app = new App();
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
-          Settings.headless());
+          settings().headless());
       Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
         public Object perform() {
           try {

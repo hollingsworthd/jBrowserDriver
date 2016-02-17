@@ -102,7 +102,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
 
   static {
-    String property = System.getProperty("jbd.ports", "10000-10007");
+    String property = System.getProperty("jbd.ports", "10000-10007"); //TODO handle arbitrary port on instantiation
     String[] ranges = property.split(",");
     for (int i = 0; i < ranges.length; i++) {
       String[] bounds = ranges[i].split("-");

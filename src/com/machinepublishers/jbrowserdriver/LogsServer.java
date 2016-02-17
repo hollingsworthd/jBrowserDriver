@@ -32,17 +32,6 @@ import java.util.logging.Level;
 import org.openqa.selenium.logging.LogEntries;
 
 class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
-  private static final boolean TRACE_CONSOLE = "true".equals(System.getProperty("jbd.traceconsole"));
-  private static final boolean WARN_CONSOLE = !"false".equals(System.getProperty("jbd.warnconsole"));
-  private static final boolean WIRE_CONSOLE = "true".equals(System.getProperty("jbd.wireconsole"));
-
-  static {
-    if (WIRE_CONSOLE) {
-      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
-      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
-    }
-  }
-  private static final int MAX_LOGS = Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
   private final LinkedList<Entry> entries = new LinkedList<Entry>();
   private static final LogsServer instance;
   static {
@@ -71,11 +60,11 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     final Entry entry = new Entry(Level.FINEST, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
-      if (entries.size() > MAX_LOGS) {
+      if (entries.size() > SettingsManager.settings().maxLogs()) {
         entries.removeFirst();
       }
     }
-    if (TRACE_CONSOLE) {
+    if (SettingsManager.settings().traceConsole()) {
       System.out.println(entry);
     }
   }
@@ -84,11 +73,11 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
-      if (entries.size() > MAX_LOGS) {
+      if (entries.size() > SettingsManager.settings().maxLogs()) {
         entries.removeFirst();
       }
     }
-    if (WARN_CONSOLE) {
+    if (SettingsManager.settings().warnCconsole()) {
       System.err.println(entry);
     }
   }
@@ -103,19 +92,19 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
         entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
         synchronized (entries) {
           entries.add(entry);
-          if (entries.size() > MAX_LOGS) {
+          if (entries.size() > SettingsManager.settings().maxLogs()) {
             entries.removeFirst();
           }
         }
       } catch (Throwable t2) {
-        if (WARN_CONSOLE) {
+        if (SettingsManager.settings().warnCconsole()) {
           System.err.println("While logging a message, an error occurred: " + t2.getMessage());
         }
         return;
       } finally {
         Util.close(writer);
       }
-      if (WARN_CONSOLE) {
+      if (SettingsManager.settings().warnCconsole()) {
         System.err.println(entry);
       }
     }

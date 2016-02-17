@@ -105,6 +105,7 @@ import org.apache.http.util.EntityUtils;
 import com.sun.webkit.network.CookieManager;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
+  //TODO move pemfile, routeconntection, and maxconnections into a context so they update when settings change
   private static final CookieStore cookieStore = (CookieStore) CookieManager.getDefault();
   private static final File attachmentsDir;
   private static final File mediaDir;
@@ -211,7 +212,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final AtomicReference<ByteArrayOutputStream> reqData = new AtomicReference<ByteArrayOutputStream>(new ByteArrayOutputStream());
 
   static {
-    if (!"false".equals(System.getProperty("jbd.blockads"))) {
+    if (SettingsManager.settings().blockAds()) {
       BufferedReader reader = null;
       try {
         reader = new BufferedReader(
@@ -342,7 +343,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   private boolean isBlocked(String host) {
-    if (!adHosts.isEmpty()) {
+    if (SettingsManager.settings().blockAds() && !adHosts.isEmpty()) {
       host = host.toLowerCase();
       while (host.contains(".")) {
         if (adHosts.contains(host)) {

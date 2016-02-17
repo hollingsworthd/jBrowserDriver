@@ -75,14 +75,8 @@ public class Settings implements Serializable {
   }
 
   private static final Random rand = new Random();
-  private static final boolean headless;
 
   static {
-    if (!"true".equals(System.getProperty("jbd.browsergui"))) {
-      headless = true;
-    } else {
-      headless = false;
-    }
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -110,8 +104,7 @@ public class Settings implements Serializable {
           }
         } catch (Throwable t) {}
         try {
-          if (!"false".equals(System.getProperty("jbd.quickrender"))
-              && connection.isMedia()) {
+          if (settings.quickRender() && connection.isMedia()) {
             LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
             StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
@@ -397,7 +390,7 @@ public class Settings implements Serializable {
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
-    if (headless) {
+    if (headless()) {
       scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
     }
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
@@ -465,7 +458,52 @@ public class Settings implements Serializable {
     return cacheEntrySize;
   }
 
-  static boolean headless() {
-    return headless;
+  boolean headless() {
+    //TODO
+    return (!"true".equals(System.getProperty("jbd.browsergui")));
+  }
+
+  long waitInterval() {
+    //TODO
+    return Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
+  }
+
+  long resourceTimeout() {
+    //TODO
+    return Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
+  }
+
+  boolean blockAds() {
+    //TODO
+    return !"false".equals(System.getProperty("jbd.blockads"));
+  }
+
+  boolean quickRender() {
+    //TODO
+    return !"false".equals(System.getProperty("jbd.quickrender"));
+  }
+
+  boolean traceConsole() {
+    //TODO
+    return "true".equals(System.getProperty("jbd.traceconsole"));
+  }
+
+  boolean warnCconsole() {
+    //TODO
+    return !"false".equals(System.getProperty("jbd.warnconsole"));
+  }
+
+  boolean wireConsole() {
+    //TODO
+    if ("true".equals(System.getProperty("jbd.wireconsole"))) {
+      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
+    }
+    return "true".equals(System.getProperty("jbd.wireconsole"));
+  }
+
+  int maxLogs() {
+    //TODO
+    return Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
   }
 }
