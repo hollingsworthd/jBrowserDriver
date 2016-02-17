@@ -22,6 +22,8 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -135,7 +137,7 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         }
       }
 
-      String[] items = System.getProperty("java.class.path").split(File.pathSeparator);
+      URL[] items = ((URLClassLoader) JBrowserDriver.class.getClassLoader()).getURLs();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
         @Override
@@ -146,10 +148,10 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       Random rand = new SecureRandom();
       List<String> paths = new ArrayList<String>();
       for (int i = 0; i < items.length; i++) {
-        File curItem = new File(items[i]);
+        File curItem = new File(items[i].getPath());
         paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
-        if (curItem.isFile() && items[i].endsWith(".jar")) {
-          try (ZipFile jar = new ZipFile(items[i])) {
+        if (curItem.isFile() && items[i].getPath().endsWith(".jar")) {
+          try (ZipFile jar = new ZipFile(items[i].getPath())) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
               ZipEntry entry = entries.nextElement();
