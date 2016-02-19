@@ -31,11 +31,13 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
@@ -93,28 +95,17 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
    * Use this string on sendKeys functions to delete text.
    */
   public static final String KEYBOARD_DELETE;
-  private static final List<Integer> ports = new ArrayList<Integer>();
+  private static final Set<Integer> portsAvailable = new LinkedHashSet<Integer>();
+  private static final Set<Integer> portsUsed = new LinkedHashSet<Integer>();
   private static final List<String> args;
   private static final List<Object> waiting = new ArrayList<Object>();
+  private static int curWaiting;
   private final Object key = new Object();
   private final JBrowserDriverRemote remote;
   private final Logs logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
-  private final int port;
+  private final AtomicInteger port = new AtomicInteger();
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
-
-  static {
-    String property = System.getProperty("jbd.ports", "10000-10007"); //TODO handle arbitrary port on instantiation
-    String[] ranges = property.split(",");
-    for (int i = 0; i < ranges.length; i++) {
-      String[] bounds = ranges[i].split("-");
-      int low = Integer.parseInt(bounds[0]);
-      int high = bounds.length > 1 ? Integer.parseInt(bounds[1]) : low;
-      for (int j = low; j <= high; j++) {
-        ports.add(j);
-      }
-    }
-  }
 
   static {
     Policy.init();
@@ -132,8 +123,6 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
         String key = keyObj.toString();
         if (key != null && key.startsWith("jbd.rmi.")) {
           argsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
-        } else if (key != null && key.startsWith("jbd.")) {
-          argsTmp.add("-D" + key + "=" + System.getProperty(key));
         }
       }
 
@@ -235,25 +224,44 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
       }
     }));
 
-    synchronized (ports) {
-      if (ports.isEmpty()) {
-        waiting.add(key);
-        while (true) {
-          try {
-            ports.wait();
-            if (key.equals(waiting.get(0)) && !ports.isEmpty()) {
+    synchronized (portsAvailable) {
+      for (int curPort : settings.ports()) {
+        if (!portsAvailable.contains(curPort) && !portsUsed.contains(curPort)) {
+          portsAvailable.add(curPort);
+        }
+      }
+      waiting.add(key);
+      while (true) {
+        boolean ready = false;
+        curWaiting = curWaiting >= waiting.size() ? 0 : curWaiting;
+        if (key.equals(waiting.get(curWaiting)) && !portsAvailable.isEmpty()) {
+          for (int curPort : settings.ports()) {
+            if (portsAvailable.contains(curPort)) {
+              port.set(curPort);
+              ready = true;
               break;
             }
-          } catch (InterruptedException e) {}
+          }
+          if (ready) {
+            curWaiting = 0;
+            break;
+          } else {
+            ++curWaiting;
+            portsAvailable.notifyAll();
+          }
         }
-        waiting.remove(key);
+        try {
+          portsAvailable.wait();
+        } catch (InterruptedException e) {}
       }
-      port = ports.remove(0);
+      waiting.remove(key);
+      portsAvailable.remove(port.get());
+      portsUsed.add(port.get());
     }
-    launchProcess(port);
+    launchProcess(port.get());
     JBrowserDriverRemote instanceTmp = null;
     try {
-      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port).lookup("JBrowserDriverRemote");
+      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(port.get()).lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
       Logs.fatal(t);
@@ -346,6 +354,9 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
   /**
    * Reset the state of the browser. More efficient than quitting the
    * browser and creating a new instance.
+   * <p>
+   * Note: it's not possible to switch between headless and GUI mode. You must quit this browser
+   * and create a new instance.
    * 
    * @param settings
    *          New settings to take effect, superseding the original ones
@@ -831,9 +842,10 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     } catch (Throwable t) {
       process.get().destroyForcibly();
     }
-    synchronized (ports) {
-      ports.add(port);
-      ports.notifyAll();
+    synchronized (portsAvailable) {
+      portsAvailable.add(port.get());
+      portsUsed.remove(port.get());
+      portsAvailable.notifyAll();
     }
   }
 

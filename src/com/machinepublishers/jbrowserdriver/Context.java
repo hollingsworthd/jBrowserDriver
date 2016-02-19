@@ -53,7 +53,7 @@ class Context {
   private int current = 0;
   private final Object lock = new Object();
 
-  Context(Settings settings) {
+  Context() {
     synchronized (lock) {
       ContextItem newContext = new ContextItem();
       items.add(newContext);

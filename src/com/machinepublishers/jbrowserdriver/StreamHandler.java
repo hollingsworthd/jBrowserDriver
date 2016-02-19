@@ -31,26 +31,28 @@ class StreamHandler implements URLStreamHandlerFactory {
   private static class HttpHandler extends sun.net.www.protocol.http.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      StackTraceElement[] trace = new Throwable().getStackTrace();
-      //TODO now that this is RMI might not need this stack trace logic
-      if (trace.length > 2
-          && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
-        return new StreamConnection(url);
-      }
-      return super.openConnection(url, null);
+      return new StreamConnection(url);
+    }
+
+    private URLConnection defaultConnection(URL url) throws IOException {
+      return super.openConnection(url);
     }
   }
 
   private static class HttpsHandler extends sun.net.www.protocol.https.Handler {
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
-      StackTraceElement[] trace = new Throwable().getStackTrace();
-      if (trace.length > 2
-          && "com.sun.webkit.network.URLLoader".equals(trace[2].getClassName())) {
-        return new StreamConnection(url);
-      }
-      return super.openConnection(url, null);
+      return new StreamConnection(url);
     }
+
+    private URLConnection defaultConnection(URL url) throws IOException {
+      return super.openConnection(url);
+    }
+  }
+
+  static URLConnection defaultConnection(URL url) throws IOException {
+    return "https".equals(url.getProtocol())
+        ? new HttpsHandler().defaultConnection(url) : new HttpHandler().defaultConnection(url);
   }
 
   @Override

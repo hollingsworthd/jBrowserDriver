@@ -35,7 +35,8 @@ import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 import com.machinepublishers.jbrowserdriver.Settings;
 
 public class Test {
-  private static final int TEST_PORT = Integer.parseInt(System.getProperty("jbd.testport", "9000"));
+  private static final int TEST_PORT_HTTP = Integer.parseInt(System.getProperty("jbd.testporthttp", "9000"));
+  private static final int TEST_PORT_RMI = Integer.parseInt(System.getProperty("jbd.testportrmi", "10000"));
   private List<String> errors = new ArrayList<String>();
   private int curTest = 0;
 
@@ -54,20 +55,21 @@ public class Test {
   private Test() {
     JBrowserDriver driver = null;
     try {
-      HttpServer.launch(TEST_PORT);
-      driver = new JBrowserDriver(Settings.builder().cache(true).ignoreDialogs(false).build());
+      HttpServer.launch(TEST_PORT_HTTP);
+      driver = new JBrowserDriver(
+          Settings.builder().portsMax(TEST_PORT_RMI, 1).traceConsole(true).cache(true).ignoreDialogs(false).build());
 
       /*
        * Load a page
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
       test(driver.getStatusCode() == 200);
       long initialRequestId = HttpServer.previousRequestId();
 
       /*
        * Load page from cache
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT);
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
 
@@ -149,7 +151,7 @@ public class Test {
       /*
        * Redirects and cookies
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT + "/redirect/site1");
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/redirect/site1");
       test(HttpServer.previousRequestId() != initialRequestId);
       test(driver.getStatusCode() == 200);
       test(driver.getCurrentUrl().endsWith("/redirect/site2"));

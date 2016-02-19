@@ -63,7 +63,7 @@ class AjaxListener implements Runnable {
     long time = start;
     while (time - start < timeoutMS) {
       try {
-        Thread.sleep(SettingsManager.settings().waitInterval());
+        Thread.sleep(SettingsManager.settings().ajaxWait());
       } catch (InterruptedException e) {}
       time = System.currentTimeMillis();
       synchronized (statusCode) {
@@ -72,7 +72,7 @@ class AjaxListener implements Runnable {
         }
         final Set<String> remove = new HashSet<String>();
         for (Map.Entry<String, Long> entry : resources.entrySet()) {
-          if (time - entry.getValue() > SettingsManager.settings().resourceTimeout()) {
+          if (time - entry.getValue() > SettingsManager.settings().ajaxResourceTimeout()) {
             remove.add(entry.getKey());
           }
         }

@@ -19,6 +19,8 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,6 +28,7 @@ import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 import javafx.application.Application;
+import javafx.embed.swing.JFXPanel;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
@@ -38,6 +41,37 @@ class SettingsManager {
 
   static void register(final Settings settings) {
     SettingsManager.settings.set(settings);
+    if (settings != null) {
+      LogsServer.updateSettings();
+      StreamConnection.updateSettings();
+
+      if (settings.headless()) {
+        System.setProperty("glass.platform", "Monocle");
+        System.setProperty("monocle.platform", "Headless");
+        System.setProperty("prism.order", "sw");
+        System.setProperty("prism.subpixeltext", "false");
+        System.setProperty("prism.allowhidpi", "false");
+        System.setProperty("prism.text", "t2k");
+        try {
+          Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
+          Field field = platformFactory.getDeclaredField("instance");
+          field.setAccessible(true);
+          field.set(platformFactory, Class.forName(
+              "com.sun.glass.ui.monocle.MonoclePlatformFactory").newInstance());
+
+          platformFactory = Class.forName("com.sun.glass.ui.monocle.NativePlatformFactory");
+          field = platformFactory.getDeclaredField("platform");
+          field.setAccessible(true);
+          Constructor headlessPlatform = Class.forName("com.sun.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
+          headlessPlatform.setAccessible(true);
+          field.set(platformFactory, headlessPlatform.newInstance());
+        } catch (Throwable t) {
+          Logs.fatal(t);
+        }
+      } else {
+        new JFXPanel();
+      }
+    }
   }
 
   static void register(

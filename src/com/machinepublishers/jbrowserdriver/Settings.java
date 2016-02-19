@@ -22,6 +22,8 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,6 +175,25 @@ public class Settings implements Serializable {
     private File cacheDir;
     private int cacheEntries = 10 * 1000;
     private long cacheEntrySize = 1000 * 1000;
+    private final Collection<Integer> ports = new LinkedHashSet<Integer>();
+    private boolean headless = true;
+    private long ajaxWait = 120;
+    private long ajaxResourceTimeout = 2000;
+    private boolean blockAds = true;
+    private boolean quickRender = true;
+    private int maxRouteConnections = 8;
+    private int maxConnections = 3000;
+    private String ssl;
+    private boolean traceConsole;
+    private boolean warnConsole = true;
+    private boolean wireConsole;
+    private int maxLogs = 5000;
+
+    public Builder() {
+      for (int i = 10000; i < 10008; i++) {
+        ports.add(i);
+      }
+    }
 
     /**
      * @param requestHeaders
@@ -352,6 +373,228 @@ public class Settings implements Serializable {
     }
 
     /**
+     * Each browser instance is run in a separate process (via RMI).
+     * This settings configures which ports are available for RMI.
+     * The number of ports determines the maximum number of RMI processes.
+     * 
+     * Defaults to <code>10000,10001,10002,10003,10004,10005,10006,10007</code>
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.ports</code>
+     * 
+     * @param ports
+     * @return this Builder
+     */
+    public Builder ports(int... ports) {
+      this.ports.clear();
+      for (int i = 0; ports != null && i < ports.length; i++) {
+        this.ports.add(ports[i]);
+      }
+      return this;
+    }
+
+    /**
+     * Each browser instance is run in a separate process (via RMI).
+     * This settings configures which ports are available for RMI.
+     * The number of ports determines the maximum number of RMI processes.
+     * This is a convenience method for those who are allocating a sequential
+     * range of ports, as you only need to specify the starting port (inclusive) and
+     * maximum number of ports/processes.
+     * 
+     * Defaults to <code>10000,8</code>
+     * 
+     * @param startingPort
+     * @param maxProcesses
+     * @return
+     */
+    public Builder portsMax(int startingPort, int maxProcesses) {
+      this.ports.clear();
+      for (int i = 0; i < maxProcesses; i++) {
+        this.ports.add(startingPort + i);
+      }
+      return this;
+    }
+
+    /**
+     * Whether to run in headless mode (no GUI windows).
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.headless</code>
+     * 
+     * @param headless
+     * @return this Builder
+     */
+    public Builder headless(boolean headless) {
+      this.headless = headless;
+      return this;
+    }
+
+    /**
+     * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to
+     * have been loaded completely. For very slow or overloaded CPUs, set a higher value.
+     * Defaults to <code>120</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.ajaxwait</code>
+     * 
+     * @param intervalMS
+     * @return this Builder
+     */
+    public Builder ajaxWait(long intervalMS) {
+      this.ajaxWait = intervalMS;
+      return this;
+    }
+
+    /**
+     * The time in milliseconds after which an AJAX request will be ignored when considering
+     * whether all AJAX requests have completed. Defaults to <code>2000</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.ajaxresourcetimeout</code>
+     * 
+     * @param timeoutMS
+     * @return this Builder
+     */
+    public Builder ajaxResourceTimeout(long timeoutMS) {
+      this.ajaxResourceTimeout = timeoutMS;
+      return this;
+    }
+
+    /**
+     * Whether requests to ad/spam servers should be blocked.
+     * Based on hosts in ad-hosts.txt in the source tree. Defaults to <code>true</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.blockads</code>
+     * 
+     * @param blockAds
+     * @return this Builder
+     */
+    public Builder blockAds(boolean blockAds) {
+      this.blockAds = blockAds;
+      return this;
+    }
+
+    /**
+     * Exclude web page images and binary data from rendering.
+     * These resources are still requested and can optionally be saved to disk (see the Settings options).
+     * Some versions of Java are inefficient (memory-wise) in rendering images.
+     * Defaults to <code>true</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.quickrender</code>
+     * 
+     * @param quickRender
+     * @return this Builder
+     */
+    public Builder quickRender(boolean quickRender) {
+      this.quickRender = quickRender;
+      return this;
+    }
+
+    /**
+     * Maximum number of concurrent connections to a specific host+proxy combo. Defaults to <code>8</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.maxrouteconnections</code>
+     * 
+     * @param maxRouteConnections
+     * @return this Builder
+     */
+    public Builder maxRouteConnections(int maxRouteConnections) {
+      this.maxRouteConnections = maxRouteConnections;
+      return this;
+    }
+
+    /**
+     * Maximum number of concurrent connections overall. Defaults to <code>3000</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.maxconnections</code>
+     * 
+     * @param maxConnections
+     * @return this Builder
+     */
+    public Builder maxConnections(int maxConnections) {
+      this.maxConnections = maxConnections;
+      return this;
+    }
+
+    /**
+     * Specifies a source of trusted certificate authorities.
+     * Can take one of four values:
+     * <br>(1) <code>compatible</code> to accept standard browser certs,
+     * <br>(2) <code>trustanything</code> to accept any SSL cert,
+     * <br>(3) a file path, or
+     * <br>(4) a URL.
+     * <br>If a file or URL is specified it must follow exactly the format of content like this: <a
+     * href="https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt">https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt</a>
+     * <br>The default when this property is not set (i.e., when it's <code>null</code>) is your JRE's keystore,
+     * so you can use JDK's keytool to import specific certs.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.ssl</code>
+     * 
+     * @param ssl
+     * @return this Builder
+     */
+    public Builder ssl(String ssl) {
+      this.ssl = ssl;
+      return this;
+    }
+
+    /**
+     * Mirror trace-level log messages to standard out.
+     * Otherwise these logs are only available through the Selenium APIs. Defaults to <code>false</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.traceconsole</code>
+     * 
+     * @param traceConsole
+     * @return this Builder
+     */
+    public Builder traceConsole(boolean traceConsole) {
+      this.traceConsole = traceConsole;
+      return this;
+    }
+
+    /**
+     * Mirror warning-level log messages to standard error.
+     * Otherwise these logs are only available through the Selenium APIs. Defaults to <code>true</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.warnconsole</code>
+     * 
+     * @param warnConsole
+     * @return this Builder
+     */
+    public Builder warnConsole(boolean warnConsole) {
+      this.warnConsole = warnConsole;
+      return this;
+    }
+
+    /**
+     * Log full requests and responses (except response bodies) to standard out.
+     * This produces an enormous amount of output and logs potentially sensitive data--use only as needed.
+     * Regardless of this setting, these log messages are never available via the Selenium logging APIs.
+     * Defaults to <code>false</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.wireconsole</code>
+     * 
+     * @param wireConsole
+     * @return this Builder
+     */
+    public Builder wireConsole(boolean wireConsole) {
+      this.wireConsole = wireConsole;
+      return this;
+    }
+
+    /**
+     * Maximum number of log entries to store in memory, accessible via the Selenium APIs.
+     * The oldest log entry is dropped once the max is reached. Regardless of this setting,
+     * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
+     * Defaults to <code>5000</code>.
+     * 
+     * <p>This setting can be overridden with Java system property <code>jbd.maxlogs</code>
+     * 
+     * @param maxLogs
+     * @return this Builder
+     */
+    public Builder maxLogs(int maxLogs) {
+      this.maxLogs = maxLogs;
+      return this;
+    }
+
+    /**
      * @return A Settings object created from this builder.
      * @see JBrowserDriver#JBrowserDriver(Settings)
      */
@@ -373,6 +616,19 @@ public class Settings implements Serializable {
   private final File cacheDir;
   private final int cacheEntries;
   private final long cacheEntrySize;
+  private final Collection<Integer> ports;
+  private final boolean headless;
+  private final long ajaxWait;
+  private final long ajaxResourceTimeout;
+  private final boolean blockAds;
+  private final boolean quickRender;
+  private final int maxRouteConnections;
+  private final int maxConnections;
+  private final String ssl;
+  private final boolean traceConsole;
+  private final boolean warnConsole;
+  private final boolean wireConsole;
+  private final int maxLogs;
 
   private Settings(Settings.Builder builder) {
     this.requestHeaders = builder.requestHeaders;
@@ -387,6 +643,66 @@ public class Settings implements Serializable {
     this.cacheDir = builder.cacheDir;
     this.cacheEntries = builder.cacheEntries;
     this.cacheEntrySize = builder.cacheEntrySize;
+
+    if (System.getProperty("jbd.ports") == null) {
+      this.ports = builder.ports;
+    } else {
+      this.ports = new LinkedHashSet<Integer>();
+      String[] ranges = System.getProperty("jbd.ports").split(",");
+      for (int i = 0; i < ranges.length; i++) {
+        String[] bounds = ranges[i].split("-");
+        int low = Integer.parseInt(bounds[0]);
+        int high = bounds.length > 1 ? Integer.parseInt(bounds[1]) : low;
+        for (int j = low; j <= high; j++) {
+          this.ports.add(j);
+        }
+      }
+    }
+    if (System.getProperty("jbd.headless") == null) {
+      //backwards compatible property name for versions <= 0.9.1
+      this.headless = System.getProperty("jbd.browsergui") == null
+          ? builder.headless : !Boolean.parseBoolean(System.getProperty("jbd.browsergui"));
+    } else {
+      this.headless = Boolean.parseBoolean(System.getProperty("jbd.headless"));
+    }
+
+    this.ajaxWait = System.getProperty("jbd.ajaxwait") == null
+        ? builder.ajaxWait : Long.parseLong(System.getProperty("jbd.ajaxwait"));
+
+    this.ajaxResourceTimeout = System.getProperty("jbd.ajaxresourcetimeout") == null
+        ? builder.ajaxResourceTimeout : Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout"));
+
+    this.blockAds = System.getProperty("jbd.blockads") == null
+        ? builder.blockAds : Boolean.parseBoolean(System.getProperty("jbd.blockads"));
+
+    this.quickRender = System.getProperty("jbd.quickrender") == null
+        ? builder.quickRender : Boolean.parseBoolean(System.getProperty("jbd.quickrender"));
+
+    this.maxRouteConnections = System.getProperty("jbd.maxrouteconnections") == null
+        ? builder.maxRouteConnections : Integer.parseInt(System.getProperty("jbd.maxrouteconnections"));
+
+    this.maxConnections = System.getProperty("jbd.maxconnections") == null
+        ? builder.maxConnections : Integer.parseInt(System.getProperty("jbd.maxconnections"));
+
+    if (System.getProperty("jbd.ssl") == null) {
+      //backwards compatible property name for versions <= 0.9.1
+      this.ssl = System.getProperty("jbd.pemfile") == null
+          ? builder.ssl : System.getProperty("jbd.pemfile");
+    } else {
+      this.ssl = System.getProperty("jbd.ssl");
+    }
+
+    this.traceConsole = System.getProperty("jbd.traceconsole") == null
+        ? builder.traceConsole : Boolean.parseBoolean(System.getProperty("jbd.traceconsole"));
+
+    this.warnConsole = System.getProperty("jbd.warnconsole") == null
+        ? builder.warnConsole : Boolean.parseBoolean(System.getProperty("jbd.warnconsole"));
+
+    this.wireConsole = System.getProperty("jbd.wireconsole") == null
+        ? builder.wireConsole : Boolean.parseBoolean(System.getProperty("jbd.wireconsole"));
+
+    this.maxLogs = System.getProperty("jbd.maxlogs") == null
+        ? builder.maxLogs : Integer.parseInt(System.getProperty("jbd.maxlogs"));
 
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
@@ -458,52 +774,55 @@ public class Settings implements Serializable {
     return cacheEntrySize;
   }
 
+  Collection<Integer> ports() {
+    return ports;
+  }
+
   boolean headless() {
-    //TODO
-    return (!"true".equals(System.getProperty("jbd.browsergui")));
+    return headless;
   }
 
-  long waitInterval() {
-    //TODO
-    return Long.parseLong(System.getProperty("jbd.ajaxwait", "120"));
+  long ajaxWait() {
+    return ajaxWait;
   }
 
-  long resourceTimeout() {
-    //TODO
-    return Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout", "2000"));
+  long ajaxResourceTimeout() {
+    return ajaxResourceTimeout;
   }
 
   boolean blockAds() {
-    //TODO
-    return !"false".equals(System.getProperty("jbd.blockads"));
+    return blockAds;
   }
 
   boolean quickRender() {
-    //TODO
-    return !"false".equals(System.getProperty("jbd.quickrender"));
+    return quickRender;
+  }
+
+  int maxRouteConnections() {
+    return maxRouteConnections;
+  }
+
+  int maxConnections() {
+    return maxConnections;
+  }
+
+  String ssl() {
+    return ssl;
   }
 
   boolean traceConsole() {
-    //TODO
-    return "true".equals(System.getProperty("jbd.traceconsole"));
+    return traceConsole;
   }
 
-  boolean warnCconsole() {
-    //TODO
-    return !"false".equals(System.getProperty("jbd.warnconsole"));
+  boolean warnConsole() {
+    return warnConsole;
   }
 
   boolean wireConsole() {
-    //TODO
-    if ("true".equals(System.getProperty("jbd.wireconsole"))) {
-      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
-      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
-    }
-    return "true".equals(System.getProperty("jbd.wireconsole"));
+    return wireConsole;
   }
 
   int maxLogs() {
-    //TODO
-    return Integer.parseInt(System.getProperty("jbd.maxlogs", "5000"));
+    return maxLogs;
   }
 }

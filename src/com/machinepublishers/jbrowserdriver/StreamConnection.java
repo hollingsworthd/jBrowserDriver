@@ -32,22 +32,14 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
-import java.net.Proxy;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.KeyStore;
 import java.security.Permission;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +48,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -64,11 +55,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -83,112 +69,36 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.CustomClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.cookie.LaxCookieSpecProvider;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 import com.sun.webkit.network.CookieManager;
 
 class StreamConnection extends HttpURLConnection implements Closeable {
-  //TODO move pemfile, routeconntection, and maxconnections into a context so they update when settings change
   private static final CookieStore cookieStore = (CookieStore) CookieManager.getDefault();
   private static final File attachmentsDir;
   private static final File mediaDir;
-  private static final File cacheDir;
   static {
     File attachmentsDirTmp = null;
     File mediaDirTmp = null;
-    File cacheDirTmp = SettingsManager.settings().cacheDir();
     try {
       attachmentsDirTmp = Files.createTempDirectory("jbd_attachments_").toFile();
       mediaDirTmp = Files.createTempDirectory("jbd_media_").toFile();
-      cacheDirTmp = cacheDirTmp == null ? Files.createTempDirectory("jbd_webcache_").toFile() : cacheDirTmp;
       attachmentsDirTmp.deleteOnExit();
       mediaDirTmp.deleteOnExit();
-      if (SettingsManager.settings().cacheDir() == null) {
-        final File finalCacheDir = cacheDirTmp;
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-          @Override
-          public void run() {
-            FileUtils.deleteQuietly(finalCacheDir);
-          }
-        }));
-      } else {
-        cacheDirTmp.mkdirs();
-      }
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
     }
     attachmentsDir = attachmentsDirTmp;
     mediaDir = mediaDirTmp;
-    cacheDir = cacheDirTmp;
   }
   private static final Set<String> ignoredHeaders = Collections.unmodifiableSet(new HashSet(Arrays.asList(new String[] {
       "cookie", "pragma", "cache-control", "content-length" })));
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
-  private static Pattern pemBlock = Pattern.compile(
-      "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
   private static final Set<String> adHosts = new HashSet<String>();
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
-  private static final int ROUTE_CONNECTIONS = Integer.parseInt(System.getProperty("jbd.maxrouteconnections", "8"));
-  private static final int CONNECTIONS = Integer.parseInt(
-      System.getProperty("jbd.maxconnections", "3000"));
-  private static final Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
-      .register("https", new SslSocketFactory(sslContext()))
-      .register("http", new SocketFactory())
-      .build();
-  private static final PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(registry);
-
-  static {
-    manager.setDefaultMaxPerRoute(ROUTE_CONNECTIONS);
-    manager.setMaxTotal(CONNECTIONS);
-  }
-  private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
-      .register("custom", new LaxCookieSpecProvider())
-      .build();
-  private static final CloseableHttpClient client = HttpClients.custom()
-      .disableRedirectHandling()
-      .disableAutomaticRetries()
-      .setDefaultCookieSpecRegistry(cookieProvider)
-      .setConnectionManager(manager)
-      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-      .setMaxConnTotal(CONNECTIONS)
-      .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
-      .build();
-  private static final CacheConfig cacheConfig = CacheConfig.custom()
-      .setSharedCache(false)
-      .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
-      .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
-      .build();
-  private static final CloseableHttpClient cachingClient = new CustomClientBuilder()
-      .setCacheConfig(cacheConfig)
-      .setHttpCacheStorage(new HttpCache(cacheDir))
-      .disableRedirectHandling()
-      .disableAutomaticRetries()
-      .setDefaultCookieSpecRegistry(cookieProvider)
-      .setConnectionManager(manager)
-      .setMaxConnPerRoute(ROUTE_CONNECTIONS)
-      .setMaxConnTotal(CONNECTIONS)
-      .setDefaultCredentialsProvider(ProxyAuth.instance())
-      .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
-      .build();
+  private static final AtomicReference<StreamConnectionClient> client = new AtomicReference<StreamConnectionClient>();
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final Map<String, String> reqHeadersCasing = new HashMap<String, String>();
@@ -228,110 +138,16 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     }
   }
 
-  private static SSLContext sslContext() {
-    final String property = System.getProperty("jbd.pemfile");
-    if (property != null && !property.isEmpty() && !"null".equals(property)) {
-      if ("trustanything".equals(property)) {
-        try {
-          return SSLContexts.custom().loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()),
-              new TrustStrategy() {
-                public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                  return true;
-                }
-              }).build();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
-      } else {
-        try {
-          String location = property;
-          location = location.equals("compatible")
-              ? "https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt" : location;
-          File cachedPemFile = new File("./pemfile_cached");
-          boolean remote = location.startsWith("https://") || location.startsWith("http://");
-          if (remote && cachedPemFile.exists()
-              && (System.currentTimeMillis() - cachedPemFile.lastModified() < 48 * 60 * 60 * 1000)) {
-            location = cachedPemFile.getAbsolutePath();
-            remote = false;
-          }
-          String pemBlocks = null;
-          if (remote) {
-            HttpURLConnection remotePemFile = (HttpURLConnection) new URL(location).openConnection();
-            remotePemFile.setRequestMethod("GET");
-            remotePemFile.connect();
-            pemBlocks = Util.toString(remotePemFile.getInputStream(),
-                Util.charset(remotePemFile));
-            cachedPemFile.delete();
-            Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
-          } else {
-            pemBlocks = new String(Files.readAllBytes(
-                Paths.get(new File(location).getAbsolutePath())), "utf-8");
-          }
-          KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-          keyStore.load(null);
-          CertificateFactory cf = CertificateFactory.getInstance("X.509");
-          Matcher matcher = pemBlock.matcher(pemBlocks);
-          boolean found = false;
-          while (matcher.find()) {
-            String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
-            java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
-            String alias = cert.getSubjectX500Principal().getName("RFC2253");
-            if (alias != null && !keyStore.containsAlias(alias)) {
-              found = true;
-              keyStore.setCertificateEntry(alias, cert);
-            }
-          }
-          if (found) {
-            KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManager.init(keyStore, null);
-            TrustManagerFactory trustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManager.init(keyStore);
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
-            return context;
-          }
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
-      }
+  static void updateSettings() {
+    StreamConnectionClient prevClient = client.get();
+    if (prevClient != null) {
+      prevClient.shutDown();
     }
-    return SSLContexts.createSystemDefault();
-  }
-
-  private static class SslSocketFactory extends SSLConnectionSocketFactory {
-    public SslSocketFactory(final SSLContext sslContext) {
-      super(sslContext);
-    }
-
-    @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
-      return newSocket(context);
-    }
-  }
-
-  private static class SocketFactory extends PlainConnectionSocketFactory {
-    @Override
-    public Socket createSocket(final HttpContext context) throws IOException {
-      return newSocket(context);
-    }
-  }
-
-  private static Socket newSocket(final HttpContext context) throws IOException {
-    InetSocketAddress proxySocks = (InetSocketAddress) context.getAttribute("proxy.socks.address");
-    Socket socket;
-    if (proxySocks != null) {
-      socket = new Socket(new Proxy(Proxy.Type.SOCKS, proxySocks));
-    } else {
-      socket = new Socket();
-    }
-    socket.setTcpNoDelay(true);
-    socket.setKeepAlive(true);
-    return socket;
+    client.set(new StreamConnectionClient());
   }
 
   static File cacheDir() {
-    return cacheDir;
+    return client.get().cacheDir();
   }
 
   static File attachmentsDir() {
@@ -493,8 +309,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("PUT".equals(method.get())) {
             ((HttpPut) req.get()).setEntity(new ByteArrayEntity(reqData.get().toByteArray()));
           }
-          response.set(SettingsManager.settings().cache()
-              ? cachingClient.execute(req.get(), context.get()) : client.execute(req.get(), context.get()));
+          response.set(client.get().execute(req.get(), context.get()));
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
             response.get().setHeader("Cache-Control", "no-store, no-cache");
@@ -539,8 +354,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   static void cleanUp() {
-    manager.closeExpiredConnections();
-    manager.closeIdleConnections(30, TimeUnit.SECONDS);
+    client.get().cleanUp();
   }
 
   /**

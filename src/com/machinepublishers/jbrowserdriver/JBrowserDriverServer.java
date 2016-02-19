@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -55,8 +54,6 @@ import com.machinepublishers.jbrowserdriver.Util.Sync;
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
 import com.sun.webkit.network.CookieManager;
-
-import javafx.embed.swing.JFXPanel;
 
 class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
@@ -113,34 +110,8 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public JBrowserDriverServer() throws RemoteException {}
 
   public void setUp(final Settings settings) {
-    context.set(new Context(settings));
-    if (settings.headless()) {
-      System.setProperty("glass.platform", "Monocle");
-      System.setProperty("monocle.platform", "Headless");
-      System.setProperty("prism.order", "sw");
-      System.setProperty("prism.subpixeltext", "false");
-      System.setProperty("prism.allowhidpi", "false");
-      System.setProperty("prism.text", "t2k");
-      try {
-        Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
-        Field field = platformFactory.getDeclaredField("instance");
-        field.setAccessible(true);
-        field.set(platformFactory, Class.forName(
-            "com.sun.glass.ui.monocle.MonoclePlatformFactory").newInstance());
-
-        platformFactory = Class.forName("com.sun.glass.ui.monocle.NativePlatformFactory");
-        field = platformFactory.getDeclaredField("platform");
-        field.setAccessible(true);
-        Constructor headlessPlatform = Class.forName("com.sun.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
-        headlessPlatform.setAccessible(true);
-        field.set(platformFactory, headlessPlatform.newInstance());
-      } catch (Throwable t) {
-        Logs.fatal(t);
-      }
-    } else {
-      new JFXPanel();
-    }
     SettingsManager.register(settings);
+    context.set(new Context());
   }
 
   /**

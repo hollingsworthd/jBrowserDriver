@@ -44,6 +44,16 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
     instance = instanceTmp;
   }
 
+  static void updateSettings() {
+    if (SettingsManager.settings().wireConsole()) {
+      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
+    } else {
+      System.clearProperty("org.apache.commons.logging.Log");
+      System.clearProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire");
+    }
+  }
+
   static LogsServer instance() {
     return instance;
   }
@@ -77,7 +87,7 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
         entries.removeFirst();
       }
     }
-    if (SettingsManager.settings().warnCconsole()) {
+    if (SettingsManager.settings().warnConsole()) {
       System.err.println(entry);
     }
   }
@@ -97,14 +107,14 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
           }
         }
       } catch (Throwable t2) {
-        if (SettingsManager.settings().warnCconsole()) {
+        if (SettingsManager.settings().warnConsole()) {
           System.err.println("While logging a message, an error occurred: " + t2.getMessage());
         }
         return;
       } finally {
         Util.close(writer);
       }
-      if (SettingsManager.settings().warnCconsole()) {
+      if (SettingsManager.settings().warnConsole()) {
         System.err.println(entry);
       }
     }
