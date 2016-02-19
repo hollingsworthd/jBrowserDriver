@@ -374,7 +374,7 @@ public class Settings implements Serializable {
 
     /**
      * Each browser instance is run in a separate process (via RMI).
-     * This settings configures which ports are available for RMI.
+     * This setting configures which ports are available for RMI.
      * The number of ports determines the maximum number of RMI processes.
      * 
      * Defaults to <code>10000,10001,10002,10003,10004,10005,10006,10007</code>
@@ -394,7 +394,7 @@ public class Settings implements Serializable {
 
     /**
      * Each browser instance is run in a separate process (via RMI).
-     * This settings configures which ports are available for RMI.
+     * This setting configures which ports are available for RMI.
      * The number of ports determines the maximum number of RMI processes.
      * This is a convenience method for those who are allocating a sequential
      * range of ports, as you only need to specify the starting port (inclusive) and
