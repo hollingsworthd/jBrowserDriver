@@ -19,21 +19,29 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
+import java.io.Serializable;
 
-interface WindowRemote extends Remote {
-  void close() throws RemoteException;
+class Rectangle implements Serializable {
+  private final int x;
+  private final int y;
+  private final int width;
+  private final int height;
 
-  Point remoteGetPosition() throws RemoteException;
+  Rectangle() {
+    this.x = 0;
+    this.y = 0;
+    this.width = 0;
+    this.height = 0;
+  }
 
-  Dimension remoteGetSize() throws RemoteException;
+  Rectangle(org.openqa.selenium.Rectangle rect) {
+    this.x = rect.x;
+    this.y = rect.y;
+    this.width = rect.width;
+    this.height = rect.height;
+  }
 
-  void maximize() throws RemoteException;
-
-  void fullscreen() throws RemoteException;
-
-  void setPosition(final Point point) throws RemoteException;
-
-  void setSize(final Dimension dimension) throws RemoteException;
+  org.openqa.selenium.Rectangle toSelenium() {
+    return new org.openqa.selenium.Rectangle(x, y, height, width);
+  }
 }

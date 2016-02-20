@@ -205,6 +205,19 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    * {@inheritDoc}
    */
   @Override
+  public org.openqa.selenium.Rectangle getRect() {
+    try {
+      return remote.remoteGetRect().toSelenium();
+    } catch (RemoteException e) {
+      logs.exception(e);
+      return null;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String getTagName() {
     try {
       return remote.getTagName();

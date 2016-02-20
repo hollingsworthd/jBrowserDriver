@@ -107,7 +107,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().setMaximized(true);
+        stage.get().setMaximized(!stage.get().isMaximized());
         return null;
       }
     });
@@ -130,6 +130,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
       @Override
       public Object perform() {
         stage.get().setMaximized(false);
+        stage.get().setFullScreen(false);
         stage.get().setX(point.getX());
         stage.get().setY(point.getY());
         return null;
@@ -154,8 +155,23 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
       @Override
       public Object perform() {
         stage.get().setMaximized(false);
+        stage.get().setFullScreen(false);
         stage.get().setWidth(dimension.getWidth());
         stage.get().setHeight(dimension.getHeight());
+        return null;
+      }
+    });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void fullscreen() {
+    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+      @Override
+      public Object perform() {
+        stage.get().setFullScreen(!stage.get().isFullScreen());
         return null;
       }
     });

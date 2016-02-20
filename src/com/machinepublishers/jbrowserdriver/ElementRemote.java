@@ -45,6 +45,8 @@ interface ElementRemote extends Remote {
 
   Dimension remoteGetSize() throws RemoteException;
 
+  Rectangle remoteGetRect() throws RemoteException;
+
   String getTagName() throws RemoteException;
 
   String getText() throws RemoteException;

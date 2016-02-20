@@ -364,6 +364,33 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    * {@inheritDoc}
    */
   @Override
+  public Rectangle remoteGetRect() {
+    return new Rectangle(getRect());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public org.openqa.selenium.Rectangle getRect() {
+    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<org.openqa.selenium.Rectangle>() {
+          @Override
+          public org.openqa.selenium.Rectangle perform() {
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+            return new org.openqa.selenium.Rectangle(x + 1, y + 1, y2 - y, x2 - x);
+          }
+        });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String getTagName() {
     return getAttribute("tagName").toLowerCase();
   }

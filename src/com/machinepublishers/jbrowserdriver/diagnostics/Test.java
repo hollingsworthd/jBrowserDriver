@@ -32,6 +32,7 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
@@ -111,6 +112,11 @@ public class Test {
       Dimension dimension = element.getSize();
       test(dimension.width > 0);
       test(dimension.height > 0);
+      Rectangle rect = element.getRect();
+      test(rect.x == point.getX());
+      test(rect.y == point.getY());
+      test(rect.width == dimension.getWidth());
+      test(rect.height == dimension.getHeight());
 
       /*
        * Cookie manager

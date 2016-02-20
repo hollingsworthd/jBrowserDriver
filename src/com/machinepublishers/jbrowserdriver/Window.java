@@ -92,4 +92,15 @@ class Window implements org.openqa.selenium.WebDriver.Window {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void fullscreen() {
+    try {
+      remote.fullscreen();
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
 }
