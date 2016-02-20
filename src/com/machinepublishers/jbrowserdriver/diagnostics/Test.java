@@ -29,7 +29,10 @@ import java.util.Set;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Point;
+import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 import com.machinepublishers.jbrowserdriver.Settings;
@@ -97,6 +100,17 @@ public class Test {
       test(driver.findElementByTagName("body").findElement(By.xpath("//*[@id='divtext1']")).getAttribute("id").equals("divtext1"));
       test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
+
+      /*
+       * DOM element properties
+       */
+      WebElement element = driver.findElement(By.id("divtext1"));
+      Point point = element.getLocation();
+      test(point.getX() > 0);
+      test(point.getY() > 0);
+      Dimension dimension = element.getSize();
+      test(dimension.width > 0);
+      test(dimension.height > 0);
 
       /*
        * Cookie manager

@@ -21,13 +21,21 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
 
-class Dimension extends org.openqa.selenium.Dimension implements Serializable {
+class Dimension implements Serializable {
+  private final int width;
+  private final int height;
 
-  Dimension(int width, int height) {
-    super(width, height);
+  Dimension() {
+    this.width = 0;
+    this.height = 0;
   }
 
   Dimension(org.openqa.selenium.Dimension dimension) {
-    super(dimension.width, dimension.height);
+    this.width = dimension.width;
+    this.height = dimension.height;
+  }
+
+  org.openqa.selenium.Dimension toSelenium() {
+    return new org.openqa.selenium.Dimension(width, height);
   }
 }

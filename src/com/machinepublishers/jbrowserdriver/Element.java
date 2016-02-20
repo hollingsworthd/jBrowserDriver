@@ -179,9 +179,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    * {@inheritDoc}
    */
   @Override
-  public Point getLocation() {
+  public org.openqa.selenium.Point getLocation() {
     try {
-      return remote.getLocation();
+      return remote.remoteGetLocation().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -192,9 +192,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    * {@inheritDoc}
    */
   @Override
-  public Dimension getSize() {
+  public org.openqa.selenium.Dimension getSize() {
     try {
-      return remote.getSize();
+      return remote.remoteGetSize().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

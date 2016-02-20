@@ -36,24 +36,48 @@ class CoordinatesServer extends UnicastRemoteObject
    * {@inheritDoc}
    */
   @Override
-  public Point onScreen() {
-    return new Point(coordinates.onScreen());
+  public org.openqa.selenium.Point onScreen() {
+    return coordinates.onScreen();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Point inViewPort() {
-    return new Point(coordinates.inViewPort());
+  public Point remoteOnScreen() {
+    return new Point(onScreen());
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Point onPage() {
-    return new Point(coordinates.onPage());
+  public org.openqa.selenium.Point inViewPort() {
+    return coordinates.inViewPort();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Point remoteInViewPort() {
+    return new Point(inViewPort());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public org.openqa.selenium.Point onPage() {
+    return coordinates.onPage();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Point remoteOnPage() {
+    return new Point(onPage());
   }
 
   /**

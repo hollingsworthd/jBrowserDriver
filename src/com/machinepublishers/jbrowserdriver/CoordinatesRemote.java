@@ -23,11 +23,11 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 interface CoordinatesRemote extends Remote {
-  Point onScreen() throws RemoteException;
+  Point remoteOnScreen() throws RemoteException;
 
-  Point inViewPort() throws RemoteException;
+  Point remoteInViewPort() throws RemoteException;
 
-  Point onPage() throws RemoteException;
+  Point remoteOnPage() throws RemoteException;
 
   Object getAuxiliary() throws RemoteException;
 }

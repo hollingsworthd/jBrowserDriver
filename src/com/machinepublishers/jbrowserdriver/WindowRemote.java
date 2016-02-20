@@ -25,9 +25,9 @@ import java.rmi.RemoteException;
 interface WindowRemote extends Remote {
   void close() throws RemoteException;
 
-  Point getPosition() throws RemoteException;
+  Point remoteGetPosition() throws RemoteException;
 
-  Dimension getSize() throws RemoteException;
+  Dimension remoteGetSize() throws RemoteException;
 
   void maximize() throws RemoteException;
 

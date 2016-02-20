@@ -312,15 +312,15 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    * {@inheritDoc}
    */
   @Override
-  public Point getLocation() {
+  public org.openqa.selenium.Point getLocation() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Point>() {
+        new Sync<org.openqa.selenium.Point>() {
           @Override
-          public Point perform() {
+          public org.openqa.selenium.Point perform() {
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
             int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
             int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            return new Point(x + 1, y + 1);
+            return new org.openqa.selenium.Point(x + 1, y + 1);
           }
         });
   }
@@ -329,19 +329,35 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    * {@inheritDoc}
    */
   @Override
-  public Dimension getSize() {
+  public Point remoteGetLocation() {
+    return new Point(getLocation());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public org.openqa.selenium.Dimension getSize() {
     return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Dimension>() {
+        new Sync<org.openqa.selenium.Dimension>() {
           @Override
-          public Dimension perform() {
+          public org.openqa.selenium.Dimension perform() {
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
             int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
             int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
             int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
             int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-            return new Dimension(x2 - x, y2 - y);
+            return new org.openqa.selenium.Dimension(x2 - x, y2 - y);
           }
         });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Dimension remoteGetSize() {
+    return new Dimension(getSize());
   }
 
   /**
@@ -805,36 +821,36 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       return new CoordinatesServer(new org.openqa.selenium.interactions.internal.Coordinates() {
 
         @Override
-        public Point onScreen() {
+        public org.openqa.selenium.Point onScreen() {
           return null;
         }
 
         @Override
-        public Point onPage() {
+        public org.openqa.selenium.Point onPage() {
           Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<Object>() {
-            @Override
-            public Point perform() {
-              node.call("scrollIntoView");
-              return null;
-            }
-          });
+                @Override
+                public Point perform() {
+                  node.call("scrollIntoView");
+                  return null;
+                }
+              });
           return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-              new Sync<Point>() {
-            @Override
-            public Point perform() {
-              JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              double y = Double.parseDouble(obj.getMember("top").toString());
-              double x = Double.parseDouble(obj.getMember("left").toString());
-              y = y < 0d ? 0d : y;
-              x = x < 0d ? 0d : x;
-              return new Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-            }
-          });
+              new Sync<org.openqa.selenium.Point>() {
+                @Override
+                public org.openqa.selenium.Point perform() {
+                  JSObject obj = (JSObject) node.call("getBoundingClientRect");
+                  double y = Double.parseDouble(obj.getMember("top").toString());
+                  double x = Double.parseDouble(obj.getMember("left").toString());
+                  y = y < 0d ? 0d : y;
+                  x = x < 0d ? 0d : x;
+                  return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
+                }
+              });
         }
 
         @Override
-        public Point inViewPort() {
+        public org.openqa.selenium.Point inViewPort() {
           return null;
         }
 

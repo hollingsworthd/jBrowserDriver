@@ -34,9 +34,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
    * {@inheritDoc}
    */
   @Override
-  public Point getPosition() {
+  public org.openqa.selenium.Point getPosition() {
     try {
-      return remote.getPosition();
+      return remote.remoteGetPosition().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -47,9 +47,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
    * {@inheritDoc}
    */
   @Override
-  public Dimension getSize() {
+  public org.openqa.selenium.Dimension getSize() {
     try {
-      return remote.getSize();
+      return remote.remoteGetSize().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

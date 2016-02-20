@@ -34,9 +34,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    * {@inheritDoc}
    */
   @Override
-  public Point onScreen() {
+  public org.openqa.selenium.Point onScreen() {
     try {
-      return remote.onScreen();
+      return remote.remoteOnScreen().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -47,9 +47,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    * {@inheritDoc}
    */
   @Override
-  public Point inViewPort() {
+  public org.openqa.selenium.Point inViewPort() {
     try {
-      return remote.inViewPort();
+      return remote.remoteInViewPort().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -60,9 +60,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    * {@inheritDoc}
    */
   @Override
-  public Point onPage() {
+  public org.openqa.selenium.Point onPage() {
     try {
-      return remote.onPage();
+      return remote.remoteOnPage().toSelenium();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

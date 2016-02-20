@@ -21,13 +21,21 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
 
-class Point extends org.openqa.selenium.Point implements Serializable {
+class Point implements Serializable {
+  private int x;
+  private int y;
 
-  Point(int x, int y) {
-    super(x, y);
+  Point() {
+    this.x = 0;
+    this.y = 0;
   }
 
   Point(org.openqa.selenium.Point point) {
-    super(point.x, point.y);
+    this.x = point.getX();
+    this.y = point.getY();
+  }
+
+  org.openqa.selenium.Point toSelenium() {
+    return new org.openqa.selenium.Point(x, y);
   }
 }

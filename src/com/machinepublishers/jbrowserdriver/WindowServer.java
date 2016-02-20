@@ -36,7 +36,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
 
   WindowServer(final AtomicReference<Stage> stage,
       final AtomicInteger statusCode)
-          throws RemoteException {
+      throws RemoteException {
     this.stage = stage;
     this.statusCode = statusCode;
   }
@@ -59,11 +59,11 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
    * {@inheritDoc}
    */
   @Override
-  public Point getPosition() {
-    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Point>() {
+  public org.openqa.selenium.Point getPosition() {
+    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<org.openqa.selenium.Point>() {
       @Override
-      public Point perform() {
-        return new Point((int) Math.rint((Double) stage.get().getX()),
+      public org.openqa.selenium.Point perform() {
+        return new org.openqa.selenium.Point((int) Math.rint((Double) stage.get().getX()),
             (int) Math.rint((Double) stage.get().getY()));
       }
     });
@@ -73,14 +73,30 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
    * {@inheritDoc}
    */
   @Override
-  public Dimension getSize() {
-    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Dimension>() {
+  public Point remoteGetPosition() {
+    return new Point(getPosition());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public org.openqa.selenium.Dimension getSize() {
+    return Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<org.openqa.selenium.Dimension>() {
       @Override
-      public Dimension perform() {
-        return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
+      public org.openqa.selenium.Dimension perform() {
+        return new org.openqa.selenium.Dimension((int) Math.rint((Double) stage.get().getWidth()),
             (int) Math.rint((Double) stage.get().getHeight()));
       }
     });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Dimension remoteGetSize() {
+    return new Dimension(getSize());
   }
 
   /**
@@ -102,7 +118,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
    */
   @Override
   public void setPosition(final Point point) {
-    setPosition(point);
+    setPosition(point.toSelenium());
   }
 
   /**

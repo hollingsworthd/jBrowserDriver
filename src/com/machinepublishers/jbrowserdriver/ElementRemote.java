@@ -41,9 +41,9 @@ interface ElementRemote extends Remote {
 
   String getCssValue(final String name) throws RemoteException;
 
-  Point getLocation() throws RemoteException;
+  Point remoteGetLocation() throws RemoteException;
 
-  Dimension getSize() throws RemoteException;
+  Dimension remoteGetSize() throws RemoteException;
 
   String getTagName() throws RemoteException;
 
