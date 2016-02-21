@@ -53,6 +53,7 @@ import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -67,6 +68,8 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.server.DefaultDriverProvider;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.listener.ProcessListener;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -85,7 +88,7 @@ import com.machinepublishers.jbrowserdriver.diagnostics.Test;
  * <p>
  * Sales and support: ops@machinepublishers.com
  */
-public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
+public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, JavascriptExecutor, FindsById,
     FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
     FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
 
@@ -203,12 +206,17 @@ public class JBrowserDriver implements WebDriver, JavascriptExecutor, FindsById,
     this(Settings.builder().build());
   }
 
+  public JBrowserDriver(final Capabilities capabilities) {
+    this(Settings.builder().build());
+  }
+
   /**
    * Use Settings.Builder to create settings to pass to this constructor.
    * 
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
+    super(new DesiredCapabilities("jbrowserdriver", "1", Platform.ANY), JBrowserDriver.class);
     File tmpDir = null;
     try {
       tmpDir = Files.createTempDirectory("jbd_tmp_").toFile();

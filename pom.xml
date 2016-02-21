@@ -32,16 +32,20 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+  <properties>
+    <selenium.version>2.52.0</selenium.version> <!-- note: selenium does not follow semantic versioning -->
+    <httpcomponents.version>[4.5.1, 5.0)</httpcomponents.version>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>[4.5.1, 5.0)</version>
+      <version>${httpcomponents.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-cache</artifactId>
-      <version>[4.5.1, 5.0)</version>
+      <version>${httpcomponents.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -51,7 +55,18 @@
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-api</artifactId>
-      <version>2.52.0</version> <!-- note: selenium does not follow semantic versioning -->
+      <version>${selenium.version}</version>
+      <exclusions>
+        <exclusion>
+            <groupId>*</groupId>
+            <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-server</artifactId>
+      <version>${selenium.version}</version>
       <exclusions>
         <exclusion>
             <groupId>*</groupId>

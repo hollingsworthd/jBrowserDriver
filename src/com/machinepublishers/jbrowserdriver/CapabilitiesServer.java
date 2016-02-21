@@ -46,7 +46,7 @@ class CapabilitiesServer extends UnicastRemoteObject implements CapabilitiesRemo
    */
   @Override
   public String getBrowserName() {
-    return "jBrowserDriver";
+    return "jbrowserdriver";
   }
 
   /**
@@ -70,7 +70,7 @@ class CapabilitiesServer extends UnicastRemoteObject implements CapabilitiesRemo
    */
   @Override
   public String getVersion() {
-    return Runtime.class.getPackage().getImplementationVersion();
+    return "1";
   }
 
   /**
