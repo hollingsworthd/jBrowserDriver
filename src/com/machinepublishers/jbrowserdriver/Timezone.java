@@ -199,6 +199,13 @@ public class Timezone {
     return zonesByName.get(locale);
   }
 
+  /**
+   * @return The locale name for this Timezone
+   */
+  public String name() {
+    return timeZoneName;
+  }
+
   private static String timeZoneDesc(boolean daylight, int rawOffset, int timeZoneMinutes, int daylightMinutes) {
     int totalOffsetMinutes = timeZoneMinutes - (daylight ? daylightMinutes : 0);
     int formattedOffsetHours = Math.abs(totalOffsetMinutes / 60);

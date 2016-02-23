@@ -49,27 +49,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.HasCapabilities;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.HasInputDevices;
-import org.openqa.selenium.internal.FindsByClassName;
-import org.openqa.selenium.internal.FindsByCssSelector;
-import org.openqa.selenium.internal.FindsById;
-import org.openqa.selenium.internal.FindsByLinkText;
-import org.openqa.selenium.internal.FindsByName;
-import org.openqa.selenium.internal.FindsByTagName;
-import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.server.DefaultDriverProvider;
+import org.openqa.selenium.remote.CommandExecutor;
+import org.openqa.selenium.remote.ErrorHandler;
+import org.openqa.selenium.remote.FileDetector;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.SessionId;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.listener.ProcessListener;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -88,9 +78,7 @@ import com.machinepublishers.jbrowserdriver.diagnostics.Test;
  * <p>
  * Sales and support: ops@machinepublishers.com
  */
-public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, JavascriptExecutor, FindsById,
-    FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName,
-    FindsByXPath, HasInputDevices, HasCapabilities, TakesScreenshot, Killable {
+public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   //TODO handle jbd.fork=false
 
@@ -206,8 +194,8 @@ public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, 
     this(Settings.builder().build());
   }
 
-  public JBrowserDriver(final Capabilities capabilities) {
-    this(Settings.builder().build());
+  public JBrowserDriver(final org.openqa.selenium.Capabilities capabilities) {
+    this(Settings.builder().build(capabilities));
   }
 
   /**
@@ -216,7 +204,6 @@ public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, 
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
-    super(new DesiredCapabilities("jbrowserdriver", "1", Platform.ANY), JBrowserDriver.class);
     File tmpDir = null;
     try {
       tmpDir = Files.createTempDirectory("jbd_tmp_").toFile();
@@ -298,37 +285,37 @@ public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, 
           new ProcessExecutor()
               .environment(System.getenv())
               .addListener(new ProcessListener() {
-            @Override
-            public void afterStart(Process proc, ProcessExecutor executor) {
-              process.set(proc);
-            }
-          })
+                @Override
+                public void afterStart(Process proc, ProcessExecutor executor) {
+                  process.set(proc);
+                }
+              })
               .redirectOutput(new LogOutputStream() {
-            boolean done = false;
+                boolean done = false;
 
-            @Override
-            protected void processLine(String line) {
-              if (!done) {
-                synchronized (ready) {
-                  if ("ready".equals(line)) {
-                    ready.set(true);
-                    ready.notify();
-                    done = true;
+                @Override
+                protected void processLine(String line) {
+                  if (!done) {
+                    synchronized (ready) {
+                      if ("ready".equals(line)) {
+                        ready.set(true);
+                        ready.notify();
+                        done = true;
+                      } else {
+                        System.out.println(logPrefix + line);
+                      }
+                    }
                   } else {
                     System.out.println(logPrefix + line);
                   }
                 }
-              } else {
-                System.out.println(logPrefix + line);
-              }
-            }
-          })
+              })
               .redirectError(new LogOutputStream() {
-            @Override
-            protected void processLine(String line) {
-              System.err.println(logPrefix + line);
-            }
-          })
+                @Override
+                protected void processLine(String line) {
+                  System.err.println(logPrefix + line);
+                }
+              })
               .destroyOnExit()
               .command(myArgs).execute();
         } catch (Throwable t) {
@@ -977,5 +964,41 @@ public class JBrowserDriver extends DefaultDriverProvider implements WebDriver, 
       logs.exception(e);
       return null;
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public SessionId getSessionId() {
+    // TODO
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ErrorHandler getErrorHandler() {
+    // TODO 
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public CommandExecutor getCommandExecutor() {
+    //TODO
+    return null;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public FileDetector getFileDetector() {
+    //TODO
+    return null;
   }
 }

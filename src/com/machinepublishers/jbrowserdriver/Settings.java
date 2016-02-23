@@ -23,10 +23,17 @@ import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
@@ -154,6 +161,46 @@ public class Settings implements Serializable {
     return new Settings.Builder();
   }
 
+  private static enum PropertyName {
+    PORTS("jbd.ports"),
+    HEADLESS("jbd.headless"),
+    AJAX_WAIT("jbd.ajaxwait"),
+    AJAX_RESOURCE_TIMEOUT("jbd.ajaxresourcetimeout"),
+    BLOCK_ADS("jbd.blockads"),
+    QUICK_RENDER("jbd.quickrender"),
+    MAX_ROUTE_CONNECTIONS("jbd.maxrouteconnections"),
+    MAX_CONNECTIONS("jbd.maxconnections"),
+    SSL("jbd.ssl"),
+    TRACE_CONSOLE("jbd.traceconsole"),
+    WARN_CONSOLE("jbd.warnconsole"),
+    WIRE_CONSOLE("jbd.wireconsole"),
+    MAX_LOGS("jbd.maxlogs"),
+    USER_AGENT("jbd.useragent"),
+    SCREEN_WIDTH("jbd.screenwidth"),
+    SCREEN_HEIGHT("jbd.screenheight"),
+    TIMEZONE("jbd.timezone"),
+    HEAD_SCRIPT("jbd.headscript"),
+    PROXY_HOST("jbd.proxyhost"),
+    PROXY_PORT("jbd.proxyport"),
+    PROXY_TYPE("jbd.proxytype"),
+    PROXY_USERNAME("jbd.proxyusername"),
+    PROXY_PASSWORD("jbd.proxypassword"),
+    PROXY_EXPECT_CONTINUE("jbd.proxyexpectcontinue"),
+    SAVE_MEDIA("jbd.savemedia"),
+    SAVE_ATTACHMENTS("jbd.saveattachments"),
+    IGNORE_DIALOGS("jbd.ignoredialogs"),
+    CACHE("jbd.cache"),
+    CACHE_DIR("jbd.cachedir"),
+    CACHE_ENTRIES("jbd.cacheentries"),
+    CACHE_ENTRY_SIZE("jbd.cacheentrysize");
+
+    private final String propertyName;
+
+    PropertyName(String propertyName) {
+      this.propertyName = propertyName;
+    }
+  }
+
   /**
    * Helps build a Settings object which configures jBrowserDriver.
    * Settings objects can safely be re-used
@@ -175,7 +222,7 @@ public class Settings implements Serializable {
     private File cacheDir;
     private int cacheEntries = 10 * 1000;
     private long cacheEntrySize = 1000 * 1000;
-    private final Collection<Integer> ports = new LinkedHashSet<Integer>();
+    private Collection<Integer> ports = new LinkedHashSet<Integer>();
     private boolean headless = true;
     private long ajaxWait = 120;
     private long ajaxResourceTimeout = 2000;
@@ -599,8 +646,135 @@ public class Settings implements Serializable {
      * @see JBrowserDriver#JBrowserDriver(Settings)
      */
     public Settings build() {
-      return new Settings(this);
+      return new Settings(this, System.getProperties());
     }
+
+    /**
+     * @return A Selenium Capabilities object for a RemoteWebDriver
+     */
+    public DesiredCapabilities buildCapabilities() {
+      DesiredCapabilities capabilities = new DesiredCapabilities("jbrowserdriver", "", Platform.ANY);
+      set(capabilities, PropertyName.CACHE_ENTRY_SIZE, this.cacheEntrySize);
+      set(capabilities, PropertyName.CACHE_ENTRIES, this.cacheEntries);
+      set(capabilities, PropertyName.CACHE, this.cache);
+      set(capabilities, PropertyName.IGNORE_DIALOGS, this.ignoreDialogs);
+      set(capabilities, PropertyName.SAVE_ATTACHMENTS, this.saveAttachments);
+      set(capabilities, PropertyName.SAVE_MEDIA, this.saveMedia);
+      set(capabilities, PropertyName.AJAX_WAIT, this.ajaxWait);
+      set(capabilities, PropertyName.AJAX_RESOURCE_TIMEOUT, this.ajaxResourceTimeout);
+      set(capabilities, PropertyName.BLOCK_ADS, this.blockAds);
+      set(capabilities, PropertyName.QUICK_RENDER, this.quickRender);
+      set(capabilities, PropertyName.MAX_ROUTE_CONNECTIONS, this.maxRouteConnections);
+      set(capabilities, PropertyName.MAX_CONNECTIONS, this.maxConnections);
+      set(capabilities, PropertyName.TRACE_CONSOLE, this.traceConsole);
+      set(capabilities, PropertyName.WARN_CONSOLE, this.warnConsole);
+      set(capabilities, PropertyName.WIRE_CONSOLE, this.wireConsole);
+      set(capabilities, PropertyName.MAX_LOGS, this.maxLogs);
+      set(capabilities, PropertyName.HEAD_SCRIPT, this.headScript);
+      set(capabilities, PropertyName.PORTS, StringUtils.join(this.ports, ','));
+      set(capabilities, PropertyName.HEADLESS, this.headless);
+      set(capabilities, PropertyName.SSL, this.ssl);
+
+      if (this.screen != null) {
+        set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
+        set(capabilities, PropertyName.SCREEN_HEIGHT, this.screen.getHeight());
+      }
+
+      if (this.cacheDir != null) {
+        set(capabilities, PropertyName.CACHE_DIR, this.cacheDir.getAbsolutePath());
+      }
+
+      if (this.timezone != null) {
+        set(capabilities, PropertyName.TIMEZONE, this.timezone.name());
+      }
+
+      if (RequestHeaders.TOR.equals(this.requestHeaders)
+          && UserAgent.TOR.equals(this.userAgent)) {
+        set(capabilities, PropertyName.USER_AGENT, "tor");
+      } else if (RequestHeaders.CHROME.equals(this.requestHeaders)
+          && UserAgent.CHROME.equals(this.userAgent)) {
+        set(capabilities, PropertyName.USER_AGENT, "chrome");
+      }
+
+      if (this.proxy != null && this.proxy.type() != null) {
+        set(capabilities, PropertyName.PROXY_TYPE, proxy.type().toString());
+        set(capabilities, PropertyName.PROXY_HOST, proxy.host());
+        set(capabilities, PropertyName.PROXY_PORT, proxy.port());
+        set(capabilities, PropertyName.PROXY_USERNAME, proxy.user());
+        set(capabilities, PropertyName.PROXY_PASSWORD, proxy.password());
+        set(capabilities, PropertyName.PROXY_EXPECT_CONTINUE, proxy.expectContinue());
+      }
+
+      return capabilities;
+    }
+
+    Settings build(org.openqa.selenium.Capabilities capabilities) {
+      Map properties = new HashMap(capabilities.asMap());
+      for (Map.Entry entry : System.getProperties().entrySet()) {
+        properties.put(entry.getKey(), entry.getValue());
+      }
+      return new Settings(this, properties);
+    }
+  }
+
+  private static Collection<Integer> parsePorts(String portString) {
+    Collection<Integer> ports = new LinkedHashSet<Integer>();
+    String[] ranges = portString.split(",");
+    for (int i = 0; i < ranges.length; i++) {
+      String[] bounds = ranges[i].split("-");
+      int low = Integer.parseInt(bounds[0]);
+      int high = bounds.length > 1 ? Integer.parseInt(bounds[1]) : low;
+      for (int j = low; j <= high; j++) {
+        ports.add(j);
+      }
+    }
+    return ports;
+  }
+
+  private static void set(DesiredCapabilities capabilities, PropertyName name, int val) {
+    capabilities.setCapability(name.propertyName, Integer.toString(val));
+  }
+
+  private static void set(DesiredCapabilities capabilities, PropertyName name, long val) {
+    capabilities.setCapability(name.propertyName, Long.toString(val));
+  }
+
+  private static void set(DesiredCapabilities capabilities, PropertyName name, boolean val) {
+    capabilities.setCapability(name.propertyName, Boolean.toString(val));
+  }
+
+  private static void set(DesiredCapabilities capabilities, PropertyName name, String val) {
+    if (val != null) {
+      capabilities.setCapability(name.propertyName, val);
+    }
+  }
+
+  private static int parse(Map capabilities, PropertyName name, int fallback) {
+    if (capabilities.get(name.propertyName) != null) {
+      return Integer.parseInt(capabilities.get(name.propertyName).toString());
+    }
+    return fallback;
+  }
+
+  private static long parse(Map capabilities, PropertyName name, long fallback) {
+    if (capabilities.get(name.propertyName) != null) {
+      return Long.parseLong(capabilities.get(name.propertyName).toString());
+    }
+    return fallback;
+  }
+
+  private static boolean parse(Map capabilities, PropertyName name, boolean fallback) {
+    if (capabilities.get(name.propertyName) != null) {
+      return Boolean.parseBoolean(capabilities.get(name.propertyName).toString());
+    }
+    return fallback;
+  }
+
+  private static String parse(Map capabilities, PropertyName name, String fallback) {
+    if (capabilities.get(name.propertyName) != null) {
+      return capabilities.get(name.propertyName).toString();
+    }
+    return fallback;
   }
 
   private final RequestHeaders requestHeaders;
@@ -630,80 +804,91 @@ public class Settings implements Serializable {
   private final boolean wireConsole;
   private final int maxLogs;
 
-  private Settings(Settings.Builder builder) {
-    this.requestHeaders = builder.requestHeaders;
-    this.screenWidth = builder.screen.getWidth();
-    this.screenHeight = builder.screen.getHeight();
-    this.userAgentString = builder.userAgent.userAgentString();
-    this.proxy = builder.proxy;
-    this.saveMedia = builder.saveMedia;
-    this.saveAttachments = builder.saveAttachments;
-    this.ignoreDialogs = builder.ignoreDialogs;
-    this.cache = builder.cache;
-    this.cacheDir = builder.cacheDir;
-    this.cacheEntries = builder.cacheEntries;
-    this.cacheEntrySize = builder.cacheEntrySize;
+  private Settings(Settings.Builder builder, Map properties) {
+    Settings.Builder defaults = Settings.builder();
 
-    if (System.getProperty("jbd.ports") == null) {
-      this.ports = builder.ports;
-    } else {
-      this.ports = new LinkedHashSet<Integer>();
-      String[] ranges = System.getProperty("jbd.ports").split(",");
-      for (int i = 0; i < ranges.length; i++) {
-        String[] bounds = ranges[i].split("-");
-        int low = Integer.parseInt(bounds[0]);
-        int high = bounds.length > 1 ? Integer.parseInt(bounds[1]) : low;
-        for (int j = low; j <= high; j++) {
-          this.ports.add(j);
-        }
+    Dimension screen = builder.screen == null ? defaults.screen : builder.screen;
+    this.screenWidth = parse(properties, PropertyName.SCREEN_WIDTH, screen.getWidth());
+    this.screenHeight = parse(properties, PropertyName.SCREEN_HEIGHT, screen.getHeight());
+    this.cacheEntrySize = parse(properties, PropertyName.CACHE_ENTRY_SIZE, builder.cacheEntrySize);
+    this.cacheEntries = parse(properties, PropertyName.CACHE_ENTRIES, builder.cacheEntries);
+    this.cache = parse(properties, PropertyName.CACHE, builder.cache);
+    this.ignoreDialogs = parse(properties, PropertyName.IGNORE_DIALOGS, builder.ignoreDialogs);
+    this.saveAttachments = parse(properties, PropertyName.SAVE_ATTACHMENTS, builder.saveAttachments);
+    this.saveMedia = parse(properties, PropertyName.SAVE_MEDIA, builder.saveMedia);
+    this.ajaxWait = parse(properties, PropertyName.AJAX_WAIT, builder.ajaxWait);
+    this.ajaxResourceTimeout = parse(properties, PropertyName.AJAX_RESOURCE_TIMEOUT, builder.ajaxResourceTimeout);
+    this.blockAds = parse(properties, PropertyName.BLOCK_ADS, builder.blockAds);
+    this.quickRender = parse(properties, PropertyName.QUICK_RENDER, builder.quickRender);
+    this.maxRouteConnections = parse(properties, PropertyName.MAX_ROUTE_CONNECTIONS, builder.maxRouteConnections);
+    this.maxConnections = parse(properties, PropertyName.MAX_CONNECTIONS, builder.maxConnections);
+    this.traceConsole = parse(properties, PropertyName.TRACE_CONSOLE, builder.traceConsole);
+    this.warnConsole = parse(properties, PropertyName.WARN_CONSOLE, builder.warnConsole);
+    this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
+    this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
+
+    this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
+        ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
+    this.ports = properties.get(PropertyName.PORTS.propertyName) == null
+        ? new LinkedHashSet<Integer>(builder.ports) : parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
+
+    //backwards compatible property name for versions <= 0.9.1
+    boolean headlessTmp = parse(properties, PropertyName.HEADLESS, builder.headless);
+    headlessTmp = System.getProperty(PropertyName.HEADLESS.propertyName) == null
+        && System.getProperty("jbd.browsergui") != null
+            ? !Boolean.parseBoolean(System.getProperty("jbd.browsergui")) : headlessTmp;
+    this.headless = headlessTmp;
+
+    //backwards compatible property name for versions <= 0.9.1
+    String sslTmp = parse(properties, PropertyName.SSL, builder.ssl);
+    sslTmp = System.getProperty(PropertyName.SSL.propertyName) == null
+        && System.getProperty("jbd.pemfile") != null
+            ? System.getProperty("jbd.pemfile") : sslTmp;
+    this.ssl = sslTmp;
+
+    RequestHeaders requestHeadersTmp = builder.requestHeaders;
+    UserAgent userAgentTmp = builder.userAgent;
+    if (properties.get(PropertyName.USER_AGENT.propertyName) != null) {
+      String value = properties.get(PropertyName.USER_AGENT.propertyName).toString();
+      if ("tor".equalsIgnoreCase(value)) {
+        requestHeadersTmp = RequestHeaders.TOR;
+        userAgentTmp = UserAgent.TOR;
+      } else if ("chrome".equalsIgnoreCase("chrome")) {
+        requestHeadersTmp = RequestHeaders.CHROME;
+        userAgentTmp = UserAgent.CHROME;
       }
     }
-    if (System.getProperty("jbd.headless") == null) {
-      //backwards compatible property name for versions <= 0.9.1
-      this.headless = System.getProperty("jbd.browsergui") == null
-          ? builder.headless : !Boolean.parseBoolean(System.getProperty("jbd.browsergui"));
-    } else {
-      this.headless = Boolean.parseBoolean(System.getProperty("jbd.headless"));
+    requestHeadersTmp = requestHeadersTmp == null ? defaults.requestHeaders : requestHeadersTmp;
+    userAgentTmp = userAgentTmp == null ? defaults.userAgent : userAgentTmp;
+    this.requestHeaders = requestHeadersTmp;
+    this.userAgentString = userAgentTmp.userAgentString();
+
+    ProxyConfig proxyTmp = builder.proxy;
+    if (properties.get(PropertyName.PROXY_TYPE.propertyName) != null
+        && properties.get(PropertyName.PROXY_HOST.propertyName) != null
+        && properties.get(PropertyName.PROXY_PORT.propertyName) != null) {
+      ProxyConfig.Type type = ProxyConfig.Type.valueOf(properties.get(PropertyName.PROXY_TYPE.propertyName).toString());
+      String host = properties.get(PropertyName.PROXY_HOST.propertyName).toString();
+      int port = Integer.parseInt(properties.get(PropertyName.PROXY_PORT.propertyName).toString());
+      String username = parse(properties, PropertyName.PROXY_USERNAME, (String) null);
+      String password = parse(properties, PropertyName.PROXY_PASSWORD, (String) null);
+      Object expectContinue = properties.get(PropertyName.PROXY_EXPECT_CONTINUE.propertyName);
+      if (expectContinue == null) {
+        proxyTmp = new ProxyConfig(type, host, port, username, password);
+      } else {
+        proxyTmp = new ProxyConfig(type, host, port, username, password,
+            Boolean.parseBoolean(expectContinue.toString()));
+      }
     }
+    this.proxy = proxyTmp;
 
-    this.ajaxWait = System.getProperty("jbd.ajaxwait") == null
-        ? builder.ajaxWait : Long.parseLong(System.getProperty("jbd.ajaxwait"));
-
-    this.ajaxResourceTimeout = System.getProperty("jbd.ajaxresourcetimeout") == null
-        ? builder.ajaxResourceTimeout : Long.parseLong(System.getProperty("jbd.ajaxresourcetimeout"));
-
-    this.blockAds = System.getProperty("jbd.blockads") == null
-        ? builder.blockAds : Boolean.parseBoolean(System.getProperty("jbd.blockads"));
-
-    this.quickRender = System.getProperty("jbd.quickrender") == null
-        ? builder.quickRender : Boolean.parseBoolean(System.getProperty("jbd.quickrender"));
-
-    this.maxRouteConnections = System.getProperty("jbd.maxrouteconnections") == null
-        ? builder.maxRouteConnections : Integer.parseInt(System.getProperty("jbd.maxrouteconnections"));
-
-    this.maxConnections = System.getProperty("jbd.maxconnections") == null
-        ? builder.maxConnections : Integer.parseInt(System.getProperty("jbd.maxconnections"));
-
-    if (System.getProperty("jbd.ssl") == null) {
-      //backwards compatible property name for versions <= 0.9.1
-      this.ssl = System.getProperty("jbd.pemfile") == null
-          ? builder.ssl : System.getProperty("jbd.pemfile");
-    } else {
-      this.ssl = System.getProperty("jbd.ssl");
+    Timezone timezoneTmp = builder.timezone;
+    if (properties.get(PropertyName.TIMEZONE.propertyName) != null) {
+      timezoneTmp = Timezone.byName(properties.get(PropertyName.TIMEZONE.propertyName).toString());
     }
+    timezoneTmp = timezoneTmp == null ? defaults.timezone : timezoneTmp;
 
-    this.traceConsole = System.getProperty("jbd.traceconsole") == null
-        ? builder.traceConsole : Boolean.parseBoolean(System.getProperty("jbd.traceconsole"));
-
-    this.warnConsole = System.getProperty("jbd.warnconsole") == null
-        ? builder.warnConsole : Boolean.parseBoolean(System.getProperty("jbd.warnconsole"));
-
-    this.wireConsole = System.getProperty("jbd.wireconsole") == null
-        ? builder.wireConsole : Boolean.parseBoolean(System.getProperty("jbd.wireconsole"));
-
-    this.maxLogs = System.getProperty("jbd.maxlogs") == null
-        ? builder.maxLogs : Integer.parseInt(System.getProperty("jbd.maxlogs"));
-
+    String headScriptTmp = parse(properties, PropertyName.HEAD_SCRIPT, builder.headScript);
     StringBuilder scriptBuilder = new StringBuilder();
     String scriptId = "A" + rand.nextLong();
     if (headless()) {
@@ -711,10 +896,10 @@ public class Settings implements Serializable {
     }
     scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
     scriptBuilder.append("try{");
-    scriptBuilder.append(builder.userAgent.script());
-    scriptBuilder.append(builder.timezone.script());
-    if (builder.headScript != null) {
-      scriptBuilder.append(builder.headScript);
+    scriptBuilder.append(userAgentTmp.script());
+    scriptBuilder.append(timezoneTmp.script());
+    if (headScriptTmp != null) {
+      scriptBuilder.append(headScriptTmp);
     }
     scriptBuilder.append("}catch(e){}");
     scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + scriptId + "'));");
