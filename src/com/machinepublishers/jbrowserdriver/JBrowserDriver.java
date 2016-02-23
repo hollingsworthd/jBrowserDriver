@@ -194,12 +194,19 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     this(Settings.builder().build());
   }
 
+  /**
+   * Use {@link Settings#builder()} ...buildCapabilities() to create settings to pass to this constructor.
+   * 
+   * This constructor is mostly useful for Selenium Server itself to use.
+   * 
+   * @param settings
+   */
   public JBrowserDriver(final org.openqa.selenium.Capabilities capabilities) {
     this(Settings.builder().build(capabilities));
   }
 
   /**
-   * Use Settings.Builder to create settings to pass to this constructor.
+   * Use {@link Settings#builder()} ...build() to create settings to pass to this constructor.
    * 
    * @param settings
    */
@@ -403,6 +410,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     }
   }
 
+  /**
+   * @return Status code of the response
+   */
   public int getStatusCode() {
     try {
       return remote.getStatusCode();

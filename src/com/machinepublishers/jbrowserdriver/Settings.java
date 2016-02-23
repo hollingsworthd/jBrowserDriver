@@ -650,7 +650,7 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @return A Selenium Capabilities object for a RemoteWebDriver
+     * @return A Selenium Capabilities object for a RemoteWebDriver or Selenium Server
      */
     public DesiredCapabilities buildCapabilities() {
       DesiredCapabilities capabilities = new DesiredCapabilities("jbrowserdriver", "", Platform.ANY);
