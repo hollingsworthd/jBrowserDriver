@@ -215,10 +215,10 @@
    • Java Native Access
        - Apache License version 2.0
        - Copyright JNA contributors [https://github.com/java-native-access/jna]
-   • Selenium API
+   • Selenium API, Selenium Remote Driver, Selenium Server
        - Apache License version 2.0
-       - Copyright 2011-2015 Software Freedom Conservancy; Copyright 2004-2011 Selenium committers
-   • SLF4J
+       - Copyright 2011-2016 Software Freedom Conservancy; Copyright 2004-2011 Selenium committers
+   • SLF4J API, SLF4J Simple
        - MIT License
        - Copyright (c) 2004-2013 QOS.ch All rights reserved. [http://www.slf4j.org/]
          Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -240,3 +240,6 @@
    • ZT Process Killer
        - Apache License version 2.0
        - Copyright (C) 2015 ZeroTurnaround <support@zeroturnaround.com>
+   • Google Guava
+       - Apache License version 2.0
+       - Copyright (C) Google Inc.
