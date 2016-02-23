@@ -20,6 +20,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import com.sun.glass.ui.Screen;
@@ -109,7 +110,9 @@ public class App extends Application {
       Field field = NativePlatform.class.getDeclaredField("screen");
       field.setAccessible(true);
       field.set(platform, null);
-      Screen.notifySettingsChanged();
+      Method method = Screen.class.getDeclaredMethod("notifySettingsChanged");
+      method.setAccessible(true); //before Java 8u20 this method was private
+      method.invoke(null);
     }
     if (stage == null) {
       stage = new Stage();
