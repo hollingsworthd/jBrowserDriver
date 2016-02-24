@@ -26,10 +26,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriverException;
 
 interface JBrowserDriverRemote extends Remote {
   void setUp(final Settings settings) throws RemoteException;
+
+  void storeCapabilities(Capabilities capabilities) throws RemoteException;
 
   void init() throws RemoteException;
 
@@ -43,7 +46,7 @@ interface JBrowserDriverRemote extends Remote {
 
   byte[] getScreenshot() throws WebDriverException, RemoteException;
 
-  CapabilitiesRemote getCapabilities() throws RemoteException;
+  Capabilities getCapabilities() throws RemoteException;
 
   KeyboardRemote getKeyboard() throws RemoteException;
 

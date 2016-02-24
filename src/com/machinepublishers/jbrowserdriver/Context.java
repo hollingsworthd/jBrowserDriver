@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.openqa.selenium.Capabilities;
+
 import com.machinepublishers.jbrowserdriver.Util.Pause;
 import com.machinepublishers.jbrowserdriver.Util.Sync;
 
@@ -41,7 +43,7 @@ class Context {
   final AtomicReference<OptionsServer> options = new AtomicReference<OptionsServer>();
   final AtomicReference<KeyboardServer> keyboard = new AtomicReference<KeyboardServer>();
   final AtomicReference<MouseServer> mouse = new AtomicReference<MouseServer>();
-  final AtomicReference<CapabilitiesServer> capabilities = new AtomicReference<CapabilitiesServer>();
+  final AtomicReference<Capabilities> capabilities = new AtomicReference<Capabilities>();
   final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
@@ -89,7 +91,6 @@ class Context {
           targetLocator.set(new TargetLocatorServer(driver, this));
           keyboard.set(new KeyboardServer(robot));
           mouse.set(new MouseServer(robot));
-          capabilities.set(new CapabilitiesServer());
           navigation.set(new NavigationServer(
               new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
           options.set(new OptionsServer(this, timeouts));

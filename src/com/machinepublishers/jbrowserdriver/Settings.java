@@ -821,7 +821,7 @@ public class Settings implements Serializable {
       return capabilities;
     }
 
-    Settings build(org.openqa.selenium.Capabilities capabilities) {
+    Settings build(Capabilities capabilities) {
       Map properties = new HashMap(capabilities.asMap());
       for (Map.Entry entry : System.getProperties().entrySet()) {
         properties.put(entry.getKey(), entry.getValue());

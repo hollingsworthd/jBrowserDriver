@@ -22,6 +22,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -48,6 +49,7 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
@@ -56,6 +58,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.internal.Killable;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.CommandExecutor;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.ErrorHandler;
 import org.openqa.selenium.remote.FileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -201,8 +204,16 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * 
    * @param capabilities
    */
-  public JBrowserDriver(final org.openqa.selenium.Capabilities capabilities) {
+  public JBrowserDriver(Capabilities capabilities) {
     this(Settings.builder().build(capabilities));
+    if (!(capabilities instanceof Serializable)) {
+      capabilities = new DesiredCapabilities(capabilities);
+    }
+    try {
+      remote.storeCapabilities(capabilities);
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
   }
 
   /**
@@ -367,6 +378,34 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     //TODO clear out tmp files except cache
     try {
       remote.reset(settings);
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
+
+  /**
+   * Reset the state of the browser. More efficient than quitting the
+   * browser and creating a new instance.
+   * <p>
+   * Note: it's not possible to switch between headless and GUI mode. You must quit this browser
+   * and create a new instance.
+   * 
+   * @param capabilities
+   *          Capabilities to take effect, superseding the original ones
+   */
+  public void reset(Capabilities capabilities) {
+    //TODO clear out tmp files except cache
+    Settings settings = Settings.builder().build(capabilities);
+    try {
+      remote.reset(settings);
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+    if (!(capabilities instanceof Serializable)) {
+      capabilities = new DesiredCapabilities(capabilities);
+    }
+    try {
+      remote.storeCapabilities(capabilities);
     } catch (RemoteException e) {
       logs.exception(e);
     }
@@ -745,13 +784,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * {@inheritDoc}
    */
   @Override
-  public org.openqa.selenium.Capabilities getCapabilities() {
+  public Capabilities getCapabilities() {
     try {
-      CapabilitiesRemote capabilities = remote.getCapabilities();
-      if (capabilities == null) {
-        return null;
-      }
-      return new Capabilities(capabilities, logs);
+      return remote.getCapabilities();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

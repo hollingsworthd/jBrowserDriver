@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -109,9 +110,15 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
 
   public JBrowserDriverServer() throws RemoteException {}
 
+  @Override
   public void setUp(final Settings settings) {
     SettingsManager.register(settings);
     context.set(new Context());
+  }
+
+  @Override
+  public void storeCapabilities(final Capabilities capabilities) {
+    context.get().capabilities.set(capabilities);
   }
 
   /**
@@ -448,7 +455,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public CapabilitiesServer getCapabilities() {
+  public Capabilities getCapabilities() {
     init();
     return context.get().capabilities.get();
   }
