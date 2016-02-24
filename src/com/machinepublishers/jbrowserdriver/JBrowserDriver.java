@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
@@ -100,6 +101,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private final AtomicReference<Process> process = new AtomicReference<Process>();
   private final AtomicInteger port = new AtomicInteger();
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
+  private final AtomicLong sessionIdCounter = new AtomicLong();
+  private final SessionId sessionId;
 
   static {
     Policy.init();
@@ -286,6 +289,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (RemoteException e) {
       Logs.fatal(e);
     }
+    sessionId = new SessionId(Long.toString(sessionIdCounter.incrementAndGet()) + ":" + port.get());
     logs = new Logs(logsRemote);
   }
 
@@ -1016,8 +1020,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public SessionId getSessionId() {
-    // TODO
-    return null;
+    return sessionId;
   }
 
   /**
@@ -1025,8 +1028,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public ErrorHandler getErrorHandler() {
-    // TODO 
-    return null;
+    return super.getErrorHandler();
   }
 
   /**
@@ -1034,8 +1036,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public CommandExecutor getCommandExecutor() {
-    //TODO
-    return null;
+    return super.getCommandExecutor();
   }
 
   /**
@@ -1043,7 +1044,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public FileDetector getFileDetector() {
-    //TODO
-    return null;
+    return super.getFileDetector();
   }
 }

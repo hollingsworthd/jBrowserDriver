@@ -234,7 +234,6 @@ public class Test {
       test(driver.manage().window().getPosition().getY() == 0);
       test(driver.manage().window().getSize().getWidth() == 1024);
       test(driver.manage().window().getSize().getHeight() == 768);
-
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {
