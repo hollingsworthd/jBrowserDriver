@@ -61,7 +61,13 @@ public class Test {
     try {
       HttpServer.launch(TEST_PORT_HTTP);
       driver = new JBrowserDriver(
-          Settings.builder().portsMax(TEST_PORT_RMI, 1).traceConsole(true).cache(true).ignoreDialogs(false).build());
+          Settings.builder()
+              .portsMax(TEST_PORT_RMI, 1)
+              .screen(new Dimension(1024, 768))
+              .traceConsole(true)
+              .cache(true)
+              .ignoreDialogs(false)
+              .build());
 
       /*
        * Load a page
@@ -184,6 +190,45 @@ public class Test {
       test("jsCookieValue2".equals(driver.manage().getCookieNamed("jsCookieName2").getValue()));
       test("jsCookieValue3".equals(driver.manage().getCookieNamed("jsCookieName3").getValue()));
       test("jsCookieValue4".equals(driver.manage().getCookieNamed("jsCookieName4").getValue()));
+
+      /*
+       * Window size and position
+       */
+      driver.manage().window().setSize(new Dimension(5000, 5000));
+      test(driver.manage().window().getSize().getWidth() == 1024);
+      test(driver.manage().window().getSize().getHeight() == 768);
+      driver.manage().window().setSize(new Dimension(800, 600));
+      test(driver.manage().window().getSize().getWidth() == 800);
+      test(driver.manage().window().getSize().getHeight() == 600);
+      driver.manage().window().setPosition(new Point(5000, 5000));
+      test(driver.manage().window().getPosition().getX() == 224);
+      test(driver.manage().window().getPosition().getY() == 168);
+      driver.manage().window().setPosition(new Point(20, 50));
+      test(driver.manage().window().getPosition().getX() == 20);
+      test(driver.manage().window().getPosition().getY() == 50);
+      driver.manage().window().maximize();
+      test(driver.manage().window().getPosition().getX() == 0);
+      test(driver.manage().window().getPosition().getY() == 0);
+      test(driver.manage().window().getSize().getWidth() == 1024);
+      test(driver.manage().window().getSize().getHeight() == 768);
+      driver.manage().window().setSize(new Dimension(800, 600));
+      driver.manage().window().setPosition(new Point(20, 50));
+      driver.manage().window().fullscreen();
+      test(driver.manage().window().getPosition().getX() == 0);
+      test(driver.manage().window().getPosition().getY() == 0);
+      test(driver.manage().window().getSize().getWidth() == 1024);
+      test(driver.manage().window().getSize().getHeight() == 768);
+      driver.manage().window().fullscreen();
+      test(driver.manage().window().getPosition().getX() == 20);
+      test(driver.manage().window().getPosition().getY() == 50);
+      test(driver.manage().window().getSize().getWidth() == 800);
+      test(driver.manage().window().getSize().getHeight() == 600);
+      driver.manage().window().setSize(new Dimension(400, 200));
+      driver.manage().window().setPosition(new Point(10, 30));
+      test(driver.manage().window().getPosition().getX() == 10);
+      test(driver.manage().window().getPosition().getY() == 30);
+      test(driver.manage().window().getSize().getWidth() == 400);
+      test(driver.manage().window().getSize().getHeight() == 200);
 
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));

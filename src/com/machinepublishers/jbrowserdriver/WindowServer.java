@@ -129,10 +129,22 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().setMaximized(false);
-        stage.get().setFullScreen(false);
-        stage.get().setX(point.getX());
-        stage.get().setY(point.getY());
+        if (!stage.get().isFullScreen()) {
+          int screenWidth = SettingsManager.settings().screenWidth();
+          int screenHeight = SettingsManager.settings().screenHeight();
+
+          int width = (int) Math.rint((Double) stage.get().getWidth());
+          int height = (int) Math.rint((Double) stage.get().getHeight());
+
+          int newX = Math.max(0, Math.min(screenWidth - width, point.getX()));
+          int newY = Math.max(0, Math.min(screenHeight - height, point.getY()));
+
+          stage.get().hide();
+          stage.get().setMaximized(false);
+          stage.get().setX(newX);
+          stage.get().setY(newY);
+          stage.get().show();
+        }
         return null;
       }
     });
@@ -143,7 +155,7 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
    */
   @Override
   public void setSize(final Dimension dimension) {
-    setSize(dimension);
+    setSize(dimension.toSelenium());
   }
 
   /**
@@ -154,10 +166,22 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
     Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
-        stage.get().setMaximized(false);
-        stage.get().setFullScreen(false);
-        stage.get().setWidth(dimension.getWidth());
-        stage.get().setHeight(dimension.getHeight());
+        if (!stage.get().isFullScreen()) {
+          int screenWidth = SettingsManager.settings().screenWidth();
+          int screenHeight = SettingsManager.settings().screenHeight();
+
+          int xPos = (int) Math.rint((Double) stage.get().getX());
+          int yPos = (int) Math.rint((Double) stage.get().getY());
+
+          int newWidth = Math.max(0, Math.min(screenWidth - xPos, dimension.getWidth()));
+          int newHeight = Math.max(0, Math.min(screenHeight - yPos, dimension.getHeight()));
+
+          stage.get().hide();
+          stage.get().setMaximized(false);
+          stage.get().setWidth(newWidth);
+          stage.get().setHeight(newHeight);
+          stage.get().show();
+        }
         return null;
       }
     });
