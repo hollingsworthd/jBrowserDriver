@@ -33,6 +33,7 @@
     </license>
   </licenses>
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <selenium.version>2.52.0</selenium.version> <!-- note: selenium does not follow semantic versioning -->
     <httpcomponents.version>[4.5.1, 5.0)</httpcomponents.version>
   </properties>
