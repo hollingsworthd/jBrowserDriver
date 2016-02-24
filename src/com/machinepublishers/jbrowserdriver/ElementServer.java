@@ -119,12 +119,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   private final Context context;
 
   ElementServer(JSObject node, final Context context) throws RemoteException {
-    try {
-      this.node = node;
-      this.context = context;
-    } catch (Throwable t) {
-      throw new BrowserException.Retry(t);
-    }
+    this.node = node;
+    this.context = context;
   }
 
   static ElementServer create(final Context context) {

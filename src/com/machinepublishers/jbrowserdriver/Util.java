@@ -68,8 +68,6 @@ class Util {
     private final AtomicInteger statusCode;
     private final AtomicBoolean done = new AtomicBoolean();
     private final AtomicReference<T> returned = new AtomicReference<T>();
-    private final AtomicReference<RuntimeException> fatal = new AtomicReference<RuntimeException>();
-    private final AtomicReference<RuntimeException> retry = new AtomicReference<RuntimeException>();
 
     public Runner(Sync<T> action, AtomicInteger statusCode) {
       this.action = action;
@@ -91,18 +89,10 @@ class Util {
         }
       }
       T result = null;
-      BrowserException.Fatal browserFatal = null;
-      BrowserException.Retry browserRetry = null;
       try {
         result = action.perform();
-      } catch (BrowserException.Fatal t) {
-        browserFatal = t;
-      } catch (BrowserException.Retry t) {
-        browserRetry = t;
       } finally {
         synchronized (done) {
-          fatal.set(browserFatal);
-          retry.set(browserRetry);
           returned.set(result);
           done.set(true);
           done.notifyAll();
@@ -135,13 +125,7 @@ class Util {
       final Sync<T> action) {
     try {
       if ((boolean) Platform.isFxApplicationThread()) {
-        try {
-          return action.perform();
-        } catch (BrowserException.Fatal t) {
-          throw t;
-        } catch (BrowserException.Retry t) {
-          throw t;
-        }
+        return action.perform();
       }
       final Runner<T> runner = new Runner<T>(action, statusCode);
       synchronized (runner.done) {
@@ -157,12 +141,6 @@ class Util {
           if (!runner.done.get()) {
             LogsServer.instance().exception(new RuntimeException("Action never completed."));
           }
-        }
-        if (runner.fatal.get() != null) {
-          throw runner.fatal.get();
-        }
-        if (runner.retry.get() != null) {
-          throw runner.retry.get();
         }
         return runner.returned.get();
       }
