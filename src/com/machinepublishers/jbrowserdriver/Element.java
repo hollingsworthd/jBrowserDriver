@@ -573,6 +573,9 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WebDriver getWrappedDriver() {
     return driver;

@@ -44,6 +44,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
   private static final CookieSpec spec = new LaxCookieSpecProvider().create(null);
   private final org.apache.http.client.CookieStore store = new BasicCookieStore();
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, List<String>> get(URI uri, Map<String, List<String>> requestHeaders) throws IOException {
     final String reqHost = canonicalHost(uri.getHost());
@@ -81,6 +84,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     return map;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void put(URI uri, Map<String, List<String>> responseHeaders) throws IOException {
     if (isJavascript(uri.getScheme())) {
@@ -136,6 +142,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     return canonical.toLowerCase();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addCookie(Cookie cookie) {
     synchronized (store) {
@@ -143,6 +152,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<Cookie> getCookies() {
     synchronized (store) {
@@ -150,6 +162,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean clearExpired(Date date) {
     synchronized (store) {
@@ -157,6 +172,9 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void clear() {
     synchronized (store) {

@@ -146,6 +146,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void activate() {
     try {

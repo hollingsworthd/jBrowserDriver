@@ -55,6 +55,9 @@ class StreamHandler implements URLStreamHandlerFactory {
         ? new HttpsHandler().defaultConnection(url) : new HttpHandler().defaultConnection(url);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public URLStreamHandler createURLStreamHandler(String protocol) {
     if ("http".equals(protocol)) {

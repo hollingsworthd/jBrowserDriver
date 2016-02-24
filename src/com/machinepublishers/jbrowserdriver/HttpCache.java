@@ -45,6 +45,9 @@ class HttpCache implements HttpCacheStorage {
     this.cacheDir = cacheDir;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void updateEntry(String key, HttpCacheUpdateCallback callback) throws IOException, HttpCacheUpdateException {
     HttpCacheEntry entry = callback.update(getEntry(key));
@@ -52,6 +55,9 @@ class HttpCache implements HttpCacheStorage {
     putEntry(key, entry);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void removeEntry(String key) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
@@ -62,6 +68,9 @@ class HttpCache implements HttpCacheStorage {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void putEntry(String key, HttpCacheEntry entry) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
@@ -76,6 +85,9 @@ class HttpCache implements HttpCacheStorage {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public HttpCacheEntry getEntry(String key) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
@@ -117,6 +129,9 @@ class HttpCache implements HttpCacheStorage {
       }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() {
       if (fileLock != null) {
