@@ -173,11 +173,19 @@ class WindowServer extends UnicastRemoteObject implements WindowRemote,
           int xPos = (int) Math.rint((Double) stage.get().getX());
           int yPos = (int) Math.rint((Double) stage.get().getY());
 
+          if ((dimension.getWidth() > screenWidth - xPos && xPos > 0)
+              || (dimension.getHeight() > screenHeight - yPos && yPos > 0)) {
+            xPos = 0;
+            yPos = 0;
+          }
+
           int newWidth = Math.max(0, Math.min(screenWidth - xPos, dimension.getWidth()));
           int newHeight = Math.max(0, Math.min(screenHeight - yPos, dimension.getHeight()));
 
           stage.get().hide();
           stage.get().setMaximized(false);
+          stage.get().setX(xPos);
+          stage.get().setY(yPos);
           stage.get().setWidth(newWidth);
           stage.get().setHeight(newHeight);
           stage.get().show();
