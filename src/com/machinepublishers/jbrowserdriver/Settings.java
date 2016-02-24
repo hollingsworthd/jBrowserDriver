@@ -256,8 +256,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system properties <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> override this setting</li>
-     * <li>{@link Capabilities} names <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> alternately configures this setting</li>
+     * <li>Java system properties <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> override this setting.</li>
+     * <li>{@link Capabilities} names <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * @param screen
@@ -274,8 +274,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.useragent</code> overrides this setting and {@link Builder#requestHeaders(RequestHeaders)}</li>
-     * <li>{@link Capabilities} name <code>jbd.useragent</code> alternately configures this setting and {@link Builder#requestHeaders(RequestHeaders)}</li>
+     * <li>Java system property <code>jbd.useragent</code> overrides this setting and {@link Builder#requestHeaders(RequestHeaders)}.</li>
+     * <li>{@link Capabilities} name <code>jbd.useragent</code> alternately configures this setting and {@link Builder#requestHeaders(RequestHeaders)}.</li>
      * </ul><p>
      * 
      * @param userAgent
@@ -309,8 +309,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.headscript</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.headscript</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.headscript</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.headscript</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * @param headScript
@@ -328,9 +328,9 @@ public class Settings implements Serializable {
     /**
      * <p><ul>
      * <li>Java system properties <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
-     * <code>jbd.proxyexpectcontinue</code> override this setting</li>
+     * <code>jbd.proxyexpectcontinue</code> override this setting.</li>
      * <li>{@link Capabilities} name <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
-     * <code>jbd.proxyexpectcontinue</code> alternately configure this setting</li>
+     * <code>jbd.proxyexpectcontinue</code> alternately configure this setting.</li>
      * </ul><p>
      * 
      * @param proxy
@@ -345,8 +345,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.savemedia</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.savemedia</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.savemedia</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.savemedia</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether to save media (e.g., images) to disk. Defaults to <code>false</code>.
@@ -374,8 +374,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.saveattachments</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.saveattachments</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.saveattachments</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.saveattachments</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether to save links to disk when prompted by the browser. Defaults to <code>false</code>.
@@ -397,8 +397,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.ignoredialogs</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.ignoredialogs</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.ignoredialogs</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.ignoredialogs</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether JavaScript alerts, prompts, and confirm dialogs should be auto-dismissed
@@ -422,8 +422,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.cache</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.cache</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.cache</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.cache</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether to cache web pages like a desktop browser would. Defaults to <code>false</code>.
@@ -442,8 +442,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.cachedir</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.cachedir</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.cachedir</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.cachedir</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Directory where the web cache resides. This enables sharing a cache across instances
@@ -460,8 +460,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.cacheentries</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.cacheentries</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.cacheentries</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.cacheentries</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Set maximum number of cached files on disk. Defaults to 10000.
@@ -476,8 +476,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.cacheentrysize</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.cacheentrysize</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.cacheentrysize</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.cacheentrysize</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Set maximum size of a file to be cached. If it's greater than this max, it will not be cached.
@@ -493,9 +493,9 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.ports</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.ports</code> alternately configures this setting</li>
-     * <li>Note that ranges (which are inclusive) can be separated with "-" and ranges/ports separated with "," (e.g., 10000-10007,12500,12502,15377-15380</li>
+     * <li>Java system property <code>jbd.ports</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.ports</code> alternately configures this setting.</li>
+     * <li>Note that ranges (which are inclusive) can be separated with "-" and ranges/ports separated with "," (e.g., 10000-10007,12500,12502,15377-15380).</li>
      * </ul><p>
      * 
      * Each browser instance is run in a separate process (via RMI).
@@ -539,8 +539,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.headless</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.headless</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.headless</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.headless</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether to run in headless mode (no GUI windows).
@@ -555,8 +555,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.ajaxwait</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.ajaxwait</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.ajaxwait</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.ajaxwait</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to
@@ -573,8 +573,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.ajaxresourcetimeout</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.ajaxresourcetimeout</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.ajaxresourcetimeout</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.ajaxresourcetimeout</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * The time in milliseconds after which an AJAX request will be ignored when considering
@@ -590,8 +590,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.blockads</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.blockads</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.blockads</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.blockads</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Whether requests to ad/spam servers should be blocked.
@@ -607,8 +607,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.quickrender</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.quickrender</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.quickrender</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.quickrender</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Exclude web page images and binary data from rendering.
@@ -626,8 +626,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.maxrouteconnections</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.maxrouteconnections</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.maxrouteconnections</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.maxrouteconnections</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Maximum number of concurrent connections to a specific host+proxy combo. Defaults to <code>8</code>.
@@ -642,8 +642,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.maxconnections</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.maxconnections</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.maxconnections</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.maxconnections</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Maximum number of concurrent connections overall. Defaults to <code>3000</code>.
@@ -658,8 +658,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.ssl</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.ssl</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.ssl</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.ssl</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Specifies a source of trusted certificate authorities.
@@ -683,8 +683,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Mirror trace-level log messages to standard out.
@@ -700,8 +700,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Mirror warning-level log messages to standard error.
@@ -717,8 +717,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.wireconsole</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.wireconsole</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.wireconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.wireconsole</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Log full requests and responses (except response bodies) to standard out.
@@ -736,8 +736,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.maxlogs</code> overrides this setting</li>
-     * <li>{@link Capabilities} name <code>jbd.maxlogs</code> alternately configures this setting</li>
+     * <li>Java system property <code>jbd.maxlogs</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.maxlogs</code> alternately configures this setting.</li>
      * </ul><p>
      * 
      * Maximum number of log entries to store in memory, accessible via the Selenium APIs.
