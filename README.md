@@ -15,10 +15,10 @@ Or install via Maven:
 <dependency>
   <groupId>com.machinepublishers</groupId>
   <artifactId>jbrowserdriver</artifactId>
-  <version>[0.9.3, 2.0)</version>
+  <version>[0.10.0, 2.0)</version>
 </dependency>
 ```
-For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.9.3|jar).
+For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.10.0|jar).
 
 #### Pre-requisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
@@ -28,11 +28,11 @@ Linux users: on Debian/Ubuntu install the following, `apt-get install openjdk-8-
 #### Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
 
-Use this library like any other Selenium WebDriver or RemoteWebDriver (it implements Selenium's JavascriptExecutor, HasInputDevices, TakesScreenshot, Killable, FindsById, FindsByClassName, FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, and FindsByXPath).
+Use this library like any other Selenium WebDriver or RemoteWebDriver. It also works with Selenium Server (use browser name "jbrowserdriver").
 
 You can optionally create a [Settings](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.html) object, [configure it](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.Builder.html), and pass it to the [JBrowserDriver constructor](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/JBrowserDriver.html#JBrowserDriver-com.machinepublishers.jbrowserdriver.Settings-) to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
-Certain settings can alternately be configured using Java system properties. See each [Settings builder](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.Builder.html) method documentation for details.
+Certain settings can alternately be configured using Java system properties or Selenium Capabilities. See each [Settings builder](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.Builder.html) documentation for details.
 
 Each instance of JBrowserDriver is backed by a separate Java process, so any native browser crashes will not take down your app.
 
