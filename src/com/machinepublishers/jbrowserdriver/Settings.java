@@ -257,7 +257,7 @@ public class Settings implements Serializable {
     /**
      * <p><ul>
      * <li>Java system properties <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> override this setting.</li>
-     * <li>{@link Capabilities} names <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> alternately configures this setting.</li>
+     * <li>{@link Capabilities} names <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> alternately configure this setting.</li>
      * </ul><p>
      * 
      * @param screen
@@ -274,8 +274,8 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
-     * <li>Java system property <code>jbd.useragent</code> overrides this setting and {@link Builder#requestHeaders(RequestHeaders)}.</li>
-     * <li>{@link Capabilities} name <code>jbd.useragent</code> alternately configures this setting and {@link Builder#requestHeaders(RequestHeaders)}.</li>
+     * <li>Java system property <code>jbd.useragent</code> overrides this setting and the {@link Builder#requestHeaders(RequestHeaders)} setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.useragent</code> alternately configures this setting and the {@link Builder#requestHeaders(RequestHeaders)} setting.</li>
      * </ul><p>
      * 
      * @param userAgent
@@ -329,7 +329,7 @@ public class Settings implements Serializable {
      * <p><ul>
      * <li>Java system properties <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
      * <code>jbd.proxyexpectcontinue</code> override this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
+     * <li>{@link Capabilities} names <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
      * <code>jbd.proxyexpectcontinue</code> alternately configure this setting.</li>
      * </ul><p>
      * 
@@ -495,7 +495,7 @@ public class Settings implements Serializable {
      * <p><ul>
      * <li>Java system property <code>jbd.ports</code> overrides this setting.</li>
      * <li>{@link Capabilities} name <code>jbd.ports</code> alternately configures this setting.</li>
-     * <li>Note that ranges (which are inclusive) can be separated with "-" and ranges/ports separated with "," (e.g., 10000-10007,12500,12502,15377-15380).</li>
+     * <li>Note that ranges (which are inclusive) are specified by "-" and ranges/ports are separated with "," (e.g., 10000-10007,12500,12502,15377-15380).</li>
      * </ul><p>
      * 
      * Each browser instance is run in a separate process (via RMI).
