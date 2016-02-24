@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -254,10 +255,16 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system properties <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> override this setting</li>
+     * <li>{@link Capabilities} names <code>jbd.screenwidth</code> and <code>jbd.screenheight</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * @param screen
      *          Screen and window size. Defaults to 1000x600. This is a typical size for Tor Browser
      *          but if you're not using the Tor user agent you might want to specify a more common
      *          size such as 1366x768.
+     * 
      * @return this Builder
      */
     public Builder screen(org.openqa.selenium.Dimension screen) {
@@ -266,8 +273,14 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.useragent</code> overrides this setting and {@link Builder#requestHeaders(RequestHeaders)}</li>
+     * <li>{@link Capabilities} name <code>jbd.useragent</code> alternately configures this setting and {@link Builder#requestHeaders(RequestHeaders)}</li>
+     * </ul><p>
+     * 
      * @param userAgent
      *          Browser's user agent and related properties. Defaults to {@link UserAgent#TOR}.
+     * 
      * @return this Builder
      * @see Builder#requestHeaders(RequestHeaders)
      */
@@ -277,10 +290,16 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.timezone</code> overrides this setting. For value, see {@link Timezone#name()}.</li>
+     * <li>{@link Capabilities} name <code>jbd.timezone</code> alternately configures this setting. For value, see {@link Timezone#name()}.</li>
+     * </ul><p>
+     * 
      * @param timezone
      *          Timezone of the browser. Defaults to {@link Timezone#UTC}. This is the timezone
      *          of Tor Browser but if you're not using the Tor user agent you might want to
      *          use a locale nearer your actual computer, such as {@link Timezone#AMERICA_LOSANGELES} if you're in San Francisco.
+     * 
      * @return this Builder
      */
     public Builder timezone(Timezone timezone) {
@@ -289,10 +308,16 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.headscript</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.headscript</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * @param headScript
      *          Script to be injected in the HTML Head section.
      *          Omit &lt;script&gt; tags; they will be added automatically.
      *          Defaults to {@link Settings#HEAD_SCRIPT}.
+     * 
      * @return this Builder
      */
     public Builder headScript(String headScript) {
@@ -301,8 +326,16 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system properties <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
+     * <code>jbd.proxyexpectcontinue</code> override this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.proxytype</code>, <code>jbd.proxyhost</code>, <code>jbd.proxyport</code>, <code>jbd.proxyusername</code>, <code>jbd.proxypassword</code>, and
+     * <code>jbd.proxyexpectcontinue</code> alternately configure this setting</li>
+     * </ul><p>
+     * 
      * @param proxy
      *          Proxy server to be used. Defaults to a direct connection (no proxy).
+     * 
      * @return this Builder
      */
     public Builder proxy(ProxyConfig proxy) {
@@ -311,6 +344,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.savemedia</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.savemedia</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Whether to save media (e.g., images) to disk. Defaults to <code>false</code>.
      * <p>
      * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
@@ -326,6 +364,7 @@ public class Settings implements Serializable {
      * 
      * @param saveMedia
      *          Whether to save media (e.g., images) to disk.
+     * 
      * @return this Builder
      */
     public Builder saveMedia(boolean saveMedia) {
@@ -334,6 +373,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.saveattachments</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.saveattachments</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Whether to save links to disk when prompted by the browser. Defaults to <code>false</code>.
      * <p>
      * Saved files are deleted when the JVM exits, so copy them to a different
@@ -343,7 +387,8 @@ public class Settings implements Serializable {
      * {@link JBrowserDriver#attachmentsDir()}
      * 
      * @param saveAttachments
-     * @return
+     * 
+     * @return this Builder
      */
     public Builder saveAttachments(boolean saveAttachments) {
       this.saveAttachments = saveAttachments;
@@ -351,6 +396,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.ignoredialogs</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.ignoredialogs</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Whether JavaScript alerts, prompts, and confirm dialogs should be auto-dismissed
      * and ignored. Otherwise, you will need to use JBrowserDriver.switchTo().alert()
      * to accept/dismiss these dialogs. Note that if dialogs are not ignored and you are handling them,
@@ -362,6 +412,7 @@ public class Settings implements Serializable {
      *          <code>True</code> to auto-dismiss alert/prompt/confirm dialogs and relieve the
      *          user from having to handle them. <code>False</code> to allow these dialogs to have an effect on the page
      *          and force the user to accept/dismiss them. Defaults to <code>true</code>.
+     * 
      * @return this Builder
      */
     public Builder ignoreDialogs(boolean ignoreDialogs) {
@@ -370,12 +421,18 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.cache</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.cache</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Whether to cache web pages like a desktop browser would. Defaults to <code>false</code>.
      * <p>
      * The temporary directory where these files are saved is availble from
      * {@link JBrowserDriver#cacheDir()}
      * 
      * @param cache
+     * 
      * @return this Builder
      */
     public Builder cache(boolean cache) {
@@ -384,6 +441,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.cachedir</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.cachedir</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Directory where the web cache resides. This enables sharing a cache across instances
      * and after JVM restarts.
      * 
@@ -397,6 +459,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.cacheentries</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.cacheentries</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Set maximum number of cached files on disk. Defaults to 10000.
      * 
      * @param cacheEntries
@@ -408,6 +475,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.cacheentrysize</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.cacheentrysize</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Set maximum size of a file to be cached. If it's greater than this max, it will not be cached.
      * Defaults to 1 MB.
      * 
@@ -420,13 +492,17 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.ports</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.ports</code> alternately configures this setting</li>
+     * <li>Note that ranges (which are inclusive) can be separated with "-" and ranges/ports separated with "," (e.g., 10000-10007,12500,12502,15377-15380</li>
+     * </ul><p>
+     * 
      * Each browser instance is run in a separate process (via RMI).
      * This setting configures which ports are available for RMI.
      * The number of ports determines the maximum number of RMI processes.
      * 
      * Defaults to <code>10000,10001,10002,10003,10004,10005,10006,10007</code>
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.ports</code>
      * 
      * @param ports
      * @return this Builder
@@ -451,7 +527,7 @@ public class Settings implements Serializable {
      * 
      * @param startingPort
      * @param maxProcesses
-     * @return
+     * @return this Builder
      */
     public Builder portsMax(int startingPort, int maxProcesses) {
       this.ports.clear();
@@ -462,9 +538,12 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Whether to run in headless mode (no GUI windows).
+     * <p><ul>
+     * <li>Java system property <code>jbd.headless</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.headless</code> alternately configures this setting</li>
+     * </ul><p>
      * 
-     * <p>This setting can be overridden with Java system property <code>jbd.headless</code>
+     * Whether to run in headless mode (no GUI windows).
      * 
      * @param headless
      * @return this Builder
@@ -475,11 +554,14 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.ajaxwait</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.ajaxwait</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to
      * have been loaded completely. For very slow or overloaded CPUs, set a higher value.
      * Defaults to <code>120</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.ajaxwait</code>
      * 
      * @param intervalMS
      * @return this Builder
@@ -490,10 +572,13 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.ajaxresourcetimeout</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.ajaxresourcetimeout</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * The time in milliseconds after which an AJAX request will be ignored when considering
      * whether all AJAX requests have completed. Defaults to <code>2000</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.ajaxresourcetimeout</code>
      * 
      * @param timeoutMS
      * @return this Builder
@@ -504,10 +589,13 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.blockads</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.blockads</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Whether requests to ad/spam servers should be blocked.
      * Based on hosts in ad-hosts.txt in the source tree. Defaults to <code>true</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.blockads</code>
      * 
      * @param blockAds
      * @return this Builder
@@ -518,12 +606,15 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.quickrender</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.quickrender</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Exclude web page images and binary data from rendering.
      * These resources are still requested and can optionally be saved to disk (see the Settings options).
      * Some versions of Java are inefficient (memory-wise) in rendering images.
      * Defaults to <code>true</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.quickrender</code>
      * 
      * @param quickRender
      * @return this Builder
@@ -534,9 +625,12 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Maximum number of concurrent connections to a specific host+proxy combo. Defaults to <code>8</code>.
+     * <p><ul>
+     * <li>Java system property <code>jbd.maxrouteconnections</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.maxrouteconnections</code> alternately configures this setting</li>
+     * </ul><p>
      * 
-     * <p>This setting can be overridden with Java system property <code>jbd.maxrouteconnections</code>
+     * Maximum number of concurrent connections to a specific host+proxy combo. Defaults to <code>8</code>.
      * 
      * @param maxRouteConnections
      * @return this Builder
@@ -547,9 +641,12 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Maximum number of concurrent connections overall. Defaults to <code>3000</code>.
+     * <p><ul>
+     * <li>Java system property <code>jbd.maxconnections</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.maxconnections</code> alternately configures this setting</li>
+     * </ul><p>
      * 
-     * <p>This setting can be overridden with Java system property <code>jbd.maxconnections</code>
+     * Maximum number of concurrent connections overall. Defaults to <code>3000</code>.
      * 
      * @param maxConnections
      * @return this Builder
@@ -560,6 +657,11 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.ssl</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.ssl</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Specifies a source of trusted certificate authorities.
      * Can take one of four values:
      * <br>(1) <code>compatible</code> to accept standard browser certs,
@@ -571,8 +673,6 @@ public class Settings implements Serializable {
      * <br>The default when this property is not set (i.e., when it's <code>null</code>) is your JRE's keystore,
      * so you can use JDK's keytool to import specific certs.
      * 
-     * <p>This setting can be overridden with Java system property <code>jbd.ssl</code>
-     * 
      * @param ssl
      * @return this Builder
      */
@@ -582,10 +682,13 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Mirror trace-level log messages to standard out.
      * Otherwise these logs are only available through the Selenium APIs. Defaults to <code>false</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.traceconsole</code>
      * 
      * @param traceConsole
      * @return this Builder
@@ -596,10 +699,13 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Mirror warning-level log messages to standard error.
      * Otherwise these logs are only available through the Selenium APIs. Defaults to <code>true</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.warnconsole</code>
      * 
      * @param warnConsole
      * @return this Builder
@@ -610,12 +716,15 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.wireconsole</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.wireconsole</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Log full requests and responses (except response bodies) to standard out.
      * This produces an enormous amount of output and logs potentially sensitive data--use only as needed.
      * Regardless of this setting, these log messages are never available via the Selenium logging APIs.
      * Defaults to <code>false</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.wireconsole</code>
      * 
      * @param wireConsole
      * @return this Builder
@@ -626,12 +735,15 @@ public class Settings implements Serializable {
     }
 
     /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.maxlogs</code> overrides this setting</li>
+     * <li>{@link Capabilities} name <code>jbd.maxlogs</code> alternately configures this setting</li>
+     * </ul><p>
+     * 
      * Maximum number of log entries to store in memory, accessible via the Selenium APIs.
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
      * Defaults to <code>5000</code>.
-     * 
-     * <p>This setting can be overridden with Java system property <code>jbd.maxlogs</code>
      * 
      * @param maxLogs
      * @return this Builder
@@ -652,7 +764,7 @@ public class Settings implements Serializable {
     /**
      * @return A Selenium Capabilities object for a RemoteWebDriver or Selenium Server
      */
-    public DesiredCapabilities buildCapabilities() {
+    public Capabilities buildCapabilities() {
       DesiredCapabilities capabilities = new DesiredCapabilities("jbrowserdriver", "", Platform.ANY);
       set(capabilities, PropertyName.CACHE_ENTRY_SIZE, this.cacheEntrySize);
       set(capabilities, PropertyName.CACHE_ENTRIES, this.cacheEntries);

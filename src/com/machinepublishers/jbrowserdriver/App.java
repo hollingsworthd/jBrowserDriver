@@ -39,6 +39,8 @@ import javafx.stage.StageStyle;
 
 /**
  * Internal use only.
+ * 
+ * @deprecated
  */
 public class App extends Application {
   private static final int HISTORY_SIZE = 8;

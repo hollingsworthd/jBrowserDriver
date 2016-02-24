@@ -99,8 +99,8 @@ public class RequestHeaders implements Serializable {
   /**
    * Specify the ordered headers to be sent on each request.
    * 
-   * @see RequestHeaders.DROP_HEADER
-   * @see RequestHeaders.DYNAMIC_HEADER
+   * @see RequestHeaders#DROP_HEADER
+   * @see RequestHeaders#DYNAMIC_HEADER
    */
   public RequestHeaders(LinkedHashMap<String, String> headers) {
     this(headers, headers);
@@ -110,8 +110,8 @@ public class RequestHeaders implements Serializable {
    * Specify the ordered headers to be sent on each request.
    * Allows different sets of headers for HTTP and HTTPS.
    * 
-   * @see RequestHeaders.DROP_HEADER
-   * @see RequestHeaders.DYNAMIC_HEADER
+   * @see RequestHeaders#DROP_HEADER
+   * @see RequestHeaders#DYNAMIC_HEADER
    */
   public RequestHeaders(LinkedHashMap<String, String> headersHttp, LinkedHashMap<String, String> headersHttps) {
     LinkedHashMap<String, String> headersHttpTmp = new LinkedHashMap<String, String>();

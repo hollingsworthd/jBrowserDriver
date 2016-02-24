@@ -199,7 +199,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * 
    * This constructor is mostly useful for Selenium Server itself to use.
    * 
-   * @param settings
+   * @param capabilities
    */
   public JBrowserDriver(final org.openqa.selenium.Capabilities capabilities) {
     this(Settings.builder().build(capabilities));

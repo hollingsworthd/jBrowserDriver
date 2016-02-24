@@ -156,7 +156,7 @@ public class UserAgent {
    *          Property of the navigator object
    * @param appVersion
    *          Property of the navigator object
-   * @param userAgent
+   * @param userAgentString
    *          Property of the navigator object and also sent on headers
    */
   public UserAgent(Family family, String vendor, String platform,
