@@ -28,9 +28,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.client.cache.HttpCacheEntry;
@@ -75,9 +76,11 @@ class HttpCache implements HttpCacheStorage {
   public void putEntry(String key, HttpCacheEntry entry) throws IOException {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
     if (!file.exists()) {
+      try {
+        file.createNewFile();
+      } catch (Throwable t) {}
       try (Lock lock = new Lock(file, false)) {
-        FileOutputStream fileOut = new FileOutputStream(file);
-        BufferedOutputStream bufferOut = new BufferedOutputStream(fileOut);
+        BufferedOutputStream bufferOut = new BufferedOutputStream(lock.streamOut);
         try (ObjectOutputStream objectOut = new ObjectOutputStream(bufferOut)) {
           objectOut.writeObject(entry);
         }
@@ -93,8 +96,7 @@ class HttpCache implements HttpCacheStorage {
     File file = new File(cacheDir, DigestUtils.sha1Hex(key));
     if (file.exists()) {
       try (Lock lock = new Lock(file, true)) {
-        FileInputStream fileIn = new FileInputStream(file);
-        BufferedInputStream bufferIn = new BufferedInputStream(fileIn);
+        BufferedInputStream bufferIn = new BufferedInputStream(lock.streamIn);
         try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
           return (HttpCacheEntry) objectIn.readObject();
         } catch (Throwable t) {
@@ -106,16 +108,38 @@ class HttpCache implements HttpCacheStorage {
   }
 
   private static class Lock implements Closeable {
+    private static final Set<String> locks = new HashSet<String>();
+    private String lockName;
     private FileLock fileLock;
-    private RandomAccessFile randAccessFile;
+    private FileInputStream streamIn;
+    private FileOutputStream streamOut;
+    private FileChannel channel;
 
-    Lock(File file, boolean shared) {
-      try {
-        randAccessFile = new RandomAccessFile(file, shared ? "r" : "rw");
-        FileChannel channel = randAccessFile.getChannel();
+    Lock(File file, boolean read) {
+      this.lockName = file.getAbsolutePath();
+      synchronized (locks) {
         while (true) {
           try {
-            fileLock = channel.lock(0, Long.MAX_VALUE, shared);
+            if (!locks.contains(lockName)) {
+              locks.add(lockName);
+              break;
+            } else {
+              locks.wait();
+            }
+          } catch (Throwable t) {}
+        }
+      }
+      try {
+        if (read) {
+          streamIn = new FileInputStream(file);
+          channel = streamIn.getChannel();
+        } else {
+          streamOut = new FileOutputStream(file);
+          channel = streamOut.getChannel();
+        }
+        while (true) {
+          try {
+            fileLock = channel.lock(0, Long.MAX_VALUE, read);
             break;
           } catch (Throwable t) {
             try {
@@ -134,19 +158,30 @@ class HttpCache implements HttpCacheStorage {
      */
     @Override
     public void close() {
-      if (fileLock != null) {
+      if (fileLock != null && channel != null && channel.isOpen()) {
         try {
           fileLock.release();
         } catch (Throwable t) {
           LogsServer.instance().exception(t);
         }
       }
-      if (randAccessFile != null) {
+      if (streamIn != null) {
         try {
-          randAccessFile.close();
+          streamIn.close();
         } catch (Throwable t) {
           LogsServer.instance().exception(t);
         }
+      }
+      if (streamOut != null) {
+        try {
+          streamOut.close();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
+      }
+      synchronized (locks) {
+        locks.remove(lockName);
+        locks.notifyAll();
       }
     }
   }
