@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -71,6 +69,8 @@ import org.zeroturnaround.process.PidProcess;
 import org.zeroturnaround.process.Processes;
 
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
+
+import io.github.lukehutch.fastclasspathscanner.scanner.ClasspathFinder;
 
 /**
  * A Selenium-compatible and WebKit-based web driver written in pure Java.
@@ -123,7 +123,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         }
       }
 
-      URL[] items = ((URLClassLoader) JBrowserDriver.class.getClassLoader()).getURLs();
+      List<File> items = new ClasspathFinder().getUniqueClasspathElements();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
         @Override
@@ -133,11 +133,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       }));
       Random rand = new SecureRandom();
       List<String> paths = new ArrayList<String>();
-      for (int i = 0; i < items.length; i++) {
-        File curItem = new File(items[i].getPath());
+      for (File curItem : items) {
         paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
-        if (curItem.isFile() && items[i].getPath().endsWith(".jar")) {
-          try (ZipFile jar = new ZipFile(items[i].getPath())) {
+        if (curItem.isFile() && curItem.getPath().endsWith(".jar")) {
+          try (ZipFile jar = new ZipFile(curItem)) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
               ZipEntry entry = entries.nextElement();
