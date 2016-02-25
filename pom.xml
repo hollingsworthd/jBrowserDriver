@@ -5,7 +5,7 @@
   <artifactId>jbrowserdriver</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A programmable, embedded web browser driver compatible with the Selenium WebDriver spec -- fast, headless, WebKit-based, 100% pure Java, and no browser dependencies</description>
-  <version>0.11.0-SNAPSHOT</version>
+  <version>0.10.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <url>https://github.com/machinepublishers/jbrowserdriver</url>
   <scm>
@@ -59,8 +59,8 @@
       <version>${selenium.version}</version>
       <exclusions>
         <exclusion>
-            <groupId>*</groupId>
-            <artifactId>*</artifactId>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -70,8 +70,24 @@
       <version>${selenium.version}</version>
       <exclusions>
         <exclusion>
-            <groupId>*</groupId>
-            <artifactId>*</artifactId>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -81,8 +97,44 @@
       <version>${selenium.version}</version>
       <exclusions>
         <exclusion>
-            <groupId>*</groupId>
-            <artifactId>*</artifactId>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>mx4j</groupId>
+            <artifactId>mx4j-tools</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>jetty-repacked</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>jetty-rc-repacked</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -90,12 +142,6 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>[19.0, 20.0)</version>
-      <exclusions>
-        <exclusion>
-            <groupId>*</groupId>
-            <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.zeroturnaround</groupId>
