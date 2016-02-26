@@ -101,6 +101,14 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     }
   }
 
+  void scriptParam(ElementId id) {
+    try {
+      remote.scriptParam(id);
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
+
   /**
    * {@inheritDoc}
    */

@@ -23,7 +23,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,6 +117,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
+  private static final Map<ElementId, ElementServer> map = new HashMap<ElementId, ElementServer>();
+
   private final JSObject node;
   private final Context context;
 
@@ -166,6 +170,16 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       }
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void scriptParam(ElementId id) {
+    synchronized (map) {
+      map.put(id, this);
     }
   }
 
@@ -718,7 +732,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             new Sync<Object>() {
               @Override
               public Object perform() {
-                return node.eval("(function(){return this.screenslicerCallbackVal;})();");
+                try {
+                  return node.eval("(function(){return this.jbrowserdriverCallbackVal;})();");
+                } finally {
+                  node.eval("jbrowserdriverCallbackVal = 'undefined';");
+                }
               }
             });
         if (!(result instanceof String) || !"undefined".equals(result.toString())) {
@@ -773,6 +791,13 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   private Object script(boolean callback, String script, Object[] args) {
+    for (int i = 0; args != null && i < args.length; i++) {
+      if (args[i] instanceof ElementId) {
+        synchronized (map) {
+          args[i] = ((ElementServer) map.remove(args[i])).node;
+        }
+      }
+    }
     return parseScriptResult(Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
@@ -784,21 +809,26 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             if (callback) {
               argList.add(null);
               node.eval("(function(){"
-                  + "          this.screenslicerCallback = function(){"
-                  + "            this.screenslicerCallbackVal = arguments;"
+                  + "          this.jbrowserdriverCallback = function(){"
+                  + "            jbrowserdriverCallbackVal = arguments && arguments.length > 0? arguments[0] : null;"
                   + "          }"
                   + "        }).apply(this);"
-                  + "        this.screenslicerJS = function(){"
-                  + "          arguments[arguments.length-1] = this.screenslicerCallback;"
+                  + "        this.jbrowserdriverJS = function(){"
+                  + "          arguments[arguments.length-1] = this.jbrowserdriverCallback;"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             } else {
-              node.eval("this.screenslicerJS = function(){"
+              node.eval("this.jbrowserdriverJS = function(){"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             }
             context.item().httpListener.get().resetStatusCode();
-            return node.call("screenslicerJS", argList.toArray(new Object[0]));
+            try {
+              return node.call("jbrowserdriverJS", argList.toArray(new Object[0]));
+            } finally {
+              node.eval("this.jbrowserdriverJS = 'undefined';");
+              node.eval("this.jbrowserdriverCallback = 'undefined';");
+            }
           }
         }));
   }

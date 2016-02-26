@@ -30,6 +30,7 @@ import java.util.Set;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.Rectangle;
@@ -107,6 +108,18 @@ public class Test {
       test(driver.findElementByTagName("body").findElement(By.xpath("//*[@id='divtext1']")).getAttribute("id").equals("divtext1"));
       test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
+
+      /*
+       * Execute javascript
+       */
+      test(((WebElement) driver.executeScript("return arguments[0];",
+          driver.findElement(By.id("divtext1")))).getAttribute("innerText").equals("test1"));
+      test(((WebElement) driver.executeScript("return arguments[0].parentNode;",
+          driver.findElement(By.id("divtext1")))).getTagName().equals("body"));
+      test(((WebElement) ((JavascriptExecutor) driver.findElement(By.id("divtext1"))).executeAsyncScript("arguments[0](this);"))
+          .getAttribute("innerText").equals("test1"));
+      test((driver.executeAsyncScript("arguments[1](arguments[0].innerText);",
+          driver.findElement(By.id("divtext1")))).equals("test1"));
 
       /*
        * DOM element properties
