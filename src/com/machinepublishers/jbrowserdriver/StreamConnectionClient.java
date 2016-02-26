@@ -51,6 +51,7 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -105,8 +106,10 @@ class StreamConnectionClient {
         .setMaxCacheEntries(SettingsManager.settings().cacheEntries())
         .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
         .build();
+    ConnectionSocketFactory sslSocketFactory = SettingsManager.settings()
+    		.hostnameVerification() ? new SslSocketFactory(sslContext()) : new SslSocketWithoutHostnameVerificationFactory(sslContext());
     registry = RegistryBuilder.<ConnectionSocketFactory> create()
-        .register("https", new SslSocketFactory(sslContext()))
+        .register("https", sslSocketFactory)
         .register("http", new SocketFactory())
         .build();
     manager = new PoolingHttpClientConnectionManager(registry);
@@ -231,6 +234,17 @@ class StreamConnectionClient {
     public Socket createSocket(final HttpContext context) throws IOException {
       return newSocket(context);
     }
+  }
+  
+  private static class SslSocketWithoutHostnameVerificationFactory extends SSLConnectionSocketFactory {
+	  public SslSocketWithoutHostnameVerificationFactory(final SSLContext sslContext) {
+		  super(sslContext, NoopHostnameVerifier.INSTANCE);
+	  }
+	  
+	  @Override
+	  public Socket createSocket(final HttpContext context) throws IOException {
+		  return newSocket(context);
+	  }
   }
 
   private static class SocketFactory extends PlainConnectionSocketFactory {

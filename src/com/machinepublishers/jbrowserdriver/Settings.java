@@ -120,7 +120,8 @@ public class Settings implements Serializable {
     CACHE("jbd.cache"),
     CACHE_DIR("jbd.cachedir"),
     CACHE_ENTRIES("jbd.cacheentries"),
-    CACHE_ENTRY_SIZE("jbd.cacheentrysize");
+    CACHE_ENTRY_SIZE("jbd.cacheentrysize"),
+    HOSTNAME_VERIFICATION("jbd.hostnameverification");
 
     private final String propertyName;
 
@@ -163,6 +164,7 @@ public class Settings implements Serializable {
     private boolean warnConsole = true;
     private boolean wireConsole;
     private int maxLogs = 5000;
+    private boolean hostnameVerification = true;
 
     public Builder() {
       for (int i = 10000; i < 10008; i++) {
@@ -480,6 +482,22 @@ public class Settings implements Serializable {
       this.headless = headless;
       return this;
     }
+    
+    /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.hostnameverification</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.hostnameverification</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Whether the hostname in certificates should be verified.
+     * 
+     * @param hostnameVerification
+     * @return this Builder
+     */
+    public Builder hostnameVerification(boolean hostnameVerification) {
+        this.hostnameVerification = hostnameVerification;
+        return this;
+    }
 
     /**
      * <p><ul>
@@ -714,6 +732,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.PORTS, StringUtils.join(this.ports, ','));
       set(capabilities, PropertyName.HEADLESS, this.headless);
       set(capabilities, PropertyName.SSL, this.ssl);
+      set(capabilities, PropertyName.HOSTNAME_VERIFICATION, this.hostnameVerification);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -844,6 +863,7 @@ public class Settings implements Serializable {
   private final boolean warnConsole;
   private final boolean wireConsole;
   private final int maxLogs;
+  private final boolean hostnameVerification;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -867,6 +887,7 @@ public class Settings implements Serializable {
     this.warnConsole = parse(properties, PropertyName.WARN_CONSOLE, builder.warnConsole);
     this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
     this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
+    this.hostnameVerification = parse(properties, PropertyName.HOSTNAME_VERIFICATION, builder.hostnameVerification);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
@@ -1055,5 +1076,9 @@ public class Settings implements Serializable {
 
   int maxLogs() {
     return maxLogs;
+  }
+
+  boolean hostnameVerification() {
+    return hostnameVerification;
   }
 }
