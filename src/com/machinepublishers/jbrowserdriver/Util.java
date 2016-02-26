@@ -38,7 +38,7 @@ import javax.net.ssl.SSLProtocolException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
 
-public class Util {
+class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Random rand = new Random();
