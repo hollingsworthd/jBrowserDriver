@@ -21,14 +21,17 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -716,9 +719,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public Object executeAsyncScript(final String script, final Object... args) {
-    lock();
+    final JavascriptNames jsNames = lock();
     try {
-      script(true, script, args);
+      script(true, script, args, jsNames);
       int sleep = 1;
       final int sleepBackoff = 2;
       final int sleepMax = 500;
@@ -733,9 +736,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               @Override
               public Object perform() {
                 try {
-                  return node.eval("(function(){return this.jbrowserdriverCallbackVal;})();");
+                  return node.eval("(function(){return this." + jsNames.callbackVal + ";})();");
                 } finally {
-                  node.eval("jbrowserdriverCallbackVal = 'undefined';");
+                  node.eval(jsNames.callbackVal + " = 'undefined';");
                 }
               }
             });
@@ -762,15 +765,28 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public Object executeScript(final String script, final Object... args) {
-    lock();
+    final JavascriptNames jsNames = lock();
     try {
-      return script(false, script, args);
+      return script(false, script, args, jsNames);
     } finally {
       unlock();
     }
   }
 
-  private void lock() {
+  private static class JavascriptNames {
+    private static final Random rand = new SecureRandom();
+
+    private final String callbackVal = nextName();
+    private final String callback = nextName();
+    private final String exec = nextName();
+
+    private static String nextName() {
+      return new StringBuilder().append(RandomStringUtils.randomAlphabetic(5))
+          .append(rand.nextInt(Integer.MAX_VALUE)).toString();
+    }
+  }
+
+  private JavascriptNames lock() {
     long myThread = context.latestThread.incrementAndGet();
     synchronized (context.curThread) {
       while (myThread != context.curThread.get() + 1) {
@@ -781,6 +797,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         }
       }
     }
+    return new JavascriptNames();
   }
 
   private void unlock() {
@@ -790,7 +807,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     }
   }
 
-  private Object script(boolean callback, String script, Object[] args) {
+  private Object script(boolean callback, String script, Object[] args, final JavascriptNames jsNames) {
     for (int i = 0; args != null && i < args.length; i++) {
       if (args[i] instanceof ElementId) {
         synchronized (map) {
@@ -809,25 +826,25 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             if (callback) {
               argList.add(null);
               node.eval("(function(){"
-                  + "          this.jbrowserdriverCallback = function(){"
-                  + "            jbrowserdriverCallbackVal = arguments && arguments.length > 0? arguments[0] : null;"
+                  + "          this." + jsNames.callback + " = function(){"
+                  + "            " + jsNames.callbackVal + " = arguments && arguments.length > 0? arguments[0] : null;"
                   + "          }"
                   + "        }).apply(this);"
-                  + "        this.jbrowserdriverJS = function(){"
-                  + "          arguments[arguments.length-1] = this.jbrowserdriverCallback;"
+                  + "        this." + jsNames.exec + " = function(){"
+                  + "          arguments[arguments.length-1] = this." + jsNames.callback + ";"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             } else {
-              node.eval("this.jbrowserdriverJS = function(){"
+              node.eval("this." + jsNames.exec + " = function(){"
                   + "          return (function(){" + script + "}).apply(this, arguments);"
                   + "        };");
             }
             context.item().httpListener.get().resetStatusCode();
             try {
-              return node.call("jbrowserdriverJS", argList.toArray(new Object[0]));
+              return node.call(jsNames.exec, argList.toArray(new Object[0]));
             } finally {
-              node.eval("this.jbrowserdriverJS = 'undefined';");
-              node.eval("this.jbrowserdriverCallback = 'undefined';");
+              node.eval("this." + jsNames.exec + " = 'undefined';");
+              node.eval("this." + jsNames.callback + " = 'undefined';");
             }
           }
         }));
