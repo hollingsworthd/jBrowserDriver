@@ -73,29 +73,31 @@ public class UserAgent {
     mozNavigatorTmp.put("mozId", "null");
     mozNavigatorTmp.put("mozPay", "null");
     mozNavigatorTmp.put("mozAlarms", "null");
-    mozNavigatorTmp.put("mozContacts", "{toString:function(){return '[object ContactManager]';},"
-        + "find:function(){return new Object();},"
-        + "getAll:function(){return new Object();},"
-        + "clear:function(){return new Object();},"
-        + "save:function(){return new Object();},"
-        + "remove:function(){return new Object();},"
-        + "getRevision:function(){return new Object();},"
-        + "getCount:function(){return new Object();},"
-        + "oncontactchange:null,"
-        + "addEventListener:function(){return new Object();},"
-        + "removeEventListener:function(){return new Object();},"
-        + "dispatchEvent:function(){return new Object();},"
-        + "}");
+    mozNavigatorTmp.put("mozContacts", new StringBuilder()
+        .append("{toString:function(){return '[object ContactManager]';},")
+        .append("find:function(){return new Object();},")
+        .append("getAll:function(){return new Object();},")
+        .append("clear:function(){return new Object();},")
+        .append("save:function(){return new Object();},")
+        .append("remove:function(){return new Object();},")
+        .append("getRevision:function(){return new Object();},")
+        .append("getCount:function(){return new Object();},")
+        .append("oncontactchange:null,")
+        .append("addEventListener:function(){return new Object();},")
+        .append("removeEventListener:function(){return new Object();},")
+        .append("dispatchEvent:function(){return new Object();},")
+        .append("}").toString());
     mozNavigatorTmp.put("mozPhoneNumberService", "''");
-    mozNavigatorTmp.put("mozApps", "{toString:function(){return '[xpconnect wrapped (nsISupports, mozIDOMApplicationRegistry, mozIDOMApplicationRegistry2)]';},"
-        + "QueryInterface:function(){return new Object();},"
-        + "install:function(){return new Object();},"
-        + "getSelf:function(){return new Object();},"
-        + "checkInstalled:function(){return new Object();},"
-        + "getInstalled:function(){return new Object();},"
-        + "installPackage:function(){return new Object();},"
-        + "mgmt:null,"
-        + "}");
+    mozNavigatorTmp.put("mozApps", new StringBuilder()
+        .append("{toString:function(){return '[xpconnect wrapped (nsISupports, mozIDOMApplicationRegistry, mozIDOMApplicationRegistry2)]';},")
+        .append("QueryInterface:function(){return new Object();},")
+        .append("install:function(){return new Object();},")
+        .append("getSelf:function(){return new Object();},")
+        .append("checkInstalled:function(){return new Object();},")
+        .append("getInstalled:function(){return new Object();},")
+        .append("installPackage:function(){return new Object();},")
+        .append("mgmt:null,")
+        .append("}").toString());
     mozNavigatorTmp.put("mozTCPSocket", "null");
     mozNavigatorTmp.put("mozIsLocallyAvailable", "function(){return false;}");
     mozNavigatorTmp.put("mozIsLocallyAvailable.toString", "function(){return 'function mozIsLocallyAvailable() { [native code] }';}");
@@ -188,16 +190,16 @@ public class UserAgent {
         int lastDot = entry.getKey().lastIndexOf(".");
         String parent = entry.getKey().substring(0, lastDot);
         String child = entry.getKey().substring(lastDot + 1);
-        builder.append("Object.defineProperty(window.navigator." + parent + ",'" + child + "',");
-        builder.append("{value:" + entry.getValue() + "});");
+        builder.append("Object.defineProperty(window.navigator.").append(parent).append(",'").append(child).append("',");
+        builder.append("{value:").append(entry.getValue()).append("});");
       } else {
         builder.append("try{");
-        builder.append("Object.defineProperty(window.navigator,'" + entry.getKey());
-        builder.append("',{value:" + entry.getValue());
+        builder.append("Object.defineProperty(window.navigator,'").append(entry.getKey());
+        builder.append("',{value:").append(entry.getValue());
         builder.append("});");
         builder.append("}catch(e){");
         builder.append("window.navigator = Object.create(navigator, {" + entry.getKey());
-        builder.append(":{value:" + entry.getValue() + "}");
+        builder.append(":{value:").append(entry.getValue()).append("}");
         builder.append("});");
         builder.append("}");
       }

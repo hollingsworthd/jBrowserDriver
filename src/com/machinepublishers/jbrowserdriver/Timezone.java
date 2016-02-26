@@ -214,8 +214,8 @@ public class Timezone {
         + (formattedOffsetHours < 10 ? "0" + formattedOffsetHours : "" + formattedOffsetHours)
         + (formattedOffsetMinutes == 0 ? "00"
             : (formattedOffsetMinutes < 10 ? "0" + formattedOffsetMinutes : formattedOffsetMinutes));
-    return daylight ? timeZoneDesc + " (" + daylightTimzones.get(rawOffset) + ")"
-        : timeZoneDesc + " (" + offsets.get(rawOffset) + ")";
+    return daylight ? new StringBuilder().append(timeZoneDesc).append(" (").append(daylightTimzones.get(rawOffset)).append(")").toString()
+        : new StringBuilder().append(timeZoneDesc).append(" (").append(offsets.get(rawOffset)).append(")").toString();
   }
 
   private void init() {
@@ -235,45 +235,45 @@ public class Timezone {
     if (daylightSavingsStart == null || daylightSavingsEnd == null) {
       builder.append("var isDaylightSavings = false;");
     } else {
-      builder.append("var start = tmpDate.getUTCMonth() > " + daylightSavingsStart[0] + "? 8");
-      builder.append(": (tmpDate.getUTCMonth() < " + daylightSavingsStart[0] + "? -8 : 0);");
-      builder.append("start += tmpDate.getUTCDate() > " + daylightSavingsStart[1] + "? 4");
-      builder.append(": (tmpDate.getUTCDate() < " + daylightSavingsStart[1] + "? -4 : 0);");
-      builder.append("start += tmpDate.getUTCHours() > " + daylightSavingsStart[2] + "? 2");
-      builder.append(": (tmpDate.getUTCHours() < " + daylightSavingsStart[2] + "? -2 : 0);");
-      builder.append("start += tmpDate.getUTCMinutes() > " + daylightSavingsStart[3] + "? 1");
-      builder.append(": (tmpDate.getUTCMinutes() < " + daylightSavingsStart[3] + "? -1 : 0);");
-      builder.append("var end = tmpDate.getUTCMonth() < " + daylightSavingsEnd[0] + "? 8");
-      builder.append(": (tmpDate.getUTCMonth() > " + daylightSavingsEnd[0] + "? -8 : 0);");
-      builder.append("end += tmpDate.getUTCDate() < " + daylightSavingsEnd[1] + "? 4");
-      builder.append(": (tmpDate.getUTCDate() > " + daylightSavingsEnd[1] + "? -4 : 0);");
-      builder.append("end += tmpDate.getUTCHours() < " + daylightSavingsEnd[2] + "? 2");
-      builder.append(": (tmpDate.getUTCHours() > " + daylightSavingsEnd[2] + "? -2 : 0);");
-      builder.append("end += tmpDate.getUTCMinutes() < " + daylightSavingsEnd[3] + "? 1");
-      builder.append(": (tmpDate.getUTCMinutes() > " + daylightSavingsEnd[3] + "? -1 : 0);");
+      builder.append("var start = tmpDate.getUTCMonth() > ").append(daylightSavingsStart[0]).append("? 8");
+      builder.append(": (tmpDate.getUTCMonth() < ").append(daylightSavingsStart[0]).append("? -8 : 0);");
+      builder.append("start += tmpDate.getUTCDate() > ").append(daylightSavingsStart[1]).append("? 4");
+      builder.append(": (tmpDate.getUTCDate() < ").append(daylightSavingsStart[1]).append("? -4 : 0);");
+      builder.append("start += tmpDate.getUTCHours() > ").append(daylightSavingsStart[2]).append("? 2");
+      builder.append(": (tmpDate.getUTCHours() < ").append(daylightSavingsStart[2]).append("? -2 : 0);");
+      builder.append("start += tmpDate.getUTCMinutes() > ").append(daylightSavingsStart[3]).append("? 1");
+      builder.append(": (tmpDate.getUTCMinutes() < ").append(daylightSavingsStart[3]).append("? -1 : 0);");
+      builder.append("var end = tmpDate.getUTCMonth() < ").append(daylightSavingsEnd[0]).append("? 8");
+      builder.append(": (tmpDate.getUTCMonth() > ").append(daylightSavingsEnd[0]).append("? -8 : 0);");
+      builder.append("end += tmpDate.getUTCDate() < ").append(daylightSavingsEnd[1]).append("? 4");
+      builder.append(": (tmpDate.getUTCDate() > ").append(daylightSavingsEnd[1]).append("? -4 : 0);");
+      builder.append("end += tmpDate.getUTCHours() < ").append(daylightSavingsEnd[2]).append("? 2");
+      builder.append(": (tmpDate.getUTCHours() > ").append(daylightSavingsEnd[2]).append("? -2 : 0);");
+      builder.append("end += tmpDate.getUTCMinutes() < ").append(daylightSavingsEnd[3]).append("? 1");
+      builder.append(": (tmpDate.getUTCMinutes() > ").append(daylightSavingsEnd[3]).append("? -1 : 0);");
       builder.append("var isDaylightSavings = start > 0 && end > 0;");
     }
     String isDaylightSavings = builder.toString();
     builder = new StringBuilder();
 
-    builder.append("var timeZoneDesc = '" + timeZoneDesc + "';");
+    builder.append("var timeZoneDesc = '").append(timeZoneDesc).append("';");
     builder.append("if(isDaylightSavings){");
-    builder.append("timeZoneDesc = '" + timeZoneDescDaylight + "';");
+    builder.append("timeZoneDesc = '").append(timeZoneDescDaylight).append("';");
     builder.append("}");
     String timeZoneDescExpr = builder.toString();
     builder = new StringBuilder();
 
-    builder.append("var tmpDate = new Date(this.getTime() + " + timeZone.getRawOffset() + ");");
+    builder.append("var tmpDate = new Date(this.getTime() + ").append(timeZone.getRawOffset()).append(");");
     builder.append(isDaylightSavings);
     builder.append("if(isDaylightSavings){");
-    builder.append("  tmpDate = new Date(tmpDate.getTime() + " + timeZone.getDSTSavings() + ");");
+    builder.append("  tmpDate = new Date(tmpDate.getTime() + ").append(timeZone.getDSTSavings()).append(");");
     builder.append("}");
     String tmpDate = builder.toString();
     builder = new StringBuilder();
 
     builder.append("var weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];");
-    builder.append("var month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', "
-        + "'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];");
+    builder.append("var month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', ")
+        .append("'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];");
     String weekdayAndMonthArrays = builder.toString();
     builder = new StringBuilder();
 
@@ -300,9 +300,9 @@ public class Timezone {
     builder.append("Date.prototype.getTimezoneOffset = function(){");
     builder.append(tmpDate);
     builder.append("if(isDaylightSavings){");
-    builder.append(" return " + timeZoneMinutes + " - " + daylightMinutes + ";");
+    builder.append(" return ").append(timeZoneMinutes).append(" - ").append(daylightMinutes).append(";");
     builder.append("}");
-    builder.append("return " + timeZoneMinutes + ";");
+    builder.append("return ").append(timeZoneMinutes).append(";");
     builder.append("};");
 
     builder.append("Date.prototype.getFullYear = function(){");
@@ -343,8 +343,8 @@ public class Timezone {
     builder.append("Date.prototype.toDateString = function(){");
     builder.append(weekdayAndMonthArrays);
     builder.append(tmpDate);
-    builder.append("return weekday[tmpDate.getUTCDay()] + ' ' + month[tmpDate.getUTCMonth()] "
-        + "+ ' ' + tmpDate.getUTCDate() + ' ' + tmpDate.getUTCFullYear();");
+    builder.append("return weekday[tmpDate.getUTCDay()] + ' ' + month[tmpDate.getUTCMonth()] ")
+        .append("+ ' ' + tmpDate.getUTCDate() + ' ' + tmpDate.getUTCFullYear();");
     builder.append("};");
 
     //TODO update this when JS engine supports optional args: dateObj.toLocaleDateString([locales [, options]])
@@ -357,8 +357,8 @@ public class Timezone {
     builder.append("Date.prototype.toLocaleString = function(){");
     builder.append(tmpDate);
     builder.append(time12Hour);
-    builder.append("return (tmpDate.getUTCMonth() + 1) + '/' + tmpDate.getUTCDate() + '/' + tmpDate.getUTCFullYear() "
-        + "+ ', ' + hours + ':' + minutes + ':' + seconds + ' ' + amPM;");
+    builder.append("return (tmpDate.getUTCMonth() + 1) + '/' + tmpDate.getUTCDate() + '/' + tmpDate.getUTCFullYear() ")
+        .append("+ ', ' + hours + ':' + minutes + ':' + seconds + ' ' + amPM;");
     builder.append("};");
 
     //TODO update this when JS engine supports optional args: dateObj.toLocaleTimeString([locales[, options]])
@@ -373,8 +373,8 @@ public class Timezone {
     builder.append(tmpDate);
     builder.append(time24Hour);
     builder.append(timeZoneDescExpr);
-    builder.append("return weekday[tmpDate.getUTCDay()] + ' ' + month[tmpDate.getUTCMonth()] + ' ' + tmpDate.getUTCDate() "
-        + "+ ' ' + tmpDate.getUTCFullYear() + ' ' + hours + ':' + minutes + ':' + seconds + ' GMT'+timeZoneDesc;");
+    builder.append("return weekday[tmpDate.getUTCDay()] + ' ' + month[tmpDate.getUTCMonth()] + ' ' + tmpDate.getUTCDate() ")
+        .append("+ ' ' + tmpDate.getUTCFullYear() + ' ' + hours + ':' + minutes + ':' + seconds + ' GMT'+timeZoneDesc;");
     builder.append("};");
 
     builder.append("Date.prototype.toTimeString = function(){");

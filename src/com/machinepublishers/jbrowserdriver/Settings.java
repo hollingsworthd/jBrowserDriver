@@ -94,18 +94,23 @@ public class Settings implements Serializable {
           if (settings.saveMedia()
               && connection.isMedia()) {
             String filename = Long.toString(System.nanoTime());
-            File contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
-            File metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
+            File contentFile = new File(StreamConnection.mediaDir(),
+                new StringBuilder().append(filename).append(".content").toString());
+            File metaFile = new File(StreamConnection.mediaDir(),
+                new StringBuilder().append(filename).append(".metadata").toString());
             while (contentFile.exists() || metaFile.exists()) {
               filename = Util.randomFileName();
-              contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
-              metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
+              contentFile = new File(StreamConnection.mediaDir(),
+                  new StringBuilder().append(filename).append(".content").toString());
+              metaFile = new File(StreamConnection.mediaDir(),
+                  new StringBuilder().append(filename).append(".metadata").toString());
             }
             contentFile.deleteOnExit();
             metaFile.deleteOnExit();
             Files.write(contentFile.toPath(), inflatedContent);
             Files.write(metaFile.toPath(),
-                (originalUrl + "\n" + connection.getContentType()).getBytes("utf-8"));
+                (new StringBuilder().append(originalUrl).append("\n").append(connection.getContentType())
+                    .toString()).getBytes("utf-8"));
           }
         } catch (Throwable t) {}
         try {
@@ -124,13 +129,16 @@ public class Settings implements Serializable {
             } else {
               matcher = html.matcher(content);
               if (matcher.find()) {
-                injected = matcher.replaceFirst(
-                    matcher.group(0) + "<head>" + settings.script() + "</head>");
+                injected = matcher.replaceFirst(new StringBuilder()
+                    .append(matcher.group(0))
+                    .append("<head>")
+                    .append(settings.script())
+                    .append("</head>").toString());
               } else {
                 matcher = body.matcher(content);
                 if (matcher.find()) {
-                  injected = ("<html><head>" + settings.script() + "</head>"
-                      + content + "</html>");
+                  injected = (new StringBuilder().append("<html><head>").append(settings.script())
+                      .append("</head>").append(content).append("</html>").toString());
                 } else {
                   injected = content;
                 }
@@ -1002,7 +1010,7 @@ public class Settings implements Serializable {
     if (headless()) {
       scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
     }
-    scriptBuilder.append("<script id='" + scriptId + "' language='javascript'>");
+    scriptBuilder.append("<script id='").append(scriptId).append("' language='javascript'>");
     scriptBuilder.append("try{");
     scriptBuilder.append(userAgentTmp.script());
     scriptBuilder.append(timezoneTmp.script());
@@ -1010,7 +1018,7 @@ public class Settings implements Serializable {
       scriptBuilder.append(headScriptTmp);
     }
     scriptBuilder.append("}catch(e){}");
-    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('" + scriptId + "'));");
+    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('").append(scriptId).append("'));");
     scriptBuilder.append("</script>");
     this.script = scriptBuilder.toString();
   }

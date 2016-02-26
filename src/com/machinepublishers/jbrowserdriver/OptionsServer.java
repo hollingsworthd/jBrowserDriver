@@ -41,7 +41,7 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
 
   OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
-          throws RemoteException {
+      throws RemoteException {
     this.context = context;
     this.timeouts = timeouts;
   }
@@ -90,13 +90,13 @@ class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
   @Override
   public void deleteCookie(Cookie cookie) {
     List<org.apache.http.cookie.Cookie> cookies = cookieStore.getCookies();
-    String toDelete = cookie.getDomain().toLowerCase()
-        + "\n" + cookie.getName().toLowerCase()
-        + "\n" + cookie.getPath().toLowerCase();
+    String toDelete = new StringBuilder().append(cookie.getDomain().toLowerCase())
+        .append("\n").append(cookie.getName().toLowerCase())
+        .append("\n").append(cookie.getPath().toLowerCase()).toString();
     for (org.apache.http.cookie.Cookie cur : cookies) {
-      String curString = cur.getDomain().toLowerCase()
-          + "\n" + cur.getName().toLowerCase()
-          + "\n" + cur.getPath().toLowerCase();
+      String curString = new StringBuilder().append(cur.getDomain().toLowerCase())
+          .append("\n").append(cur.getName().toLowerCase())
+          .append("\n").append(cur.getPath().toLowerCase()).toString();
       if (toDelete.equals(curString)) {
         removeFromCookieStore(cur);
       }

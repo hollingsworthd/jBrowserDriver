@@ -195,19 +195,20 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             node.call("scrollIntoView");
             if (context.keyboard.get().isShiftPressed()) {
               node.eval(
-                  "this.origOnclick = this.onclick;"
-                      + "this.onclick=function(event){"
-                      + "  this.target='_blank';"
-                      + "  if(event){"
-                      + "    if(event.stopPropagation){"
-                      + "      event.stopPropagation();"
-                      + "    }"
-                      + "  }"
-                      + "  if(this.origOnclick){"
-                      + "    this.origOnclick(event? event: null);"
-                      + "  }"
-                      + "  this.onclick = this.origOnclick;"
-                      + "};");
+                  new StringBuilder()
+                      .append("this.origOnclick = this.onclick;")
+                      .append("this.onclick=function(event){")
+                      .append("  this.target='_blank';")
+                      .append("  if(event){")
+                      .append("    if(event.stopPropagation){")
+                      .append("      event.stopPropagation();")
+                      .append("    }")
+                      .append("  }")
+                      .append("  if(this.origOnclick){")
+                      .append("    this.origOnclick(event? event: null);")
+                      .append("  }")
+                      .append("  this.onclick = this.origOnclick;")
+                      .append("};").toString());
             }
             return null;
           }
@@ -302,10 +303,13 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         new Sync<String>() {
           @Override
           public String perform() {
-            return cleanUpCssVal((String) (node.eval("var me = this;"
-                + "(function(){"
-                + "  return window.getComputedStyle(me).getPropertyValue('" + name + "');"
-                + "})();")));
+            return cleanUpCssVal((String) (node.eval(new StringBuilder()
+                .append("var me = this;")
+                .append("(function(){")
+                .append("  return window.getComputedStyle(me).getPropertyValue('")
+                .append(name)
+                .append("');")
+                .append("})();").toString())));
           }
         });
   }
@@ -314,8 +318,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
     if (rgbStr != null) {
       Matcher matcher = rgb.matcher(rgbStr);
       if (matcher.matches()) {
-        return "rgba(" + matcher.group(1) + ", "
-            + matcher.group(2) + ", " + matcher.group(3) + ", 1)";
+        return new StringBuilder().append("rgba(").append(matcher.group(1)).append(", ")
+            .append(matcher.group(2)).append(", ").append(matcher.group(3)).append(", 1)").toString();
       }
     }
     return rgbStr == null ? "" : rgbStr;
@@ -502,15 +506,15 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public List<ElementServer> perform() {
             try {
-              return (List<ElementServer>) executeScript(""
-                  + "var iter = "
-                  + "  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);"
-                  + "var items = [];"
-                  + "var cur = null;"
-                  + "while(cur = iter.iterateNext()){"
-                  + "  items.push(cur);"
-                  + "}"
-                  + "return items;", expr, node);
+              return (List<ElementServer>) executeScript(new StringBuilder()
+                  .append("var iter = ")
+                  .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
+                  .append("var items = [];")
+                  .append("var cur = null;")
+                  .append("while(cur = iter.iterateNext()){")
+                  .append("  items.push(cur);")
+                  .append("}")
+                  .append("return items;").toString(), expr, node);
             } catch (Throwable t) {
               LogsServer.instance().exception(t);
             }
@@ -607,7 +611,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public ElementServer findElementByName(String name) {
-    return findElementByCssSelector("*[name='" + name + "']");
+    return findElementByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
   }
 
   /**
@@ -615,7 +619,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public List findElementsByName(String name) {
-    return findElementsByCssSelector("*[name='" + name + "']");
+    return findElementsByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
   }
 
   /**
@@ -692,7 +696,8 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   private List byCssClass(String cssClass) {
-    return (List<ElementServer>) executeScript("return this.getElementsByClassName('" + cssClass + "');");
+    return (List<ElementServer>) executeScript(
+        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString());
   }
 
   /**
@@ -700,7 +705,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public ElementServer findElementById(final String id) {
-    return findElementByCssSelector("*[id='" + id + "']");
+    return findElementByCssSelector(new StringBuilder("*[id='").append(id).append("']").toString());
   }
 
   /**
@@ -708,7 +713,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public List findElementsById(String id) {
-    return findElementsByCssSelector("*[id='" + id + "']");
+    return findElementsByCssSelector(new StringBuilder().append("*[id='").append(id).append("']").toString());
   }
 
   /**
