@@ -742,8 +742,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                       .append(";})();").toString());
                 } finally {
                   node.eval(new StringBuilder()
+                      .append("delete ")
                       .append(jsNames.callbackVal)
-                      .append(" = 'undefined';").toString());
+                      .append(";").toString());
                 }
               }
             });
@@ -848,8 +849,10 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             try {
               return node.call(jsNames.exec, argList.toArray(new Object[0]));
             } finally {
-              node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = 'undefined';").toString());
-              node.eval(new StringBuilder().append("this.").append(jsNames.callback).append(" = 'undefined';").toString());
+              node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
+              if (callback) {
+                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
+              }
             }
           }
         }));
