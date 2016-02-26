@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.Capabilities;
@@ -48,8 +47,6 @@ class Context {
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
-  final AtomicLong latestThread = new AtomicLong();
-  final AtomicLong curThread = new AtomicLong();
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
   private int current = 0;

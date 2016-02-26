@@ -721,50 +721,46 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public Object executeAsyncScript(final String script, final Object... args) {
-    final JavascriptNames jsNames = lock();
-    try {
-      script(true, script, args, jsNames);
-      int sleep = 1;
-      final int sleepBackoff = 2;
-      final int sleepMax = 500;
-      while (true) {
-        sleep = sleep < sleepMax ? sleep * sleepBackoff : sleep;
-        try {
-          Thread.sleep(sleep);
-        } catch (InterruptedException e) {}
-        Object result = AppThread.exec(
-            Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-            new Sync<Object>() {
-              @Override
-              public Object perform() {
-                try {
-                  return node.eval(new StringBuilder()
-                      .append("(function(){return this.")
-                      .append(jsNames.callbackVal)
-                      .append(";})();").toString());
-                } finally {
-                  node.eval(new StringBuilder()
-                      .append("delete ")
-                      .append(jsNames.callbackVal)
-                      .append(";").toString());
-                }
+    final JavascriptNames jsNames = new JavascriptNames();
+    script(true, script, args, jsNames);
+    int sleep = 1;
+    final int sleepBackoff = 2;
+    final int sleepMax = 500;
+    while (true) {
+      sleep = sleep < sleepMax ? sleep * sleepBackoff : sleep;
+      try {
+        Thread.sleep(sleep);
+      } catch (InterruptedException e) {}
+      Object result = AppThread.exec(
+          Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          new Sync<Object>() {
+            @Override
+            public Object perform() {
+              try {
+                return node.eval(new StringBuilder()
+                    .append("(function(){return this.")
+                    .append(jsNames.callbackVal)
+                    .append(";})();").toString());
+              } finally {
+                node.eval(new StringBuilder()
+                    .append("delete ")
+                    .append(jsNames.callbackVal)
+                    .append(";").toString());
               }
-            });
-        if (!(result instanceof String) || !"undefined".equals(result.toString())) {
-          Object parsed = parseScriptResult(result);
-          if (parsed instanceof List) {
-            if (((List) parsed).size() == 0) {
-              return null;
             }
-            if (((List) parsed).size() == 1) {
-              return ((List) parsed).get(0);
-            }
+          });
+      if (!(result instanceof String) || !"undefined".equals(result.toString())) {
+        Object parsed = parseScriptResult(result);
+        if (parsed instanceof List) {
+          if (((List) parsed).size() == 0) {
+            return null;
           }
-          return parsed;
+          if (((List) parsed).size() == 1) {
+            return ((List) parsed).get(0);
+          }
         }
+        return parsed;
       }
-    } finally {
-      unlock();
     }
   }
 
@@ -773,39 +769,13 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public Object executeScript(final String script, final Object... args) {
-    final JavascriptNames jsNames = lock();
-    try {
-      return script(false, script, args, jsNames);
-    } finally {
-      unlock();
-    }
+    return script(false, script, args, new JavascriptNames());
   }
 
   private static class JavascriptNames {
     private final String callbackVal = Util.randomPropertyName();
     private final String callback = Util.randomPropertyName();
     private final String exec = Util.randomPropertyName();
-  }
-
-  private JavascriptNames lock() {
-    long myThread = context.latestThread.incrementAndGet();
-    synchronized (context.curThread) {
-      while (myThread != context.curThread.get() + 1) {
-        try {
-          context.curThread.wait();
-        } catch (Exception e) {
-          LogsServer.instance().exception(e);
-        }
-      }
-    }
-    return new JavascriptNames();
-  }
-
-  private void unlock() {
-    context.curThread.incrementAndGet();
-    synchronized (context.curThread) {
-      context.curThread.notifyAll();
-    }
   }
 
   private Object script(boolean callback, String script, Object[] args, final JavascriptNames jsNames) {
