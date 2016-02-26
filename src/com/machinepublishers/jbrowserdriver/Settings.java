@@ -21,21 +21,16 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
-
-import com.machinepublishers.jbrowserdriver.StreamInjectors.Injector;
 
 /**
  * An immutable class which contains settings for the browser.
@@ -79,77 +74,6 @@ public class Settings implements Serializable {
     builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
     builder.append("'isPointInStroke', {value:function(){return undefined;}});");
     HEAD_SCRIPT = builder.toString();
-  }
-
-  static {
-    final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-    final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-    final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
-    StreamInjectors.add(new Injector() {
-      @Override
-      public byte[] inject(StreamConnection connection,
-          byte[] inflatedContent, String originalUrl) {
-        final Settings settings = SettingsManager.settings();
-        try {
-          if (settings.saveMedia()
-              && connection.isMedia()) {
-            String filename = Long.toString(System.nanoTime());
-            File contentFile = new File(StreamConnection.mediaDir(),
-                new StringBuilder().append(filename).append(".content").toString());
-            File metaFile = new File(StreamConnection.mediaDir(),
-                new StringBuilder().append(filename).append(".metadata").toString());
-            while (contentFile.exists() || metaFile.exists()) {
-              filename = Util.randomFileName();
-              contentFile = new File(StreamConnection.mediaDir(),
-                  new StringBuilder().append(filename).append(".content").toString());
-              metaFile = new File(StreamConnection.mediaDir(),
-                  new StringBuilder().append(filename).append(".metadata").toString());
-            }
-            contentFile.deleteOnExit();
-            metaFile.deleteOnExit();
-            Files.write(contentFile.toPath(), inflatedContent);
-            Files.write(metaFile.toPath(),
-                (new StringBuilder().append(originalUrl).append("\n").append(connection.getContentType())
-                    .toString()).getBytes("utf-8"));
-          }
-        } catch (Throwable t) {}
-        try {
-          if (settings.quickRender() && connection.isMedia()) {
-            LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
-            StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
-            return new byte[0];
-          } else if ((connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
-              && StatusMonitor.instance().isPrimaryDocument(connection.getURL().toExternalForm())) {
-            String injected = null;
-            String charset = Util.charset(connection);
-            String content = new String(inflatedContent, charset);
-            Matcher matcher = head.matcher(content);
-            if (matcher.find()) {
-              injected = matcher.replaceFirst(matcher.group(0) + settings.script());
-            } else {
-              matcher = html.matcher(content);
-              if (matcher.find()) {
-                injected = matcher.replaceFirst(new StringBuilder()
-                    .append(matcher.group(0))
-                    .append("<head>")
-                    .append(settings.script())
-                    .append("</head>").toString());
-              } else {
-                matcher = body.matcher(content);
-                if (matcher.find()) {
-                  injected = (new StringBuilder().append("<html><head>").append(settings.script())
-                      .append("</head>").append(content).append("</html>").toString());
-                } else {
-                  injected = content;
-                }
-              }
-            }
-            return injected == null ? null : injected.getBytes(charset);
-          }
-        } catch (Throwable t) {}
-        return null;
-      }
-    });
   }
 
   /**
