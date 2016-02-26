@@ -25,8 +25,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
     org.openqa.selenium.WebDriver.Navigation {
@@ -47,7 +47,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
    */
   @Override
   public void back() {
-    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -65,7 +65,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
    */
   @Override
   public void forward() {
-    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -83,7 +83,7 @@ class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
    */
   @Override
   public void refresh() {
-    Util.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             context.item().view.get().getEngine().reload();

@@ -30,25 +30,26 @@ import java.net.SocketException;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLProtocolException;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
 
-import javafx.application.Platform;
-
-class Util {
+public class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Random rand = new Random();
+  private static final Random secureRand = new Random();
 
-  static enum Pause {
-    LONG, SHORT, NONE
+  static String randomPropertyName() {
+    return RandomStringUtils.randomAlphabetic(12 + rand.nextInt(12));
+  }
+
+  static String randomFileName() {
+    return Long.toString(Math.abs(secureRand.nextLong()), Math.min(36, Character.MAX_RADIX));
   }
 
   static void close(Closeable closeable) {
@@ -56,98 +57,6 @@ class Util {
       try {
         closeable.close();
       } catch (Throwable t) {}
-    }
-  }
-
-  static interface Sync<T> {
-    T perform();
-  }
-
-  private static class Runner<T> implements Runnable {
-    private final Sync<T> action;
-    private final AtomicInteger statusCode;
-    private final AtomicBoolean done = new AtomicBoolean();
-    private final AtomicReference<T> returned = new AtomicReference<T>();
-
-    public Runner(Sync<T> action, AtomicInteger statusCode) {
-      this.action = action;
-      this.statusCode = statusCode;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void run() {
-      if (statusCode.get() != -1) {
-        if (statusCode.get() == 0) {
-          Platform.runLater(this);
-          return;
-        }
-        if (statusCode.get() > 299) {
-          LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
-        }
-      }
-      T result = null;
-      try {
-        result = action.perform();
-      } finally {
-        synchronized (done) {
-          returned.set(result);
-          done.set(true);
-          done.notifyAll();
-        }
-      }
-    }
-  }
-
-  private static void pause(final Pause pauseLength) {
-    Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        try {
-          if (pauseLength == Pause.SHORT) {
-            Thread.sleep(0, 1);
-          } else if (pauseLength == Pause.LONG) {
-            Thread.sleep(60 + rand.nextInt(60));
-          }
-        } catch (Throwable t) {}
-        return null;
-      }
-    });
-  }
-
-  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action) {
-    return exec(pauseAfterExec, statusCode, 0, action);
-  }
-
-  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
-      final Sync<T> action) {
-    try {
-      if ((boolean) Platform.isFxApplicationThread()) {
-        return action.perform();
-      }
-      final Runner<T> runner = new Runner<T>(action, statusCode);
-      synchronized (runner.done) {
-        Platform.runLater(runner);
-      }
-      synchronized (runner.done) {
-        if (!runner.done.get()) {
-          try {
-            runner.done.wait(timeout);
-          } catch (InterruptedException e) {
-            LogsServer.instance().exception(e);
-          }
-          if (!runner.done.get()) {
-            LogsServer.instance().exception(new RuntimeException("Action never completed."));
-          }
-        }
-        return runner.returned.get();
-      }
-    } finally {
-      if (pauseAfterExec != Pause.NONE) {
-        pause(pauseAfterExec);
-      }
     }
   }
 

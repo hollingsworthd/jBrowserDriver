@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
 
 import javafx.scene.web.WebEngine;
@@ -58,7 +58,7 @@ class ContextItem {
       } catch (RemoteException e) {
         LogsServer.instance().exception(e);
       }
-      Util.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           httpListener.set(new HttpListener(

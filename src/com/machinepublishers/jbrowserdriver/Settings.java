@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,8 +81,6 @@ public class Settings implements Serializable {
     HEAD_SCRIPT = builder.toString();
   }
 
-  private static final Random rand = new Random();
-
   static {
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -100,7 +97,7 @@ public class Settings implements Serializable {
             File contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
             File metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
             while (contentFile.exists() || metaFile.exists()) {
-              filename = Long.toString(Math.abs(rand.nextLong()));
+              filename = Util.randomFileName();
               contentFile = new File(StreamConnection.mediaDir(), filename + ".content");
               metaFile = new File(StreamConnection.mediaDir(), filename + ".metadata");
             }
@@ -1001,7 +998,7 @@ public class Settings implements Serializable {
 
     String headScriptTmp = parse(properties, PropertyName.HEAD_SCRIPT, builder.headScript);
     StringBuilder scriptBuilder = new StringBuilder();
-    String scriptId = "A" + rand.nextLong();
+    String scriptId = Util.randomPropertyName();
     if (headless()) {
       scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
     }

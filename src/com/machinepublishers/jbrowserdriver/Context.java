@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.Capabilities;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class Context {
   final AtomicBoolean initialized = new AtomicBoolean();
@@ -113,7 +113,7 @@ class Context {
   }
 
   String itemId() {
-    return Util.exec(Pause.NONE, statusCode,
+    return AppThread.exec(Pause.NONE, statusCode,
         new Sync<String>() {
           @Override
           public String perform() {
@@ -125,7 +125,7 @@ class Context {
   }
 
   Set<String> itemIds() {
-    return Util.exec(Pause.NONE, statusCode,
+    return AppThread.exec(Pause.NONE, statusCode,
         new Sync<Set<String>>() {
           @Override
           public Set<String> perform() {
@@ -138,7 +138,7 @@ class Context {
 
   ContextItem spawn(final JBrowserDriverServer driver) {
     final Context thisObj = this;
-    return Util.exec(Pause.SHORT, statusCode,
+    return AppThread.exec(Pause.SHORT, statusCode,
         new Sync<ContextItem>() {
           @Override
           public ContextItem perform() {
@@ -155,7 +155,7 @@ class Context {
   }
 
   void setCurrent(final String id) {
-    Util.exec(Pause.SHORT, statusCode,
+    AppThread.exec(Pause.SHORT, statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -169,7 +169,7 @@ class Context {
   }
 
   void removeItem() {
-    Util.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -183,7 +183,7 @@ class Context {
   }
 
   void removeItem(final String itemId) {
-    Util.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -197,7 +197,7 @@ class Context {
   }
 
   void removeItems() {
-    Util.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {

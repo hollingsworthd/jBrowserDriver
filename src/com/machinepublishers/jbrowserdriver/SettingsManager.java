@@ -24,8 +24,8 @@ import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 import javafx.application.Application;
 import javafx.embed.swing.JFXPanel;
@@ -99,7 +99,7 @@ class SettingsManager {
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
           settings().headless());
-      Util.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
+      AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
         public Object perform() {
           try {
             app.start();

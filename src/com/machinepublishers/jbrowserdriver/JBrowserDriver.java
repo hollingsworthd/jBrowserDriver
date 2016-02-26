@@ -26,13 +26,11 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -131,7 +129,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           FileUtils.deleteQuietly(classpathDir);
         }
       }));
-      Random rand = new SecureRandom();
       List<String> paths = new ArrayList<String>();
       for (File curItem : items) {
         paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
@@ -143,7 +140,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
               if (entry.getName().endsWith(".jar")) {
                 try (InputStream in = jar.getInputStream(entry)) {
                   File childJar = new File(classpathDir,
-                      Long.toString(Math.abs(rand.nextLong()), Math.min(36, Character.MAX_RADIX)) + ".jar");
+                      Util.randomFileName() + ".jar");
                   Files.copy(in, childJar.toPath());
                   paths.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
                   childJar.deleteOnExit();

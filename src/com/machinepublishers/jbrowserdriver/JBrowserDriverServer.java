@@ -50,8 +50,8 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
 import com.sun.webkit.network.CookieManager;
@@ -137,7 +137,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    *          New settings to take effect, superseding the original ones
    */
   public void reset(final Settings settings) {
-    Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         context.get().item().engine.get().getLoadWorker().cancel();
@@ -187,7 +187,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public String getCurrentUrl() {
     init();
-    return Util.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
+    return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
         return context.get().item().view.get().getEngine().getLocation();
       }
@@ -214,7 +214,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public String getTitle() {
     init();
-    return Util.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
+    return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
         return context.get().item().view.get().getEngine().getTitle();
       }
@@ -227,7 +227,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   @Override
   public void get(final String url) {
     init();
-    Util.exec(Pause.SHORT, context.get().statusCode, new Sync<Object>() {
+    AppThread.exec(Pause.SHORT, context.get().statusCode, new Sync<Object>() {
       public Object perform() {
         context.get().item().engine.get().load(url);
         return null;
@@ -243,7 +243,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       LogsServer.instance().exception(e);
     }
     if (context.get().statusCode.get() == 0) {
-      Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
         @Override
         public Object perform() {
           context.get().item().engine.get().getLoadWorker().cancel();
@@ -520,7 +520,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public void quit() {
     final ContextItem item = context.get().item();
     if (item != null) {
-      Util.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
         @Override
         public Object perform() {
           item.engine.get().getLoadWorker().cancel();

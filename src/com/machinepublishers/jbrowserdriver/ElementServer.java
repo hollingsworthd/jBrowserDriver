@@ -21,17 +21,14 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -49,9 +46,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
+import com.machinepublishers.jbrowserdriver.AppThread.Pause;
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
-import com.machinepublishers.jbrowserdriver.Util.Pause;
-import com.machinepublishers.jbrowserdriver.Util.Sync;
 
 import netscape.javascript.JSObject;
 
@@ -131,7 +128,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   static ElementServer create(final Context context) {
-    final JSObject doc = Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    final JSObject doc = AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<JSObject>() {
           @Override
           public JSObject perform() {
@@ -191,7 +188,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public void click() {
-    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -216,7 +213,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           }
         });
 
-    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -237,7 +234,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public void submit() {
-    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -257,7 +254,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public void sendKeys(final CharSequence... keys) {
-    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -274,7 +271,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public void clear() {
-    Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -301,7 +298,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public String getCssValue(final String name) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<String>() {
           @Override
           public String perform() {
@@ -329,7 +326,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public org.openqa.selenium.Point getLocation() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<org.openqa.selenium.Point>() {
           @Override
           public org.openqa.selenium.Point perform() {
@@ -354,7 +351,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public org.openqa.selenium.Dimension getSize() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<org.openqa.selenium.Dimension>() {
           @Override
           public org.openqa.selenium.Dimension perform() {
@@ -389,7 +386,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public org.openqa.selenium.Rectangle getRect() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<org.openqa.selenium.Rectangle>() {
           @Override
           public org.openqa.selenium.Rectangle perform() {
@@ -424,7 +421,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public boolean isDisplayed() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -443,7 +440,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public boolean isEnabled() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -458,7 +455,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public boolean isSelected() {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -500,7 +497,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public List findElementsByXPath(final String expr) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -540,7 +537,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   private List byTagName(final String tagName) {
-    return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -558,7 +555,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public ElementServer findElementByCssSelector(final String expr) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<ElementServer>() {
           @Override
           public ElementServer perform() {
@@ -581,7 +578,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public List findElementsByCssSelector(final String expr) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -657,7 +654,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
   private List byLinkText(final String text,
       final boolean multiple, final boolean partial) {
-    return Util.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -730,7 +727,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         try {
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
-        Object result = Util.exec(
+        Object result = AppThread.exec(
             Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
             new Sync<Object>() {
               @Override
@@ -780,16 +777,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   private static class JavascriptNames {
-    private static final Random rand = new SecureRandom();
-
-    private final String callbackVal = nextName();
-    private final String callback = nextName();
-    private final String exec = nextName();
-
-    private static String nextName() {
-      return new StringBuilder().append(RandomStringUtils.randomAlphabetic(5))
-          .append(rand.nextInt(Integer.MAX_VALUE)).toString();
-    }
+    private final String callbackVal = Util.randomPropertyName();
+    private final String callback = Util.randomPropertyName();
+    private final String exec = Util.randomPropertyName();
   }
 
   private JavascriptNames lock() {
@@ -821,7 +811,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
         }
       }
     }
-    return parseScriptResult(Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return parseScriptResult(AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -908,7 +898,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
 
         @Override
         public org.openqa.selenium.Point onPage() {
-          Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<Object>() {
                 @Override
                 public Point perform() {
@@ -916,7 +906,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
                   return null;
                 }
               });
-          return Util.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          return AppThread.exec(Pause.SHORT, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<org.openqa.selenium.Point>() {
                 @Override
                 public org.openqa.selenium.Point perform() {
