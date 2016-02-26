@@ -49,7 +49,12 @@ class Util {
   }
 
   static String randomFileName() {
-    return Long.toString(Math.abs(secureRand.nextLong()), Math.min(36, Character.MAX_RADIX));
+    long num = secureRand.nextLong();
+    if (num == Long.MIN_VALUE) {
+      num = 0;
+    }
+    return new StringBuilder().append(RandomStringUtils.randomAlphabetic(5).toLowerCase())
+        .append(Long.toString(Math.abs(num), Math.min(36, Character.MAX_RADIX))).toString();
   }
 
   static void close(Closeable closeable) {
