@@ -72,8 +72,6 @@ public class Settings implements Serializable {
     builder.append("Object.defineProperty(HTMLCanvasElement.prototype, ");
     builder.append("'toDataURL', {value:function(){return undefined;}});");
     builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
-    builder.append("'createImageData', {value:function(){return undefined;}});");
-    builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
     builder.append("'getImageData', {value:function(){return undefined;}});");
     builder.append("Object.defineProperty(CanvasRenderingContext2D.prototype, ");
     builder.append("'measureText', {value:function(){return undefined;}});");
