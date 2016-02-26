@@ -736,9 +736,14 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
               @Override
               public Object perform() {
                 try {
-                  return node.eval("(function(){return this." + jsNames.callbackVal + ";})();");
+                  return node.eval(new StringBuilder()
+                      .append("(function(){return this.")
+                      .append(jsNames.callbackVal)
+                      .append(";})();").toString());
                 } finally {
-                  node.eval(jsNames.callbackVal + " = 'undefined';");
+                  node.eval(new StringBuilder()
+                      .append(jsNames.callbackVal)
+                      .append(" = 'undefined';").toString());
                 }
               }
             });
@@ -825,26 +830,26 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             }
             if (callback) {
               argList.add(null);
-              node.eval("(function(){"
-                  + "          this." + jsNames.callback + " = function(){"
-                  + "            " + jsNames.callbackVal + " = arguments && arguments.length > 0? arguments[0] : null;"
-                  + "          }"
-                  + "        }).apply(this);"
-                  + "        this." + jsNames.exec + " = function(){"
-                  + "          arguments[arguments.length-1] = this." + jsNames.callback + ";"
-                  + "          return (function(){" + script + "}).apply(this, arguments);"
-                  + "        };");
+              node.eval(new StringBuilder().append("(function(){")
+                  .append("this.").append(jsNames.callback).append(" = function(){")
+                  .append(jsNames.callbackVal).append(" = arguments && arguments.length > 0? arguments[0] : null;")
+                  .append("}")
+                  .append("}).apply(this);")
+                  .append("this.").append(jsNames.exec).append(" = function(){")
+                  .append("arguments[arguments.length-1] = this.").append(jsNames.callback).append(";")
+                  .append("return (function(){").append(script).append("}).apply(this, arguments);")
+                  .append("};").toString());
             } else {
-              node.eval("this." + jsNames.exec + " = function(){"
-                  + "          return (function(){" + script + "}).apply(this, arguments);"
-                  + "        };");
+              node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = function(){")
+                  .append("return (function(){").append(script).append("}).apply(this, arguments);")
+                  .append("};").toString());
             }
             context.item().httpListener.get().resetStatusCode();
             try {
               return node.call(jsNames.exec, argList.toArray(new Object[0]));
             } finally {
-              node.eval("this." + jsNames.exec + " = 'undefined';");
-              node.eval("this." + jsNames.callback + " = 'undefined';");
+              node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = 'undefined';").toString());
+              node.eval(new StringBuilder().append("this.").append(jsNames.callback).append(" = 'undefined';").toString());
             }
           }
         }));
