@@ -25,7 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -91,6 +95,8 @@ class StreamInjectors {
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+    final Set<Integer> redirectCodes = Collections.unmodifiableSet(
+        new HashSet<Integer>(Arrays.asList(new Integer[] { 301, 302, 303, 307, 308 })));
     StreamInjectors.add(new Injector() {
       @Override
       public byte[] inject(StreamConnection connection,
@@ -124,7 +130,8 @@ class StreamInjectors {
             LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
             StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
-          } else if ((connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
+          } else if (!redirectCodes.contains(connection.getResponseCode())
+              && (connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
               && StatusMonitor.instance().isPrimaryDocument(connection.getURL().toExternalForm())) {
             String injected = null;
             String charset = Util.charset(connection);

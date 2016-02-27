@@ -61,7 +61,7 @@ class ContextItem {
       AppThread.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
-          httpListener.set(new HttpListener(
+          httpListener.set(new HttpListener(engine.get(),
               context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
           Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
           engine.get().setCreatePopupHandler(new PopupHandler(driver, context));

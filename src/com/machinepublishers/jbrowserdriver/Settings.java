@@ -825,6 +825,7 @@ public class Settings implements Serializable {
   private final boolean saveMedia;
   private final boolean saveAttachments;
   private final String script;
+  private final String scriptContent;
   private final boolean ignoreDialogs;
   private final boolean cache;
   private final File cacheDir;
@@ -930,19 +931,22 @@ public class Settings implements Serializable {
 
     String headScriptTmp = parse(properties, PropertyName.HEAD_SCRIPT, builder.headScript);
     StringBuilder scriptBuilder = new StringBuilder();
+    StringBuilder scriptContentBuilder = new StringBuilder();
     String scriptId = Util.randomPropertyName();
     if (headless()) {
       scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
     }
     scriptBuilder.append("<script id='").append(scriptId).append("' language='javascript'>");
-    scriptBuilder.append("try{");
-    scriptBuilder.append(userAgentTmp.script());
-    scriptBuilder.append(timezoneTmp.script());
+    scriptContentBuilder.append("(function(){try{");
+    scriptContentBuilder.append(userAgentTmp.script());
+    scriptContentBuilder.append(timezoneTmp.script());
     if (headScriptTmp != null) {
-      scriptBuilder.append(headScriptTmp);
+      scriptContentBuilder.append(headScriptTmp);
     }
-    scriptBuilder.append("}catch(e){}");
-    scriptBuilder.append("document.getElementsByTagName('head')[0].removeChild(document.getElementById('").append(scriptId).append("'));");
+    scriptContentBuilder.append("}catch(e){}})();");
+    this.scriptContent = scriptContentBuilder.toString();
+    scriptBuilder.append(this.scriptContent);
+    scriptBuilder.append("(function(){document.getElementsByTagName('head')[0].removeChild(document.getElementById('").append(scriptId).append("'));})();");
     scriptBuilder.append("</script>");
     this.script = scriptBuilder.toString();
   }
@@ -977,6 +981,10 @@ public class Settings implements Serializable {
 
   String script() {
     return script;
+  }
+
+  String scriptContent() {
+    return scriptContent;
   }
 
   boolean ignoreDialogs() {

@@ -28,7 +28,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.sun.javafx.webkit.Accessor;
+import com.sun.webkit.Invoker;
 import com.sun.webkit.LoadListenerClient;
+
+import javafx.scene.web.WebEngine;
 
 class HttpListener implements LoadListenerClient {
   private static final Map<Integer, String> states;
@@ -73,13 +77,15 @@ class HttpListener implements LoadListenerClient {
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final Map<String, Long> resources = new HashMap<String, Long>();
+  private final WebEngine engine;
   private final AtomicInteger statusCode;
   private final AtomicLong frame = new AtomicLong();
   private final AtomicLong timeoutMS;
   private final StatusMonitor statusMonitor;
   private final LogsServer logs;
 
-  HttpListener(AtomicInteger statusCode, AtomicLong timeoutMS) {
+  HttpListener(WebEngine engine, AtomicInteger statusCode, AtomicLong timeoutMS) {
+    this.engine = engine;
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
     this.statusMonitor = StatusMonitor.instance();
@@ -152,7 +158,7 @@ class HttpListener implements LoadListenerClient {
    * {@inheritDoc}
    */
   @Override
-  public void dispatchLoadEvent(long frame, final int state, String url,
+  public void dispatchLoadEvent(final long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
     if (SettingsManager.settings() == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
@@ -180,6 +186,17 @@ class HttpListener implements LoadListenerClient {
           resources.remove(frame + url);
           new Thread(new AjaxListener(newStatusCode, statusCode,
               resources, timeoutMS.get())).start();
+        }
+        if (state == LoadListenerClient.PAGE_FINISHED) {
+          String urlLowercase = url.toLowerCase();
+          if (!urlLowercase.startsWith("http:") && !urlLowercase.startsWith("https:")) {
+            Invoker.getInvoker().postOnEventThread(new Runnable() {
+              @Override
+              public void run() {
+                Accessor.getPageFor(engine).executeScript(frame, SettingsManager.settings().scriptContent());
+              }
+            });
+          }
         }
       }
     } catch (Throwable t) {
