@@ -29,7 +29,7 @@ import com.sun.glass.events.WindowEvent;
 import com.sun.glass.ui.Screen;
 import com.sun.javafx.tk.Toolkit;
 
-
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -175,7 +175,11 @@ final class MonocleWindowManager {
 
             @Override
             public void run() {
-                Screen.notifySettingsChanged();
+                try{
+                    Method method = Screen.class.getDeclaredMethod("notifySettingsChanged");
+                    method.setAccessible(true); //before Java 8u20 this method was private
+                    method.invoke(null);
+                }catch(Throwable t){}
                 instance.getFocusedWindow().setFullScreen(true);
                 instance.repaintAll();
                 Toolkit.getToolkit().requestNextPulse();

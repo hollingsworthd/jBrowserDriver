@@ -351,7 +351,7 @@ public final class MonocleApplication extends Application {
         return deviceFlags[DEVICE_POINTER] > 0;
     }
 
-    @Override
+    //@Override
     public void notifyRenderingFinished() {
         invokeLater(renderEndNotifier);
     }
@@ -373,7 +373,7 @@ public final class MonocleApplication extends Application {
         _leaveNestedEventLoop(null);
     }
 
-    @Override
+    //@Override
     protected int _getKeyCodeForChar(char c) {
         return KeyInput.getInstance().getKeyCodeForChar(c);
     }
