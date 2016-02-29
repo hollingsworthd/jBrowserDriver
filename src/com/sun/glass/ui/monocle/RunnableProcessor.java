@@ -89,11 +89,9 @@ class RunnableProcessor implements Runnable {
         control.active = true;
         while (control.active) {
             try {
-              synchronized(Object.class){
                 queue.getNextRunnable().run();
-              }
             } catch (Throwable e) {
-                //Application.reportException(e);
+                Application.reportException(e);
             }
         }
 
