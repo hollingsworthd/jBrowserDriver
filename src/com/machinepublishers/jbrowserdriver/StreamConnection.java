@@ -176,6 +176,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   boolean isMedia() {
     String contentType = getContentType();
+    String urlLowercase = urlString.toLowerCase();
     return contentType == null
         || contentType.isEmpty()
         || contentType.startsWith("image/")
@@ -186,7 +187,24 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         || contentType.startsWith("application/octet-stream")
         || contentType.contains("/font-")
         || contentType.contains("/vnd.")
-        || contentType.contains("/x.");
+        || contentType.contains("/x.")
+        || urlLowercase.endsWith(".svg")
+        || urlLowercase.endsWith(".gif")
+        || urlLowercase.endsWith(".jpeg")
+        || urlLowercase.endsWith(".jpg")
+        || urlLowercase.endsWith(".png")
+        || urlLowercase.endsWith(".ico")
+        || urlLowercase.endsWith(".webm")
+        || urlLowercase.endsWith(".mp4")
+        || urlLowercase.endsWith(".ogg")
+        || urlLowercase.endsWith(".ogv")
+        || urlLowercase.endsWith(".mp3")
+        || urlLowercase.endsWith(".aac")
+        || urlLowercase.endsWith(".wav")
+        || urlLowercase.endsWith(".swf")
+        || urlLowercase.endsWith(".woff")
+        || urlLowercase.endsWith(".otf")
+        || urlLowercase.endsWith(".ttf");
   }
 
   StreamConnection(URL url) throws MalformedURLException {
