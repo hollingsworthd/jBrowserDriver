@@ -45,11 +45,20 @@ class SettingsManager {
       LogsServer.updateSettings();
       StreamConnection.updateSettings();
 
+      System.setProperty("quantum.multithreaded", "false");
+      System.setProperty("prism.vsync", "false");
+      System.setProperty("javafx.animation.pulse", "1");
+      System.setProperty("quantum.singlethreaded", "true");
+      System.setProperty("prism.threadcheck", "false");
+      System.setProperty("prism.dirtyopts", "false");
+      System.setProperty("prism.cacheshapes", "false");
+      System.setProperty("prism.primtextures", "false");
+      System.setProperty("prism.shutdownHook", "false");
+      System.setProperty("prism.disableRegionCaching", "true");
       if (settings.headless()) {
         System.setProperty("glass.platform", "Monocle");
         System.setProperty("monocle.platform", "Headless");
         System.setProperty("prism.order", "sw");
-        System.setProperty("prism.subpixeltext", "false");
         System.setProperty("prism.allowhidpi", "false");
         System.setProperty("prism.text", "t2k");
         System.setProperty("prism.maxvram", Long.toString(1024 * 1024 * 4));
