@@ -368,17 +368,20 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         try {
           InputStream entityStream = entity.get().getContent();
           if (entityStream != null && !skip.get()) {
-            String header = getHeaderField("Content-Disposition");
-            Settings settings = SettingsManager.settings();
-            if (settings != null && settings.saveAttachments()
-                && header != null && !header.isEmpty()) {
-              Matcher matcher = downloadHeader.matcher(header);
+            String disposition = getHeaderField("Content-Disposition");
+            if (disposition != null && !disposition.isEmpty()
+                && "application/octet-stream".equals(getContentType())) {
+              Matcher matcher = downloadHeader.matcher(disposition);
               if (matcher.matches()) {
-                File downloadFile = new File(attachmentsDir,
-                    matcher.group(1) == null || matcher.group(1).isEmpty()
-                        ? Long.toString(System.nanoTime()) : matcher.group(1));
-                downloadFile.deleteOnExit();
-                Files.write(downloadFile.toPath(), Util.toBytes(entityStream));
+                Settings settings = SettingsManager.settings();
+                if (settings != null && settings.saveAttachments()) {
+                  File downloadFile = new File(attachmentsDir,
+                      matcher.group(1) == null || matcher.group(1).isEmpty()
+                          ? Long.toString(System.nanoTime()) : matcher.group(1));
+                  downloadFile.deleteOnExit();
+                  Files.write(downloadFile.toPath(), Util.toBytes(entityStream));
+                }
+                skip.set(true);
               }
             }
             if (!skip.get()) {
