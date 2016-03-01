@@ -197,10 +197,12 @@ class HttpListener implements LoadListenerClient {
         if (state == LoadListenerClient.PAGE_FINISHED) {
           String urlLowercase = url.toLowerCase();
           if (!urlLowercase.startsWith("http:") && !urlLowercase.startsWith("https:")) {
+            final long thisFrame = this.frame.get();
             Invoker.getInvoker().postOnEventThread(new Runnable() {
               @Override
               public void run() {
-                if (Accessor.getPageFor(engine).getDocument(frame) != null) {
+                if (Accessor.getPageFor(engine).getChildFrames(thisFrame).contains(frame)
+                    && Accessor.getPageFor(engine).getDocument(frame) != null) {
                   Accessor.getPageFor(engine).executeScript(frame, SettingsManager.settings().scriptContent());
                 }
               }
