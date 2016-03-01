@@ -359,16 +359,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           EntityUtils.consume(entity.get());
         } catch (Throwable t) {}
       }
-      if (req.get() != null) {
-        try {
-          req.get().reset();
-        } catch (Throwable t) {}
-      }
-      if (response.get() != null) {
-        try {
-          response.get().close();
-        } catch (Throwable t) {}
-      }
     }
   }
 
