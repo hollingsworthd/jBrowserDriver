@@ -170,6 +170,13 @@ class HttpListener implements LoadListenerClient {
             || state == LoadListenerClient.PAGE_REDIRECTED
             || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
           if (this.frame.get() == frame) {
+            if (state == LoadListenerClient.PAGE_STARTED) {
+              try {
+                StatusMonitor.instance().clearStatusMonitor();
+              } catch (Throwable t) {
+                LogsServer.instance().exception(t);
+              }
+            }
             statusCode.set(0);
             superseded.set(true);
             resources.clear();
@@ -193,7 +200,9 @@ class HttpListener implements LoadListenerClient {
             Invoker.getInvoker().postOnEventThread(new Runnable() {
               @Override
               public void run() {
-                Accessor.getPageFor(engine).executeScript(frame, SettingsManager.settings().scriptContent());
+                if (Accessor.getPageFor(engine).getDocument(frame) != null) {
+                  Accessor.getPageFor(engine).executeScript(frame, SettingsManager.settings().scriptContent());
+                }
               }
             });
           }

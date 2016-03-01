@@ -96,11 +96,6 @@ class AjaxListener implements Runnable {
       } else {
         resources.clear();
         statusCode.set(newStatusCode);
-        try {
-          StatusMonitor.instance().clearStatusMonitor();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
         statusCode.notifyAll();
       }
     }
