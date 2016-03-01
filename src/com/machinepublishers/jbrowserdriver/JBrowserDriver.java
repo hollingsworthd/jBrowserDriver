@@ -27,8 +27,10 @@ import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,6 +95,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final List<String> args;
   private static final List<Object> waiting = new ArrayList<Object>();
   private static int curWaiting;
+  private static final Set<String> filteredLogs = Collections.unmodifiableSet(
+      new HashSet<String>(Arrays.asList(new String[] {
+          "Warning: Single GUI Threadiong is enabled, FPS should be slower",
+          "Setting PULSE_DURATION to 1 hz"
+      })));
   private final Object key = new Object();
   private final JBrowserDriverRemote remote;
   private final Logs logs;
@@ -319,11 +326,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
                         ready.set(true);
                         ready.notify();
                         done = true;
-                      } else {
+                      } else if (!filteredLogs.contains(line)) {
                         System.out.println(logPrefix + line);
                       }
                     }
-                  } else {
+                  } else if (!filteredLogs.contains(line)) {
                     System.out.println(logPrefix + line);
                   }
                 }
@@ -331,7 +338,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
               .redirectError(new LogOutputStream() {
                 @Override
                 protected void processLine(String line) {
-                  System.err.println(logPrefix + line);
+                  if (!filteredLogs.contains(line)) {
+                    System.err.println(logPrefix + line);
+                  }
                 }
               })
               .destroyOnExit()
