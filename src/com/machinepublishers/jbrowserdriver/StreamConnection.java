@@ -177,17 +177,16 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   boolean isMedia() {
     String contentType = getContentType();
     String urlLowercase = urlString.toLowerCase();
-    return contentType == null
-        || contentType.isEmpty()
-        || contentType.startsWith("image/")
-        || contentType.startsWith("video/")
-        || contentType.startsWith("audio/")
-        || contentType.startsWith("model/")
-        || contentType.startsWith("font/")
-        || contentType.startsWith("application/octet-stream")
-        || contentType.contains("/font-")
-        || contentType.contains("/vnd.")
-        || contentType.contains("/x.")
+    return (contentType != null
+        && (contentType.startsWith("image/")
+            || contentType.startsWith("video/")
+            || contentType.startsWith("audio/")
+            || contentType.startsWith("model/")
+            || contentType.startsWith("font/")
+            || contentType.startsWith("application/octet-stream")
+            || contentType.contains("/font-")
+            || contentType.contains("/vnd.")
+            || contentType.contains("/x.")))
         || urlLowercase.endsWith(".svg")
         || urlLowercase.endsWith(".gif")
         || urlLowercase.endsWith(".jpeg")
@@ -257,8 +256,10 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   public void connect() throws IOException {
     try {
       if (connected.compareAndSet(false, true)) {
-        if (StatusMonitor.instance().isDiscarded(urlString)
-            || isBlocked(url.getHost())) {
+        if (StatusMonitor.instance().isDiscarded(urlString)) {
+          skip.set(true);
+          LogsServer.instance().trace("Media skipped: " + urlString);
+        } else if (isBlocked(url.getHost())) {
           skip.set(true);
         } else if (SettingsManager.settings() != null) {
           config.get()
