@@ -87,7 +87,7 @@ class StreamHandler implements URLStreamHandlerFactory {
     if ("netdoc".equals(protocol)) {
       return new sun.net.www.protocol.netdoc.Handler();
     }
-    throw new InternalError();
+    return null;
   }
 
 }
