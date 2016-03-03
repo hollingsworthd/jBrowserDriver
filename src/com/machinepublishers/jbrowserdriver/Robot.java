@@ -46,6 +46,7 @@ import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.Pixels;
+import com.sun.javafx.webkit.Accessor;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
@@ -302,6 +303,20 @@ class Robot {
         }
       }
     }
+    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      @Override
+      public Object perform() {
+        while (true) {
+          try {
+            Thread.sleep(JBrowserDriverServer.PAINT_MS);
+          } catch (InterruptedException e) {}
+          if (!Accessor.getPageFor(context.item().engine.get()).isRepaintPending()) {
+            break;
+          }
+        }
+        return null;
+      }
+    });
   }
 
   private void unlock() {

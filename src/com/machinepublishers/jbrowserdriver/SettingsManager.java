@@ -47,7 +47,7 @@ class SettingsManager {
 
       System.setProperty("quantum.multithreaded", "false");
       System.setProperty("prism.vsync", "false");
-      System.setProperty("javafx.animation.pulse", "1");
+      System.setProperty("javafx.animation.pulse", Integer.toString(JBrowserDriverServer.PAINT_HZ));
       System.setProperty("quantum.singlethreaded", "true");
       System.setProperty("prism.threadcheck", "false");
       System.setProperty("prism.dirtyopts", "false");

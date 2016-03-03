@@ -61,6 +61,9 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
 
+  static final int PAINT_HZ = 2;
+  static final int PAINT_MS = 1000 / PAINT_HZ;
+
   private static Registry registry;
 
   /*
