@@ -928,14 +928,10 @@ public class Settings implements Serializable {
       timezoneTmp = Timezone.byName(properties.get(PropertyName.TIMEZONE.propertyName).toString());
     }
     timezoneTmp = timezoneTmp == null ? defaults.timezone : timezoneTmp;
-
+    String scriptId = Util.randomPropertyName();
     String headScriptTmp = parse(properties, PropertyName.HEAD_SCRIPT, builder.headScript);
     StringBuilder scriptBuilder = new StringBuilder();
     StringBuilder scriptContentBuilder = new StringBuilder();
-    String scriptId = Util.randomPropertyName();
-    if (headless()) {
-      scriptBuilder.append("<style>body::-webkit-scrollbar {width: 0px !important;height:0px !important;}</style>");
-    }
     scriptBuilder.append("<script id='").append(scriptId).append("' language='javascript'>");
     scriptContentBuilder.append("(function(){try{");
     scriptContentBuilder.append(userAgentTmp.script());
@@ -946,7 +942,9 @@ public class Settings implements Serializable {
     scriptContentBuilder.append("}catch(e){}})();");
     this.scriptContent = scriptContentBuilder.toString();
     scriptBuilder.append(this.scriptContent);
-    scriptBuilder.append("(function(){document.getElementsByTagName('head')[0].removeChild(document.getElementById('").append(scriptId).append("'));})();");
+    scriptBuilder.append("(function(){document.getElementsByTagName('head')[0].removeChild(document.getElementById('");
+    scriptBuilder.append(scriptId);
+    scriptBuilder.append("'));})();");
     scriptBuilder.append("</script>");
     this.script = scriptBuilder.toString();
   }

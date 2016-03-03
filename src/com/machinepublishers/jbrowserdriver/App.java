@@ -19,8 +19,10 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.List;
 
 import com.sun.glass.ui.Screen;
@@ -128,6 +130,11 @@ public class App extends Application {
       stage.initStyle(StageStyle.UNDECORATED);
     }
     WebEngine engine = view.getEngine();
+    File style = File.createTempFile("jbd_style_", ".css");
+    style.deleteOnExit();
+    Files.write(style.toPath(),
+        "body::-webkit-scrollbar {width: 0px !important;height:0px !important;}".getBytes("utf-8"));
+    engine.setUserStyleSheetLocation(style.toPath().toUri().toURL().toExternalForm());
     engine.getHistory().setMaxSize(HISTORY_SIZE);
     Accessor.getPageFor(engine).setDeveloperExtrasEnabled(false);
     Accessor.getPageFor(engine).setUsePageCache(false);
