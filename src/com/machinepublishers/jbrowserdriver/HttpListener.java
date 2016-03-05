@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.sun.javafx.webkit.Accessor;
-import com.sun.webkit.Invoker;
 import com.sun.webkit.LoadListenerClient;
 
 import javafx.scene.web.WebEngine;
@@ -193,21 +191,6 @@ class HttpListener implements LoadListenerClient {
           resources.remove(frame + url);
           new Thread(new AjaxListener(newStatusCode, statusCode,
               resources, timeoutMS.get())).start();
-        }
-        if (state == LoadListenerClient.PAGE_FINISHED) {
-          String urlLowercase = url.toLowerCase();
-          if (!urlLowercase.startsWith("http:") && !urlLowercase.startsWith("https:")) {
-            final long thisFrame = this.frame.get();
-            Invoker.getInvoker().postOnEventThread(new Runnable() {
-              @Override
-              public void run() {
-                if (Accessor.getPageFor(engine).getChildFrames(thisFrame).contains(frame)
-                    && Accessor.getPageFor(engine).getDocument(frame) != null) {
-                  Accessor.getPageFor(engine).executeScript(frame, SettingsManager.settings().scriptContent());
-                }
-              }
-            });
-          }
         }
       }
     } catch (Throwable t) {
