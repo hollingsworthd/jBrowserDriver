@@ -186,6 +186,8 @@ public class Test {
       driver.switchTo().defaultContent();
       driver.switchTo().frame("testiframe");
       test(driver.findElementById("iframebody") != null);
+      //System.out.println(driver.findElement(By.id("iframe-useragent")).getAttribute("innerHTML"));
+      //System.out.println(driver.findElement(By.id("iframe-nested-useragent")).getAttribute("innerHTML"));
 
       /*
        * Redirects and cookies
