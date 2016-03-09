@@ -449,7 +449,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public Boolean perform() {
             String val = node.getMember("disabled").toString();
-            return val == null || "undefined".equals(val) || val.isEmpty();
+            return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
           }
         });
   }
