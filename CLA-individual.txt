@@ -100,3 +100,4 @@ as evidenced by their digital signatures and information below.
 Philipp Katz, https://github.com/qqilihq, 2016-02-10
 Travis Rodman, https://github.com/travis-rodman, 2016-02-28
 Joakim Särehag, https://github.com/sarehag, 2016-03-08
+Florian Geyer, https://github.com/BlueIce, 2016-03-10
