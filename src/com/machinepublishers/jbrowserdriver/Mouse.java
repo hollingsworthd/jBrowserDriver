@@ -38,7 +38,9 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void click(Coordinates coords) {
     try {
-      remote.click(((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote);
+      CoordinatesRemote coordsRemote = coords == null ?
+              null : ((com.machinepublishers.jbrowserdriver.Coordinates)coords).remote;
+      remote.click(coordsRemote);
     } catch (RemoteException e) {
       logs.exception(e);
     }

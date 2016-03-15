@@ -51,8 +51,12 @@ class MouseServer extends UnicastRemoteObject implements MouseRemote,
    */
   @Override
   public void click(CoordinatesRemote coords) {
-    click(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
-        new Logs(LogsServer.instance())));
+    if (coords != null) {
+      click(new com.machinepublishers.jbrowserdriver.Coordinates(coords,
+              new Logs(LogsServer.instance())));
+    } else {
+      click((Coordinates)null);
+    }
   }
 
   /**
