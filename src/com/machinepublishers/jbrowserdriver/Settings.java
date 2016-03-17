@@ -915,7 +915,7 @@ public class Settings implements Serializable {
       if ("tor".equalsIgnoreCase(value)) {
         requestHeadersTmp = RequestHeaders.TOR;
         userAgentTmp = UserAgent.TOR;
-      } else if ("chrome".equalsIgnoreCase("chrome")) {
+      } else if ("chrome".equalsIgnoreCase(value)) {
         requestHeadersTmp = RequestHeaders.CHROME;
         userAgentTmp = UserAgent.CHROME;
       }
