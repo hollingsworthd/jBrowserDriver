@@ -219,11 +219,11 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           @Override
           public Object perform() {
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            double y = Double.parseDouble(obj.getMember("top").toString());
-            double x = Double.parseDouble(obj.getMember("left").toString());
-            y = y < 0d ? 0d : y;
-            x = x < 0d ? 0d : x;
-            context.robot.get().mouseMove(x + 1, y + 1);
+            double y1 = Double.parseDouble(obj.getMember("top").toString());
+            double x1 = Double.parseDouble(obj.getMember("left").toString());
+            double y2 = Double.parseDouble(obj.getMember("bottom").toString());
+            double x2 = Double.parseDouble(obj.getMember("right").toString());
+            context.robot.get().mouseMove((x1 + x2) / 2d, (y1 + y2) / 2d);
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }

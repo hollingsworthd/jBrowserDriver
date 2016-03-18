@@ -468,11 +468,13 @@ class Robot {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
+          double adjustedPageX = Math.max(0, Math.min(pageX, stage.getScene().getWidth() - 1));
+          double adjustedPageY = Math.max(0, Math.min(pageY, stage.getScene().getHeight() - 1));
           robot.get().mouseMove(
-              (int) Math.rint(pageX
+              (int) Math.rint(adjustedPageX
                   + (Double) stage.getX()
                   + (Double) stage.getScene().getX()),
-              (int) Math.rint(pageY
+              (int) Math.rint(adjustedPageY
                   + (Double) stage.getY()
                   + (Double) stage.getScene().getY()));
           return null;
@@ -489,11 +491,12 @@ class Robot {
       AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
+          Stage stage = context.item().stage.get();
           robot.get().mouseMove(
-              (int) Math.rint(pageX
-                  + new Double((Integer) robot.get().getMouseX())),
-              (int) Math.rint(pageY
-                  + new Double((Integer) robot.get().getMouseY())));
+              (int) Math.rint(Math.max(0, Math.min(stage.getScene().getWidth() - 1,
+                  pageX + new Double((Integer) robot.get().getMouseX())))),
+              (int) Math.rint(Math.max(0, Math.min(stage.getScene().getHeight() - 1,
+                  pageY + new Double((Integer) robot.get().getMouseY())))));
           return null;
         }
       });
