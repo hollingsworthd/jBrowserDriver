@@ -61,6 +61,7 @@ class ContextItem {
       AppThread.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
+          engine.get().setJavaScriptEnabled(SettingsManager.settings().javascript());
           httpListener.set(new HttpListener(engine.get(),
               context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
           Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());

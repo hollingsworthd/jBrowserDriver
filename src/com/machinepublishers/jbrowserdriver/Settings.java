@@ -121,7 +121,8 @@ public class Settings implements Serializable {
     CACHE_DIR("jbd.cachedir"),
     CACHE_ENTRIES("jbd.cacheentries"),
     CACHE_ENTRY_SIZE("jbd.cacheentrysize"),
-    HOSTNAME_VERIFICATION("jbd.hostnameverification");
+    HOSTNAME_VERIFICATION("jbd.hostnameverification"),
+    JAVASCRIPT("jbd.javascript");
 
     private final String propertyName;
 
@@ -165,6 +166,7 @@ public class Settings implements Serializable {
     private boolean wireConsole;
     private int maxLogs = 5000;
     private boolean hostnameVerification = true;
+    private boolean javascript = true;
 
     public Builder() {
       for (int i = 10000; i < 10008; i++) {
@@ -482,7 +484,7 @@ public class Settings implements Serializable {
       this.headless = headless;
       return this;
     }
-    
+
     /**
      * <p><ul>
      * <li>Java system property <code>jbd.hostnameverification</code> overrides this setting.</li>
@@ -495,8 +497,8 @@ public class Settings implements Serializable {
      * @return this Builder
      */
     public Builder hostnameVerification(boolean hostnameVerification) {
-        this.hostnameVerification = hostnameVerification;
-        return this;
+      this.hostnameVerification = hostnameVerification;
+      return this;
     }
 
     /**
@@ -599,6 +601,23 @@ public class Settings implements Serializable {
      */
     public Builder maxConnections(int maxConnections) {
       this.maxConnections = maxConnections;
+      return this;
+    }
+
+    /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.javascript</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.javascript</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Whether javascript is enabled in the browser. Defaults to <code>true</code>.
+     * 
+     * @param isEnabled
+     *          <code>true</code> to enable Javascript, <code>false</code> otherwise
+     * @return this Builder
+     */
+    public Builder javascript(boolean isEnabled) {
+      this.javascript = isEnabled;
       return this;
     }
 
@@ -733,6 +752,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.HEADLESS, this.headless);
       set(capabilities, PropertyName.SSL, this.ssl);
       set(capabilities, PropertyName.HOSTNAME_VERIFICATION, this.hostnameVerification);
+      set(capabilities, PropertyName.JAVASCRIPT, this.javascript);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -864,6 +884,7 @@ public class Settings implements Serializable {
   private final boolean wireConsole;
   private final int maxLogs;
   private final boolean hostnameVerification;
+  private final boolean javascript;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -888,6 +909,7 @@ public class Settings implements Serializable {
     this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
     this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
     this.hostnameVerification = parse(properties, PropertyName.HOSTNAME_VERIFICATION, builder.hostnameVerification);
+    this.javascript = parse(properties, PropertyName.JAVASCRIPT, builder.javascript);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
@@ -1060,6 +1082,10 @@ public class Settings implements Serializable {
 
   String ssl() {
     return ssl;
+  }
+
+  boolean javascript() {
+    return javascript;
   }
 
   boolean traceConsole() {
