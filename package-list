@@ -1,4 +1,5 @@
 com.machinepublishers.jbrowserdriver
+com.sun.glass.ui.accessible
 org.openqa.selenium
 org.openqa.selenium.interactions
 org.openqa.selenium.internal
