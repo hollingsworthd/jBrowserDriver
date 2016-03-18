@@ -45,7 +45,8 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   static void updateSettings() {
-    if (SettingsManager.settings().wireConsole()) {
+    Settings settings = SettingsManager.settings();
+    if (settings != null && settings.wireConsole()) {
       System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
     } else {
@@ -67,32 +68,35 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
   }
 
   public void trace(String message) {
+    Settings settings = SettingsManager.settings();
     final Entry entry = new Entry(Level.FINEST, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
-      if (entries.size() > SettingsManager.settings().maxLogs()) {
+      if (settings != null && entries.size() > settings.maxLogs()) {
         entries.removeFirst();
       }
     }
-    if (SettingsManager.settings().traceConsole()) {
+    if (settings == null || settings.traceConsole()) {
       System.out.println(entry);
     }
   }
 
   public void warn(String message) {
+    Settings settings = SettingsManager.settings();
     final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (entries) {
       entries.add(entry);
-      if (entries.size() > SettingsManager.settings().maxLogs()) {
+      if (settings != null && entries.size() > settings.maxLogs()) {
         entries.removeFirst();
       }
     }
-    if (SettingsManager.settings().warnConsole()) {
+    if (settings == null || settings.warnConsole()) {
       System.err.println(entry);
     }
   }
 
   public void exception(Throwable t) {
+    Settings settings = SettingsManager.settings();
     if (t != null) {
       final Entry entry;
       StringWriter writer = null;
@@ -102,19 +106,19 @@ class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.s
         entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
         synchronized (entries) {
           entries.add(entry);
-          if (entries.size() > SettingsManager.settings().maxLogs()) {
+          if (settings != null && entries.size() > settings.maxLogs()) {
             entries.removeFirst();
           }
         }
       } catch (Throwable t2) {
-        if (SettingsManager.settings().warnConsole()) {
+        if (settings == null || settings.warnConsole()) {
           System.err.println("While logging a message, an error occurred: " + t2.getMessage());
         }
         return;
       } finally {
         Util.close(writer);
       }
-      if (SettingsManager.settings().warnConsole()) {
+      if (settings == null || settings.warnConsole()) {
         System.err.println(entry);
       }
     }
