@@ -122,7 +122,10 @@ public class Settings implements Serializable {
     CACHE_ENTRIES("jbd.cacheentries"),
     CACHE_ENTRY_SIZE("jbd.cacheentrysize"),
     HOSTNAME_VERIFICATION("jbd.hostnameverification"),
-    JAVASCRIPT("jbd.javascript");
+    JAVASCRIPT("jbd.javascript"),
+    SOCKET_TIMEOUT_MS("jbd.sockettimeout"),
+    CONNECT_TIMEOUT_MS("jbd.connecttimeout"),
+    CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout");
 
     private final String propertyName;
 
@@ -167,6 +170,9 @@ public class Settings implements Serializable {
     private int maxLogs = 5000;
     private boolean hostnameVerification = true;
     private boolean javascript = true;
+    private int socketTimeout = -1;
+    private int connectTimeout = -1;
+    private int connectionReqTimeout = -1;
 
     public Builder() {
       for (int i = 10000; i < 10008; i++) {
@@ -623,6 +629,62 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
+     * <li>Java system property <code>jbd.sockettimeout</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.sockettimeout</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Socket timeout in milliseconds, which is the max idle time between any two packets.
+     * Defaults to -1 (system default). Value of 0 means infinite timeout.
+     * 
+     * @param timeoutMS
+     *          Timeout in milliseconds
+     * @return this Builder
+     */
+    public Builder socketTimeout(int timeoutMS) {
+      this.socketTimeout = timeoutMS;
+      return this;
+    }
+
+    /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.connecttimeout</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.connecttimeout</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Connect timeout in milliseconds, which the is max time until a connection is established.
+     * Defaults to -1 (system default). Value of 0 means infinite timeout.
+     * 
+     * @param timeoutMS
+     *          Timeout in milliseconds
+     * @return this Builder
+     */
+    public Builder connectTimeout(int timeoutMS) {
+      this.connectTimeout = timeoutMS;
+      return this;
+    }
+
+    /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.connectionreqtimeout</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.connectionreqtimeout</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Connection request timeout in milliseconds,
+     * which is the max time to wait when the max number of connections has already been reached.
+     * When the timeout is reached, the connection fails with an exception.
+     * Defaults to -1 (system default). Value of 0 means infinite timeout.
+     * 
+     * @param timeoutMS
+     *          Timeout in milliseconds
+     * @return this Builder
+     */
+    public Builder connectionReqTimeout(int timeoutMS) {
+      this.connectionReqTimeout = timeoutMS;
+      return this;
+    }
+
+    /**
+     * <p><ul>
      * <li>Java system property <code>jbd.ssl</code> overrides this setting.</li>
      * <li>{@link Capabilities} name <code>jbd.ssl</code> alternately configures this setting.</li>
      * </ul><p>
@@ -753,6 +815,9 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SSL, this.ssl);
       set(capabilities, PropertyName.HOSTNAME_VERIFICATION, this.hostnameVerification);
       set(capabilities, PropertyName.JAVASCRIPT, this.javascript);
+      set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
+      set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
+      set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -885,6 +950,9 @@ public class Settings implements Serializable {
   private final int maxLogs;
   private final boolean hostnameVerification;
   private final boolean javascript;
+  private final int socketTimeout;
+  private final int connectTimeout;
+  private final int connectionReqTimeout;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -910,6 +978,9 @@ public class Settings implements Serializable {
     this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
     this.hostnameVerification = parse(properties, PropertyName.HOSTNAME_VERIFICATION, builder.hostnameVerification);
     this.javascript = parse(properties, PropertyName.JAVASCRIPT, builder.javascript);
+    this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
+    this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
+    this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
@@ -1086,6 +1157,18 @@ public class Settings implements Serializable {
 
   boolean javascript() {
     return javascript;
+  }
+
+  int socketTimeout() {
+    return socketTimeout;
+  }
+
+  int connectTimeout() {
+    return connectTimeout;
+  }
+
+  int connectionReqTimeout() {
+    return connectionReqTimeout;
   }
 
   boolean traceConsole() {

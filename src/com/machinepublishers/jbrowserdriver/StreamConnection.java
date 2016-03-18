@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -106,8 +105,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final URL url;
   private final String urlString;
   private final AtomicBoolean skip = new AtomicBoolean();
-  private final AtomicInteger connectTimeout = new AtomicInteger();
-  private final AtomicInteger readTimeout = new AtomicInteger();
   private final AtomicReference<String> method = new AtomicReference<String>();
   private final AtomicBoolean connected = new AtomicBoolean();
   private final AtomicBoolean exec = new AtomicBoolean();
@@ -264,8 +261,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         } else if (SettingsManager.settings() != null) {
           config.get()
               .setCookieSpec("custom")
-              .setConnectTimeout(connectTimeout.get())
-              .setConnectionRequestTimeout(readTimeout.get());
+              .setSocketTimeout(SettingsManager.settings().socketTimeout())
+              .setConnectTimeout(SettingsManager.settings().connectTimeout())
+              .setConnectionRequestTimeout(SettingsManager.settings().connectionReqTimeout());
           URI uri = null;
           try {
             uri = url.toURI();
@@ -678,7 +676,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public int getConnectTimeout() {
-    return connectTimeout.get();
+    //Apache HttpComponents handles this.
+    return 0;
   }
 
   /**
@@ -686,7 +685,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setConnectTimeout(int timeout) {
-    this.connectTimeout.set(timeout);
+    //Ignore. Configured by the user via Settings.
   }
 
   /**
@@ -694,7 +693,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public int getReadTimeout() {
-    return readTimeout.get();
+    //Apache HttpComponents handles this.
+    return 0;
   }
 
   /**
@@ -702,7 +702,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public void setReadTimeout(int timeout) {
-    this.readTimeout.set(timeout);
+    //Ignore. Configured by the user via Settings.
   }
 
   /**
