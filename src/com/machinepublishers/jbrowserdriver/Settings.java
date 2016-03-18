@@ -159,7 +159,7 @@ public class Settings implements Serializable {
     private boolean blockAds = true;
     private boolean quickRender = true;
     private int maxRouteConnections = 8;
-    private int maxConnections = 3000;
+    private int maxConnections = 300;
     private String ssl;
     private boolean traceConsole;
     private boolean warnConsole = true;
@@ -594,7 +594,7 @@ public class Settings implements Serializable {
      * <li>{@link Capabilities} name <code>jbd.maxconnections</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * Maximum number of concurrent connections overall. Defaults to <code>3000</code>.
+     * Maximum number of concurrent connections overall. Defaults to <code>300</code>.
      * 
      * @param maxConnections
      * @return this Builder
