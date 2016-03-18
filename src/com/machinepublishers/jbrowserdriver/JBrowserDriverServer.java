@@ -114,13 +114,13 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
   public JBrowserDriverServer() throws RemoteException {}
 
   @Override
-  public void setUp(final Settings settings) {
+  public synchronized void setUp(final Settings settings) {
     SettingsManager.register(settings);
     context.set(new Context());
   }
 
   @Override
-  public void storeCapabilities(final Capabilities capabilities) {
+  public synchronized void storeCapabilities(final Capabilities capabilities) {
     context.get().capabilities.set(capabilities);
   }
 
@@ -128,7 +128,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * Optionally call this method if you want JavaFX initialized and the browser
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
-  public void init() {
+  public synchronized void init() {
     context.get().init(this);
   }
 
@@ -139,7 +139,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * @param settings
    *          New settings to take effect, superseding the original ones
    */
-  public void reset(final Settings settings) {
+  public synchronized void reset(final Settings settings) {
     AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -159,7 +159,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * Reset the state of the browser. More efficient than quitting the
    * browser and creating a new instance.
    */
-  public void reset() {
+  public synchronized void reset() {
     reset(SettingsManager.settings());
   }
 
@@ -167,7 +167,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public String getPageSource() {
+  public synchronized String getPageSource() {
     init();
     WebElement element = ElementServer.create(context.get()).findElementByTagName("html");
     if (element != null) {
@@ -188,7 +188,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public String getCurrentUrl() {
+  public synchronized String getCurrentUrl() {
     init();
     return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
@@ -197,7 +197,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     });
   }
 
-  public int getStatusCode() {
+  public synchronized int getStatusCode() {
     init();
     try {
       synchronized (context.get().statusCode) {
@@ -215,7 +215,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public String getTitle() {
+  public synchronized String getTitle() {
     init();
     return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
@@ -228,7 +228,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public void get(final String url) {
+  public synchronized void get(final String url) {
     init();
     AppThread.exec(Pause.SHORT, context.get().statusCode, new Sync<Object>() {
       public Object perform() {
@@ -260,7 +260,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElement(By by) {
+  public synchronized ElementServer findElement(By by) {
     init();
     return ElementServer.create(context.get()).findElement(by);
   }
@@ -269,7 +269,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElements(By by) {
+  public synchronized List findElements(By by) {
     init();
     return ElementServer.create(context.get()).findElements(by);
   }
@@ -278,7 +278,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementById(String id) {
+  public synchronized ElementServer findElementById(String id) {
     init();
     return ElementServer.create(context.get()).findElementById(id);
   }
@@ -287,7 +287,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsById(String id) {
+  public synchronized List findElementsById(String id) {
     init();
     return ElementServer.create(context.get()).findElementsById(id);
   }
@@ -296,7 +296,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByXPath(String expr) {
+  public synchronized ElementServer findElementByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByXPath(expr);
   }
@@ -305,7 +305,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByXPath(String expr) {
+  public synchronized List findElementsByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByXPath(expr);
   }
@@ -323,7 +323,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByPartialLinkText(String text) {
+  public synchronized ElementServer findElementByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementByPartialLinkText(text);
   }
@@ -332,7 +332,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByLinkText(String text) {
+  public synchronized List findElementsByLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByLinkText(text);
   }
@@ -341,7 +341,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByPartialLinkText(String text) {
+  public synchronized List findElementsByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByPartialLinkText(text);
   }
@@ -350,7 +350,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByClassName(String cssClass) {
+  public synchronized ElementServer findElementByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementByClassName(cssClass);
   }
@@ -359,7 +359,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByClassName(String cssClass) {
+  public synchronized List findElementsByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementsByClassName(cssClass);
   }
@@ -368,7 +368,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByName(String name) {
+  public synchronized ElementServer findElementByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementByName(name);
   }
@@ -377,7 +377,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByName(String name) {
+  public synchronized List findElementsByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementsByName(name);
   }
@@ -386,7 +386,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByCssSelector(String expr) {
+  public synchronized ElementServer findElementByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByCssSelector(expr);
   }
@@ -395,7 +395,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByCssSelector(String expr) {
+  public synchronized List findElementsByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByCssSelector(expr);
   }
@@ -404,7 +404,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public ElementServer findElementByTagName(String tagName) {
+  public synchronized ElementServer findElementByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementByTagName(tagName);
   }
@@ -413,7 +413,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public List findElementsByTagName(String tagName) {
+  public synchronized List findElementsByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementsByTagName(tagName);
   }
@@ -422,7 +422,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public Object executeAsyncScript(String script, Object... args) {
+  public synchronized Object executeAsyncScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeAsyncScript(script, args);
   }
@@ -431,7 +431,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public Object executeScript(String script, Object... args) {
+  public synchronized Object executeScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeScript(script, args);
   }
@@ -440,7 +440,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public KeyboardServer getKeyboard() {
+  public synchronized KeyboardServer getKeyboard() {
     init();
     return context.get().keyboard.get();
   }
@@ -449,7 +449,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public MouseServer getMouse() {
+  public synchronized MouseServer getMouse() {
     init();
     return context.get().mouse.get();
   }
@@ -458,7 +458,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public Capabilities getCapabilities() {
+  public synchronized Capabilities getCapabilities() {
     init();
     return context.get().capabilities.get();
   }
@@ -467,7 +467,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public void close() {
+  public synchronized void close() {
     init();
     context.get().removeItem();
   }
@@ -476,7 +476,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public String getWindowHandle() {
+  public synchronized String getWindowHandle() {
     init();
     return context.get().itemId();
   }
@@ -485,7 +485,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public Set<String> getWindowHandles() {
+  public synchronized Set<String> getWindowHandles() {
     init();
     return context.get().itemIds();
   }
@@ -494,7 +494,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public OptionsServer manage() {
+  public synchronized OptionsServer manage() {
     init();
     return context.get().options.get();
   }
@@ -503,7 +503,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public LogsServer logs() {
+  public synchronized LogsServer logs() {
     return LogsServer.instance();
   }
 
@@ -511,7 +511,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public NavigationServer navigate() {
+  public synchronized NavigationServer navigate() {
     init();
     return context.get().navigation.get();
   }
@@ -520,7 +520,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public void quit() {
+  public synchronized void quit() {
     final ContextItem item = context.get().item();
     if (item != null) {
       AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
@@ -540,7 +540,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public TargetLocatorServer switchTo() {
+  public synchronized TargetLocatorServer switchTo() {
     init();
     return context.get().targetLocator.get();
   }
@@ -549,7 +549,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public void kill() {
+  public synchronized void kill() {
     quit();
   }
 
@@ -557,7 +557,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
+  public synchronized <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     return outputType.convertFromPngBytes(getScreenshot());
   }
 
@@ -565,7 +565,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public byte[] getScreenshot() throws WebDriverException {
+  public synchronized byte[] getScreenshot() throws WebDriverException {
     init();
     return context.get().robot.get().screenshot();
   }
@@ -574,7 +574,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public File cacheDir() {
+  public synchronized File cacheDir() {
     return StreamConnection.cacheDir();
   }
 
@@ -582,7 +582,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public File attachmentsDir() {
+  public synchronized File attachmentsDir() {
     return StreamConnection.attachmentsDir();
   }
 
@@ -590,7 +590,7 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
    * {@inheritDoc}
    */
   @Override
-  public File mediaDir() {
+  public synchronized File mediaDir() {
     return StreamConnection.mediaDir();
   }
 }
