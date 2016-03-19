@@ -209,7 +209,14 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     this.urlString = url.toExternalForm();
   }
 
-  private void processHeaders(Settings settings, HttpRequestBase req, String host) {
+  private String hostHeader() {
+    int port = url.getPort();
+    return (port == -1 || port == url.getDefaultPort()) ?
+      url.getHost() :
+      url.getHost() + ":" + port;
+  }
+
+  private void processHeaders(Settings settings, HttpRequestBase req) {
     boolean https = urlString.toLowerCase().startsWith("https://");
     Collection<String> names = settings.headers().headerNames(https);
     for (String name : names) {
@@ -223,7 +230,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         if (name.equals("user-agent") && valuesIn != null && !valuesIn.isEmpty()) {
           req.addHeader(nameProperCase, settings.userAgentString());
         } else if (name.equals("host")) {
-          req.addHeader(nameProperCase, host);
+          req.addHeader(nameProperCase, hostHeader());
         } else if (valuesIn != null && !valuesIn.isEmpty()) {
           for (String curVal : valuesIn) {
             req.addHeader(nameProperCase, curVal);
@@ -295,7 +302,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           } else if ("TRACE".equals(method.get())) {
             req.set(new HttpTrace(uri));
           }
-          processHeaders(SettingsManager.settings(), req.get(), url.getHost());
+          processHeaders(SettingsManager.settings(), req.get());
           ProxyConfig proxy = SettingsManager.settings().proxy();
           if (proxy != null && !proxy.directConnection()) {
             config.get().setExpectContinueEnabled(proxy.expectContinue());
