@@ -211,9 +211,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
 
   private String hostHeader() {
     int port = url.getPort();
-    return (port == -1 || port == url.getDefaultPort()) ?
-      url.getHost() :
-      url.getHost() + ":" + port;
+    return (port == -1 || port == url.getDefaultPort())
+        ? url.getHost() : url.getHost() + ":" + port;
   }
 
   private void processHeaders(Settings settings, HttpRequestBase req) {
