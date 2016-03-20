@@ -165,6 +165,9 @@ public class Test {
        * Request headers
        */
       List<String> request = HttpServer.previousRequest();
+      if (TEST_PORT_HTTP != 443 && TEST_PORT_HTTP != 80) {
+        test(request.get(1).endsWith(":" + TEST_PORT_HTTP));
+      }
       test(request.size() > 1);
       Set<String> headers = new HashSet<String>();
       for (String line : request) {
