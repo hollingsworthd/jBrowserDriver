@@ -40,12 +40,21 @@ class AppThread {
   private static class Runner<T> implements Runnable {
     private final Sync<T> action;
     private final AtomicInteger statusCode;
-    private final AtomicBoolean done = new AtomicBoolean();
-    private final AtomicReference<T> returned = new AtomicReference<T>();
+    private final AtomicBoolean done;
+    private final AtomicReference<T> returned;
 
     public Runner(Sync<T> action, AtomicInteger statusCode) {
       this.action = action;
       this.statusCode = statusCode;
+      this.done = new AtomicBoolean();
+      this.returned = new AtomicReference<T>();
+    }
+
+    public Runner(Runner other) {
+      this.action = other.action;
+      this.statusCode = other.statusCode;
+      this.done = other.done;
+      this.returned = other.returned;
     }
 
     /**
@@ -53,23 +62,23 @@ class AppThread {
      */
     @Override
     public void run() {
-      if (statusCode.get() != -1) {
+      synchronized (statusCode) {
         if (statusCode.get() == 0) {
-          Platform.runLater(this);
-          return;
-        }
-        if (statusCode.get() > 299) {
-          LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
-        }
-      }
-      T result = null;
-      try {
-        result = action.perform();
-      } finally {
-        synchronized (done) {
-          returned.set(result);
-          done.set(true);
-          done.notifyAll();
+          Platform.runLater(new Runner(this));
+        } else {
+          if (statusCode.get() != -1 && statusCode.get() > 299) {
+            LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+          }
+          T result = null;
+          try {
+            result = action.perform();
+          } finally {
+            synchronized (done) {
+              returned.set(result);
+              done.set(true);
+              done.notifyAll();
+            }
+          }
         }
       }
     }

@@ -124,8 +124,16 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   private final JSObject node;
   private final Context context;
 
-  ElementServer(JSObject node, final Context context) throws RemoteException {
-    node.getMember("");
+  ElementServer(final JSObject node, final Context context) throws RemoteException {
+    AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            //for whatever reason this prevents segfaults due to bugs in the JRE
+            node.getMember("");
+            return null;
+          }
+        });
     this.node = node;
     this.context = context;
   }
@@ -314,12 +322,18 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public String getAttribute(final String attrName) {
-    Object obj = node.getMember(attrName);
-    if (obj == null) {
-      return "";
-    }
-    String str = obj.toString();
-    return str == null || "undefined".equals(str) ? "" : str;
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<String>() {
+          @Override
+          public String perform() {
+            Object obj = node.getMember(attrName);
+            if (obj == null) {
+              return "";
+            }
+            String str = obj.toString();
+            return str == null || "undefined".equals(str) ? "" : str;
+          }
+        });
   }
 
   /**
