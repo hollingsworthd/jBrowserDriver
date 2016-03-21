@@ -66,7 +66,7 @@ class AppThread {
         if (statusCode.get() == 0) {
           Platform.runLater(new Runner(this));
         } else {
-          if (statusCode.get() != -1 && statusCode.get() > 299) {
+          if (statusCode.get() > 299) {
             LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
           }
           T result = null;
