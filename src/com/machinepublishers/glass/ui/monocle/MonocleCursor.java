@@ -100,33 +100,33 @@ final class MonocleCursor extends Cursor {
     }
 
     private static byte[] getImage(int cursorType) {
-        InputStream in = null;
-        try {
-            in = MonocleCursor.class.getResourceAsStream(
-                    "Cursor"
-                    + cursorResourceName(cursorType)
-                    + "Translucent.raw");
-            byte[] b = new byte[1024];
-            int bytesRead = 0;
-            while (bytesRead < 1024) {
-                int read = in.read(b, bytesRead, 1024 - bytesRead);
-                if (read >= 0) {
-                    bytesRead += read;
-                } else {
-                    throw new IOException("Incomplete cursor resource");
-                }
-            }
-            return b;
-        } catch (IOException e) {
-            e.printStackTrace();
+//        InputStream in = null;
+//        try {
+//            in = MonocleCursor.class.getResourceAsStream(
+//                    "Cursor"
+//                    + cursorResourceName(cursorType)
+//                    + "Translucent.raw");
+//            byte[] b = new byte[1024];
+//            int bytesRead = 0;
+//            while (bytesRead < 1024) {
+//                int read = in.read(b, bytesRead, 1024 - bytesRead);
+//                if (read >= 0) {
+//                    bytesRead += read;
+//                } else {
+//                    throw new IOException("Incomplete cursor resource");
+//                }
+//            }
+//            return b;
+//        } catch (IOException e) {
+//            e.printStackTrace();
             return null;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) { }
-            }
-        }
+//        } finally {
+//            if (in != null) {
+//                try {
+//                    in.close();
+//                } catch (IOException e) { }
+//            }
+//        }
     }
 
 }

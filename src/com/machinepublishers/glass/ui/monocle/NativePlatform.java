@@ -25,8 +25,6 @@
 
 package com.machinepublishers.glass.ui.monocle;
 
-import com.machinepublishers.glass.ui.monocle.AcceleratedScreen;
-import com.machinepublishers.glass.ui.monocle.GLException;
 import com.machinepublishers.glass.ui.monocle.InputDeviceRegistry;
 import com.machinepublishers.glass.ui.monocle.NativeCursor;
 import com.machinepublishers.glass.ui.monocle.NativeScreen;
@@ -39,7 +37,7 @@ public abstract class NativePlatform {
     private final RunnableProcessor runnableProcessor;
     private NativeCursor cursor;
     private NativeScreen screen;
-    protected AcceleratedScreen accScreen;
+//    protected AcceleratedScreen accScreen;
 
     protected NativePlatform() {
         runnableProcessor = new RunnableProcessor();
@@ -120,20 +118,20 @@ public abstract class NativePlatform {
         return screen;
     }
 
-    /**
-     * Gets the AcceleratedScreen for this platform
-     *
-     * @param attributes a sequence of pairs (GLAttibute, value)
-     * @return an AcceleratedScreen for rendering using OpenGL
-     * @throws GLException if no OpenGL surface could be created
-     * @throws UnsatisfiedLinkError if native graphics libraries could not be loaded for this platform.
-     */
-    public synchronized AcceleratedScreen getAcceleratedScreen(int[] attributes)
-            throws GLException, UnsatisfiedLinkError {
-        if (accScreen == null) {
-            accScreen = new AcceleratedScreen(attributes);
-        }
-        return accScreen;
-    }
+//    /**
+//     * Gets the AcceleratedScreen for this platform
+//     *
+//     * @param attributes a sequence of pairs (GLAttibute, value)
+//     * @return an AcceleratedScreen for rendering using OpenGL
+//     * @throws GLException if no OpenGL surface could be created
+//     * @throws UnsatisfiedLinkError if native graphics libraries could not be loaded for this platform.
+//     */
+//    public synchronized AcceleratedScreen getAcceleratedScreen(int[] attributes)
+//            throws GLException, UnsatisfiedLinkError {
+//        if (accScreen == null) {
+//            accScreen = new AcceleratedScreen(attributes);
+//        }
+//        return accScreen;
+//    }
 
 }

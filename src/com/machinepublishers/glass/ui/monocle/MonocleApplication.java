@@ -72,19 +72,19 @@ public final class MonocleApplication extends Application {
 
   MonocleApplication(AtomicReference<String> chosenFile) {
     this.chosenFile = chosenFile;
-    for (InputDevice device : platform.getInputDeviceRegistry().getInputDevices()) {
-      updateDeviceFlags(device, true);
-    }
-    platform.getInputDeviceRegistry().getInputDevices().addListener(
-        (SetChangeListener<InputDevice>) change -> {
-          if (change.wasAdded()) {
-            InputDevice device = change.getElementAdded();
-            updateDeviceFlags(device, true);
-          } else if (change.wasRemoved()) {
-            InputDevice device = change.getElementRemoved();
-            updateDeviceFlags(device, false);
-          }
-        });
+//    for (InputDevice device : platform.getInputDeviceRegistry().getInputDevices()) {
+//      updateDeviceFlags(device, true);
+//    }
+//    platform.getInputDeviceRegistry().getInputDevices().addListener(
+//        (SetChangeListener<InputDevice>) change -> {
+//          if (change.wasAdded()) {
+//            InputDevice device = change.getElementAdded();
+//            updateDeviceFlags(device, true);
+//          } else if (change.wasRemoved()) {
+//            InputDevice device = change.getElementRemoved();
+//            updateDeviceFlags(device, false);
+//          }
+//        });
   }
 
   private void updateDeviceFlags(InputDevice device, boolean added) {

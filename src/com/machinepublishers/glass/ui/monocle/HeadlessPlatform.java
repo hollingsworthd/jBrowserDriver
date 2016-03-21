@@ -27,7 +27,6 @@ package com.machinepublishers.glass.ui.monocle;
 
 import com.machinepublishers.glass.ui.monocle.HeadlessScreen;
 import com.machinepublishers.glass.ui.monocle.InputDeviceRegistry;
-import com.machinepublishers.glass.ui.monocle.LinuxInputDeviceRegistry;
 import com.machinepublishers.glass.ui.monocle.NativeCursor;
 import com.machinepublishers.glass.ui.monocle.NativePlatform;
 import com.machinepublishers.glass.ui.monocle.NativeScreen;
@@ -39,7 +38,8 @@ class HeadlessPlatform extends NativePlatform {
     protected InputDeviceRegistry createInputDeviceRegistry() {
         // use of a LinuxInputDeviceRegistry lets us simulate
         // Linux input devices on any system
-        return new LinuxInputDeviceRegistry(true);
+//        return new LinuxInputDeviceRegistry(true);
+      return null;
     }
 
     @Override
