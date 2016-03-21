@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
@@ -953,6 +954,8 @@ public class Settings implements Serializable {
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
+  //TODO refactor--'chosenFile' doesn't really belong in Settings
+  private final AtomicReference<String> chosenFile = new AtomicReference<String>();
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -1189,5 +1192,9 @@ public class Settings implements Serializable {
 
   boolean hostnameVerification() {
     return hostnameVerification;
+  }
+
+  AtomicReference<String> chosenFile() {
+    return chosenFile;
   }
 }

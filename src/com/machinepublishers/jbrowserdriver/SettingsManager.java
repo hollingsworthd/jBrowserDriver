@@ -66,13 +66,12 @@ class SettingsManager {
           Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
           Field field = platformFactory.getDeclaredField("instance");
           field.setAccessible(true);
-          field.set(platformFactory, Class.forName(
-              "com.sun.glass.ui.monocle.MonoclePlatformFactory").newInstance());
+          field.set(platformFactory, new com.machinepublishers.glass.ui.monocle.MonoclePlatformFactory(settings.chosenFile()));
 
-          platformFactory = Class.forName("com.sun.glass.ui.monocle.NativePlatformFactory");
+          platformFactory = Class.forName("com.machinepublishers.glass.ui.monocle.NativePlatformFactory");
           field = platformFactory.getDeclaredField("platform");
           field.setAccessible(true);
-          Constructor headlessPlatform = Class.forName("com.sun.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
+          Constructor headlessPlatform = Class.forName("com.machinepublishers.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
           headlessPlatform.setAccessible(true);
           field.set(platformFactory, headlessPlatform.newInstance());
         } catch (Throwable t) {

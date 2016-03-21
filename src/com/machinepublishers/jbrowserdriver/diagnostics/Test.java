@@ -149,6 +149,13 @@ public class Test {
       test(driver.getScreenshotAs(OutputType.BYTES).length > 0);
 
       /*
+       * File Input Type
+       */
+      driver.findElement(By.id("upload")).sendKeys("some-file");
+      test("event-test".equals(driver.findElement(By.id("file-input-onchange")).getText()));
+      test(driver.findElement(By.id("upload")).getAttribute("value").endsWith("some-file"));
+
+      /*
        * Javascript alerts
        */
       driver.findElement(By.tagName("button")).click();

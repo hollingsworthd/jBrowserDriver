@@ -1,5 +1,10 @@
 <html>
   <head>
+    <script>
+      function change() {
+        document.getElementById("file-input-onchange").innerHTML = "event-test";
+      }
+    </script>
   </head>
   <body id="testbody">
     <div id="divtext1" name="divs" class="divclass">test1</div>
@@ -14,5 +19,8 @@
       document.cookie ='jsCookieName2=jsCookieValue2';
     </script>
     <iframe src="iframe.htm" name="testiframe"></iframe>
+
+    <span id="file-input-onchange"></span>
+    <input id="upload" type="file" name="files" onChange="change();">
   </body>
 </html>

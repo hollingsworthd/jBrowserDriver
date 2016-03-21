@@ -26,11 +26,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -123,6 +125,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   private final Context context;
 
   ElementServer(JSObject node, final Context context) throws RemoteException {
+    node.getMember("");
     this.node = node;
     this.context = context;
   }
@@ -138,7 +141,6 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             } else {
               node = context.item().frame.get().node;
             }
-            node.getMember("");
             return node;
           }
         });
@@ -264,7 +266,29 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             return null;
           }
         });
-    context.robot.get().keysType(keys);
+    final boolean fileChooser = node instanceof HTMLInputElement && "file".equalsIgnoreCase(getAttribute("type"));
+    final boolean headless = SettingsManager.settings().headless();
+    if (fileChooser) {
+      click();
+    }
+    if (fileChooser && headless) {
+      StringBuilder builder = new StringBuilder();
+      for (CharSequence cur : keys) {
+        builder.append(cur.toString());
+      }
+      String value = builder.toString();
+      value = value == null ? "" : value;
+      AtomicReference<String> chosenFile = SettingsManager.settings().chosenFile();
+      synchronized (chosenFile) {
+        chosenFile.set(value);
+        chosenFile.notifyAll();
+      }
+    } else {
+      context.robot.get().keysType(keys);
+      if (fileChooser) {
+        context.robot.get().keysType(Keys.ENTER);
+      }
+    }
   }
 
   /**
@@ -290,8 +314,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
    */
   @Override
   public String getAttribute(final String attrName) {
-    String val = (String) (node.getMember(attrName));
-    return val == null || val.equals("undefined") ? "" : val;
+    Object obj = node.getMember(attrName);
+    if (obj == null) {
+      return "";
+    }
+    String str = obj.toString();
+    return str == null || "undefined".equals(str) ? "" : str;
   }
 
   /**
