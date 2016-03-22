@@ -285,9 +285,11 @@ class Robot {
 
   private static boolean isChord(CharSequence charSequence) {
     int[] codePoints = charSequence.codePoints().toArray();
-    char[] chars = Character.toChars(codePoints[codePoints.length - 1]);
-    if (chars.length == 1) {
-      return Keys.NULL.equals(Keys.getKeyFromUnicode(chars[0]));
+    if (codePoints.length > 0) {
+      char[] chars = Character.toChars(codePoints[codePoints.length - 1]);
+      if (chars.length == 1) {
+        return Keys.NULL.equals(Keys.getKeyFromUnicode(chars[0]));
+      }
     }
     return false;
   }
