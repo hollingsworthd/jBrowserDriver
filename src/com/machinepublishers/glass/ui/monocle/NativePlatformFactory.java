@@ -96,7 +96,7 @@ public abstract class NativePlatformFactory {
                 if (factoryName.contains(".")) {
                     factoryClassName = factoryName;
                 } else {
-                    factoryClassName = "com.sun.glass.ui.monocle."
+                    factoryClassName = "com.machinepublishers.glass.ui.monocle."
                             + factoryName + "PlatformFactory";
                 }
                 if (MonocleSettings.settings.tracePlatformConfig) {
