@@ -70,6 +70,10 @@ public abstract class NativePlatformFactory {
     private static final int majorVersion = 1;
     private static final int minorVersion = 0;
 
+    public static synchronized void setPlatform(NativePlatform platform){
+      NativePlatformFactory.platform = platform;
+    }
+    
     /**
      * Obtains a NativePlatform that matches the platform on which we are running.
      *

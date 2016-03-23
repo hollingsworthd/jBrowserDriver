@@ -32,7 +32,7 @@ import com.machinepublishers.glass.ui.monocle.NativePlatform;
 import com.machinepublishers.glass.ui.monocle.NativeScreen;
 import com.machinepublishers.glass.ui.monocle.NullCursor;
 
-class HeadlessPlatform extends NativePlatform {
+public class HeadlessPlatform extends NativePlatform {
 
     @Override
     protected InputDeviceRegistry createInputDeviceRegistry() {

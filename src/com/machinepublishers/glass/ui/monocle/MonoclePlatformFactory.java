@@ -25,8 +25,6 @@
 
 package com.machinepublishers.glass.ui.monocle;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.Menu;
 import com.sun.glass.ui.MenuBar;
@@ -41,15 +39,9 @@ import com.sun.glass.ui.delegate.MenuDelegate;
 import com.sun.glass.ui.delegate.MenuItemDelegate;
 
 public class MonoclePlatformFactory extends PlatformFactory {
-    private final AtomicReference<String> chosenFile;
-    
-    public MonoclePlatformFactory(AtomicReference<String> chosenFile){
-      this.chosenFile = chosenFile;  
-    }
-  
     @Override
     public Application createApplication() {
-        return new MonocleApplication(chosenFile);
+        return new MonocleApplication();
     }
 
     @Override

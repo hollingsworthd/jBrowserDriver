@@ -19,7 +19,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -66,14 +65,9 @@ class SettingsManager {
           Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
           Field field = platformFactory.getDeclaredField("instance");
           field.setAccessible(true);
-          field.set(platformFactory, new com.machinepublishers.glass.ui.monocle.MonoclePlatformFactory(settings.chosenFile()));
-
-          platformFactory = Class.forName("com.machinepublishers.glass.ui.monocle.NativePlatformFactory");
-          field = platformFactory.getDeclaredField("platform");
-          field.setAccessible(true);
-          Constructor headlessPlatform = Class.forName("com.machinepublishers.glass.ui.monocle.HeadlessPlatform").getDeclaredConstructor();
-          headlessPlatform.setAccessible(true);
-          field.set(platformFactory, headlessPlatform.newInstance());
+          field.set(platformFactory, new com.machinepublishers.glass.ui.monocle.MonoclePlatformFactory());
+          com.machinepublishers.glass.ui.monocle.NativePlatformFactory.setPlatform(
+              new com.machinepublishers.glass.ui.monocle.HeadlessPlatform());
         } catch (Throwable t) {
           Logs.fatal(t);
         }

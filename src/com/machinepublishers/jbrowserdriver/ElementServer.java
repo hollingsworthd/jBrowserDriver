@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -275,27 +274,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
           }
         });
     final boolean fileChooser = node instanceof HTMLInputElement && "file".equalsIgnoreCase(getAttribute("type"));
-    final boolean headless = SettingsManager.settings().headless();
     if (fileChooser) {
       click();
     }
-    if (fileChooser && headless) {
-      StringBuilder builder = new StringBuilder();
-      for (CharSequence cur : keys) {
-        builder.append(cur.toString());
-      }
-      String value = builder.toString();
-      value = value == null ? "" : value;
-      AtomicReference<String> chosenFile = SettingsManager.settings().chosenFile();
-      synchronized (chosenFile) {
-        chosenFile.set(value);
-        chosenFile.notifyAll();
-      }
-    } else {
-      context.robot.get().keysType(keys);
-      if (fileChooser) {
-        context.robot.get().keysType(Keys.ENTER);
-      }
+    context.robot.get().keysType(keys);
+    if (fileChooser) {
+      context.robot.get().keysType(Keys.ENTER);
     }
   }
 

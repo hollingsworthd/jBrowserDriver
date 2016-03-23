@@ -31,7 +31,6 @@ import java.nio.IntBuffer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.CommonDialogs.ExtensionFilter;
@@ -45,7 +44,7 @@ import com.sun.glass.ui.Timer;
 import com.sun.glass.ui.View;
 import com.sun.glass.ui.Window;
 
-import javafx.collections.SetChangeListener;
+import javafx.scene.control.TextInputDialog;
 
 public final class MonocleApplication extends Application {
 
@@ -68,23 +67,21 @@ public final class MonocleApplication extends Application {
   private int[] deviceFlags = new int[DEVICE_MAX + 1];
   private Thread shutdownHookThread;
   private Runnable renderEndNotifier = () -> platform.getScreen().swapBuffers();
-  private final AtomicReference<String> chosenFile;
 
-  MonocleApplication(AtomicReference<String> chosenFile) {
-    this.chosenFile = chosenFile;
-//    for (InputDevice device : platform.getInputDeviceRegistry().getInputDevices()) {
-//      updateDeviceFlags(device, true);
-//    }
-//    platform.getInputDeviceRegistry().getInputDevices().addListener(
-//        (SetChangeListener<InputDevice>) change -> {
-//          if (change.wasAdded()) {
-//            InputDevice device = change.getElementAdded();
-//            updateDeviceFlags(device, true);
-//          } else if (change.wasRemoved()) {
-//            InputDevice device = change.getElementRemoved();
-//            updateDeviceFlags(device, false);
-//          }
-//        });
+  MonocleApplication() {
+    //    for (InputDevice device : platform.getInputDeviceRegistry().getInputDevices()) {
+    //      updateDeviceFlags(device, true);
+    //    }
+    //    platform.getInputDeviceRegistry().getInputDevices().addListener(
+    //        (SetChangeListener<InputDevice>) change -> {
+    //          if (change.wasAdded()) {
+    //            InputDevice device = change.getElementAdded();
+    //            updateDeviceFlags(device, true);
+    //          } else if (change.wasRemoved()) {
+    //            InputDevice device = change.getElementRemoved();
+    //            updateDeviceFlags(device, false);
+    //          }
+    //        });
   }
 
   private void updateDeviceFlags(InputDevice device, boolean added) {
@@ -293,23 +290,20 @@ public final class MonocleApplication extends Application {
       int type, boolean multipleMode,
       ExtensionFilter[] extensionFilters,
       int defaultFilterIndex) {
-    synchronized (chosenFile) {
-      while (chosenFile.get() == null) {
-        try {
-          chosenFile.wait();
-        } catch (InterruptedException e) {}
-      }
-      String filePaths = chosenFile.getAndSet(null);
-      if (filePaths == null) {
-        return null;
-      }
+    TextInputDialog dialog = new TextInputDialog();
+    dialog.showAndWait();
+    File[] files;
+    String filePaths = dialog.getEditor().getText();
+    if (filePaths != null && !filePaths.isEmpty()) {
       String[] filePathParts = filePaths.split(":");
-      File[] files = new File[filePathParts.length];
+      files = new File[filePathParts.length];
       for (int i = 0; i < filePathParts.length; i++) {
         files[i] = new File(filePathParts[i]);
       }
-      return new FileChooserResult(Arrays.asList(files), null);
+    } else {
+      files = new File[0];
     }
+    return new FileChooserResult(Arrays.asList(files), null);
   }
 
   @Override
