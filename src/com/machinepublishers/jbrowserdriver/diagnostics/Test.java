@@ -110,6 +110,15 @@ public class Test {
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
 
       /*
+       * Typing text
+       */
+      driver.findElement(By.id("text-input")).sendKeys("testing");
+      driver.findElement(By.id("text-input")).sendKeys("");
+      test(driver.findElement(By.id("text-input")).getAttribute("value").equals("testing"));
+      driver.findElement(By.id("text-input")).sendKeys(JBrowserDriver.KEYBOARD_DELETE);
+      test("".equals(driver.findElement(By.id("text-input")).getAttribute("value")));
+
+      /*
        * Execute javascript
        */
       test(((WebElement) driver.executeScript("return arguments[0];",

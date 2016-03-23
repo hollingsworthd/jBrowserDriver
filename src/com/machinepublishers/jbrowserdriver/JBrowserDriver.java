@@ -50,7 +50,6 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -89,7 +88,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   /**
    * Use this string on sendKeys functions to delete text.
    */
-  public static final String KEYBOARD_DELETE;
+  public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
   private static final Set<Integer> portsAvailable = new LinkedHashSet<Integer>();
   private static final Set<Integer> portsUsed = new LinkedHashSet<Integer>();
   private static final List<String> args;
@@ -169,20 +168,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       Logs.fatal(t);
     }
     args = Collections.unmodifiableList(argsTmp);
-  }
-
-  static {
-    final int CHARS_TO_DELETE = 60;
-    StringBuilder builder = new StringBuilder();
-    String key = Keys.BACK_SPACE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
-    }
-    key = Keys.DELETE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
-    }
-    KEYBOARD_DELETE = builder.toString();
   }
 
   /**

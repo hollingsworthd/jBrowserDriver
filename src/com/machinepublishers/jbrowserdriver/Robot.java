@@ -420,7 +420,7 @@ class Robot {
         keysPress(chars, false, true);
         keysRelease(new StringBuilder(chars).reverse(), false, true);
       } else {
-        final boolean delay = !chars.toString().equals(JBrowserDriver.KEYBOARD_DELETE);
+        final boolean delay = !chars.toString().equals(Util.KEYBOARD_DELETE);
         int[] ints = chars.codePoints().toArray();
         for (int i = 0; i < ints.length; i++) {
           final int codePoint = ints[i];
