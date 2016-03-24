@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,33 +36,29 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
-class StreamInjectors {
-  public static interface Injector {
-    byte[] inject(StreamConnection connection, byte[] inflatedContent, String originalUrl);
-  }
-
+class StreamInterceptors {
   private static final Object lock = new Object();
-  private static final List<Injector> injectors = new ArrayList<Injector>();
+  private static final List<ResponseInterceptor> responseInterceptors = new ArrayList<ResponseInterceptor>();
 
-  static void add(Injector injector) {
+  static void add(ResponseInterceptor responseInterceptor) {
     synchronized (lock) {
-      injectors.add(injector);
+      responseInterceptors.add(responseInterceptor);
     }
   }
 
-  static void remove(Injector injector) {
+  static void remove(ResponseInterceptor responseInterceptor) {
     synchronized (lock) {
-      injectors.remove(injector);
+      responseInterceptors.remove(responseInterceptor);
     }
   }
 
   static void removeAll() {
     synchronized (lock) {
-      injectors.clear();
+      responseInterceptors.clear();
     }
   }
 
-  static InputStream injectedStream(StreamConnection conn, InputStream inputStream,
+  static InputStream interceptedResponse(StreamConnection conn, InputStream inputStream,
       String originalUrl) throws IOException {
     byte[] bytes = new byte[0];
     try {
@@ -74,9 +71,9 @@ class StreamInjectors {
       }
       conn.removeContentEncoding();
       synchronized (lock) {
-        for (Injector injector : injectors) {
+        for (ResponseInterceptor responseInterceptor : responseInterceptors) {
           conn.setContentLength(bytes.length);
-          byte[] newContent = injector.inject(conn, bytes, originalUrl);
+          byte[] newContent = responseInterceptor.intercept(conn, bytes, originalUrl);
           if (newContent != null) {
             bytes = newContent;
           }
@@ -91,20 +88,20 @@ class StreamInjectors {
     return new ByteArrayInputStream(bytes);
   }
 
-  static {
+  static void init() {
     final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Pattern body = Pattern.compile("<body\\b[^>]*>", Pattern.CASE_INSENSITIVE);
     final Set<Integer> redirectCodes = Collections.unmodifiableSet(
         new HashSet<Integer>(Arrays.asList(new Integer[] { 301, 302, 303, 307, 308 })));
-    StreamInjectors.add(new Injector() {
+    StreamInterceptors.add(new ResponseInterceptor() {
       @Override
-      public byte[] inject(StreamConnection connection,
+      public byte[] intercept(HttpURLConnection connection,
           byte[] inflatedContent, String originalUrl) {
         final Settings settings = SettingsManager.settings();
         try {
           if (settings.saveMedia()
-              && connection.isMedia()) {
+              && ((StreamConnection) connection).isMedia()) {
             String filename = Long.toString(System.nanoTime());
             File contentFile = new File(StreamConnection.mediaDir(),
                 new StringBuilder().append(filename).append(".content").toString());
@@ -126,23 +123,23 @@ class StreamInjectors {
           }
         } catch (Throwable t) {}
         try {
-          if (settings.quickRender() && connection.isMedia()) {
+          if (settings.quickRender() && ((StreamConnection) connection).isMedia()) {
             LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
             StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
             return new byte[0];
           } else if (!redirectCodes.contains(connection.getResponseCode())
               && (connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
               && StatusMonitor.instance().isPrimaryDocument(connection.getURL().toExternalForm())) {
-            String injected = null;
+            String intercepted = null;
             String charset = Util.charset(connection);
             String content = new String(inflatedContent, charset);
             Matcher matcher = head.matcher(content);
             if (matcher.find()) {
-              injected = matcher.replaceFirst(matcher.group(0) + settings.script());
+              intercepted = matcher.replaceFirst(matcher.group(0) + settings.script());
             } else {
               matcher = html.matcher(content);
               if (matcher.find()) {
-                injected = matcher.replaceFirst(new StringBuilder()
+                intercepted = matcher.replaceFirst(new StringBuilder()
                     .append(matcher.group(0))
                     .append("<head>")
                     .append(settings.script())
@@ -150,14 +147,14 @@ class StreamInjectors {
               } else {
                 matcher = body.matcher(content);
                 if (matcher.find()) {
-                  injected = (new StringBuilder().append("<html><head>").append(settings.script())
+                  intercepted = (new StringBuilder().append("<html><head>").append(settings.script())
                       .append("</head>").append(content).append("</html>").toString());
                 } else {
-                  injected = content;
+                  intercepted = content;
                 }
               }
             }
-            return injected == null ? null : injected.getBytes(charset);
+            return intercepted == null ? null : intercepted.getBytes(charset);
           }
         } catch (Throwable t) {}
         return null;

@@ -19,13 +19,20 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
@@ -125,7 +132,8 @@ public class Settings implements Serializable {
     JAVASCRIPT("jbd.javascript"),
     SOCKET_TIMEOUT_MS("jbd.sockettimeout"),
     CONNECT_TIMEOUT_MS("jbd.connecttimeout"),
-    CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout");
+    CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout"),
+    RESPONSE_INTERCEPTORS("jbd.responseinterceptors");
 
     private final String propertyName;
 
@@ -173,6 +181,7 @@ public class Settings implements Serializable {
     private int socketTimeout = -1;
     private int connectTimeout = -1;
     private int connectionReqTimeout = -1;
+    private ResponseInterceptor[] responseInterceptors;
 
     public Builder() {
       for (int i = 10000; i < 10008; i++) {
@@ -710,6 +719,25 @@ public class Settings implements Serializable {
 
     /**
      * <p><ul>
+     * <li>Java system property <code>jbd.responseinterceptors</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.responseinterceptors</code> alternately configures this setting.</li>
+     * <li>Note that the value must be a base-64 encoded string of a serialized ResponseInterceptor array.
+     * </ul><p>
+     * 
+     * @param responseInterceptors
+     *          Interceptors to modify the response before it's passed to the browser. These ResponseInterceptors
+     *          are used in a child RMI Java process, so memory cannot be directly shared between the interceptors
+     *          and the rest of your code (it will be serialized and copied).
+     * 
+     * @return this Builder
+     */
+    public Builder responseInterceptors(ResponseInterceptor[] responseInterceptors) {
+      this.responseInterceptors = Arrays.copyOf(responseInterceptors, responseInterceptors.length);
+      return this;
+    }
+
+    /**
+     * <p><ul>
      * <li>Java system property <code>jbd.traceconsole</code> overrides this setting.</li>
      * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting.</li>
      * </ul><p>
@@ -818,6 +846,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
+      set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -893,6 +922,18 @@ public class Settings implements Serializable {
     }
   }
 
+  private static void set(DesiredCapabilities capabilities, PropertyName name, ResponseInterceptor[] val) {
+    if (val != null && val.length > 0) {
+      ByteArrayOutputStream streamOut = new ByteArrayOutputStream();
+      try (ObjectOutputStream objectOut = new ObjectOutputStream(streamOut)) {
+        objectOut.writeObject(val);
+      } catch (Throwable t) {
+        Logs.fatal(t);
+      }
+      capabilities.setCapability(name.propertyName, Base64.getEncoder().encodeToString(streamOut.toByteArray()));
+    }
+  }
+
   private static int parse(Map capabilities, PropertyName name, int fallback) {
     if (capabilities.get(name.propertyName) != null) {
       return Integer.parseInt(capabilities.get(name.propertyName).toString());
@@ -917,6 +958,19 @@ public class Settings implements Serializable {
   private static String parse(Map capabilities, PropertyName name, String fallback) {
     if (capabilities.get(name.propertyName) != null) {
       return capabilities.get(name.propertyName).toString();
+    }
+    return fallback;
+  }
+
+  private static ResponseInterceptor[] parse(Map capabilities, PropertyName name, ResponseInterceptor[] fallback) {
+    if (capabilities.get(name.propertyName) != null) {
+      BufferedInputStream bufferIn = new BufferedInputStream(new ByteArrayInputStream(
+          Base64.getDecoder().decode(capabilities.get(name.propertyName).toString())));
+      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
+        return (ResponseInterceptor[]) objectIn.readObject();
+      } catch (Throwable t) {
+        Logs.fatal(t);
+      }
     }
     return fallback;
   }
@@ -953,6 +1007,7 @@ public class Settings implements Serializable {
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
+  private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -981,6 +1036,7 @@ public class Settings implements Serializable {
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
+    this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
@@ -1189,5 +1245,9 @@ public class Settings implements Serializable {
 
   boolean hostnameVerification() {
     return hostnameVerification;
+  }
+
+  ResponseInterceptor[] responseInterceptors() {
+    return responseInterceptors;
   }
 }

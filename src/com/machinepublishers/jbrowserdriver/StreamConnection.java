@@ -398,7 +398,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               }
             }
             if (!skip.get()) {
-              return StreamInjectors.injectedStream(this, entityStream, urlString);
+              return StreamInterceptors.interceptedResponse(this, entityStream, urlString);
             }
           }
         } finally {
