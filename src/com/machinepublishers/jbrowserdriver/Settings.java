@@ -725,13 +725,11 @@ public class Settings implements Serializable {
      * </ul><p>
      * 
      * @param responseInterceptors
-     *          Interceptors to modify the response before it's passed to the browser. These ResponseInterceptors
-     *          are used in a child RMI Java process, so memory cannot be directly shared between the interceptors
-     *          and the rest of your code (it will be serialized and copied).
+     *          Interceptors to modify the response before it's passed to the browser.
      * 
      * @return this Builder
      */
-    public Builder responseInterceptors(ResponseInterceptor[] responseInterceptors) {
+    public Builder responseInterceptors(ResponseInterceptor... responseInterceptors) {
       this.responseInterceptors = Arrays.copyOf(responseInterceptors, responseInterceptors.length);
       return this;
     }

@@ -19,6 +19,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-public interface ResponseInterceptor {
-  Response intercept(Response response);
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+interface InterceptRemote extends Remote {
+  void intercept() throws RemoteException;
 }

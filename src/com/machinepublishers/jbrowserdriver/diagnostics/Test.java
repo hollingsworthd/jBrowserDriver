@@ -21,7 +21,6 @@ package com.machinepublishers.jbrowserdriver.diagnostics;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,7 +37,6 @@ import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
-import com.machinepublishers.jbrowserdriver.ResponseInterceptor;
 import com.machinepublishers.jbrowserdriver.Settings;
 
 public class Test {
@@ -57,13 +55,6 @@ public class Test {
 
   public static List<String> run() {
     return new Test().errors;
-  }
-
-  private static class TestResponseInterceptor implements ResponseInterceptor {
-    @Override
-    public byte[] intercept(HttpURLConnection connection, byte[] inflatedContent, String originalUrl) {
-      return new byte[0];
-    }
   }
 
   private Test() {
@@ -277,18 +268,6 @@ public class Test {
       test(driver.manage().window().getPosition().getY() == 0);
       test(driver.manage().window().getSize().getWidth() == 1024);
       test(driver.manage().window().getSize().getHeight() == 768);
-
-      /*
-       * Response interceptor
-       */
-      driver.reset(Settings.builder()
-          .portsMax(TEST_PORT_RMI, 1)
-          .traceConsole(true)
-          .responseInterceptors(new ResponseInterceptor[] { new TestResponseInterceptor() })
-          .build());
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
-      test("<html><head></head><body></body></html>".equals(driver.getPageSource()));
-
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {

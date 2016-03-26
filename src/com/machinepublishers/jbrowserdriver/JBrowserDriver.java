@@ -89,6 +89,16 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * Use this string on sendKeys functions to delete text.
    */
   public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
+  private static final Intercept intercept;
+  static {
+    Intercept interceptTmp = null;
+    try {
+      interceptTmp = new Intercept();
+    } catch (Throwable t) {
+      Logs.fatal(t);
+    }
+    intercept = interceptTmp;
+  }
   private static final Set<Integer> portsAvailable = new LinkedHashSet<Integer>();
   private static final Set<Integer> portsUsed = new LinkedHashSet<Integer>();
   private static final List<String> args;
@@ -295,6 +305,16 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           new ProcessExecutor()
               .environment(System.getenv())
               .addListener(new ProcessListener() {
+                @Override
+                public void afterStop(Process process) {
+                  intercept.deallocate();
+                }
+
+                @Override
+                public void beforeStart(ProcessExecutor executor) {
+                  intercept.allocate();
+                }
+
                 @Override
                 public void afterStart(Process proc, ProcessExecutor executor) {
                   process.set(proc);

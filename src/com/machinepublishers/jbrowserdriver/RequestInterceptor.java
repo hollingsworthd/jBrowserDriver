@@ -19,6 +19,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-public interface ResponseInterceptor {
-  Response intercept(Response response);
+public interface RequestInterceptor {
+  Request intercept(Request request);
 }

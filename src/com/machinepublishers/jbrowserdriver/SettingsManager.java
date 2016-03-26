@@ -43,12 +43,6 @@ class SettingsManager {
     if (settings != null) {
       LogsServer.updateSettings();
       StreamConnection.updateSettings();
-      final ResponseInterceptor[] responseInterceptors = settings.responseInterceptors();
-      StreamInterceptors.removeAll();
-      StreamInterceptors.init();
-      for (int i = 0; responseInterceptors != null && i < responseInterceptors.length; i++) {
-        StreamInterceptors.add(responseInterceptors[i]);
-      }
 
       System.setProperty("quantum.multithreaded", "false");
       System.setProperty("prism.vsync", "false");

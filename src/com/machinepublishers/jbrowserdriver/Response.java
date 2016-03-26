@@ -19,6 +19,8 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-public interface ResponseInterceptor {
-  Response intercept(Response response);
+import java.io.Serializable;
+
+public class Response implements Serializable {
+
 }
