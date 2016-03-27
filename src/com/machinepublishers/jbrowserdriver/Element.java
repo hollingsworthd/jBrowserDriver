@@ -40,6 +40,8 @@ import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.internal.WrapsDriver;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable,
     WrapsDriver {
@@ -528,6 +530,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeAsyncScript(final String script, final Object... args) {
     try {
       return constructObject(remote.executeAsyncScript(script, args), driver, logs);
+    } catch (UncheckedExecutionException e) {
+      throw (RuntimeException) e.getCause();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -541,6 +545,8 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeScript(final String script, final Object... args) {
     try {
       return constructObject(remote.executeScript(script, args), driver, logs);
+    } catch (UncheckedExecutionException e) {
+      throw (RuntimeException) e.getCause();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

@@ -47,6 +47,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
@@ -820,29 +821,35 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
             if (args != null) {
               argList.addAll(Arrays.asList(args));
             }
-            if (callback) {
-              argList.add(null);
-              node.eval(new StringBuilder().append("(function(){")
-                  .append("this.").append(jsNames.callback).append(" = function(){")
-                  .append(jsNames.callbackVal).append(" = arguments && arguments.length > 0? arguments[0] : null;")
-                  .append("}")
-                  .append("}).apply(this);")
-                  .append("this.").append(jsNames.exec).append(" = function(){")
-                  .append("arguments[arguments.length-1] = this.").append(jsNames.callback).append(";")
-                  .append("return (function(){").append(script).append("}).apply(this, arguments);")
-                  .append("};").toString());
-            } else {
-              node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = function(){")
-                  .append("return (function(){").append(script).append("}).apply(this, arguments);")
-                  .append("};").toString());
-            }
-            context.item().httpListener.get().resetStatusCode();
             try {
-              return node.call(jsNames.exec, argList.toArray(new Object[0]));
-            } finally {
-              node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
               if (callback) {
-                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
+                argList.add(null);
+                node.eval(new StringBuilder().append("(function(){")
+                    .append("this.").append(jsNames.callback).append(" = function(){")
+                    .append(jsNames.callbackVal).append(" = arguments && arguments.length > 0? arguments[0] : null;")
+                    .append("}")
+                    .append("}).apply(this);")
+                    .append("this.").append(jsNames.exec).append(" = function(){")
+                    .append("arguments[arguments.length-1] = this.").append(jsNames.callback).append(";")
+                    .append("return (function(){").append(script).append("}).apply(this, arguments);")
+                    .append("};").toString());
+              } else {
+                node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = function(){")
+                    .append("return (function(){").append(script).append("}).apply(this, arguments);")
+                    .append("};").toString());
+              }
+              context.item().httpListener.get().resetStatusCode();
+              return node.call(jsNames.exec, argList.toArray(new Object[0]));
+            } catch (Throwable t) {
+              return t;
+            } finally {
+              try {
+                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
+                if (callback) {
+                  node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
+                }
+              } catch (Throwable t) {
+                LogsServer.instance().exception(t);
               }
             }
           }
@@ -850,6 +857,12 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
   }
 
   private Object parseScriptResult(Object obj) {
+    if (obj instanceof Throwable) {
+      if (obj instanceof RuntimeException) {
+        throw new UncheckedExecutionException((RuntimeException) obj);
+      }
+      throw new UncheckedExecutionException(new RuntimeException((Throwable) obj));
+    }
     if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
       return null;
     }

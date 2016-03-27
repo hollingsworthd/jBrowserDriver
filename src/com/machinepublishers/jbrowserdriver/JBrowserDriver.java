@@ -67,6 +67,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.process.PidProcess;
 import org.zeroturnaround.process.Processes;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
 import io.github.lukehutch.fastclasspathscanner.scanner.ClasspathFinder;
@@ -741,6 +742,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public Object executeAsyncScript(String script, Object... args) {
     try {
       return Element.constructObject(remote.executeAsyncScript(script, scriptParams(args)), this, logs);
+    } catch (UncheckedExecutionException e) {
+      throw (RuntimeException) e.getCause();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;
@@ -754,6 +757,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public Object executeScript(String script, Object... args) {
     try {
       return Element.constructObject(remote.executeScript(script, scriptParams(args)), this, logs);
+    } catch (UncheckedExecutionException e) {
+      throw (RuntimeException) e.getCause();
     } catch (RemoteException e) {
       logs.exception(e);
       return null;

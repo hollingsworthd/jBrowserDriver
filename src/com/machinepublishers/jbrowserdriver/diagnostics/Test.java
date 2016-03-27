@@ -129,6 +129,13 @@ public class Test {
           .getAttribute("innerText").equals("test1"));
       test((driver.executeAsyncScript("arguments[1](arguments[0].innerText);",
           driver.findElement(By.id("divtext1")))).equals("test1"));
+      Throwable error = null;
+      try {
+        driver.executeScript("invalid.execute()");
+      } catch (Throwable t) {
+        error = t;
+      }
+      test(error != null);
 
       /*
        * DOM element properties
