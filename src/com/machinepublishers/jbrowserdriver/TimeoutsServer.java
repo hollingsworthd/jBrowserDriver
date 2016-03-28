@@ -20,11 +20,10 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-class TimeoutsServer extends UnicastRemoteObject implements TimeoutsRemote,
+class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
     org.openqa.selenium.WebDriver.Timeouts {
   private AtomicLong implicit = new AtomicLong();
   private AtomicLong load = new AtomicLong();

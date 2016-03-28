@@ -22,7 +22,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -31,7 +30,7 @@ import java.util.logging.Level;
 
 import org.openqa.selenium.logging.LogEntries;
 
-class LogsServer extends UnicastRemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
+class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
   private final LinkedList<Entry> entries = new LinkedList<Entry>();
   private static final LogsServer instance;
   static {

@@ -20,49 +20,11 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.List;
+import java.rmi.server.UnicastRemoteObject;
 
-class ImeHandlerServer extends RemoteObject implements ImeHandlerRemote,
-    org.openqa.selenium.WebDriver.ImeHandler {
+class RemoteObject extends UnicastRemoteObject {
 
-  protected ImeHandlerServer() throws RemoteException {
-    super();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void activateEngine(String name) {}
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void deactivate() {}
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String getActiveEngine() {
-    return "default";
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public List<String> getAvailableEngines() {
-    return Arrays.asList(new String[] { "default" });
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isActivated() {
-    return true;
+  protected RemoteObject() throws RemoteException {
+    super(JBrowserDriverServer.rmiPort());
   }
 }

@@ -19,7 +19,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-class Intercept /* TODO extends UnicastRemoteObject implements InterceptRemote */ {
+class Intercept /* TODO extends RemoteObject implements InterceptRemote */ {
   //TODO
   //  private final Object lock = new Object();
   //  private final List<RequestInterceptor> requestInterceptors = new ArrayList<RequestInterceptor>();

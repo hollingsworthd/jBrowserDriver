@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,7 +54,7 @@ import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
 import netscape.javascript.JSObject;
 
-class ElementServer extends UnicastRemoteObject implements ElementRemote, WebElement,
+class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
 

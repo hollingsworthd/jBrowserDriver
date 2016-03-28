@@ -20,12 +20,11 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.Keys;
 
-class KeyboardServer extends UnicastRemoteObject implements KeyboardRemote,
+class KeyboardServer extends RemoteObject implements KeyboardRemote,
     org.openqa.selenium.interactions.Keyboard {
 
   private final AtomicReference<Robot> robot;

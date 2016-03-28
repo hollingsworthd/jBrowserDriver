@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +31,7 @@ import javafx.scene.web.PromptData;
 import javafx.scene.web.WebEvent;
 import javafx.util.Callback;
 
-class AlertServer extends UnicastRemoteObject implements AlertRemote,
+class AlertServer extends RemoteObject implements AlertRemote,
     org.openqa.selenium.Alert {
 
   private static final String NO_TEXT_VALUE = "no-text-value";

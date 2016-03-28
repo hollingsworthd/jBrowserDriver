@@ -20,11 +20,10 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
 import org.openqa.selenium.interactions.internal.Coordinates;
 
-class CoordinatesServer extends UnicastRemoteObject
+class CoordinatesServer extends RemoteObject
     implements CoordinatesRemote, org.openqa.selenium.interactions.internal.Coordinates {
   final Coordinates coordinates;
 

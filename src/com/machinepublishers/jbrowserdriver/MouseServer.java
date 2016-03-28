@@ -20,14 +20,13 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.interactions.internal.Coordinates;
 
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
-class MouseServer extends UnicastRemoteObject implements MouseRemote,
+class MouseServer extends RemoteObject implements MouseRemote,
     org.openqa.selenium.interactions.Mouse {
   private final AtomicReference<Robot> robot;
 

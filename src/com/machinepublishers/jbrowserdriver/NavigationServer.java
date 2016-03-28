@@ -21,14 +21,13 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
-class NavigationServer extends UnicastRemoteObject implements NavigationRemote,
+class NavigationServer extends RemoteObject implements NavigationRemote,
     org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriverServer> driver;
   private final Context context;

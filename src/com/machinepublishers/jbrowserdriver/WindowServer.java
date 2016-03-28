@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,7 +28,7 @@ import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 import javafx.stage.Stage;
 
-class WindowServer extends UnicastRemoteObject implements WindowRemote,
+class WindowServer extends RemoteObject implements WindowRemote,
     org.openqa.selenium.WebDriver.Window {
   private final AtomicReference<Stage> stage;
   private final AtomicInteger statusCode;

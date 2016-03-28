@@ -20,13 +20,12 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openqa.selenium.WebElement;
 
-class TargetLocatorServer extends UnicastRemoteObject implements TargetLocatorRemote,
+class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
     org.openqa.selenium.WebDriver.TargetLocator {
 
   private final JBrowserDriverServer driver;

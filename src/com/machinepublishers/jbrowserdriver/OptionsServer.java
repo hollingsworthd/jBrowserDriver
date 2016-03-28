@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +31,7 @@ import org.openqa.selenium.Cookie;
 
 import com.sun.webkit.network.CookieManager;
 
-class OptionsServer extends UnicastRemoteObject implements OptionsRemote,
+class OptionsServer extends RemoteObject implements OptionsRemote,
     org.openqa.selenium.WebDriver.Options {
   private static final CookieStore cookieStore = (CookieStore) CookieManager.getDefault();
   private final Context context;

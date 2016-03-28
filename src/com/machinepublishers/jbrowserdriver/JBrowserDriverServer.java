@@ -25,7 +25,6 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,14 +55,14 @@ import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
 import com.sun.webkit.network.CookieManager;
 
-class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriverRemote,
+class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
 
   static final int PAINT_HZ = 2;
   static final int PAINT_MS = 1000 / PAINT_HZ;
-
+  private static final AtomicInteger rmiPort = new AtomicInteger();
   private static Registry registry;
 
   /*
@@ -92,10 +91,10 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
       }
     }
 
-    final int port = Integer.parseInt(args[0]);
+    rmiPort.set(Integer.parseInt(args[0]));
     Registry registryTmp = null;
     try {
-      registryTmp = LocateRegistry.createRegistry(port);
+      registryTmp = LocateRegistry.createRegistry(rmiPort.get());
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
     }
@@ -107,6 +106,10 @@ class JBrowserDriverServer extends UnicastRemoteObject implements JBrowserDriver
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
     }
+  }
+
+  static int rmiPort() {
+    return rmiPort.get();
   }
 
   final AtomicReference<Context> context = new AtomicReference<Context>();
