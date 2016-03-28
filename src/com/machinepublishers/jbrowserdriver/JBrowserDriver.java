@@ -110,13 +110,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           "Warning: Single GUI Threadiong is enabled, FPS should be slower",
           "Setting PULSE_DURATION to 2 hz"
       })));
+  private static final AtomicLong sessionIdCounter = new AtomicLong();
   private final Object key = new Object();
   private final JBrowserDriverRemote remote;
   private final Logs logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
   private final AtomicInteger port = new AtomicInteger();
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
-  private final AtomicLong sessionIdCounter = new AtomicLong();
   private final SessionId sessionId;
 
   static {
