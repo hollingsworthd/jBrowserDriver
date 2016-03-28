@@ -24,6 +24,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -875,15 +876,37 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       }
     }
     if (obj instanceof JSObject) {
-      List<Object> result = new ArrayList<Object>();
+      List<Object> list = new ArrayList<Object>();
+      boolean isList = false;
       for (int i = 0;; i++) {
         Object cur = ((JSObject) obj).getSlot(i);
         if (cur instanceof String && "undefined".equals(cur.toString())) {
           break;
         }
-        result.add(parseScriptResult(cur));
+        isList = true;
+        list.add(parseScriptResult(cur));
       }
-      return result;
+      if (isList) {
+        return list;
+      }
+      if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
+        return obj.toString();
+      }
+      List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
+          .append("var list = [];")
+          .append("for(var propertyName in arguments[0]){")
+          .append("list.push(propertyName);")
+          .append("var val = arguments[0][propertyName];")
+          .append("list.push(val === undefined? null : val);")
+          .append("}")
+          .append("return list.length > 0? list : undefined;").toString(),
+          obj);
+      //TODO ES6 will support Symbol keys
+      Map map = new LinkedHashMap();
+      for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
+        map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
+      }
+      return map.isEmpty() ? null : map;
     }
     if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
       return obj;

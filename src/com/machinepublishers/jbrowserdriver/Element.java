@@ -21,7 +21,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -84,13 +86,16 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     if (obj instanceof List<?>) {
       List retList = new ArrayList();
       for (Object item : (List) obj) {
-        if (item instanceof ElementRemote) {
-          retList.add(new Element((ElementRemote) item, driver, logs));
-        } else {
-          retList.add(item);
-        }
+        retList.add(constructObject(item, driver, logs));
       }
       return retList;
+    }
+    if (obj instanceof Map<?, ?>) {
+      Map retMap = new LinkedHashMap();
+      for (Object key : ((Map) obj).keySet()) {
+        retMap.put(key, constructObject(((Map) obj).get(key), driver, logs));
+      }
+      return retMap;
     }
     return obj;
   }

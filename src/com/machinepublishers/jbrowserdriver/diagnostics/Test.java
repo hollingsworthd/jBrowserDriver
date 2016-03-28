@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.openqa.selenium.By;
@@ -129,6 +130,34 @@ public class Test {
           .getAttribute("innerText").equals("test1"));
       test((driver.executeAsyncScript("arguments[1](arguments[0].innerText);",
           driver.findElement(By.id("divtext1")))).equals("test1"));
+      Map<String, Object> map = (Map<String, Object>) driver
+          .executeScript(
+              "return {"
+                  + "key1:['value1','value2','value3'], "
+                  + "key2:5, key3:function(){return 'testing';}, "
+                  + "key4:undefined, key5:null, key6:1/0, key7:0/0, key8:'', "
+                  + "key9:document.getElementById('divtext1'), "
+                  + "key10:document.getElementsByName('divs'), "
+                  + "key11:[document.getElementById('divtext1'),document.getElementsByName('divs'),{subkey1:'subval1'}]};");
+      test(map.size() == 11);
+      test(((List) map.get("key1")).size() == 3);
+      test(((List) map.get("key1")).get(2).equals("value3"));
+      test(((List) map.get("key1")).get(2) instanceof String);
+      test(map.get("key2").equals(new Long(5)));
+      test("function () {return 'testing';}".equals(map.get("key3")));
+      test(map.get("key4") == null);
+      test(map.get("key5") == null);
+      test(Double.isInfinite(((Double) map.get("key6")).doubleValue()));
+      test(Double.isNaN(((Double) map.get("key7")).doubleValue()));
+      test("".equals(map.get("key8")));
+      test("test1".equals(((WebElement) map.get("key9")).getAttribute("innerText")));
+      test(((List<WebElement>) map.get("key10")).size() == 2);
+      test(((List<WebElement>) map.get("key10")).get(1).getAttribute("innerText").equals("test2"));
+      test(((List) map.get("key11")).size() == 3);
+      test(((List) ((List) map.get("key11")).get(1)).size() == 2);
+      test(((WebElement) ((List) ((List) map.get("key11")).get(1)).get(1)).getAttribute("innerText").equals("test2"));
+      test(((Map) ((List) map.get("key11")).get(2)).size() == 1);
+      test("subval1".equals(((Map) ((List) map.get("key11")).get(2)).get("subkey1")));
       Throwable error = null;
       try {
         driver.executeScript("invalid.execute()");
