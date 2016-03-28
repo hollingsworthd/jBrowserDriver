@@ -19,6 +19,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-public interface ResponseInterceptor {
+/*public TODO*/ interface ResponseInterceptor {
   Response intercept(Response response);
 }

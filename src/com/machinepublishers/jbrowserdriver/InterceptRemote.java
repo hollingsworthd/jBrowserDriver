@@ -19,9 +19,7 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-
-interface InterceptRemote extends Remote {
-  void intercept() throws RemoteException;
-}
+//TODO
+//interface InterceptRemote extends Remote {
+//  void intercept() throws RemoteException;
+//}

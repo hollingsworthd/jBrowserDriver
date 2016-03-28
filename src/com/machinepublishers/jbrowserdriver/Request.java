@@ -21,6 +21,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
 
-public class Request implements Serializable {
+/*public TODO*/ class Request implements Serializable {
 
 }

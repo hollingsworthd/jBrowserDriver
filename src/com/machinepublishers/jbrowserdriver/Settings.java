@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
@@ -181,7 +180,7 @@ public class Settings implements Serializable {
     private int socketTimeout = -1;
     private int connectTimeout = -1;
     private int connectionReqTimeout = -1;
-    private ResponseInterceptor[] responseInterceptors;
+    //TODO    private ResponseInterceptor[] responseInterceptors;
 
     public Builder() {
       for (int i = 10000; i < 10008; i++) {
@@ -717,22 +716,23 @@ public class Settings implements Serializable {
       return this;
     }
 
-    /**
-     * <p><ul>
-     * <li>Java system property <code>jbd.responseinterceptors</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.responseinterceptors</code> alternately configures this setting.</li>
-     * <li>Note that the value must be a base-64 encoded string of a serialized ResponseInterceptor array.
-     * </ul><p>
-     * 
-     * @param responseInterceptors
-     *          Interceptors to modify the response before it's passed to the browser.
-     * 
-     * @return this Builder
-     */
-    public Builder responseInterceptors(ResponseInterceptor... responseInterceptors) {
-      this.responseInterceptors = Arrays.copyOf(responseInterceptors, responseInterceptors.length);
-      return this;
-    }
+    //TODO
+    //    /**
+    //     * <p><ul>
+    //     * <li>Java system property <code>jbd.responseinterceptors</code> overrides this setting.</li>
+    //     * <li>{@link Capabilities} name <code>jbd.responseinterceptors</code> alternately configures this setting.</li>
+    //     * <li>Note that the value must be a base-64 encoded string of a serialized ResponseInterceptor array.
+    //     * </ul><p>
+    //     * 
+    //     * @param responseInterceptors
+    //     *          Interceptors to modify the response before it's passed to the browser.
+    //     * 
+    //     * @return this Builder
+    //     */
+    //    public Builder responseInterceptors(ResponseInterceptor... responseInterceptors) {
+    //      this.responseInterceptors = Arrays.copyOf(responseInterceptors, responseInterceptors.length);
+    //      return this;
+    //    }
 
     /**
      * <p><ul>
@@ -844,7 +844,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
-      set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
+      //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -1005,7 +1005,7 @@ public class Settings implements Serializable {
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
-  private final ResponseInterceptor[] responseInterceptors;
+  //TODO private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -1034,7 +1034,7 @@ public class Settings implements Serializable {
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
-    this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
+    //TODO this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
@@ -1245,7 +1245,8 @@ public class Settings implements Serializable {
     return hostnameVerification;
   }
 
-  ResponseInterceptor[] responseInterceptors() {
-    return responseInterceptors;
-  }
+  //TODO
+  //  ResponseInterceptor[] responseInterceptors() {
+  //    return responseInterceptors;
+  //  }
 }
