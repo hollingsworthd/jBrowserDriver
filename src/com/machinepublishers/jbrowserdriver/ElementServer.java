@@ -892,6 +892,9 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
         return obj.toString();
       }
+      if (Boolean.TRUE.equals(executeScript("return Array.isArray(arguments[0]);", obj))) {
+        return new ArrayList<Object>();
+      }
       List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
           .append("var list = [];")
           .append("for(var propertyName in arguments[0]){")
@@ -906,7 +909,7 @@ class ElementServer extends UnicastRemoteObject implements ElementRemote, WebEle
       for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
         map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
       }
-      return map.isEmpty() ? null : map;
+      return map;
     }
     if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
       return obj;

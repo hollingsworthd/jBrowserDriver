@@ -134,12 +134,13 @@ public class Test {
           .executeScript(
               "return {"
                   + "key1:['value1','value2','value3'], "
-                  + "key2:5, key3:function(){return 'testing';}, "
-                  + "key4:undefined, key5:null, key6:1/0, key7:0/0, key8:'', "
-                  + "key9:document.getElementById('divtext1'), "
-                  + "key10:document.getElementsByName('divs'), "
-                  + "key11:[document.getElementById('divtext1'),document.getElementsByName('divs'),{subkey1:'subval1'}]};");
-      test(map.size() == 11);
+                  + "key2:5,"
+                  + "key3:function(){return 'testing';}, "
+                  + "key4:undefined, key5:null, key6:1/0, key7:0/0, key8:'', key9:[], key10:{}, key11:[{},{}],"
+                  + "key12:document.getElementById('divtext1'), "
+                  + "key13:document.getElementsByName('divs'), "
+                  + "key14:[document.getElementById('divtext1'),document.getElementsByName('divs'),{subkey1:'subval1'}]};");
+      test(map.size() == 14);
       test(((List) map.get("key1")).size() == 3);
       test(((List) map.get("key1")).get(2).equals("value3"));
       test(((List) map.get("key1")).get(2) instanceof String);
@@ -150,14 +151,20 @@ public class Test {
       test(Double.isInfinite(((Double) map.get("key6")).doubleValue()));
       test(Double.isNaN(((Double) map.get("key7")).doubleValue()));
       test("".equals(map.get("key8")));
-      test("test1".equals(((WebElement) map.get("key9")).getAttribute("innerText")));
-      test(((List<WebElement>) map.get("key10")).size() == 2);
-      test(((List<WebElement>) map.get("key10")).get(1).getAttribute("innerText").equals("test2"));
-      test(((List) map.get("key11")).size() == 3);
-      test(((List) ((List) map.get("key11")).get(1)).size() == 2);
-      test(((WebElement) ((List) ((List) map.get("key11")).get(1)).get(1)).getAttribute("innerText").equals("test2"));
-      test(((Map) ((List) map.get("key11")).get(2)).size() == 1);
-      test("subval1".equals(((Map) ((List) map.get("key11")).get(2)).get("subkey1")));
+      test(map.get("key9") instanceof List);
+      test(map.get("key10") instanceof Map);
+      test(((List) map.get("key11")).size() == 2);
+      test(((Map) ((List) map.get("key11")).get(1)).isEmpty());
+      test("test1".equals(((WebElement) map.get("key12")).getAttribute("innerText")));
+      test(((List<WebElement>) map.get("key13")).size() == 2);
+      test(((List<WebElement>) map.get("key13")).get(1).getAttribute("innerText").equals("test2"));
+      test(((List) map.get("key14")).size() == 3);
+      test(((List) ((List) map.get("key14")).get(1)).size() == 2);
+      test(((WebElement) ((List) ((List) map.get("key14")).get(1)).get(1)).getAttribute("innerText").equals("test2"));
+      test(((Map) ((List) map.get("key14")).get(2)).size() == 1);
+      test("subval1".equals(((Map) ((List) map.get("key14")).get(2)).get("subkey1")));
+      test(((List) driver.executeScript("return [];")).isEmpty());
+      test(((Map) driver.executeScript("return {};")).isEmpty());
       Throwable error = null;
       try {
         driver.executeScript("invalid.execute()");
