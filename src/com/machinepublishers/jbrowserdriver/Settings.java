@@ -97,6 +97,7 @@ public class Settings implements Serializable {
 
   private static enum PropertyName {
     PORTS("jbd.ports"),
+    PROCESSES("jbd.processes"),
     HEADLESS("jbd.headless"),
     AJAX_WAIT("jbd.ajaxwait"),
     AJAX_RESOURCE_TIMEOUT("jbd.ajaxresourcetimeout"),
@@ -163,6 +164,7 @@ public class Settings implements Serializable {
     private int cacheEntries = 10 * 1000;
     private long cacheEntrySize = 1000 * 1000;
     private Collection<Integer> ports = new LinkedHashSet<Integer>();
+    private int processes = 8;
     private boolean headless = true;
     private long ajaxWait = 120;
     private long ajaxResourceTimeout = 2000;
@@ -181,12 +183,6 @@ public class Settings implements Serializable {
     private int connectTimeout = -1;
     private int connectionReqTimeout = -1;
     //TODO    private ResponseInterceptor[] responseInterceptors;
-
-    public Builder() {
-      for (int i = 10000; i < 10008; i++) {
-        ports.add(i);
-      }
-    }
 
     /**
      * @param requestHeaders
@@ -447,14 +443,14 @@ public class Settings implements Serializable {
      * Each browser instance is run in a separate process (via RMI).
      * This setting configures which ports are available for RMI.
      * The number of ports determines the maximum number of RMI processes.
-     * 
-     * Defaults to <code>10000,10001,10002,10003,10004,10005,10006,10007</code>
+     * May overwrite anything set from {@link #portsMax(int, int)} or {@link #processes(int)}.
      * 
      * @param ports
      * @return this Builder
      */
     public Builder ports(int... ports) {
       this.ports.clear();
+      this.processes = -1;
       for (int i = 0; ports != null && i < ports.length; i++) {
         this.ports.add(ports[i]);
       }
@@ -467,9 +463,8 @@ public class Settings implements Serializable {
      * The number of ports determines the maximum number of RMI processes.
      * This is a convenience method for those who are allocating a sequential
      * range of ports, as you only need to specify the starting port (inclusive) and
-     * maximum number of ports/processes.
-     * 
-     * Defaults to <code>10000,8</code>
+     * maximum number of ports/processes. May overwrite anything set from
+     * {@link #ports(int...)} or {@link #processes(int)}.
      * 
      * @param startingPort
      * @param maxProcesses
@@ -477,9 +472,31 @@ public class Settings implements Serializable {
      */
     public Builder portsMax(int startingPort, int maxProcesses) {
       this.ports.clear();
+      this.processes = -1;
       for (int i = 0; i < maxProcesses; i++) {
         this.ports.add(startingPort + i);
       }
+      return this;
+    }
+
+    /**
+     * <p><ul>
+     * <li>Java system property <code>jbd.processes</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.processes</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * Each browser instance is run in a separate process (via RMI).
+     * This setting configures the maximum number of these processes and allows them to use any available port.
+     * May overwrite anything set from {@link #ports(int...)} or {@link #portsMax(int, int)}.
+     * 
+     * Defaults to <code>8</code>.
+     * 
+     * @param maxProcesses
+     * @return this Builder
+     */
+    public Builder processes(int maxProcesses) {
+      this.ports.clear();
+      this.processes = maxProcesses;
       return this;
     }
 
@@ -836,7 +853,11 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.WIRE_CONSOLE, this.wireConsole);
       set(capabilities, PropertyName.MAX_LOGS, this.maxLogs);
       set(capabilities, PropertyName.HEAD_SCRIPT, this.headScript);
-      set(capabilities, PropertyName.PORTS, StringUtils.join(this.ports, ','));
+      final String joinedPorts = StringUtils.join(this.ports, ',');
+      set(capabilities, PropertyName.PORTS, joinedPorts == null || joinedPorts.isEmpty() ? null : joinedPorts);
+      if (this.processes > -1) {
+        set(capabilities, PropertyName.PROCESSES, this.processes);
+      }
       set(capabilities, PropertyName.HEADLESS, this.headless);
       set(capabilities, PropertyName.SSL, this.ssl);
       set(capabilities, PropertyName.HOSTNAME_VERIFICATION, this.hostnameVerification);
@@ -898,6 +919,16 @@ public class Settings implements Serializable {
       for (int j = low; j <= high; j++) {
         ports.add(j);
       }
+    }
+    return ports;
+  }
+
+  private static Collection<Integer> parseProcesses(String processesMax) {
+    int max = Integer.parseInt(processesMax);
+    Collection<Integer> ports = new LinkedHashSet<Integer>();
+    int curPort = -1;
+    for (int i = 0; i < max; i++) {
+      ports.add(curPort--);
     }
     return ports;
   }
@@ -1038,8 +1069,18 @@ public class Settings implements Serializable {
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
-    this.ports = properties.get(PropertyName.PORTS.propertyName) == null
-        ? new LinkedHashSet<Integer>(builder.ports) : parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
+    if (properties.get(PropertyName.PORTS.propertyName) == null
+        && properties.get(PropertyName.PROCESSES.propertyName) == null) {
+      if (builder.processes > -1) {
+        this.ports = parseProcesses(Integer.toString(builder.processes));
+      } else {
+        this.ports = new LinkedHashSet<Integer>(builder.ports);
+      }
+    } else if (properties.get(PropertyName.PORTS.propertyName) != null) {
+      this.ports = parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
+    } else {
+      this.ports = parseProcesses(properties.get(PropertyName.PROCESSES.propertyName).toString());
+    }
 
     //backwards compatible property name for versions <= 0.9.1
     boolean headlessTmp = parse(properties, PropertyName.HEADLESS, builder.headless);

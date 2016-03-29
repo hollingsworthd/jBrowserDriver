@@ -21,6 +21,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -93,16 +96,41 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
 
     rmiPort.set(Integer.parseInt(args[0]));
     Registry registryTmp = null;
+    final int maxTries = 5;
+    String localhost;
     try {
-      registryTmp = LocateRegistry.createRegistry(rmiPort.get());
+      localhost = InetAddress.getLocalHost().getHostAddress();
     } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      localhost = "";
+    }
+    for (int i = 1; i <= maxTries; i++) {
+      ServerSocket socket = null;
+      try {
+        if (rmiPort.get() > 0) {
+          registryTmp = LocateRegistry.createRegistry(rmiPort.get());
+        } else {
+          socket = new ServerSocket();
+          socket.setReuseAddress(true);
+          socket.bind(new InetSocketAddress(localhost, 0));
+          final int curPort = socket.getLocalPort();
+          socket.close();
+          registryTmp = LocateRegistry.createRegistry(curPort);
+          rmiPort.set(curPort);
+        }
+        break;
+      } catch (Throwable t) {
+        if (i == maxTries) {
+          LogsServer.instance().exception(t);
+        }
+      } finally {
+        Util.close(socket);
+      }
     }
     registry = registryTmp;
 
     try {
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
-      System.out.println("ready");
+      System.out.println("ready on port " + rmiPort.get());
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
     }
