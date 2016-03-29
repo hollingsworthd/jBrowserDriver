@@ -533,7 +533,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public List<ElementServer> perform() {
             try {
-              return cast(executeScript(new StringBuilder()
+              return asList(executeScript(new StringBuilder()
                   .append("var iter = ")
                   .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
                   .append("var items = [];")
@@ -541,8 +541,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                   .append("while(cur = iter.iterateNext()){")
                   .append("  items.push(cur);")
                   .append("}")
-                  .append("return items;").toString(), expr, node),
-                  new ArrayList<ElementServer>());
+                  .append("return items;").toString(), expr, node));
             } catch (Throwable t) {
               LogsServer.instance().exception(t);
             }
@@ -574,9 +573,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public List<ElementServer> perform() {
             if (node != null) {
-              return cast(parseScriptResult(
-                  node.call("getElementsByTagName", new Object[] { tagName })),
-                  new ArrayList<ElementServer>());
+              return asList(parseScriptResult(
+                  node.call("getElementsByTagName", new Object[] { tagName })));
             }
             return new ArrayList<ElementServer>();
           }
@@ -725,9 +723,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private List byCssClass(String cssClass) {
-    return cast(executeScript(
-        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()),
-        new ArrayList<ElementServer>());
+    return asList(executeScript(
+        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()));
   }
 
   /**
@@ -802,11 +799,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     return script(false, script, args, new JavascriptNames());
   }
 
-  private static <T> T cast(Object objToCast, T defaultValueToCastLike) {
-    if (objToCast == null || defaultValueToCastLike.getClass().isInstance(objToCast)) {
-      return (T) defaultValueToCastLike.getClass().cast(objToCast);
+  private static List<ElementServer> asList(Object objToCast) {
+    try {
+      return (List<ElementServer>) objToCast;
+    } catch (ClassCastException e) {
+      return new ArrayList<ElementServer>();
     }
-    return (T) defaultValueToCastLike;
   }
 
   private static class JavascriptNames {
