@@ -6,6 +6,7 @@
     <iframe id='nestedframe' src="data:text/html;base64,PGh0bWw+PGJvZHk+aGVsbG88L2JvZHk+PC9odG1sPg=="></iframe>
     <span id='iframe-useragent'></span>
     <span id='iframe-nested-useragent'></span>
+    <a href="/?param=fromiframe" id="iframe-anchor">click</a>
     <script>
       document.getElementById("iframe-useragent").innerHTML=window.navigator.userAgent;
       document.getElementById("iframe-nested-useragent").innerHTML=window.frames[0].navigator.userAgent;

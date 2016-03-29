@@ -138,16 +138,20 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     this.context = context;
   }
 
+  JSObject node() {
+    return node;
+  }
+
   static ElementServer create(final Context context) {
     final JSObject doc = AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<JSObject>() {
           @Override
           public JSObject perform() {
             JSObject node;
-            if (context.item().frame.get() == null) {
+            if (context.item().selectedFrame() == null) {
               node = (JSObject) context.item().engine.get().getDocument();
             } else {
-              node = context.item().frame.get().node;
+              node = context.item().selectedFrame().node;
             }
             return node;
           }
@@ -171,12 +175,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
       if (contentWindow instanceof JSObject) {
         Object document = ((JSObject) contentWindow).getMember("document");
         if (document instanceof JSObject) {
-          context.item().frame.set(new ElementServer((JSObject) document, context));
+          context.item().selectFrame(new ElementServer((JSObject) document, context));
           set = true;
         }
       }
       if (!set) {
-        context.item().frame.set(this);
+        context.item().selectFrame(this);
       }
     } catch (Throwable t) {
       LogsServer.instance().exception(t);

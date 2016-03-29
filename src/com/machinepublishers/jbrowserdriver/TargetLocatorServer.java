@@ -42,7 +42,7 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
   @Override
   public ElementServer activeElement() {
     ElementServer element = (ElementServer) driver.executeScript("return document.activeElement;");
-    context.item().frame.set(element);
+    context.item().selectFrame(element);
     return element;
   }
 
@@ -59,7 +59,7 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
    */
   @Override
   public JBrowserDriverServer defaultContent() {
-    context.item().frame.set(null);
+    context.item().deselectFrame();
     return driver;
   }
 
@@ -68,7 +68,7 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
    */
   @Override
   public JBrowserDriverServer frame(int index) {
-    context.item().frame.set(
+    context.item().selectFrame(
         (ElementServer) driver.executeScript(
             "return window.frames[arguments[0]].document;", new Object[] { index }));
     return driver;
@@ -115,7 +115,7 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
    */
   @Override
   public JBrowserDriverServer parentFrame() {
-    context.item().frame.set(
+    context.item().selectFrame(
         (ElementServer) driver.executeScript("return window.parent.document;"));
     return driver;
   }

@@ -30,8 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.webkit.LoadListenerClient;
 
-import javafx.scene.web.WebEngine;
-
 class HttpListener implements LoadListenerClient {
   private static final Map<Integer, String> states;
   private static final Map<Integer, String> errors;
@@ -75,15 +73,14 @@ class HttpListener implements LoadListenerClient {
   private final List<Thread> threadsFromReset = new ArrayList<Thread>();
   private final AtomicBoolean superseded = new AtomicBoolean();
   private final Map<String, Long> resources = new HashMap<String, Long>();
-  private final WebEngine engine;
+  private final ContextItem contextItem;
   private final AtomicInteger statusCode;
-  private final AtomicLong frame = new AtomicLong();
   private final AtomicLong timeoutMS;
   private final StatusMonitor statusMonitor;
   private final LogsServer logs;
 
-  HttpListener(WebEngine engine, AtomicInteger statusCode, AtomicLong timeoutMS) {
-    this.engine = engine;
+  HttpListener(ContextItem contextItem, AtomicInteger statusCode, AtomicLong timeoutMS) {
+    this.contextItem = contextItem;
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
     this.statusMonitor = StatusMonitor.instance();
@@ -163,11 +160,14 @@ class HttpListener implements LoadListenerClient {
     }
     try {
       synchronized (statusCode) {
-        this.frame.compareAndSet(0l, frame);
+        if (state == LoadListenerClient.PAGE_STARTED) {
+          contextItem.resetFrameId(frame);
+        }
+        contextItem.addFrameId(frame);
         if (state == LoadListenerClient.PAGE_STARTED
             || state == LoadListenerClient.PAGE_REDIRECTED
             || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-          if (this.frame.get() == frame) {
+          if (contextItem.currentFrameId() == frame) {
             if (state == LoadListenerClient.PAGE_STARTED) {
               try {
                 StatusMonitor.instance().clearStatusMonitor();
@@ -183,7 +183,7 @@ class HttpListener implements LoadListenerClient {
           }
           statusMonitor.addPrimaryDocument(url);
         } else if (statusCode.get() == 0
-            && this.frame.get() == frame
+            && contextItem.currentFrameId() == frame
             && (state == LoadListenerClient.PAGE_FINISHED
                 || state == LoadListenerClient.LOAD_STOPPED
                 || state == LoadListenerClient.LOAD_FAILED)) {

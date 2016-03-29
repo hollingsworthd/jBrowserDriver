@@ -251,6 +251,17 @@ public class Test {
       driver.switchTo().defaultContent();
       driver.switchTo().frame("testiframe");
       test(driver.findElementById("iframebody") != null);
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      test(driver.getPageSource() != null);
+      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      test(driver.findElementById("iframebody") != null);
+      driver.switchTo().parentFrame();
+      driver.findElement(By.id("anchor3")).click();
+      test(driver.getPageSource() != null);
+      //TODO coords of iframes
+      //driver.findElement(By.id("iframe-anchor")).click();
+      //System.out.println(driver.getCurrentUrl());
+      //TODO fingerprinting
       //System.out.println(driver.findElement(By.id("iframe-useragent")).getAttribute("innerHTML"));
       //System.out.println(driver.findElement(By.id("iframe-nested-useragent")).getAttribute("innerHTML"));
 
