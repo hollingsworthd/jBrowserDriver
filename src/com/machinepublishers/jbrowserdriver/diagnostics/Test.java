@@ -47,7 +47,10 @@ public class Test {
   private int curTest = 0;
 
   public static void main(String[] args) {
+    final long startTime = System.currentTimeMillis();
     List<String> errors = new Test().errors;
+    final long endTime = System.currentTimeMillis();
+    System.out.println("Elapsed Time: " + (endTime - startTime) + " ms");
     System.out.println("Tests Passed: " + errors.isEmpty());
     for (String error : errors) {
       System.out.println("    " + error);
