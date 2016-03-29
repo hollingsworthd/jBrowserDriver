@@ -295,7 +295,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         .append("][Port ")
         .append(actualPort.get())
         .append("]")
-        .append(actualPort.get() == configuredPort.get() ? "" : "[Process " + Math.abs(configuredPort.get()) + "]").toString());
+        .append(actualPort.get() == configuredPort.get()
+            ? "" : "[Process " + Math.abs(configuredPort.get()) + "]")
+        .toString());
     logs = new Logs(logsRemote);
   }
 
@@ -336,8 +338,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
                   if (!done) {
                     synchronized (ready) {
                       if (line != null && line.startsWith("ready on port ")) {
-                        actualPort.set(Integer.parseInt(line.substring("ready on port ".length())));
-                        String portId = actualPort.get() != port ? actualPort.get() + "; Process " + Math.abs(port) : Integer.toString(port);
+                        actualPort.set(Integer.parseInt(
+                            line.substring("ready on port ".length())));
+                        String portId = actualPort.get() != port
+                            ? actualPort.get() + "; Process " + Math.abs(port) : Integer.toString(port);
                         logPrefix.set("[Port " + portId + "] ");
                         ready.set(true);
                         ready.notify();
