@@ -533,7 +533,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public List<ElementServer> perform() {
             try {
-              return (List<ElementServer>) executeScript(new StringBuilder()
+              return cast(executeScript(new StringBuilder()
                   .append("var iter = ")
                   .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
                   .append("var items = [];")
@@ -541,11 +541,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                   .append("while(cur = iter.iterateNext()){")
                   .append("  items.push(cur);")
                   .append("}")
-                  .append("return items;").toString(), expr, node);
+                  .append("return items;").toString(), expr, node),
+                  new ArrayList<ElementServer>());
             } catch (Throwable t) {
               LogsServer.instance().exception(t);
             }
-            return null;
+            return new ArrayList<ElementServer>();
           }
         });
   }
@@ -573,10 +574,11 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public List<ElementServer> perform() {
             if (node != null) {
-              return (List<ElementServer>) parseScriptResult(
-                  node.call("getElementsByTagName", new Object[] { tagName }));
+              return cast(parseScriptResult(
+                  node.call("getElementsByTagName", new Object[] { tagName })),
+                  new ArrayList<ElementServer>());
             }
-            return null;
+            return new ArrayList<ElementServer>();
           }
         });
   }
@@ -622,7 +624,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                   elements.add(new ElementServer((JSObject) cur, context));
                 } catch (RemoteException e) {
                   LogsServer.instance().exception(e);
-                  return null;
+                  return new ArrayList<ElementServer>();
                 }
               } else {
                 break;
@@ -723,8 +725,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private List byCssClass(String cssClass) {
-    return (List<ElementServer>) executeScript(
-        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString());
+    return cast(executeScript(
+        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()),
+        new ArrayList<ElementServer>());
   }
 
   /**
@@ -797,6 +800,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   @Override
   public Object executeScript(final String script, final Object... args) {
     return script(false, script, args, new JavascriptNames());
+  }
+
+  private static <T> T cast(Object objToCast, T defaultValueToCastLike) {
+    if (objToCast == null || defaultValueToCastLike.getClass().isInstance(objToCast)) {
+      return (T) defaultValueToCastLike.getClass().cast(objToCast);
+    }
+    return (T) defaultValueToCastLike;
   }
 
   private static class JavascriptNames {
