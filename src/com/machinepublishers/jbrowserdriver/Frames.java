@@ -39,20 +39,18 @@ class Frames {
   }
 
   void add(long id, JSObject doc, long parentId) {
-    if (doc != null) {
-      Frame frame = new Frame(id, doc);
-      Frame foundFrame = findFrame(root, id);
-      if (foundFrame != null) {
-        frame.children.addAll(foundFrame.children);
-      }
-      if (root == null || id == root.id) {
-        root = frame;
-      } else if (parentId != 0 && root != null) {
-        Frame foundParent = findFrame(root, parentId);
-        if (foundParent != null) {
-          foundParent.children.remove(frame);
-          foundParent.children.add(frame);
-        }
+    Frame frame = new Frame(id, doc);
+    Frame foundFrame = findFrame(root, id);
+    if (foundFrame != null) {
+      frame.children.addAll(foundFrame.children);
+    }
+    if (root == null || id == root.id) {
+      root = frame;
+    } else {
+      Frame foundParent = findFrame(root, parentId);
+      if (foundParent != null) {
+        foundParent.children.remove(frame);
+        foundParent.children.add(frame);
       }
     }
   }
