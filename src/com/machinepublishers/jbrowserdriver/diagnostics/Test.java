@@ -196,7 +196,9 @@ public class Test {
        * Cookie manager
        */
       driver.manage().addCookie(new Cookie("testname", "testvalue"));
-      test(driver.manage().getCookieNamed("testname").getValue().equals("testvalue"));
+      Cookie cookie = driver.manage().getCookieNamed("testname");
+      test(cookie.getValue().equals("testvalue"));
+      test(InetAddress.getLoopbackAddress().getHostAddress().equals(cookie.getDomain()));
 
       /*
        * Screenshots
@@ -272,7 +274,9 @@ public class Test {
       test(HttpServer.previousRequestId() != initialRequestId);
       test(driver.getStatusCode() == 200);
       test(driver.getCurrentUrl().endsWith("/redirect/site2"));
-      test(driver.manage().getCookieNamed("JSESSIONID").getValue().equals("ABC123"));
+      cookie = driver.manage().getCookieNamed("JSESSIONID");
+      test(cookie.getValue().equals("ABC123"));
+      test(InetAddress.getLoopbackAddress().getHostAddress().equals(cookie.getDomain()));
 
       /*
        * Cookies set by Javascript

@@ -19,13 +19,18 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
 
@@ -37,6 +42,7 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
   private final Context context;
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
+  private static final Pattern domain = Pattern.compile(".*?://(?:[^/]*@)?\\[?([^\\]:/]*).*");
 
   OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
@@ -45,9 +51,22 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
     this.timeouts = timeouts;
   }
 
-  private static org.apache.http.cookie.Cookie convert(Cookie in) {
+  private org.apache.http.cookie.Cookie convert(Cookie in) {
     BasicClientCookie out = new BasicClientCookie(in.getName(), in.getValue());
-    out.setDomain(in.getDomain());
+    String domainStr = null;
+    if (StringUtils.isEmpty(in.getDomain())) {
+      String urlStr = context.item().engine.get().getLocation();
+      try {
+        URL url = new URL(urlStr);
+        domainStr = url.getHost();
+      } catch (MalformedURLException e) {
+        Matcher matcher = domain.matcher(urlStr);
+        if (matcher.matches()) {
+          domainStr = matcher.group(1);
+        }
+      }
+    }
+    out.setDomain(domainStr == null ? in.getDomain() : domainStr);
     if (in.getExpiry() != null) {
       out.setExpiryDate(in.getExpiry());
     }
