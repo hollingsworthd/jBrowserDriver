@@ -228,6 +228,15 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     });
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public synchronized void ajaxWait() {
+    context.get().item().httpListener.get().resetStatusCode();
+    getStatusCode();
+  }
+
   public synchronized int getStatusCode() {
     init();
     try {

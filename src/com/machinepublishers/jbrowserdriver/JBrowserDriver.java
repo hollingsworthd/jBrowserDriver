@@ -491,6 +491,26 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   }
 
   /**
+   * Wait until AJAX requests are completed and idle for a certain
+   * amount of time. This type of waiting happens implicitly on form
+   * submissions, page loads, and mouse clicks, so in those cases there's
+   * usually no need to call this method. However, calling this method
+   * may be useful when AJAX is triggered under other circumstances or if
+   * a more conservative wait is needed in addition to the implicit wait.
+   * <p>
+   * The behavior of this AJAX wait algorithm can be configured by
+   * {@link Settings.Builder#ajaxWait(long)} and
+   * {@link Settings.Builder#ajaxResourceTimeout(long)}.
+   */
+  public void ajaxWait() {
+    try {
+      remote.ajaxWait();
+    } catch (RemoteException e) {
+      logs.exception(e);
+    }
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override

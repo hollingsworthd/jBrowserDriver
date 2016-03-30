@@ -70,6 +70,7 @@ public class Test {
               .portsMax(TEST_PORT_RMI, 1)
               .screen(new Dimension(1024, 768))
               .traceConsole(true)
+              .ajaxWait(120)
               .cache(true)
               .ignoreDialogs(false)
               .build());
@@ -87,6 +88,14 @@ public class Test {
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
+
+      /*
+       * Waiting for AJAX requests
+       */
+      long waitStart = System.currentTimeMillis();
+      driver.ajaxWait();
+      long waitEnd = System.currentTimeMillis();
+      test(waitEnd - waitStart > 115 && waitEnd - waitStart < 125);
 
       /*
        * Select DOM elements

@@ -850,7 +850,6 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                     .append("return (function(){").append(script).append("}).apply(this, arguments);")
                     .append("};").toString());
               }
-              context.item().httpListener.get().resetStatusCode();
               return node.call(jsNames.exec, argList.toArray(new Object[0]));
             } catch (Throwable t) {
               return t;
