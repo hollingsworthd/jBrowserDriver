@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.w3c.dom.Document;
+
 import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
@@ -44,6 +46,7 @@ class ContextItem {
   final AtomicReference<HttpListener> httpListener = new AtomicReference<HttpListener>();
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
+  final AtomicReference<Context> context = new AtomicReference<Context>();
   private final Frames frames = new Frames();
   private ElementServer frame;
 
@@ -54,7 +57,19 @@ class ContextItem {
   ElementServer selectedFrame() {
     synchronized (frames) {
       if (frame != null && !frames.conatins(frame.node())) {
-        deselectFrame();
+        boolean foundFrame = false;
+        try {
+          if (frame.frameId() > 0) {
+            Document doc = Accessor.getPageFor(engine.get()).getDocument(frame.frameId());
+            if (doc instanceof JSObject) {
+              selectFrame(new ElementServer((JSObject) doc, context.get()));
+              foundFrame = true;
+            }
+          }
+        } catch (Throwable t) {}
+        if (!foundFrame) {
+          deselectFrame();
+        }
       }
       //TODO after returning this frame it might be possible for it to become invalid
       return frame;
@@ -69,6 +84,7 @@ class ContextItem {
 
   void selectFrame(ElementServer frame) {
     synchronized (frames) {
+      frame.setFrameId(frames.id(frame.node()));
       this.frame = frame;
     }
   }
@@ -96,6 +112,7 @@ class ContextItem {
 
   void init(final JBrowserDriverServer driver, final Context context) {
     if (initialized.compareAndSet(false, true)) {
+      this.context.set(context);
       SettingsManager.register(stage, view);
       engine.set(view.get().getEngine());
       try {

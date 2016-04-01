@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,6 +124,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
 
   private final JSObject node;
   private final Context context;
+  private final AtomicLong frameId = new AtomicLong();
 
   ElementServer(final JSObject node, final Context context) throws RemoteException {
     AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
@@ -140,6 +142,14 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
 
   JSObject node() {
     return node;
+  }
+
+  void setFrameId(long frameId) {
+    this.frameId.set(frameId);
+  }
+
+  long frameId() {
+    return frameId.get();
   }
 
   static ElementServer create(final Context context) {
