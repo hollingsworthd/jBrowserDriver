@@ -561,19 +561,8 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    */
   @Override
   public synchronized void quit() {
-    final ContextItem item = context.get().item();
-    if (item != null) {
-      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-        @Override
-        public Object perform() {
-          item.engine.get().getLoadWorker().cancel();
-          return null;
-        }
-      });
-      Accessor.getPageFor(item.engine.get()).stop();
-    }
-    SettingsManager.register(null);
-    StatusMonitor.instance().clearStatusMonitor();
+    getStatusCode();
+    kill();
   }
 
   /**
@@ -590,7 +579,19 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    */
   @Override
   public synchronized void kill() {
-    quit();
+    final ContextItem item = context.get().item();
+    if (item != null) {
+      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+        @Override
+        public Object perform() {
+          item.engine.get().getLoadWorker().cancel();
+          return null;
+        }
+      });
+      Accessor.getPageFor(item.engine.get()).stop();
+    }
+    SettingsManager.register(null);
+    StatusMonitor.instance().clearStatusMonitor();
   }
 
   /**
