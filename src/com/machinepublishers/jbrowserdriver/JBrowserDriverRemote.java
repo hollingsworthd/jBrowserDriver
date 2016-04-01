@@ -42,7 +42,7 @@ interface JBrowserDriverRemote extends Remote {
 
   int getStatusCode() throws RemoteException;
 
-  void ajaxWait() throws RemoteException;
+  void pageWait() throws RemoteException;
 
   void kill() throws RemoteException;
 

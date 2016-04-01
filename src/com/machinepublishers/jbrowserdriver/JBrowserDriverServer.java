@@ -232,7 +232,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void ajaxWait() {
+  public synchronized void pageWait() {
     context.get().item().httpListener.get().resetStatusCode();
     getStatusCode();
   }

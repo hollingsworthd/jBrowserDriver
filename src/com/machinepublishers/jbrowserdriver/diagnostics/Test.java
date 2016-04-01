@@ -93,7 +93,7 @@ public class Test {
        * Waiting for AJAX requests
        */
       long waitStart = System.currentTimeMillis();
-      driver.ajaxWait();
+      driver.pageWait();
       long waitEnd = System.currentTimeMillis();
       test(waitEnd - waitStart > 115 && waitEnd - waitStart < 125);
 
@@ -270,8 +270,10 @@ public class Test {
       driver.findElement(By.id("anchor3")).click();
       test(driver.getPageSource() != null);
       //TODO coords of iframes
-      //driver.findElement(By.id("iframe-anchor")).click();
-      //System.out.println(driver.getCurrentUrl());
+      //      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      //      driver.findElement(By.id("iframe-anchor")).click();
+      //      driver.pageWait();
+      //test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
       //TODO fingerprinting
       //System.out.println(driver.findElement(By.id("iframe-useragent")).getAttribute("innerHTML"));
       //System.out.println(driver.findElement(By.id("iframe-nested-useragent")).getAttribute("innerHTML"));
