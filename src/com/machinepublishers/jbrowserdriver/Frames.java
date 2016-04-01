@@ -19,7 +19,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import netscape.javascript.JSObject;
@@ -39,7 +41,7 @@ class Frames {
   }
 
   void add(long id, JSObject doc, long parentId) {
-    Frame frame = new Frame(id, doc);
+    Frame frame = new Frame(id, doc, parentId);
     Frame foundFrame = findFrame(root, id);
     if (foundFrame != null) {
       frame.children.addAll(foundFrame.children);
@@ -61,6 +63,19 @@ class Frames {
 
   long id(JSObject doc) {
     return findId(root, doc);
+  }
+
+  List<Long> ancestors(long frameId) {
+    List<Long> ancestors = new ArrayList<Long>();
+    while (true) {
+      Frame frame = findFrame(root, frameId);
+      if (frame == null || frame.parentId == 0) {
+        break;
+      }
+      ancestors.add(frame.parentId);
+      frameId = frame.parentId;
+    }
+    return ancestors;
   }
 
   private long findId(Frame cur, JSObject toFind) {
@@ -98,11 +113,13 @@ class Frames {
   private static final class Frame {
     final Long id;
     final JSObject doc;
+    final Long parentId;
     final Set<Frame> children = new HashSet<Frame>();
 
-    Frame(long id, JSObject doc) {
+    Frame(long id, JSObject doc, long parentId) {
       this.id = id;
       this.doc = doc;
+      this.parentId = parentId;
     }
 
     @Override

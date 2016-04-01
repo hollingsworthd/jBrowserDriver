@@ -269,11 +269,12 @@ public class Test {
       driver.switchTo().parentFrame();
       driver.findElement(By.id("anchor3")).click();
       test(driver.getPageSource() != null);
-      //TODO coords of iframes
-      //      driver.switchTo().frame(driver.findElementByTagName("iframe"));
-      //      driver.findElement(By.id("iframe-anchor")).click();
-      //      driver.pageWait();
-      //test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
+      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      driver.findElement(By.id("iframe-anchor")).click(); //TODO iframe coord offset needed on other methods too besides click() ?
+      //TODO figure out why pageWait doesn't work here
+      //driver.pageWait();
+      Thread.sleep(1000);
+      test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
       //TODO fingerprinting
       //System.out.println(driver.findElement(By.id("iframe-useragent")).getAttribute("innerHTML"));
       //System.out.println(driver.findElement(By.id("iframe-nested-useragent")).getAttribute("innerHTML"));

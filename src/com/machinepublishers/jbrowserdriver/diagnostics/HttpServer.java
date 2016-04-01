@@ -116,7 +116,7 @@ public class HttpServer {
                   if (line.startsWith("GET / ")) {
                     output.write(indexContent, 0, indexContent.length);
                     output.write(indexBody, 0, indexBody.length);
-                  } else if (line.startsWith("GET /iframe.htm ")) {
+                  } else if (line.startsWith("GET /iframe.htm")) {
                     output.write(iframeContent, 0, iframeContent.length);
                     output.write(iframeBody, 0, iframeBody.length);
                   } else if (line.startsWith("GET /redirect/site1 ")) {

@@ -20,6 +20,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,6 +74,33 @@ class ContextItem {
       }
       //TODO after returning this frame it might be possible for it to become invalid
       return frame;
+    }
+  }
+
+  org.openqa.selenium.Point selectedFrameLocation() {
+    synchronized (frames) {
+      ElementServer selectedFrame = selectedFrame();
+      int xCoord = 0;
+      int yCoord = 0;
+      if (selectedFrame != null) {
+        long frameId = frames.id(selectedFrame.node());
+        WebPage webPage = Accessor.getPageFor(engine.get());
+        List<Long> ancestors = frames.ancestors(frameId);
+        ancestors.add(frameId);
+        for (Long curFrameId : ancestors) {
+          try {
+            org.w3c.dom.Element owner = webPage.getOwnerElement(curFrameId);
+            if (owner instanceof JSObject) {
+              org.openqa.selenium.Point point = new ElementServer(((JSObject) owner), context.get()).getLocation();
+              xCoord += point.getX();
+              yCoord += point.getY();
+            }
+          } catch (RemoteException e) {
+            LogsServer.instance().exception(e);
+          }
+        }
+      }
+      return new org.openqa.selenium.Point(xCoord, yCoord);
     }
   }
 

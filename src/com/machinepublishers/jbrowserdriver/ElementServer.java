@@ -131,7 +131,6 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            //for whatever reason this prevents segfaults due to bugs in the JRE
             node.getMember("");
             return null;
           }
@@ -242,12 +241,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
+            org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
             double y1 = Double.parseDouble(obj.getMember("top").toString());
             double x1 = Double.parseDouble(obj.getMember("left").toString());
             double y2 = Double.parseDouble(obj.getMember("bottom").toString());
             double x2 = Double.parseDouble(obj.getMember("right").toString());
-            context.robot.get().mouseMove((x1 + x2) / 2d, (y1 + y2) / 2d);
+            context.robot.get().mouseMove((x1 + x2) / 2d + frameLocation.getX(), (y1 + y2) / 2d + frameLocation.getY());
             context.robot.get().mouseClick(MouseButton.LEFT);
             return null;
           }
