@@ -238,11 +238,15 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   }
 
   public synchronized int getStatusCode() {
+    return getStatusCode(context.get().timeouts.get().getPageLoadTimeoutMS());
+  }
+
+  private synchronized int getStatusCode(long waitMS) {
     init();
     try {
       synchronized (context.get().statusCode) {
         if (context.get().statusCode.get() == 0) {
-          context.get().statusCode.wait(context.get().timeouts.get().getPageLoadTimeoutMS());
+          context.get().statusCode.wait(waitMS);
         }
       }
     } catch (InterruptedException e) {
@@ -270,20 +274,22 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public synchronized void get(final String url) {
     init();
-    AppThread.exec(Pause.SHORT, context.get().statusCode, new Sync<Object>() {
-      public Object perform() {
-        context.get().item().engine.get().load(url);
-        return null;
+    long start = System.currentTimeMillis();
+    AppThread.exec(Pause.SHORT, context.get().statusCode,
+        context.get().timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
+          public Object perform() {
+            context.get().item().engine.get().load(url);
+            return null;
+          }
+        });
+    long end = System.currentTimeMillis();
+    if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
+      getStatusCode();
+    } else {
+      long waitMS = context.get().timeouts.get().getPageLoadTimeoutMS() - (end - start);
+      if (waitMS > 0) {
+        getStatusCode(waitMS);
       }
-    });
-    try {
-      synchronized (context.get().statusCode) {
-        if (context.get().statusCode.get() == 0) {
-          context.get().statusCode.wait(context.get().timeouts.get().getPageLoadTimeoutMS());
-        }
-      }
-    } catch (InterruptedException e) {
-      LogsServer.instance().exception(e);
     }
     if (context.get().statusCode.get() == 0) {
       AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
