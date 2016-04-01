@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
     org.openqa.selenium.WebDriver.Timeouts {
-  private AtomicLong implicit = new AtomicLong();
-  private AtomicLong load = new AtomicLong();
-  private AtomicLong script = new AtomicLong();
+  private final AtomicLong implicit = new AtomicLong();
+  private final AtomicLong load = new AtomicLong();
+  private final AtomicLong script = new AtomicLong();
 
   TimeoutsServer() throws RemoteException {}
 
@@ -36,7 +36,7 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
    */
   @Override
   public TimeoutsServer implicitlyWait(long duration, TimeUnit unit) {
-    implicit.set(unit.convert(duration, TimeUnit.MILLISECONDS));
+    implicit.set(TimeUnit.MILLISECONDS.convert(duration, unit));
     return this;
   }
 
@@ -45,7 +45,7 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
    */
   @Override
   public TimeoutsServer pageLoadTimeout(long duration, TimeUnit unit) {
-    load.set(unit.convert(duration, TimeUnit.MILLISECONDS));
+    load.set(TimeUnit.MILLISECONDS.convert(duration, unit));
     return this;
   }
 
@@ -54,7 +54,7 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
    */
   @Override
   public TimeoutsServer setScriptTimeout(long duration, TimeUnit unit) {
-    script.set(unit.convert(duration, TimeUnit.MILLISECONDS));
+    script.set(TimeUnit.MILLISECONDS.convert(duration, unit));
     return this;
   }
 
