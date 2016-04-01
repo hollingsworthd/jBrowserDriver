@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.openqa.selenium.TimeoutException;
+
 import javafx.application.Platform;
 
 class AppThread {
@@ -38,16 +40,21 @@ class AppThread {
   }
 
   private static class Runner<T> implements Runnable {
+    private static final int MAX_DELAY = 500;
     private final Sync<T> action;
     private final AtomicInteger statusCode;
     private final AtomicBoolean done;
     private final AtomicReference<T> returned;
+    private final int delay;
+    private final AtomicBoolean cancel;
 
     public Runner(Sync<T> action, AtomicInteger statusCode) {
       this.action = action;
       this.statusCode = statusCode;
       this.done = new AtomicBoolean();
       this.returned = new AtomicReference<T>();
+      this.delay = 1;
+      this.cancel = new AtomicBoolean();
     }
 
     public Runner(Runner other) {
@@ -55,6 +62,8 @@ class AppThread {
       this.statusCode = other.statusCode;
       this.done = other.done;
       this.returned = other.returned;
+      this.delay = Math.min(MAX_DELAY, other.delay * 2);
+      this.cancel = other.cancel;
     }
 
     /**
@@ -62,21 +71,32 @@ class AppThread {
      */
     @Override
     public void run() {
-      synchronized (statusCode) {
-        if (statusCode.get() == 0) {
-          Platform.runLater(new Runner(this));
-        } else {
-          if (statusCode.get() > 299) {
-            LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
-          }
-          T result = null;
-          try {
-            result = action.perform();
-          } finally {
-            synchronized (done) {
-              returned.set(result);
-              done.set(true);
-              done.notifyAll();
+      if (!cancel.get()) {
+        synchronized (statusCode) {
+          if (statusCode.get() == 0) {
+            final Runner newRunner = new Runner(this);
+            new Thread(new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  Thread.sleep(delay);
+                } catch (InterruptedException e) {}
+                Platform.runLater(newRunner);
+              }
+            }).start();
+          } else {
+            if (statusCode.get() > 299) {
+              LogsServer.instance().trace("Performing browser action, but HTTP status is " + statusCode.get() + ".");
+            }
+            T result = null;
+            try {
+              result = action.perform();
+            } finally {
+              synchronized (done) {
+                returned.set(result);
+                done.set(true);
+                done.notifyAll();
+              }
             }
           }
         }
@@ -122,6 +142,7 @@ class AppThread {
             LogsServer.instance().exception(e);
           }
           if (!runner.done.get()) {
+            runner.cancel.set(true);
             LogsServer.instance().exception(new RuntimeException("Action never completed."));
           }
         }
