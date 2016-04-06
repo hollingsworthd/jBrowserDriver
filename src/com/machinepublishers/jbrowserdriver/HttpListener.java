@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -70,8 +69,7 @@ class HttpListener implements LoadListenerClient {
     errors = Collections.unmodifiableMap(errorsTmp);
   }
 
-  private final List<Thread> threadsFromReset = new ArrayList<Thread>();
-  private final AtomicBoolean superseded = new AtomicBoolean();
+  private final List<Thread> ajaxListeners = new ArrayList<Thread>();
   private final Map<String, Long> resources = new HashMap<String, Long>();
   private final ContextItem contextItem;
   private final AtomicInteger statusCode;
@@ -134,18 +132,23 @@ class HttpListener implements LoadListenerClient {
   }
 
   void resetStatusCode() {
+    resetStatusCode(true);
+  }
+
+  private void resetStatusCode(boolean startNewListener) {
     synchronized (statusCode) {
-      for (Thread thread : threadsFromReset) {
+      for (Thread thread : ajaxListeners) {
         thread.interrupt();
       }
-      threadsFromReset.clear();
-      superseded.set(false);
+      ajaxListeners.clear();
       statusCode.set(0);
       resources.clear();
-      Thread thread = new Thread(new AjaxListener(
-          statusCode, resources, superseded, timeoutMS.get()));
-      threadsFromReset.add(thread);
-      thread.start();
+      if (startNewListener) {
+        Thread thread = new Thread(new AjaxListener(
+            200, statusCode, resources, timeoutMS.get()));
+        ajaxListeners.add(thread);
+        thread.start();
+      }
     }
   }
 
@@ -175,9 +178,7 @@ class HttpListener implements LoadListenerClient {
                 LogsServer.instance().exception(t);
               }
             }
-            statusCode.set(0);
-            superseded.set(true);
-            resources.clear();
+            resetStatusCode(false);
             resources.put(frame + url, System.currentTimeMillis());
             statusMonitor.startStatusMonitor(url);
           }
@@ -189,8 +190,10 @@ class HttpListener implements LoadListenerClient {
                 || state == LoadListenerClient.LOAD_FAILED)) {
           final int newStatusCode = statusMonitor.stopStatusMonitor(url);
           resources.remove(frame + url);
-          new Thread(new AjaxListener(newStatusCode, statusCode,
-              resources, timeoutMS.get())).start();
+          Thread thread = new Thread(new AjaxListener(newStatusCode, statusCode,
+              resources, timeoutMS.get()));
+          ajaxListeners.add(thread);
+          thread.start();
         }
       }
     } catch (Throwable t) {

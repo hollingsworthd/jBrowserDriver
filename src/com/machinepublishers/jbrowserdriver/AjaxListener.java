@@ -22,7 +22,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class AjaxListener implements Runnable {
@@ -30,7 +29,6 @@ class AjaxListener implements Runnable {
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
   private final Map<String, Long> resources;
-  private final AtomicBoolean superseded;
   private final long timeoutMS;
 
   AjaxListener(final int newStatusCode,
@@ -40,17 +38,6 @@ class AjaxListener implements Runnable {
     this.statusCode = statusCode;
     this.resources = resources;
     this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
-    this.superseded = new AtomicBoolean();
-  }
-
-  AjaxListener(final AtomicInteger statusCode,
-      final Map<String, Long> resources,
-      final AtomicBoolean superseded, final long timeoutMS) {
-    this.statusCode = statusCode;
-    this.resources = resources;
-    this.superseded = superseded;
-    this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
-    this.newStatusCode = null;
   }
 
   /**
@@ -64,10 +51,12 @@ class AjaxListener implements Runnable {
     while (time - start < timeoutMS) {
       try {
         Thread.sleep(SettingsManager.settings().ajaxWait());
-      } catch (InterruptedException e) {}
+      } catch (InterruptedException e) {
+        return;
+      }
       time = System.currentTimeMillis();
       synchronized (statusCode) {
-        if (superseded.get() || Thread.interrupted()) {
+        if (Thread.interrupted()) {
           return;
         }
         final Set<String> remove = new HashSet<String>();
@@ -86,7 +75,7 @@ class AjaxListener implements Runnable {
       }
     }
     synchronized (statusCode) {
-      if (superseded.get() || Thread.interrupted()) {
+      if (Thread.interrupted()) {
         return;
       }
       if (newStatusCode == null) {
