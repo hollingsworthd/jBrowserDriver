@@ -46,7 +46,6 @@ import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.Pixels;
-import com.sun.javafx.webkit.Accessor;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
@@ -306,20 +305,19 @@ class Robot {
       }
     }
     if (wait) {
+      long waitMS = Math.max(SettingsManager.settings().ajaxWait(), 2) / 2;
+      try {
+        Thread.sleep(waitMS);
+      } catch (InterruptedException e) {}
       AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
-          while (true) {
-            try {
-              Thread.sleep(JBrowserDriverServer.PAINT_MS);
-            } catch (InterruptedException e) {}
-            if (!Accessor.getPageFor(context.item().engine.get()).isRepaintPending()) {
-              break;
-            }
-          }
           return null;
         }
       });
+      try {
+        Thread.sleep(waitMS);
+      } catch (InterruptedException e) {}
     }
   }
 
@@ -333,13 +331,13 @@ class Robot {
   void keysPress(final CharSequence chars) {
     lock(true);
     try {
-      keysPress(chars, true);
+      keysPressHelper(chars);
     } finally {
       unlock();
     }
   }
 
-  private void keysPress(final CharSequence chars, boolean delay) {
+  private void keysPressHelper(final CharSequence chars) {
     final int[] ints = chars.codePoints().toArray();
     final Integer[] integers = new Integer[ints.length];
     for (int i = 0; i < ints.length; i++) {
@@ -348,7 +346,7 @@ class Robot {
     final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
     for (int i = 0; i < codePoints.length(); i++) {
       final int cur = i;
-      AppThread.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
@@ -366,13 +364,13 @@ class Robot {
   void keysRelease(final CharSequence chars) {
     lock(false);
     try {
-      keysRelease(chars, true);
+      keysReleaseHelper(chars);
     } finally {
       unlock();
     }
   }
 
-  private void keysRelease(final CharSequence chars, boolean delay) {
+  private void keysReleaseHelper(final CharSequence chars) {
     final int[] ints = chars.codePoints().toArray();
     final Integer[] integers = new Integer[ints.length];
     for (int i = 0; i < ints.length; i++) {
@@ -381,7 +379,7 @@ class Robot {
     final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
     for (int i = 0; i < codePoints.length(); i++) {
       final int cur = i;
-      AppThread.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
@@ -411,10 +409,9 @@ class Robot {
     lock(true);
     try {
       if (isChord(chars)) {
-        keysPress(chars, true);
-        keysRelease(new StringBuilder(chars).reverse(), true);
+        keysPressHelper(chars);
+        keysReleaseHelper(new StringBuilder(chars).reverse());
       } else {
-        final boolean delay = !chars.toString().equals(Util.KEYBOARD_DELETE);
         int[] ints = chars.codePoints().toArray();
         for (int i = 0; i < ints.length; i++) {
           final int codePoint = ints[i];
@@ -432,7 +429,7 @@ class Robot {
             reset = false;
           }
           if (fireEvent) {
-            AppThread.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+            AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
               @Override
               public Object perform() {
                 if (reset) {
@@ -447,8 +444,8 @@ class Robot {
               }
             });
           } else {
-            keysPress(myChar, false);
-            keysRelease(myChar, delay);
+            keysPressHelper(myChar);
+            keysReleaseHelper(myChar);
           }
         }
       }
@@ -460,7 +457,7 @@ class Robot {
   void mouseMove(final double pageX, final double pageY) {
     lock(false);
     try {
-      AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -484,7 +481,7 @@ class Robot {
   void mouseMoveBy(final double pageX, final double pageY) {
     lock(false);
     try {
-      AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -504,8 +501,8 @@ class Robot {
   void mouseClick(final MouseButton button) {
     lock(true);
     try {
-      mousePress(button, false);
-      mouseRelease(button, true);
+      mousePressHelper(button);
+      mouseReleaseHelper(button);
     } finally {
       unlock();
     }
@@ -514,14 +511,14 @@ class Robot {
   void mousePress(final MouseButton button) {
     lock(true);
     try {
-      mousePress(button, true);
+      mousePressHelper(button);
     } finally {
       unlock();
     }
   }
 
-  private void mousePress(final MouseButton button, boolean delay) {
-    AppThread.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+  private void mousePressHelper(final MouseButton button) {
+    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         robot.get().mousePress(button.getValue());
@@ -533,14 +530,14 @@ class Robot {
   void mouseRelease(final MouseButton button) {
     lock(false);
     try {
-      mouseRelease(button, true);
+      mouseReleaseHelper(button);
     } finally {
       unlock();
     }
   }
 
-  private void mouseRelease(final MouseButton button, boolean delay) {
-    AppThread.exec(delay ? Pause.LONG : Pause.SHORT, statusCode, new Sync<Object>() {
+  private void mouseReleaseHelper(final MouseButton button) {
+    AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         if (button == MouseButton.LEFT) {
@@ -555,7 +552,7 @@ class Robot {
   void mouseWheel(final int wheelAmt) {
     lock(true);
     try {
-      AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().mouseWheel(wheelAmt);
