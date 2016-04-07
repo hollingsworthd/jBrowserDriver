@@ -540,7 +540,7 @@ public class Settings implements Serializable {
      * 
      * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to
      * have been loaded completely. For very slow or overloaded CPUs, set a higher value.
-     * Defaults to <code>120</code>.
+     * Defaults to <code>150</code>.
      * 
      * @param intervalMS
      * @return this Builder
