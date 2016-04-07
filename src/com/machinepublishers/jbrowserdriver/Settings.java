@@ -166,7 +166,7 @@ public class Settings implements Serializable {
     private Collection<Integer> ports = new LinkedHashSet<Integer>();
     private int processes = 8;
     private boolean headless = true;
-    private long ajaxWait = 120;
+    private long ajaxWait = 150;
     private long ajaxResourceTimeout = 2000;
     private boolean blockAds = true;
     private boolean quickRender = true;
