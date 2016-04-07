@@ -293,7 +293,7 @@ class Robot {
     return false;
   }
 
-  private void lock(boolean wait) {
+  private void lock() {
     long myThread = latestThread.incrementAndGet();
     synchronized (curThread) {
       while (myThread != curThread.get() + 1) {
@@ -304,24 +304,21 @@ class Robot {
         }
       }
     }
-    if (wait) {
-      long waitMS = Math.max(SettingsManager.settings().ajaxWait(), 2) / 2;
-      try {
-        Thread.sleep(waitMS);
-      } catch (InterruptedException e) {}
-      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          return null;
-        }
-      });
-      try {
-        Thread.sleep(waitMS);
-      } catch (InterruptedException e) {}
-    }
+    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      @Override
+      public Object perform() {
+        return null;
+      }
+    });
   }
 
   private void unlock() {
+    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      @Override
+      public Object perform() {
+        return null;
+      }
+    });
     curThread.incrementAndGet();
     synchronized (curThread) {
       curThread.notifyAll();
@@ -329,7 +326,7 @@ class Robot {
   }
 
   void keysPress(final CharSequence chars) {
-    lock(true);
+    lock();
     try {
       keysPressHelper(chars);
     } finally {
@@ -362,7 +359,7 @@ class Robot {
   }
 
   void keysRelease(final CharSequence chars) {
-    lock(false);
+    lock();
     try {
       keysReleaseHelper(chars);
     } finally {
@@ -411,7 +408,7 @@ class Robot {
   }
 
   void keysTypeHelper(final CharSequence chars) {
-    lock(true);
+    lock();
     try {
       if (isChord(chars)) {
         keysPressHelper(chars);
@@ -460,7 +457,7 @@ class Robot {
   }
 
   void mouseMove(final double pageX, final double pageY) {
-    lock(false);
+    lock();
     try {
       AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
@@ -484,7 +481,7 @@ class Robot {
   }
 
   void mouseMoveBy(final double pageX, final double pageY) {
-    lock(false);
+    lock();
     try {
       AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
@@ -504,7 +501,7 @@ class Robot {
   }
 
   void mouseClick(final MouseButton button) {
-    lock(true);
+    lock();
     try {
       mousePressHelper(button);
       mouseReleaseHelper(button);
@@ -514,7 +511,7 @@ class Robot {
   }
 
   void mousePress(final MouseButton button) {
-    lock(true);
+    lock();
     try {
       mousePressHelper(button);
     } finally {
@@ -533,7 +530,7 @@ class Robot {
   }
 
   void mouseRelease(final MouseButton button) {
-    lock(false);
+    lock();
     try {
       mouseReleaseHelper(button);
     } finally {
@@ -555,7 +552,7 @@ class Robot {
   }
 
   void mouseWheel(final int wheelAmt) {
-    lock(true);
+    lock();
     try {
       AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
         @Override
@@ -570,7 +567,7 @@ class Robot {
   }
 
   byte[] screenshot() {
-    lock(true);
+    lock();
     try {
       return AppThread.exec(Pause.NONE, statusCode, new Sync<byte[]>() {
         @Override
