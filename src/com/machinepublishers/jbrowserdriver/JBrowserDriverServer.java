@@ -63,8 +63,6 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
 
-  static final int PAINT_HZ = 2;
-  static final int PAINT_MS = 1000 / PAINT_HZ;
   private static final AtomicInteger rmiPort = new AtomicInteger();
   private static Registry registry;
 
