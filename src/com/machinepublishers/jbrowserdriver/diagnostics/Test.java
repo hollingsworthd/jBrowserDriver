@@ -70,7 +70,7 @@ public class Test {
               .portsMax(TEST_PORT_RMI, 1)
               .screen(new Dimension(1024, 768))
               .traceConsole(true)
-              .ajaxWait(120)
+              .ajaxWait(150)
               .cache(true)
               .ignoreDialogs(false)
               .build());
@@ -95,7 +95,7 @@ public class Test {
       long waitStart = System.currentTimeMillis();
       driver.pageWait();
       long waitEnd = System.currentTimeMillis();
-      test(waitEnd - waitStart > 115 && waitEnd - waitStart < 125);
+      test(waitEnd - waitStart > 145 && waitEnd - waitStart < 155);
 
       /*
        * Select DOM elements
