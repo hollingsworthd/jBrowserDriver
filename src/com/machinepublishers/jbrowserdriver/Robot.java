@@ -402,10 +402,15 @@ class Robot {
       joiner.add(chars);
     }
     final String toSend = joiner.toString();
-    keysType(toSend);
+    if (toSend.equals(Util.KEYBOARD_DELETE)) {
+      keysTypeHelper(Keys.chord(Keys.CONTROL, "a"));
+      keysTypeHelper(Keys.BACK_SPACE.toString());
+    } else {
+      keysTypeHelper(toSend);
+    }
   }
 
-  void keysType(final CharSequence chars) {
+  void keysTypeHelper(final CharSequence chars) {
     lock(true);
     try {
       if (isChord(chars)) {

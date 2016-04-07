@@ -37,27 +37,13 @@ import javax.net.ssl.SSLProtocolException;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
-import org.openqa.selenium.Keys;
 
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
   private static final Random rand = new Random();
   private static final Random secureRand = new Random();
-  static final String KEYBOARD_DELETE;
-  static {
-    final int CHARS_TO_DELETE = 60;
-    StringBuilder builder = new StringBuilder();
-    String key = Keys.BACK_SPACE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
-    }
-    key = Keys.DELETE.toString();
-    for (int i = 0; i < CHARS_TO_DELETE; i++) {
-      builder.append(key);
-    }
-    KEYBOARD_DELETE = builder.toString();
-  }
+  static final String KEYBOARD_DELETE = "jbrowserdriver-keyboard-delete";
 
   static String randomPropertyName() {
     return RandomStringUtils.randomAlphabetic(12 + rand.nextInt(12));
