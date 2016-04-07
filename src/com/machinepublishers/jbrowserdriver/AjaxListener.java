@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class AjaxListener implements Runnable {
   private static final long MAX_WAIT_DEFAULT = 15000;
+  private static final int IDLE_COUNT_TARGET = 3;
   private final Integer newStatusCode;
   private final AtomicInteger statusCode;
   private final Map<String, Long> resources;
@@ -48,9 +49,12 @@ class AjaxListener implements Runnable {
     int size = 0;
     final long start = System.currentTimeMillis();
     long time = start;
+    final long sleepMS = Math.max(SettingsManager.settings().ajaxWait() / IDLE_COUNT_TARGET, 0);
+    int idleCount = 0;
+    int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
     while (time - start < timeoutMS) {
       try {
-        Thread.sleep(SettingsManager.settings().ajaxWait());
+        Thread.sleep(sleepMS);
       } catch (InterruptedException e) {
         return;
       }
@@ -71,6 +75,11 @@ class AjaxListener implements Runnable {
         size = resources.size();
       }
       if (size == 0) {
+        ++idleCount;
+      } else {
+        idleCount = 0;
+      }
+      if (idleCount == idleCountTarget) {
         break;
       }
     }
