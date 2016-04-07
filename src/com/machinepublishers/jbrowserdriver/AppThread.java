@@ -110,7 +110,7 @@ class AppThread {
           if (pauseLength == Pause.SHORT) {
             Thread.sleep(0, 1);
           } else if (pauseLength == Pause.LONG) {
-            Thread.sleep(60 + rand.nextInt(60));
+            Thread.sleep(30 + rand.nextInt(40));
           }
         } catch (Throwable t) {}
         return null;
