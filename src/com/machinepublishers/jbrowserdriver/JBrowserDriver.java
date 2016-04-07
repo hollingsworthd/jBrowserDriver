@@ -87,7 +87,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   //TODO handle jbd.fork=false
 
   /**
-   * Use this string on sendKeys functions to delete text.
+   * This can be passed to sendKeys to delete all the text in a text field.
    */
   public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
   private static final Intercept intercept;
