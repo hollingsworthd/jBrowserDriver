@@ -100,6 +100,8 @@ public class Test {
       /*
        * Select DOM elements
        */
+      test("test-data-attr".equals(driver.findElement(By.id("divtext1")).getAttribute("data-selected")));
+      test(driver.findElement(By.id("divtext1")).getAttribute("undefinedattr") == null);
       test(driver.findElement(By.id("divtext1")).getAttribute("innerText").equals("test1"));
       test(driver.findElements(By.name("divs")).size() == 2);
       test(driver.findElements(By.name("divs")).get(1).getAttribute("innerText").equals("test2"));
@@ -129,7 +131,7 @@ public class Test {
       driver.findElement(By.id("text-input")).sendKeys("");
       test(driver.findElement(By.id("text-input")).getAttribute("value").equals("testing"));
       driver.findElement(By.id("text-input")).sendKeys(JBrowserDriver.KEYBOARD_DELETE);
-      test("".equals(driver.findElement(By.id("text-input")).getAttribute("value")));
+      test(driver.findElement(By.id("text-input")).getAttribute("value") == null);
 
       /*
        * Execute javascript
