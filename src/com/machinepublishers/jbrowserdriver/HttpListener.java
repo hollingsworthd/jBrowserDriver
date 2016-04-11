@@ -87,15 +87,17 @@ class HttpListener implements LoadListenerClient {
 
   private void trace(String label, long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    logs.trace(new StringBuilder()
-        .append("-").append(label).append("-> ")
-        .append(url)
-        .append(" ** {timestamp: ").append(System.currentTimeMillis())
-        .append(", state: ").append(states.get(state))
-        .append(", progress: ").append(progress)
-        .append(", error: ").append(errors.get(errorCode))
-        .append(", contentType: ").append(contentType)
-        .append(", frame: ").append(frame).append("}").toString());
+    if (state != LoadListenerClient.PROGRESS_CHANGED) {
+      logs.trace(new StringBuilder()
+          .append("-").append(label).append("-> ")
+          .append(url)
+          .append(" ** {timestamp: ").append(System.currentTimeMillis())
+          .append(", state: ").append(states.get(state))
+          .append(", progress: ").append(progress)
+          .append(", error: ").append(errors.get(errorCode))
+          .append(", contentType: ").append(contentType)
+          .append(", frame: ").append(frame).append("}").toString());
+    }
   }
 
   /**

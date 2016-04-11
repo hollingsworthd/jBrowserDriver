@@ -141,12 +141,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
       List<File> items = new ClasspathFinder().getUniqueClasspathElements();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
-      Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-        @Override
-        public void run() {
-          FileUtils.deleteQuietly(classpathDir);
-        }
-      }));
+      Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
       List<String> paths = new ArrayList<String>();
       for (File curItem : items) {
         paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
@@ -192,6 +187,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   }
 
   private final File tmpDir;
+  private final FileRemover shutdownHook;
 
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
@@ -232,13 +228,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       Logs.fatal(t);
     }
     this.tmpDir = tmpDir;
-    final File thisTmpDir = this.tmpDir;
-    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-      @Override
-      public void run() {
-        FileUtils.deleteQuietly(thisTmpDir);
-      }
-    }));
+    this.shutdownHook = new FileRemover(tmpDir);
+    Runtime.getRuntime().addShutdownHook(shutdownHook);
 
     synchronized (portsAvailable) {
       for (int curPort : settings.ports()) {
@@ -299,6 +290,15 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
             ? "" : "[Process " + Math.abs(configuredPort.get()) + "]")
         .toString());
     logs = new Logs(logsRemote);
+  }
+
+  @Override
+  protected void finalize() throws Throwable {
+    super.finalize();
+    try {
+      Runtime.getRuntime().removeShutdownHook(shutdownHook);
+      shutdownHook.run();
+    } catch (Throwable t) {}
   }
 
   private void launchProcess(final int port) {

@@ -176,7 +176,7 @@ public class Settings implements Serializable {
     private boolean traceConsole;
     private boolean warnConsole = true;
     private boolean wireConsole;
-    private int maxLogs = 5000;
+    private int maxLogs = 3000;
     private boolean hostnameVerification = true;
     private boolean javascript = true;
     private int socketTimeout = -1;
@@ -813,7 +813,7 @@ public class Settings implements Serializable {
      * Maximum number of log entries to store in memory, accessible via the Selenium APIs.
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
-     * Defaults to <code>5000</code>.
+     * Defaults to <code>3000</code>.
      * 
      * @param maxLogs
      * @return this Builder

@@ -22,16 +22,21 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
 import org.openqa.selenium.logging.LogEntries;
 
 class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
-  private final LinkedList<Entry> entries = new LinkedList<Entry>();
+  private final LinkedList<Entry> entriesNormal = new LinkedList<Entry>();
+  private final LinkedList<Entry> entriesTrace = new LinkedList<Entry>();
+  private static final int LOG_TYPES = 2;
+  private final Object lock = new Object();
   private static final LogsServer instance;
   static {
     LogsServer instanceTmp = null;
@@ -61,18 +66,19 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   private LogsServer() throws RemoteException {}
 
   public void clear() {
-    synchronized (entries) {
-      entries.clear();
+    synchronized (lock) {
+      entriesNormal.clear();
+      entriesTrace.clear();
     }
   }
 
   public void trace(String message) {
     Settings settings = SettingsManager.settings();
     final Entry entry = new Entry(Level.FINEST, System.currentTimeMillis(), message);
-    synchronized (entries) {
-      entries.add(entry);
-      if (settings != null && entries.size() > settings.maxLogs()) {
-        entries.removeFirst();
+    synchronized (lock) {
+      entriesTrace.add(entry);
+      if (settings != null && entriesTrace.size() > settings.maxLogs() / LOG_TYPES) {
+        entriesTrace.removeFirst();
       }
     }
     if (settings == null || settings.traceConsole()) {
@@ -83,10 +89,10 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   public void warn(String message) {
     Settings settings = SettingsManager.settings();
     final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
-    synchronized (entries) {
-      entries.add(entry);
-      if (settings != null && entries.size() > settings.maxLogs()) {
-        entries.removeFirst();
+    synchronized (lock) {
+      entriesNormal.add(entry);
+      if (settings != null && entriesNormal.size() > settings.maxLogs() / LOG_TYPES) {
+        entriesNormal.removeFirst();
       }
     }
     if (settings == null || settings.warnConsole()) {
@@ -103,10 +109,10 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
         writer = new StringWriter();
         t.printStackTrace(new PrintWriter(writer));
         entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
-        synchronized (entries) {
-          entries.add(entry);
-          if (settings != null && entries.size() > settings.maxLogs()) {
-            entries.removeFirst();
+        synchronized (lock) {
+          entriesNormal.add(entry);
+          if (settings != null && entriesNormal.size() > settings.maxLogs() / LOG_TYPES) {
+            entriesNormal.removeFirst();
           }
         }
       } catch (Throwable t2) {
@@ -128,10 +134,17 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public Entries getRemote(String s) {
-    synchronized (entries) {
-      Entries logEntries = new Entries(entries);
-      entries.clear();
-      return logEntries;
+    synchronized (lock) {
+      try {
+        List<Entry> combinedLogs = new ArrayList<Entry>();
+        combinedLogs.addAll(entriesNormal);
+        combinedLogs.addAll(entriesTrace);
+        Entries logEntries = new Entries(combinedLogs);
+        return logEntries;
+      } finally {
+        entriesNormal.clear();
+        entriesTrace.clear();
+      }
     }
   }
 
@@ -140,12 +153,8 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public LogEntries get(String s) {
-    synchronized (entries) {
-      try {
-        return new Entries(entries).toLogEntries();
-      } finally {
-        entries.clear();
-      }
+    synchronized (lock) {
+      return getRemote(null).toLogEntries();
     }
   }
 

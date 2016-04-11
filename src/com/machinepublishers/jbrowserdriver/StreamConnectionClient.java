@@ -42,7 +42,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -79,25 +78,23 @@ class StreamConnectionClient {
   private final PoolingHttpClientConnectionManager manager;
   private final CloseableHttpClient client;
   private final CloseableHttpClient cachingClient;
+  private final FileRemover shutdownHook;
 
   StreamConnectionClient() {
     File cacheDirTmp = SettingsManager.settings().cacheDir();
+    FileRemover shutdownHookTmp = null;
     try {
       cacheDirTmp = cacheDirTmp == null ? Files.createTempDirectory("jbd_webcache_").toFile() : cacheDirTmp;
       if (SettingsManager.settings().cacheDir() == null) {
-        final File finalCacheDir = cacheDirTmp;
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-          @Override
-          public void run() {
-            FileUtils.deleteQuietly(finalCacheDir);
-          }
-        }));
+        shutdownHookTmp = new FileRemover(cacheDirTmp);
+        Runtime.getRuntime().addShutdownHook(shutdownHookTmp);
       } else {
         cacheDirTmp.mkdirs();
       }
     } catch (Throwable t) {
       LogsServer.instance().exception(t);
     }
+    shutdownHook = shutdownHookTmp;
     cacheDir = cacheDirTmp;
     httpCache = new HttpCache(cacheDirTmp);
 
@@ -107,7 +104,7 @@ class StreamConnectionClient {
         .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
         .build();
     ConnectionSocketFactory sslSocketFactory = SettingsManager.settings()
-    		.hostnameVerification() ? new SslSocketFactory(sslContext()) : new SslSocketWithoutHostnameVerificationFactory(sslContext());
+        .hostnameVerification() ? new SslSocketFactory(sslContext()) : new SslSocketWithoutHostnameVerificationFactory(sslContext());
     registry = RegistryBuilder.<ConnectionSocketFactory> create()
         .register("https", sslSocketFactory)
         .register("http", new SocketFactory())
@@ -133,6 +130,15 @@ class StreamConnectionClient {
         .setDefaultCredentialsProvider(ProxyAuth.instance())
         .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
         .build();
+  }
+
+  @Override
+  protected void finalize() throws Throwable {
+    super.finalize();
+    try {
+      Runtime.getRuntime().removeShutdownHook(shutdownHook);
+      shutdownHook.run();
+    } catch (Throwable t) {}
   }
 
   File cacheDir() {
@@ -235,16 +241,16 @@ class StreamConnectionClient {
       return newSocket(context);
     }
   }
-  
+
   private static class SslSocketWithoutHostnameVerificationFactory extends SSLConnectionSocketFactory {
-	  public SslSocketWithoutHostnameVerificationFactory(final SSLContext sslContext) {
-		  super(sslContext, NoopHostnameVerifier.INSTANCE);
-	  }
-	  
-	  @Override
-	  public Socket createSocket(final HttpContext context) throws IOException {
-		  return newSocket(context);
-	  }
+    public SslSocketWithoutHostnameVerificationFactory(final SSLContext sslContext) {
+      super(sslContext, NoopHostnameVerifier.INSTANCE);
+    }
+
+    @Override
+    public Socket createSocket(final HttpContext context) throws IOException {
+      return newSocket(context);
+    }
   }
 
   private static class SocketFactory extends PlainConnectionSocketFactory {
