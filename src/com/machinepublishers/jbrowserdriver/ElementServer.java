@@ -49,7 +49,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
@@ -183,22 +182,30 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void activate() {
-    try {
-      boolean set = false;
-      Object contentWindow = node.getMember("contentWindow");
-      if (contentWindow instanceof JSObject) {
-        Object document = ((JSObject) contentWindow).getMember("document");
-        if (document instanceof JSObject) {
-          context.item().selectFrame(new ElementServer((JSObject) document, context));
-          set = true;
-        }
-      }
-      if (!set) {
-        context.item().selectFrame(this);
-      }
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-    }
+    final ElementServer thisObj = this;
+    AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            try {
+              boolean set = false;
+              Object contentWindow = node.getMember("contentWindow");
+              if (contentWindow instanceof JSObject) {
+                Object document = ((JSObject) contentWindow).getMember("document");
+                if (document instanceof JSObject) {
+                  context.item().selectFrame(new ElementServer((JSObject) document, context));
+                  set = true;
+                }
+              }
+              if (!set) {
+                context.item().selectFrame(thisObj);
+              }
+            } catch (Throwable t) {
+              LogsServer.instance().exception(t);
+            }
+            return null;
+          }
+        });
   }
 
   /**
@@ -1035,70 +1042,71 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         }));
   }
 
-  private Object parseScriptResult(Object obj) {
-    if (obj instanceof Throwable) {
-      if (obj instanceof RuntimeException) {
-        throw new UncheckedExecutionException((RuntimeException) obj);
-      }
-      throw new UncheckedExecutionException(new RuntimeException((Throwable) obj));
-    }
-    if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
-      return null;
-    }
-    if (obj instanceof Node) {
-      try {
-        return new ElementServer((JSObject) obj, context);
-      } catch (RemoteException e) {
-        LogsServer.instance().exception(e);
-        return null;
-      }
-    }
-    if (obj instanceof JSObject) {
-      List<Object> list = new ArrayList<Object>();
-      boolean isList = false;
-      for (int i = 0;; i++) {
-        Object cur = ((JSObject) obj).getSlot(i);
-        if (cur instanceof String && "undefined".equals(cur.toString())) {
-          break;
-        }
-        isList = true;
-        list.add(parseScriptResult(cur));
-      }
-      if (isList) {
-        return list;
-      }
-      if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
-        return obj.toString();
-      }
-      if (Boolean.TRUE.equals(executeScript("return Array.isArray(arguments[0]);", obj))) {
-        return new ArrayList<Object>();
-      }
-      List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
-          .append("var list = [];")
-          .append("for(var propertyName in arguments[0]){")
-          .append("list.push(propertyName);")
-          .append("var val = arguments[0][propertyName];")
-          .append("list.push(val === undefined? null : val);")
-          .append("}")
-          .append("return list.length > 0? list : undefined;").toString(),
-          obj);
-      //TODO ES6 will support Symbol keys
-      Map map = new LinkedHashMap();
-      for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
-        map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
-      }
-      return map;
-    }
-    if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
-      return obj;
-    }
-    if (obj instanceof Integer) {
-      return new Long((Integer) obj);
-    }
-    if (obj instanceof Float) {
-      return new Double((Float) obj);
-    }
-    return obj.toString();
+  private Object parseScriptResult(final Object obj) {
+    return AppThread.exec(Pause.NONE, context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            AppThread.handleException(obj);
+            if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
+              return null;
+            }
+            if (obj instanceof Node) {
+              try {
+                return new ElementServer((JSObject) obj, context);
+              } catch (RemoteException e) {
+                LogsServer.instance().exception(e);
+                return null;
+              }
+            }
+            if (obj instanceof JSObject) {
+              List<Object> list = new ArrayList<Object>();
+              boolean isList = false;
+              for (int i = 0;; i++) {
+                Object cur = ((JSObject) obj).getSlot(i);
+                if (cur instanceof String && "undefined".equals(cur.toString())) {
+                  break;
+                }
+                isList = true;
+                list.add(parseScriptResult(cur));
+              }
+              if (isList) {
+                return list;
+              }
+              if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
+                return obj.toString();
+              }
+              if (Boolean.TRUE.equals(executeScript("return Array.isArray(arguments[0]);", obj))) {
+                return new ArrayList<Object>();
+              }
+              List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
+                  .append("var list = [];")
+                  .append("for(var propertyName in arguments[0]){")
+                  .append("list.push(propertyName);")
+                  .append("var val = arguments[0][propertyName];")
+                  .append("list.push(val === undefined? null : val);")
+                  .append("}")
+                  .append("return list.length > 0? list : undefined;").toString(),
+                  obj);
+              //TODO ES6 will support Symbol keys
+              Map map = new LinkedHashMap();
+              for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
+                map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
+              }
+              return map;
+            }
+            if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
+              return obj;
+            }
+            if (obj instanceof Integer) {
+              return new Long((Integer) obj);
+            }
+            if (obj instanceof Float) {
+              return new Double((Float) obj);
+            }
+            return obj.toString();
+          }
+        });
   }
 
   /**

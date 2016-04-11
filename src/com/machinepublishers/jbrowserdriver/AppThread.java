@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
 import javafx.application.Platform;
 
 class AppThread {
@@ -45,6 +47,7 @@ class AppThread {
     private final AtomicReference<T> returned;
     private final int delay;
     private final AtomicBoolean cancel;
+    private final AtomicReference<Throwable> failure;
 
     public Runner(Sync<T> action, AtomicInteger statusCode) {
       this.action = action;
@@ -53,6 +56,7 @@ class AppThread {
       this.returned = new AtomicReference<T>();
       this.delay = 1;
       this.cancel = new AtomicBoolean();
+      this.failure = new AtomicReference<Throwable>();
     }
 
     public Runner(Runner other) {
@@ -62,6 +66,7 @@ class AppThread {
       this.returned = other.returned;
       this.delay = Math.min(MAX_DELAY, other.delay * 2);
       this.cancel = other.cancel;
+      this.failure = other.failure;
     }
 
     /**
@@ -89,6 +94,8 @@ class AppThread {
             T result = null;
             try {
               result = action.perform();
+            } catch (Throwable t) {
+              failure.set(t);
             } finally {
               synchronized (done) {
                 returned.set(result);
@@ -122,6 +129,18 @@ class AppThread {
     return exec(pauseAfterExec, statusCode, 0, action);
   }
 
+  static void handleException(Object obj) {
+    if (obj instanceof UncheckedExecutionException) {
+      throw (UncheckedExecutionException) obj;
+    }
+    if (obj instanceof RuntimeException) {
+      throw new UncheckedExecutionException((RuntimeException) obj);
+    }
+    if (obj instanceof Throwable) {
+      throw new UncheckedExecutionException(new RuntimeException((Throwable) obj));
+    }
+  }
+
   static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action) {
     try {
@@ -144,6 +163,7 @@ class AppThread {
             LogsServer.instance().exception(new RuntimeException("Action never completed."));
           }
         }
+        handleException(runner.failure.get());
         return runner.returned.get();
       }
     } finally {
