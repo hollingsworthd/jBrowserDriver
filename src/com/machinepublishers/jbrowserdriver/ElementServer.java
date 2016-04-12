@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
@@ -61,7 +62,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
 
-  private static final String IS_DISPLAYED;
+  private static final String IS_VISIBLE;
 
   static {
     StringBuilder builder = new StringBuilder();
@@ -92,6 +93,14 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     builder.append("  }");
     builder.append("  return propertyValue;");
     builder.append("};");
+    builder.append("var isDisplayed = function(element) {");
+    builder.append("  var display = findEffectiveStyleProperty(element, \"display\");");
+    builder.append("  if (display == \"none\") return false;");
+    builder.append("  if (element.parentNode.style) {");
+    builder.append("    return isDisplayed(element.parentNode);");
+    builder.append("  }");
+    builder.append("  return true;");
+    builder.append("};");
     builder.append("var isVisible = function(element) {");
     builder.append("  if (element.tagName) {");
     builder.append("    var tagName = new String(element.tagName).toLowerCase();");
@@ -107,17 +116,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     builder.append("  var visibility = findEffectiveStyleProperty(element, \"visibility\");");
     builder.append("  return (visibility != \"hidden\" && isDisplayed(element));");
     builder.append("};");
-    builder.append("var isDisplayed = function(element) {");
-    builder.append("  var display = findEffectiveStyleProperty(element, \"display\");");
-    builder.append("  if (display == \"none\") return false;");
-    builder.append("  if (element.parentNode.style) {");
-    builder.append("    return isDisplayed(element.parentNode);");
-    builder.append("  }");
-    builder.append("  return true;");
-    builder.append("};");
-    builder.append("return isDisplayed(me);");
+    builder.append("return isVisible(me);");
     builder.append("})();");
-    IS_DISPLAYED = builder.toString();
+    IS_VISIBLE = builder.toString();
   }
 
   private static final Pattern rgb = Pattern.compile(
@@ -190,7 +191,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             try {
               boolean set = false;
               Object contentWindow = node.getMember("contentWindow");
@@ -232,8 +233,11 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     }
   }
 
-  private void validate() {
+  private void validate(boolean mustBeVisible) {
     validate(node, context.item());
+    if (mustBeVisible && !isDisplayed()) {
+      throw new ElementNotVisibleException("Element is not visible.");
+    }
   }
 
   /**
@@ -245,7 +249,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             node.call("scrollIntoView");
             if (context.keyboard.get().isShiftPressed()) {
               node.eval(
@@ -272,7 +276,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(true);
             org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
             double y1 = Double.parseDouble(obj.getMember("top").toString());
@@ -295,7 +299,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             context.item().httpListener.get().resetStatusCode();
             if (node instanceof HTMLInputElement) {
               ((HTMLInputElement) node).getForm().submit();
@@ -316,7 +320,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(true);
             node.call("scrollIntoView");
             node.call("focus");
             return null;
@@ -341,7 +345,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             context.item().httpListener.get().resetStatusCode();
             node.call("scrollIntoView");
             node.call("focus");
@@ -360,7 +364,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<String>() {
           @Override
           public String perform() {
-            validate();
+            validate(false);
             try {
               Object obj = node.getMember(attrName);
               if (obj != null) {
@@ -400,7 +404,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<String>() {
           @Override
           public String perform() {
-            validate();
+            validate(false);
             try {
               return cleanUpCssVal((String) (node.eval(new StringBuilder()
                   .append("var me = this;")
@@ -437,7 +441,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<org.openqa.selenium.Point>() {
           @Override
           public org.openqa.selenium.Point perform() {
-            validate();
+            validate(true);
             try {
               JSObject obj = (JSObject) node.call("getBoundingClientRect");
               int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
@@ -468,7 +472,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<org.openqa.selenium.Dimension>() {
           @Override
           public org.openqa.selenium.Dimension perform() {
-            validate();
+            validate(true);
             try {
               JSObject obj = (JSObject) node.call("getBoundingClientRect");
               int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
@@ -519,7 +523,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<org.openqa.selenium.Rectangle>() {
           @Override
           public org.openqa.selenium.Rectangle perform() {
-            validate();
+            validate(true);
             try {
               JSObject obj = (JSObject) node.call("getBoundingClientRect");
               int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
@@ -570,10 +574,10 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            validate();
+            validate(false);
             try {
               //a fast approximation of whether this element is visible
-              return (Boolean) node.eval(IS_DISPLAYED);
+              return (Boolean) node.eval(IS_VISIBLE);
             } catch (Throwable t) {
               return false;
             }
@@ -590,7 +594,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            validate();
+            validate(false);
             try {
               String val = node.getMember("disabled").toString();
               return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
@@ -611,7 +615,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
-            validate();
+            validate(false);
             try {
               String selected = node.getMember("selected").toString();
               String checked = node.getMember("checked").toString();
@@ -674,7 +678,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            validate();
+            validate(false);
             try {
               return asList(executeScript(new StringBuilder()
                   .append("var iter = ")
@@ -725,7 +729,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            validate();
+            validate(false);
             if (node != null) {
               return asList(parseScriptResult(
                   node.call("getElementsByTagName", new Object[] { tagName })));
@@ -744,7 +748,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<ElementServer>() {
           @Override
           public ElementServer perform() {
-            validate();
+            validate(false);
             JSObject result = (JSObject) node.call("querySelector", new Object[] { expr });
             if (result == null) {
               return null;
@@ -768,7 +772,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            validate();
+            validate(false);
             List<ElementServer> elements = new ArrayList<ElementServer>();
             try {
               JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
@@ -874,7 +878,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
-            validate();
+            validate(false);
             List<ElementServer> elements = new ArrayList<ElementServer>();
             try {
               List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
@@ -978,7 +982,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           new Sync<Object>() {
             @Override
             public Object perform() {
-              validate();
+              validate(false);
               try {
                 return node.eval(new StringBuilder()
                     .append("(function(){return this.")
@@ -1041,7 +1045,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             List<Object> argList = new ArrayList<Object>();
             if (args != null) {
               argList.addAll(Arrays.asList(args));
@@ -1085,7 +1089,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<Object>() {
           @Override
           public Object perform() {
-            validate();
+            validate(false);
             AppThread.handleExecutionException(obj);
             if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
               return null;
@@ -1167,7 +1171,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               new Sync<Object>() {
                 @Override
                 public Point perform() {
-                  validate();
+                  validate(false);
                   try {
                     node.call("scrollIntoView");
                   } catch (Throwable t) {
@@ -1180,7 +1184,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               new Sync<org.openqa.selenium.Point>() {
                 @Override
                 public org.openqa.selenium.Point perform() {
-                  validate();
+                  validate(true);
                   try {
                     JSObject obj = (JSObject) node.call("getBoundingClientRect");
                     double y = Double.parseDouble(obj.getMember("top").toString());

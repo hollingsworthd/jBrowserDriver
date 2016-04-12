@@ -7,6 +7,8 @@
     <span id='iframe-useragent'></span>
     <span id='iframe-nested-useragent'></span>
     <a href="iframe.htm?param=fromiframe" id="iframe-anchor">click</a>
+    <a style="display:none;" href="iframe.htm?param=display-none" id="anchor-display-none">click</a>
+    <a style="visibility:hidden;" href="iframe.htm?param=visibility-hidden" id="anchor-visibility-hidden">click</a>
     <script>
       document.getElementById("iframe-useragent").innerHTML=window.navigator.userAgent;
       document.getElementById("iframe-nested-useragent").innerHTML=window.frames[0].navigator.userAgent;

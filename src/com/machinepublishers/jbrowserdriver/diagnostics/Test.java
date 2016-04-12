@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
@@ -346,6 +347,27 @@ public class Test {
       test(driver.manage().window().getPosition().getY() == 0);
       test(driver.manage().window().getSize().getWidth() == 1024);
       test(driver.manage().window().getSize().getHeight() == 768);
+
+      /*
+       * Element visibility
+       */
+      test(driver.findElement(By.id("iframe-anchor")).isDisplayed());
+      test(!driver.findElement(By.id("anchor-visibility-hidden")).isDisplayed());
+      test(!driver.findElement(By.id("anchor-display-none")).isDisplayed());
+      error = null;
+      try {
+        driver.findElement(By.id("anchor-visibility-hidden")).click();
+      } catch (ElementNotVisibleException e) {
+        error = e;
+      }
+      test(error != null);
+      error = null;
+      try {
+        driver.findElement(By.id("anchor-display-none")).click();
+      } catch (ElementNotVisibleException e) {
+        error = e;
+      }
+      test(error != null);
 
       /*
        * Operations on elements that no longer exist
