@@ -34,6 +34,10 @@ public class CustomRequest implements HttpRequest {
     this.req = req;
   }
 
+  private void adjustHeaders() {
+    req.removeHeaders("Via");
+  }
+
   @Override
   public ProtocolVersion getProtocolVersion() {
     return req.getProtocolVersion();
@@ -41,31 +45,31 @@ public class CustomRequest implements HttpRequest {
 
   @Override
   public boolean containsHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.containsHeader(name);
   }
 
   @Override
   public Header[] getHeaders(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.getHeaders(name);
   }
 
   @Override
   public Header getFirstHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.getFirstHeader(name);
   }
 
   @Override
   public Header getLastHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.getLastHeader(name);
   }
 
   @Override
   public Header[] getAllHeaders() {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.getAllHeaders();
   }
 
@@ -106,19 +110,19 @@ public class CustomRequest implements HttpRequest {
 
   @Override
   public HeaderIterator headerIterator() {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.headerIterator();
   }
 
   @Override
   public HeaderIterator headerIterator(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.headerIterator(name);
   }
 
   @Override
   public HttpParams getParams() {
-    removeHeaders("Via");
+    adjustHeaders();
     return req.getParams();
   }
 

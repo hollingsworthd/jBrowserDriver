@@ -22,6 +22,7 @@ package org.apache.http.impl.client.cache;
 import java.io.IOException;
 import java.util.Locale;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
@@ -36,6 +37,13 @@ public class CustomResponse implements CloseableHttpResponse {
 
   public CustomResponse(CloseableHttpResponse resp) {
     this.resp = resp;
+  }
+
+  private void adjustHeaders() {
+    resp.removeHeaders("Via");
+    if (ArrayUtils.isEmpty(resp.getHeaders("Content-Type"))) {
+      resp.addHeader("Content-Type", "text/html");
+    }
   }
 
   @Override
@@ -70,7 +78,7 @@ public class CustomResponse implements CloseableHttpResponse {
 
   @Override
   public HttpEntity getEntity() {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getEntity();
   }
 
@@ -96,31 +104,31 @@ public class CustomResponse implements CloseableHttpResponse {
 
   @Override
   public boolean containsHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.containsHeader(name);
   }
 
   @Override
   public Header[] getHeaders(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getHeaders(name);
   }
 
   @Override
   public Header getFirstHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getFirstHeader(name);
   }
 
   @Override
   public Header getLastHeader(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getLastHeader(name);
   }
 
   @Override
   public Header[] getAllHeaders() {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getAllHeaders();
   }
 
@@ -161,19 +169,19 @@ public class CustomResponse implements CloseableHttpResponse {
 
   @Override
   public HeaderIterator headerIterator() {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.headerIterator();
   }
 
   @Override
   public HeaderIterator headerIterator(String name) {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.headerIterator(name);
   }
 
   @Override
   public HttpParams getParams() {
-    removeHeaders("Via");
+    adjustHeaders();
     return resp.getParams();
   }
 

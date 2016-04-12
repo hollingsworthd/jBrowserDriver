@@ -82,7 +82,7 @@ public class HttpServer {
       bodyTmp = builder.toString().getBytes("utf-8");
       contentTmp = new String("HTTP/1.1 200 OK\n"
           + "Content-Length: " + bodyTmp.length + "\n"
-          + "Content-Type: text/html; charset=utf-8\n"
+          //Don't set content-type -- test that it's added automatically
           + "Expires: Sun, 09 Feb 2116 01:01:01 GMT\n"
           + "Connection: close\n\n").getBytes("utf-8");
     } catch (Throwable t) {
