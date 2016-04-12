@@ -129,6 +129,24 @@ public class Test {
       test(driver.findElementByTagName("body").findElement(By.xpath("//*[@id='divtext1']")).getAttribute("id").equals("divtext1"));
       test(driver.findElementsByXPath("//html/*").get(1).getAttribute("id").equals("testbody"));
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
+      test(driver.findElementsByXPath("//a[contains(@href,'!!!')]").isEmpty());
+      test(driver.findElementsByClassName("xx").isEmpty());
+      test(driver.findElementByTagName("xx") == null);
+      test(driver.findElementByCssSelector("#xx") == null);
+      Throwable error = null;
+      try {
+        driver.findElementsByXPath("!!!");
+      } catch (WebDriverException e) {
+        error = e;
+      }
+      test(error != null);
+      error = null;
+      try {
+        driver.findElement(By.id("divtext1")).findElements(By.cssSelector("???"));
+      } catch (WebDriverException e) {
+        error = e;
+      }
+      test(error != null);
 
       /*
        * Typing text
@@ -185,7 +203,7 @@ public class Test {
       test("subval1".equals(((Map) ((List) map.get("key14")).get(2)).get("subkey1")));
       test(((List) driver.executeScript("return [];")).isEmpty());
       test(((Map) driver.executeScript("return {};")).isEmpty());
-      Throwable error = null;
+      error = null;
       try {
         driver.executeScript("invalid.execute()");
       } catch (WebDriverException e) {

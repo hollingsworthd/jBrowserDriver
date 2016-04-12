@@ -35,6 +35,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriverException;
@@ -135,11 +136,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Object perform() {
             validate(node, context.item());
-            try {
-              node.getMember("");
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-            }
+            node.getMember("");
             return null;
           }
         });
@@ -224,6 +221,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private static void validate(JSObject node, ContextItem contextItem) {
+    if (node == null) {
+      throw new NoSuchElementException("Element not found or does not exist.");
+    }
     JSObject doc = node instanceof Document ? node : (JSObject) ((Node) node).getOwnerDocument();
     if (!contextItem.containsFrame(doc)) {
       throw new StaleElementReferenceException("The page containing the element no longer exists.");
@@ -365,29 +365,21 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public String perform() {
             validate(false);
-            try {
-              Object obj = node.getMember(attrName);
-              if (obj != null) {
-                String str = obj.toString();
-                if (!StringUtils.isEmpty(str) && !"undefined".equals(str)) {
-                  return str;
-                }
+            Object obj = node.getMember(attrName);
+            if (obj != null) {
+              String str = obj.toString();
+              if (!StringUtils.isEmpty(str) && !"undefined".equals(str)) {
+                return str;
               }
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
             }
 
-            try {
-              Object obj = executeScript(new StringBuilder()
-                  .append("return this.getAttribute('").append(attrName).append("');").toString());
-              if (obj != null) {
-                String str = obj.toString();
-                if (!StringUtils.isEmpty(str)) {
-                  return str;
-                }
+            obj = executeScript(new StringBuilder()
+                .append("return this.getAttribute('").append(attrName).append("');").toString());
+            if (obj != null) {
+              String str = obj.toString();
+              if (!StringUtils.isEmpty(str)) {
+                return str;
               }
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
             }
 
             return null;
@@ -405,18 +397,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public String perform() {
             validate(false);
-            try {
-              return cleanUpCssVal((String) (node.eval(new StringBuilder()
-                  .append("var me = this;")
-                  .append("(function(){")
-                  .append("  return window.getComputedStyle(me).getPropertyValue('")
-                  .append(name)
-                  .append("');")
-                  .append("})();").toString())));
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return null;
-            }
+            return cleanUpCssVal((String) (node.eval(new StringBuilder()
+                .append("var me = this;")
+                .append("(function(){")
+                .append("  return window.getComputedStyle(me).getPropertyValue('")
+                .append(name)
+                .append("');")
+                .append("})();").toString())));
           }
         });
   }
@@ -442,15 +429,10 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public org.openqa.selenium.Point perform() {
             validate(true);
-            try {
-              JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-              int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-              return new org.openqa.selenium.Point(x + 1, y + 1);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return null;
-            }
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            return new org.openqa.selenium.Point(x + 1, y + 1);
           }
         });
   }
@@ -473,17 +455,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public org.openqa.selenium.Dimension perform() {
             validate(true);
-            try {
-              JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-              int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-              int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-              int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-              return new org.openqa.selenium.Dimension(x2 - x, y2 - y);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return null;
-            }
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+            return new org.openqa.selenium.Dimension(x2 - x, y2 - y);
           }
         });
   }
@@ -493,12 +470,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Dimension remoteGetSize() {
-    try {
-      return new Dimension(getSize());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return new Dimension(getSize());
   }
 
   /**
@@ -506,12 +478,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Rectangle remoteGetRect() {
-    try {
-      return new Rectangle(getRect());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return new Rectangle(getRect());
   }
 
   /**
@@ -524,17 +491,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public org.openqa.selenium.Rectangle perform() {
             validate(true);
-            try {
-              JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-              int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-              int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-              int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-              return new org.openqa.selenium.Rectangle(x + 1, y + 1, y2 - y, x2 - x);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return null;
-            }
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+            return new org.openqa.selenium.Rectangle(x + 1, y + 1, y2 - y, x2 - x);
           }
         });
   }
@@ -544,12 +506,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getTagName() {
-    try {
-      return getAttribute("tagName").toLowerCase();
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return getAttribute("tagName").toLowerCase();
   }
 
   /**
@@ -557,12 +514,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getText() {
-    try {
-      return getAttribute("textContent");
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return getAttribute("textContent");
   }
 
   /**
@@ -575,12 +527,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Boolean perform() {
             validate(false);
-            try {
-              //a fast approximation of whether this element is visible
-              return (Boolean) node.eval(IS_VISIBLE);
-            } catch (Throwable t) {
-              return false;
-            }
+            return (Boolean) node.eval(IS_VISIBLE);
           }
         });
   }
@@ -595,13 +542,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Boolean perform() {
             validate(false);
-            try {
-              String val = node.getMember("disabled").toString();
-              return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return false;
-            }
+            String val = node.getMember("disabled").toString();
+            return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
           }
         });
   }
@@ -616,15 +558,10 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Boolean perform() {
             validate(false);
-            try {
-              String selected = node.getMember("selected").toString();
-              String checked = node.getMember("checked").toString();
-              return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
-                  || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return false;
-            }
+            String selected = node.getMember("selected").toString();
+            String checked = node.getMember("checked").toString();
+            return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
+                || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
           }
         });
   }
@@ -634,12 +571,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElement(By by) {
-    try {
-      return (ElementServer) by.findElement(this);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return (ElementServer) by.findElement(this);
   }
 
   /**
@@ -647,12 +579,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElements(By by) {
-    try {
-      return by.findElements(this);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return by.findElements(this);
   }
 
   /**
@@ -660,13 +587,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByXPath(final String expr) {
-    try {
-      List list = findElementsByXPath(expr);
-      return list.isEmpty() ? null : (ElementServer) list.get(0);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    List list = findElementsByXPath(expr);
+    return list.isEmpty() ? null : (ElementServer) list.get(0);
   }
 
   /**
@@ -679,20 +601,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public List<ElementServer> perform() {
             validate(false);
-            try {
-              return asList(executeScript(new StringBuilder()
-                  .append("var iter = ")
-                  .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
-                  .append("var items = [];")
-                  .append("var cur = null;")
-                  .append("while(cur = iter.iterateNext()){")
-                  .append("  items.push(cur);")
-                  .append("}")
-                  .append("return items;").toString(), expr, node));
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-              return new ArrayList<ElementServer>();
-            }
+            return asList(executeScript(new StringBuilder()
+                .append("var iter = ")
+                .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
+                .append("var items = [];")
+                .append("var cur = null;")
+                .append("while(cur = iter.iterateNext()){")
+                .append("  items.push(cur);")
+                .append("}")
+                .append("return items;").toString(), expr, node));
           }
         });
   }
@@ -702,13 +619,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByTagName(String tagName) {
-    try {
-      List<ElementServer> list = byTagName(tagName);
-      return list == null || list.isEmpty() ? null : list.get(0);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    List<ElementServer> list = byTagName(tagName);
+    return list == null || list.isEmpty() ? null : list.get(0);
   }
 
   /**
@@ -716,12 +628,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByTagName(String tagName) {
-    try {
-      return byTagName(tagName);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return byTagName(tagName);
   }
 
   private List byTagName(final String tagName) {
@@ -774,18 +681,18 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           public List<ElementServer> perform() {
             validate(false);
             List<ElementServer> elements = new ArrayList<ElementServer>();
-            try {
-              JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
-              for (int i = 0;; i++) {
-                Object cur = result.getSlot(i);
-                if (cur instanceof Node) {
+            JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
+            for (int i = 0;; i++) {
+              Object cur = result.getSlot(i);
+              if (cur instanceof Node) {
+                try {
                   elements.add(new ElementServer((JSObject) cur, context));
-                } else {
-                  break;
+                } catch (RemoteException e) {
+                  Util.handleException(e);
                 }
+              } else {
+                break;
               }
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
             }
             return elements;
           }
@@ -797,12 +704,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByName(String name) {
-    try {
-      return findElementByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return findElementByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
   }
 
   /**
@@ -810,12 +712,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByName(String name) {
-    try {
-      return findElementsByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return findElementsByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
   }
 
   /**
@@ -823,13 +720,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByLinkText(final String text) {
-    try {
-      List<ElementServer> list = byLinkText(text, false, false);
-      return list.isEmpty() ? null : list.get(0);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    List<ElementServer> list = byLinkText(text, false, false);
+    return list.isEmpty() ? null : list.get(0);
   }
 
   /**
@@ -837,13 +729,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByPartialLinkText(String text) {
-    try {
-      List<ElementServer> list = byLinkText(text, false, true);
-      return list.isEmpty() ? null : list.get(0);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    List<ElementServer> list = byLinkText(text, false, true);
+    return list.isEmpty() ? null : list.get(0);
   }
 
   /**
@@ -851,12 +738,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByLinkText(String text) {
-    try {
-      return byLinkText(text, true, false);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return byLinkText(text, true, false);
   }
 
   /**
@@ -864,12 +746,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByPartialLinkText(String text) {
-    try {
-      return byLinkText(text, true, true);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return byLinkText(text, true, true);
   }
 
   private List byLinkText(final String text,
@@ -880,19 +757,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           public List<ElementServer> perform() {
             validate(false);
             List<ElementServer> elements = new ArrayList<ElementServer>();
-            try {
-              List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
-              for (ElementServer cur : nodes) {
-                if ((partial && cur.getText().contains(text))
-                    || (!partial && cur.getText().equals(text))) {
-                  elements.add(cur);
-                  if (!multiple) {
-                    break;
-                  }
+            List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
+            for (ElementServer cur : nodes) {
+              if ((partial && cur.getText().contains(text))
+                  || (!partial && cur.getText().equals(text))) {
+                elements.add(cur);
+                if (!multiple) {
+                  break;
                 }
               }
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
             }
             return elements;
           }
@@ -904,13 +777,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByClassName(String cssClass) {
-    try {
-      List<ElementServer> list = byCssClass(cssClass);
-      return list.isEmpty() ? null : list.get(0);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    List<ElementServer> list = byCssClass(cssClass);
+    return list.isEmpty() ? null : list.get(0);
   }
 
   /**
@@ -918,22 +786,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByClassName(String cssClass) {
-    try {
-      return byCssClass(cssClass);
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return byCssClass(cssClass);
   }
 
   private List byCssClass(String cssClass) {
-    try {
-      return asList(executeScript(
-          new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()));
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return asList(executeScript(
+        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()));
   }
 
   /**
@@ -941,12 +799,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementById(final String id) {
-    try {
-      return findElementByCssSelector(new StringBuilder("*[id='").append(id).append("']").toString());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return null;
-    }
+    return findElementByCssSelector(new StringBuilder("*[id='").append(id).append("']").toString());
   }
 
   /**
@@ -954,12 +807,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsById(String id) {
-    try {
-      return findElementsByCssSelector(new StringBuilder().append("*[id='").append(id).append("']").toString());
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
-      return new ArrayList<ElementServer>();
-    }
+    return findElementsByCssSelector(new StringBuilder().append("*[id='").append(id).append("']").toString());
   }
 
   /**
@@ -1071,13 +919,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             } catch (Throwable t) {
               return t;
             } finally {
-              try {
-                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
-                if (callback) {
-                  node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
-                }
-              } catch (Throwable t) {
-                LogsServer.instance().exception(t);
+              node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
+              if (callback) {
+                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
               }
             }
           }
@@ -1172,11 +1016,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                 @Override
                 public Point perform() {
                   validate(false);
-                  try {
-                    node.call("scrollIntoView");
-                  } catch (Throwable t) {
-                    LogsServer.instance().exception(t);
-                  }
+                  node.call("scrollIntoView");
                   return null;
                 }
               });
@@ -1185,17 +1025,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
                 @Override
                 public org.openqa.selenium.Point perform() {
                   validate(true);
-                  try {
-                    JSObject obj = (JSObject) node.call("getBoundingClientRect");
-                    double y = Double.parseDouble(obj.getMember("top").toString());
-                    double x = Double.parseDouble(obj.getMember("left").toString());
-                    y = y < 0d ? 0d : y;
-                    x = x < 0d ? 0d : x;
-                    return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-                  } catch (Throwable t) {
-                    LogsServer.instance().exception(t);
-                    return null;
-                  }
+                  JSObject obj = (JSObject) node.call("getBoundingClientRect");
+                  double y = Double.parseDouble(obj.getMember("top").toString());
+                  double x = Double.parseDouble(obj.getMember("left").toString());
+                  y = y < 0d ? 0d : y;
+                  x = x < 0d ? 0d : x;
+                  return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
                 }
               });
         }
