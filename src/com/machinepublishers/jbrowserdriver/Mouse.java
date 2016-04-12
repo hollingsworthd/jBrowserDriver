@@ -19,17 +19,13 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-
 import org.openqa.selenium.interactions.internal.Coordinates;
 
 class Mouse implements org.openqa.selenium.interactions.Mouse {
   private final MouseRemote remote;
-  private final Logs logs;
 
-  Mouse(MouseRemote remote, Logs logs) {
+  Mouse(MouseRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -41,8 +37,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.click(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -55,8 +51,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.contextClick(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -69,8 +65,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.doubleClick(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -83,8 +79,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.mouseDown(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -97,8 +93,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.mouseMove(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -111,8 +107,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.mouseMove(coordsRemote, xOffset, yOffset);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -125,8 +121,8 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
       CoordinatesRemote coordsRemote = coords == null
           ? null : ((com.machinepublishers.jbrowserdriver.Coordinates) coords).remote;
       remote.mouseUp(coordsRemote);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 }

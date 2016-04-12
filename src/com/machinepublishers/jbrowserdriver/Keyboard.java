@@ -19,16 +19,12 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-
 class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final KeyboardRemote remote;
-  private final Logs logs;
 
-  Keyboard(KeyboardRemote remote, Logs logs) {
+  Keyboard(KeyboardRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -38,8 +34,8 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   public void pressKey(CharSequence key) {
     try {
       remote.pressKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -50,8 +46,8 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   public void releaseKey(CharSequence key) {
     try {
       remote.releaseKey(key);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -62,16 +58,16 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   public void sendKeys(CharSequence... keys) {
     try {
       remote.sendKeys(keys);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
   boolean isShiftPressed() {
     try {
       return remote.isShiftPressed();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return false;
     }
   }

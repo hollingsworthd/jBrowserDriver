@@ -49,38 +49,41 @@ class AjaxListener implements Runnable {
     int size = 0;
     final long start = System.currentTimeMillis();
     long time = start;
-    final long sleepMS = Math.max(SettingsManager.settings().ajaxWait() / IDLE_COUNT_TARGET, 0);
-    int idleCount = 0;
-    int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
-    while (time - start < timeoutMS) {
-      try {
-        Thread.sleep(sleepMS);
-      } catch (InterruptedException e) {
-        return;
-      }
-      time = System.currentTimeMillis();
-      synchronized (statusCode) {
-        if (Thread.interrupted()) {
+    final Settings settings = SettingsManager.settings();
+    if (settings != null) {
+      final long sleepMS = Math.max(settings.ajaxWait() / IDLE_COUNT_TARGET, 0);
+      int idleCount = 0;
+      int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
+      while (time - start < timeoutMS) {
+        try {
+          Thread.sleep(sleepMS);
+        } catch (InterruptedException e) {
           return;
         }
-        final Set<String> remove = new HashSet<String>();
-        for (Map.Entry<String, Long> entry : resources.entrySet()) {
-          if (time - entry.getValue() > SettingsManager.settings().ajaxResourceTimeout()) {
-            remove.add(entry.getKey());
+        time = System.currentTimeMillis();
+        synchronized (statusCode) {
+          if (Thread.interrupted()) {
+            return;
           }
+          final Set<String> remove = new HashSet<String>();
+          for (Map.Entry<String, Long> entry : resources.entrySet()) {
+            if (time - entry.getValue() > settings.ajaxResourceTimeout()) {
+              remove.add(entry.getKey());
+            }
+          }
+          for (String key : remove) {
+            resources.remove(key);
+          }
+          size = resources.size();
         }
-        for (String key : remove) {
-          resources.remove(key);
+        if (size == 0) {
+          ++idleCount;
+        } else {
+          idleCount = 0;
         }
-        size = resources.size();
-      }
-      if (size == 0) {
-        ++idleCount;
-      } else {
-        idleCount = 0;
-      }
-      if (idleCount == idleCountTarget) {
-        break;
+        if (idleCount == idleCountTarget) {
+          break;
+        }
       }
     }
     synchronized (statusCode) {

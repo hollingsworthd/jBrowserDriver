@@ -92,7 +92,7 @@ class StreamConnectionClient {
         cacheDirTmp.mkdirs();
       }
     } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      Util.handleException(t);
     }
     shutdownHook = shutdownHookTmp;
     cacheDir = cacheDirTmp;
@@ -134,7 +134,9 @@ class StreamConnectionClient {
 
   @Override
   protected void finalize() throws Throwable {
-    super.finalize();
+    try {
+      super.finalize();
+    } catch (Throwable t) {}
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
       shutdownHook.run();

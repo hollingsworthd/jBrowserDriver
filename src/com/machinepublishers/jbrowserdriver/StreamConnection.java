@@ -86,7 +86,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       attachmentsDirTmp.deleteOnExit();
       mediaDirTmp.deleteOnExit();
     } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      Util.handleException(t);
     }
     attachmentsDir = attachmentsDirTmp;
     mediaDir = mediaDirTmp;

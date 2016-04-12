@@ -23,11 +23,9 @@ import java.rmi.RemoteException;
 
 class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates {
   final CoordinatesRemote remote;
-  private final Logs logs;
 
-  Coordinates(CoordinatesRemote remote, Logs logs) {
+  Coordinates(CoordinatesRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -38,7 +36,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote == null ? null : remote.remoteOnScreen().toSelenium();
     } catch (RemoteException e) {
-      logs.exception(e);
+      Util.handleException(e);
       return null;
     }
   }
@@ -51,7 +49,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote == null ? null : remote.remoteInViewPort().toSelenium();
     } catch (RemoteException e) {
-      logs.exception(e);
+      Util.handleException(e);
       return null;
     }
   }
@@ -64,7 +62,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote == null ? null : remote.remoteOnPage().toSelenium();
     } catch (RemoteException e) {
-      logs.exception(e);
+      Util.handleException(e);
       return null;
     }
   }
@@ -77,7 +75,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     try {
       return remote == null ? null : remote.getAuxiliary();
     } catch (RemoteException e) {
-      logs.exception(e);
+      Util.handleException(e);
       return null;
     }
   }

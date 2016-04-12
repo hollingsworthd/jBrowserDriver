@@ -299,9 +299,7 @@ class Robot {
       while (myThread != curThread.get() + 1) {
         try {
           curThread.wait();
-        } catch (Exception e) {
-          LogsServer.instance().exception(e);
-        }
+        } catch (InterruptedException e) {}
       }
     }
     AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {

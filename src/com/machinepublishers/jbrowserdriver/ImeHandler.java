@@ -19,16 +19,14 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 
 class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   private final ImeHandlerRemote remote;
-  private final Logs logs;
 
-  ImeHandler(ImeHandlerRemote remote, Logs logs) {
+  ImeHandler(ImeHandlerRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -38,8 +36,8 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   public void activateEngine(String name) {
     try {
       remote.activateEngine(name);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -50,8 +48,8 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   public void deactivate() {
     try {
       remote.deactivate();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -62,8 +60,8 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   public String getActiveEngine() {
     try {
       return remote.getActiveEngine();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -75,9 +73,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   public List<String> getAvailableEngines() {
     try {
       return remote.getAvailableEngines();
-    } catch (RemoteException e) {
-      logs.exception(e);
-      return null;
+    } catch (Throwable t) {
+      Util.handleException(t);
+      return new ArrayList<String>();
     }
   }
 
@@ -88,8 +86,8 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   public boolean isActivated() {
     try {
       return remote.isActivated();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return false;
     }
   }

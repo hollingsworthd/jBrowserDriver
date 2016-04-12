@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.openqa.selenium.TimeoutException;
+
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import javafx.application.Platform;
@@ -129,7 +131,7 @@ class AppThread {
     return exec(pauseAfterExec, statusCode, 0, action);
   }
 
-  static void handleException(Object obj) {
+  static void handleExecutionException(Object obj) {
     if (obj instanceof UncheckedExecutionException) {
       throw (UncheckedExecutionException) obj;
     }
@@ -160,10 +162,11 @@ class AppThread {
           }
           if (!runner.done.get()) {
             runner.cancel.set(true);
-            LogsServer.instance().exception(new RuntimeException("Action never completed."));
+            throw new TimeoutException(new StringBuilder()
+                .append("Timeout of ").append(timeout).append("ms reached.").toString());
           }
         }
-        handleException(runner.failure.get());
+        handleExecutionException(runner.failure.get());
         return runner.returned.get();
       }
     } finally {

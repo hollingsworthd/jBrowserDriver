@@ -19,20 +19,16 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
   private final JBrowserDriver driver;
-  private final Logs logs;
 
-  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver, Logs logs) {
+  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver) {
     this.remote = remote;
     this.driver = driver;
-    this.logs = logs;
   }
 
   /**
@@ -41,9 +37,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebElement activeElement() {
     try {
-      return Element.constructElement(remote.activeElement(), driver, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return Element.constructElement(remote.activeElement(), driver);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -54,9 +50,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public org.openqa.selenium.Alert alert() {
     try {
-      return new Alert(remote.alert(), logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new Alert(remote.alert());
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -69,8 +65,8 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       remote.defaultContent();
       return driver;
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -83,8 +79,8 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       remote.frame(index);
       return driver;
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -97,8 +93,8 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       remote.frame(nameOrId);
       return driver;
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -120,8 +116,8 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       remote.parentFrame();
       return driver;
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -134,8 +130,8 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       remote.window(windowHandle);
       return driver;
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }

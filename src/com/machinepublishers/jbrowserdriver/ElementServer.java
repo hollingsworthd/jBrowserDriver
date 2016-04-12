@@ -175,7 +175,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     try {
       return new ElementServer(doc, context);
     } catch (RemoteException e) {
-      LogsServer.instance().exception(e);
+      Util.handleException(e);
       return null;
     }
   }
@@ -204,8 +204,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               if (!set) {
                 context.item().selectFrame(thisObj);
               }
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
+            } catch (RemoteException e) {
+              Util.handleException(e);
             }
             return null;
           }
@@ -752,7 +752,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             try {
               return new ElementServer(result, context);
             } catch (RemoteException e) {
-              LogsServer.instance().exception(e);
+              Util.handleException(e);
               return null;
             }
           }
@@ -1086,7 +1086,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Object perform() {
             validate();
-            AppThread.handleException(obj);
+            AppThread.handleExecutionException(obj);
             if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
               return null;
             }
@@ -1094,7 +1094,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               try {
                 return new ElementServer((JSObject) obj, context);
               } catch (RemoteException e) {
-                LogsServer.instance().exception(e);
+                Util.handleException(e);
                 return null;
               }
             }
@@ -1207,7 +1207,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         }
       });
     } catch (RemoteException e) {
-      LogsServer.instance().exception(e);
+      Util.handleException(e);
       return null;
     }
   }

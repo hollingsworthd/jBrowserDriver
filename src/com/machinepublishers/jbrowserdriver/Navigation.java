@@ -20,15 +20,12 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
-import java.rmi.RemoteException;
 
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final NavigationRemote remote;
-  private final Logs logs;
 
-  Navigation(NavigationRemote remote, Logs logs) {
+  Navigation(NavigationRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -38,8 +35,8 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void back() {
     try {
       remote.back();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -50,8 +47,8 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void forward() {
     try {
       remote.forward();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -62,8 +59,8 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void refresh() {
     try {
       remote.refresh();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -74,8 +71,8 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void to(String url) {
     try {
       remote.to(url);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -86,8 +83,8 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   public void to(URL url) {
     try {
       remote.to(url);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 }

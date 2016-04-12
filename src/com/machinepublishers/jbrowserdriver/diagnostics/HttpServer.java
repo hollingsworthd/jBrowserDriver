@@ -124,6 +124,10 @@ public class HttpServer {
                   } else if (line.startsWith("GET /redirect/site2 ")) {
                     output.write(iframeContent, 0, iframeContent.length);
                     output.write(iframeBody, 0, iframeBody.length);
+                  } else if (line.startsWith("GET /wait-forever ")) {
+                    synchronized (HttpServer.class) {
+                      HttpServer.class.wait();
+                    }
                   }
                 }
                 previousRequest.set(request);
@@ -138,6 +142,9 @@ public class HttpServer {
 
   public static void stop() {
     loop.set(false);
+    synchronized (HttpServer.class) {
+      HttpServer.class.notifyAll();
+    }
     try {
       listener.get().close();
     } catch (Throwable t) {}

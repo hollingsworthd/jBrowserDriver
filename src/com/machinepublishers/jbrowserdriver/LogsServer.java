@@ -42,8 +42,8 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
     LogsServer instanceTmp = null;
     try {
       instanceTmp = new LogsServer();
-    } catch (Throwable t) {
-      t.printStackTrace();
+    } catch (RemoteException e) {
+      Util.handleException(e);
     }
     instance = instanceTmp;
   }

@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.net.SocketException;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +38,9 @@ import javax.net.ssl.SSLProtocolException;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
+import org.openqa.selenium.WebDriverException;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
@@ -107,5 +111,21 @@ class Util {
       }
     }
     return "utf-8";
+  }
+
+  static void handleException(Throwable throwable) {
+    if (throwable != null) {
+      throwable = throwable instanceof UncheckedExecutionException ? throwable.getCause() : throwable;
+      if (throwable.getClass().getName().startsWith("org.openqa.selenium.")) {
+        if (throwable instanceof RuntimeException) {
+          throw (RuntimeException) throwable;
+        }
+        throw new WebDriverException(throwable);
+      }
+      if (throwable instanceof RemoteException) {
+        throw new WebDriverException("Remote browser exception.", throwable.getCause());
+      }
+      throw new WebDriverException(throwable);
+    }
   }
 }

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
@@ -36,6 +37,9 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
@@ -183,8 +187,8 @@ public class Test {
       Throwable error = null;
       try {
         driver.executeScript("invalid.execute()");
-      } catch (Throwable t) {
-        error = t;
+      } catch (WebDriverException e) {
+        error = e;
       }
       test(error != null);
 
@@ -352,8 +356,20 @@ public class Test {
       error = null;
       try {
         body.getAttribute("outerHTML");
-      } catch (Throwable t) {
-        error = t;
+      } catch (StaleElementReferenceException e) {
+        error = e;
+      }
+      test(error != null);
+
+      /*
+       * Timeouts
+       */
+      driver.manage().timeouts().pageLoadTimeout(1, TimeUnit.MILLISECONDS);
+      error = null;
+      try {
+        driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/wait-forever");
+      } catch (TimeoutException e) {
+        error = e;
       }
       test(error != null);
 

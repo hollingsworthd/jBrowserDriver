@@ -39,6 +39,7 @@ import org.openqa.selenium.HasCapabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -88,7 +89,9 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         try {
           //this should work regardless
           factory.set(null, new StreamHandler());
-        } catch (Throwable t3) {}
+        } catch (Throwable t3) {
+          Util.handleException(t3);
+        }
       }
     }
 
@@ -118,7 +121,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         break;
       } catch (Throwable t) {
         if (i == maxTries) {
-          LogsServer.instance().exception(t);
+          Util.handleException(t);
         }
       } finally {
         Util.close(socket);
@@ -130,7 +133,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
       System.out.println("ready on port " + rmiPort.get());
     } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      Util.handleException(t);
     }
   }
 
@@ -273,30 +276,36 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   public synchronized void get(final String url) {
     init();
     long start = System.currentTimeMillis();
-    AppThread.exec(Pause.SHORT, context.get().statusCode,
-        context.get().timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
+    try {
+      AppThread.exec(Pause.SHORT, context.get().statusCode,
+          context.get().timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
+            public Object perform() {
+              context.get().item().engine.get().load(url);
+              return null;
+            }
+          });
+      long end = System.currentTimeMillis();
+      if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
+        getStatusCode();
+      } else {
+        long waitMS = context.get().timeouts.get().getPageLoadTimeoutMS() - (end - start);
+        if (waitMS > 0) {
+          getStatusCode(waitMS);
+        }
+      }
+    } finally {
+      if (context.get().statusCode.get() == 0) {
+        AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+          @Override
           public Object perform() {
-            context.get().item().engine.get().load(url);
-            return null;
+            context.get().item().engine.get().getLoadWorker().cancel();
+            throw new TimeoutException(new StringBuilder()
+                .append("Timeout of ")
+                .append(context.get().timeouts.get().getPageLoadTimeoutMS())
+                .append("ms reached.").toString());
           }
         });
-    long end = System.currentTimeMillis();
-    if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
-      getStatusCode();
-    } else {
-      long waitMS = context.get().timeouts.get().getPageLoadTimeoutMS() - (end - start);
-      if (waitMS > 0) {
-        getStatusCode(waitMS);
       }
-    }
-    if (context.get().statusCode.get() == 0) {
-      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-        @Override
-        public Object perform() {
-          context.get().item().engine.get().getLoadWorker().cancel();
-          return null;
-        }
-      });
     }
   }
 

@@ -19,7 +19,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
 import java.util.Set;
 
 import org.openqa.selenium.Cookie;
@@ -44,8 +43,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public void addCookie(Cookie cookie) {
     try {
       remote.addCookie(cookie);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -56,8 +55,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public void deleteAllCookies() {
     try {
       remote.deleteAllCookies();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -68,8 +67,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public void deleteCookie(Cookie cookie) {
     try {
       remote.deleteCookie(cookie);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -80,8 +79,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public void deleteCookieNamed(String name) {
     try {
       remote.deleteCookieNamed(name);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -92,8 +91,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public Cookie getCookieNamed(String name) {
     try {
       return remote.getCookieNamed(name);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -105,8 +104,8 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   public Set<Cookie> getCookies() {
     try {
       return remote.getCookies();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -121,9 +120,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
       if (imeHandler == null) {
         return null;
       }
-      return new com.machinepublishers.jbrowserdriver.ImeHandler(imeHandler, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new com.machinepublishers.jbrowserdriver.ImeHandler(imeHandler);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -146,9 +145,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
       if (timeouts == null) {
         return null;
       }
-      return new com.machinepublishers.jbrowserdriver.Timeouts(timeouts, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new com.machinepublishers.jbrowserdriver.Timeouts(timeouts);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -163,9 +162,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
       if (window == null) {
         return null;
       }
-      return new com.machinepublishers.jbrowserdriver.Window(window, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new com.machinepublishers.jbrowserdriver.Window(window);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }

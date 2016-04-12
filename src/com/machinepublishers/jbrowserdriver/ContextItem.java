@@ -100,7 +100,7 @@ class ContextItem {
               yCoord += point.getY();
             }
           } catch (RemoteException e) {
-            LogsServer.instance().exception(e);
+            Util.handleException(e);
           }
         }
       }
@@ -151,7 +151,7 @@ class ContextItem {
         window.set(new WindowServer(stage, context.statusCode));
         context.alert.get().listen(this);
       } catch (RemoteException e) {
-        LogsServer.instance().exception(e);
+        Util.handleException(e);
       }
       final ContextItem thisObject = this;
       AppThread.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {

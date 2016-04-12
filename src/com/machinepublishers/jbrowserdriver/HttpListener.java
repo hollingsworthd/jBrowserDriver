@@ -116,11 +116,7 @@ class HttpListener implements LoadListenerClient {
         } else if (state == LoadListenerClient.RESOURCE_FINISHED
             || state == LoadListenerClient.RESOURCE_FAILED) {
           String original = null;
-          try {
-            original = statusMonitor.originalFromRedirect(url);
-          } catch (Throwable t) {
-            LogsServer.instance().exception(t);
-          }
+          original = statusMonitor.originalFromRedirect(url);
           resources.remove(frame + url);
           if (original != null) {
             resources.remove(frame + original);
@@ -163,43 +159,35 @@ class HttpListener implements LoadListenerClient {
     if (SettingsManager.settings() == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
-    try {
-      synchronized (statusCode) {
-        if (state == LoadListenerClient.PAGE_STARTED) {
-          contextItem.resetFrameId(frame);
-        }
-        contextItem.addFrameId(frame);
-        if (state == LoadListenerClient.PAGE_STARTED
-            || state == LoadListenerClient.PAGE_REDIRECTED
-            || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-          if (contextItem.currentFrameId() == frame) {
-            if (state == LoadListenerClient.PAGE_STARTED) {
-              try {
-                StatusMonitor.instance().clearStatusMonitor();
-              } catch (Throwable t) {
-                LogsServer.instance().exception(t);
-              }
-            }
-            resetStatusCode(false);
-            resources.put(frame + url, System.currentTimeMillis());
-            statusMonitor.startStatusMonitor(url);
-          }
-          statusMonitor.addPrimaryDocument(url);
-        } else if (statusCode.get() == 0
-            && contextItem.currentFrameId() == frame
-            && (state == LoadListenerClient.PAGE_FINISHED
-                || state == LoadListenerClient.LOAD_STOPPED
-                || state == LoadListenerClient.LOAD_FAILED)) {
-          final int newStatusCode = statusMonitor.stopStatusMonitor(url);
-          resources.remove(frame + url);
-          Thread thread = new Thread(new AjaxListener(newStatusCode, statusCode,
-              resources, timeoutMS.get()));
-          ajaxListeners.add(thread);
-          thread.start();
-        }
+    synchronized (statusCode) {
+      if (state == LoadListenerClient.PAGE_STARTED) {
+        contextItem.resetFrameId(frame);
       }
-    } catch (Throwable t) {
-      LogsServer.instance().exception(t);
+      contextItem.addFrameId(frame);
+      if (state == LoadListenerClient.PAGE_STARTED
+          || state == LoadListenerClient.PAGE_REDIRECTED
+          || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
+        if (contextItem.currentFrameId() == frame) {
+          if (state == LoadListenerClient.PAGE_STARTED) {
+            StatusMonitor.instance().clearStatusMonitor();
+          }
+          resetStatusCode(false);
+          resources.put(frame + url, System.currentTimeMillis());
+          statusMonitor.startStatusMonitor(url);
+        }
+        statusMonitor.addPrimaryDocument(url);
+      } else if (statusCode.get() == 0
+          && contextItem.currentFrameId() == frame
+          && (state == LoadListenerClient.PAGE_FINISHED
+              || state == LoadListenerClient.LOAD_STOPPED
+              || state == LoadListenerClient.LOAD_FAILED)) {
+        final int newStatusCode = statusMonitor.stopStatusMonitor(url);
+        resources.remove(frame + url);
+        Thread thread = new Thread(new AjaxListener(newStatusCode, statusCode,
+            resources, timeoutMS.get()));
+        ajaxListeners.add(thread);
+        thread.start();
+      }
     }
     trace("Page", frame, state, url, contentType, progress, errorCode);
   }

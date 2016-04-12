@@ -61,7 +61,7 @@ class Context {
         timeouts.set(new TimeoutsServer());
         alert.set(new AlertServer(timeouts));
       } catch (RemoteException e) {
-        LogsServer.instance().exception(e);
+        Util.handleException(e);
       }
     }
   }
@@ -92,7 +92,7 @@ class Context {
               new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
           options.set(new OptionsServer(this, timeouts));
         } catch (RemoteException e) {
-          LogsServer.instance().exception(e);
+          Util.handleException(e);
         }
       }
     }

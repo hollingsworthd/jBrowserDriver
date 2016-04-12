@@ -19,16 +19,13 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
 import java.util.concurrent.TimeUnit;
 
 class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   private final TimeoutsRemote remote;
-  private final Logs logs;
 
-  Timeouts(TimeoutsRemote remote, Logs logs) {
+  Timeouts(TimeoutsRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -41,9 +38,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
       if (timeouts == null) {
         return null;
       }
-      return new Timeouts(timeouts, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new Timeouts(timeouts);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -58,9 +55,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
       if (timeouts == null) {
         return null;
       }
-      return new Timeouts(timeouts, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new Timeouts(timeouts);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -75,9 +72,9 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
       if (timeouts == null) {
         return null;
       }
-      return new Timeouts(timeouts, logs);
-    } catch (RemoteException e) {
-      logs.exception(e);
+      return new Timeouts(timeouts);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -85,8 +82,8 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   long getImplicitlyWaitMS() {
     try {
       return remote.getImplicitlyWaitMS();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return -1;
     }
   }
@@ -94,8 +91,8 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   long getPageLoadTimeoutMS() {
     try {
       return remote.getPageLoadTimeoutMS();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return -1;
     }
   }
@@ -103,8 +100,8 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   long getScriptTimeoutMS() {
     try {
       return remote.getScriptTimeoutMS();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return -1;
     }
   }

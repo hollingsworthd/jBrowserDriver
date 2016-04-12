@@ -19,18 +19,14 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
-
 import org.openqa.selenium.security.Credentials;
 
 class Alert implements org.openqa.selenium.Alert {
 
   private final AlertRemote remote;
-  private final Logs logs;
 
-  Alert(AlertRemote remote, Logs logs) {
+  Alert(AlertRemote remote) {
     this.remote = remote;
-    this.logs = logs;
   }
 
   /**
@@ -40,8 +36,8 @@ class Alert implements org.openqa.selenium.Alert {
   public void accept() {
     try {
       remote.accept();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -52,8 +48,8 @@ class Alert implements org.openqa.selenium.Alert {
   public void dismiss() {
     try {
       remote.dismiss();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
@@ -64,8 +60,8 @@ class Alert implements org.openqa.selenium.Alert {
   public String getText() {
     try {
       return remote.getText();
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
       return null;
     }
   }
@@ -77,8 +73,8 @@ class Alert implements org.openqa.selenium.Alert {
   public void sendKeys(String text) {
     try {
       remote.sendKeys(text);
-    } catch (RemoteException e) {
-      logs.exception(e);
+    } catch (Throwable t) {
+      Util.handleException(t);
     }
   }
 
