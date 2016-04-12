@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Dimension;
@@ -341,6 +342,21 @@ public class Test {
       test(driver.manage().window().getPosition().getY() == 0);
       test(driver.manage().window().getSize().getWidth() == 1024);
       test(driver.manage().window().getSize().getHeight() == 768);
+
+      /*
+       * Operations on elements that no longer exist
+       */
+      WebElement body = driver.findElement(By.tagName("body"));
+      test(!StringUtils.isEmpty(body.getAttribute("outerHTML")));
+      driver.get("about:blank");
+      error = null;
+      try {
+        body.getAttribute("outerHTML");
+      } catch (Throwable t) {
+        error = t;
+      }
+      test(error != null);
+
     } catch (Throwable t) {
       errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
     } finally {

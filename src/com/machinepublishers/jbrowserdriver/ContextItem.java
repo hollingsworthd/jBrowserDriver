@@ -77,6 +77,10 @@ class ContextItem {
     }
   }
 
+  boolean containsFrame(JSObject doc) {
+    return frames.conatins(doc);
+  }
+
   org.openqa.selenium.Point selectedFrameLocation() {
     synchronized (frames) {
       ElementServer selectedFrame = selectedFrame();
