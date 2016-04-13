@@ -36,6 +36,7 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.Rectangle;
@@ -148,9 +149,23 @@ public class Test {
       test(driver.findElement(By.xpath("//a[contains(@href,'1')]")).getAttribute("id").equals("anchor1"));
       test(driver.findElementsByXPath("//a[contains(@href,'!!!')]").isEmpty());
       test(driver.findElementsByClassName("xx").isEmpty());
-      test(driver.findElementByTagName("xx") == null);
-      test(driver.findElementByCssSelector("#xx") == null);
+      test(driver.findElementsByTagName("xx").isEmpty());
+      test(driver.findElementsByCssSelector("#xx").isEmpty());
       Throwable error = null;
+      try {
+        driver.findElementByTagName("xx");
+      } catch (NoSuchElementException e) {
+        error = e;
+      }
+      test(error != null);
+      error = null;
+      try {
+        driver.findElementByCssSelector("#xx");
+      } catch (NoSuchElementException e) {
+        error = e;
+      }
+      test(error != null);
+      error = null;
       try {
         driver.findElementsByXPath("!!!");
       } catch (WebDriverException e) {

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -66,7 +67,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   static WebElement constructElement(ElementRemote element, JBrowserDriver driver) {
     if (element == null) {
-      return null;
+      throw new NoSuchElementException("Element not found.");
     }
     return new Element(element, driver);
   }
