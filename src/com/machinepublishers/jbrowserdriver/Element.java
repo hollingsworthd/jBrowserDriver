@@ -529,7 +529,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public Object executeAsyncScript(final String script, final Object... args) {
     try {
-      return constructObject(remote.executeAsyncScript(script, args), driver);
+      return constructObject(remote.executeAsyncScript(script, Element.scriptParams(args)), driver);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -542,11 +542,28 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public Object executeScript(final String script, final Object... args) {
     try {
-      return constructObject(remote.executeScript(script, args), driver);
+      return constructObject(remote.executeScript(script, Element.scriptParams(args)), driver);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
     }
+  }
+
+  static Object[] scriptParams(Object[] args) {
+    if (args != null) {
+      Object[] argsOut = new Object[args.length];
+      for (int i = 0; i < args.length; i++) {
+        if (args[i] instanceof Element) {
+          ElementId id = new ElementId();
+          ((Element) args[i]).scriptParam(id);
+          argsOut[i] = id;
+        } else {
+          argsOut[i] = args[i];
+        }
+      }
+      return argsOut;
+    }
+    return null;
   }
 
   /**

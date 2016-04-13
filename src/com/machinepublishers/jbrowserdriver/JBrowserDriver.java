@@ -775,7 +775,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeAsyncScript(script, scriptParams(args)), this);
+      return Element.constructObject(remote.executeAsyncScript(script, Element.scriptParams(args)), this);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -788,28 +788,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Object executeScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeScript(script, scriptParams(args)), this);
+      return Element.constructObject(remote.executeScript(script, Element.scriptParams(args)), this);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
     }
-  }
-
-  private static Object[] scriptParams(Object[] args) {
-    if (args != null) {
-      Object[] argsOut = new Object[args.length];
-      for (int i = 0; i < args.length; i++) {
-        if (args[i] instanceof Element) {
-          ElementId id = new ElementId();
-          ((Element) args[i]).scriptParam(id);
-          argsOut[i] = id;
-        } else {
-          argsOut[i] = args[i];
-        }
-      }
-      return argsOut;
-    }
-    return null;
   }
 
   /**
