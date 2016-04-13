@@ -431,7 +431,7 @@ public class Test {
       test(error != null);
 
     } catch (Throwable t) {
-      errors.add(failureLabel(curTest + 1, t, 0, true));
+      errors.add(failureLabel(curTest + 1, t));
     } finally {
       try {
         driver.quit();
@@ -442,22 +442,25 @@ public class Test {
     }
   }
 
-  private static String failureLabel(int curTest, Throwable throwable, int stackTraceIndex, boolean printFullTrace) {
-    StackTraceElement[] elements = throwable.getStackTrace();
-    String lineNumber = "";
-    if (elements != null && elements.length > stackTraceIndex) {
-      lineNumber = elements[stackTraceIndex].toString();
-    } else {
-      lineNumber = "(unknown line number)";
+  private static String failureLabel(int curTest, Throwable throwable) {
+    String stackTrace = throwable == null ? "" : " -- " + toString(throwable);
+
+    StackTraceElement[] elements = throwable == null ? new Throwable().getStackTrace() : throwable.getStackTrace();
+    String testLocation = "";
+    for (int i = 0; i < elements.length; i++) {
+      if (Test.class.getName().equals(elements[i].getClassName())
+          && "<init>".equals(elements[i].getMethodName())) {
+        testLocation = elements[i].toString();
+      }
     }
-    String stackTrace = printFullTrace ? " -- " + toString(throwable) : "";
-    return "Test #" + curTest + " failed -- " + lineNumber + stackTrace;
+
+    return "Test #" + curTest + " failed -- " + testLocation + stackTrace;
   }
 
   private void test(boolean bool) {
     ++curTest;
     if (!bool) {
-      errors.add(failureLabel(curTest, new Throwable(), 1, false));
+      errors.add(failureLabel(curTest, null));
     }
   }
 
