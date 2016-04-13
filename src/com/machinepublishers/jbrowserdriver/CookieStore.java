@@ -36,12 +36,12 @@ import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.LaxCookieSpecProvider;
+import org.apache.http.impl.cookie.JbdCookieSpecProvider;
 import org.apache.http.message.BasicHeader;
 
 class CookieStore extends CookieHandler implements org.apache.http.client.CookieStore, Serializable {
 
-  private static final CookieSpec spec = new LaxCookieSpecProvider().create(null);
+  private static final CookieSpec spec = new JbdCookieSpecProvider().create(null);
   private final org.apache.http.client.CookieStore store = new BasicCookieStore();
 
   /**

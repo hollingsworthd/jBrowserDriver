@@ -57,16 +57,16 @@ import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.CustomClientBuilder;
+import org.apache.http.impl.client.cache.JbdClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.cookie.LaxCookieSpecProvider;
+import org.apache.http.impl.cookie.JbdCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 
 class StreamConnectionClient {
   private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
-      .register("custom", new LaxCookieSpecProvider())
+      .register("custom", new JbdCookieSpecProvider())
       .build();
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
@@ -120,7 +120,7 @@ class StreamConnectionClient {
         .setDefaultCredentialsProvider(ProxyAuth.instance())
         .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
         .build();
-    cachingClient = new CustomClientBuilder()
+    cachingClient = new JbdClientBuilder()
         .setCacheConfig(cacheConfig)
         .setHttpCacheStorage(httpCache)
         .disableRedirectHandling()
