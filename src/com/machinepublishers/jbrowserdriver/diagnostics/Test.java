@@ -19,9 +19,11 @@
  */
 package com.machinepublishers.jbrowserdriver.diagnostics;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -76,19 +79,28 @@ public class Test {
 
   private Test() {
     JBrowserDriver driver = null;
+    Thread shutdownHook = null;
     try {
       HttpServer.launch(TEST_PORT_HTTP);
-      driver = new JBrowserDriver(
-          Settings.builder()
-              .portsMax(TEST_PORT_RMI, 1)
-              .screen(new Dimension(1024, 768))
-              .traceConsole(true)
-              .javascriptConsole(true)
-              .javascriptLog(true)
-              .ajaxWait(150)
-              .cache(true)
-              .ignoreDialogs(false)
-              .build());
+      final File cacheDir = Files.createTempDirectory("jbd_test_cache").toFile();
+      shutdownHook = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          FileUtils.deleteQuietly(cacheDir);
+        }
+      });
+      Runtime.getRuntime().addShutdownHook(shutdownHook);
+      Settings.Builder builder = Settings.builder()
+          .portsMax(TEST_PORT_RMI, 1)
+          .screen(new Dimension(1024, 768))
+          .traceConsole(true)
+          .javascriptConsole(true)
+          .javascriptLog(true)
+          .ajaxWait(150)
+          .cacheDir(cacheDir)
+          .cache(true)
+          .ignoreDialogs(false);
+      driver = new JBrowserDriver(builder.build());
 
       /*
        * Load a page
@@ -103,6 +115,18 @@ public class Test {
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
+
+      /*
+       * Driver reset
+       */
+      driver.reset();
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      test(driver.getStatusCode() == 200);
+      test(HttpServer.previousRequestId() == initialRequestId);
+      driver.reset(builder.cacheDir(null).build());
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      test(driver.getStatusCode() == 200);
+      test(HttpServer.previousRequestId() != initialRequestId);
 
       /*
        * Waiting for AJAX requests
@@ -455,6 +479,10 @@ public class Test {
       } catch (Throwable t) {
         errors.add(toString(t));
       }
+      try {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        shutdownHook.run();
+      } catch (Throwable t) {}
     }
   }
 

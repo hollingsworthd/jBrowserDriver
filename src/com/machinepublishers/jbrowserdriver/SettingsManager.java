@@ -20,6 +20,7 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,6 +34,15 @@ import javafx.stage.Stage;
 
 class SettingsManager {
   private static final AtomicReference<Settings> settings = new AtomicReference<Settings>();
+  private static final AtomicBoolean platformInitialized = new AtomicBoolean();
+  private static final AtomicBoolean monocle = new AtomicBoolean();
+
+  static boolean isMonocle() {
+    if (!platformInitialized.get()) {
+      throw new IllegalStateException();
+    }
+    return monocle.get();
+  }
 
   static Settings settings() {
     return settings.get();
@@ -54,7 +64,8 @@ class SettingsManager {
       System.setProperty("prism.primtextures", "false");
       System.setProperty("prism.shutdownHook", "false");
       System.setProperty("prism.disableRegionCaching", "true");
-      if (settings.headless()) {
+      if (settings.headless() && platformInitialized.compareAndSet(false, true)) {
+        monocle.set(true);
         System.setProperty("glass.platform", "Monocle");
         System.setProperty("monocle.platform", "Headless");
         System.setProperty("prism.order", "sw");
@@ -71,7 +82,7 @@ class SettingsManager {
         } catch (Throwable t) {
           Util.handleException(t);
         }
-      } else {
+      } else if (platformInitialized.compareAndSet(false, true)) {
         new JFXPanel();
       }
     }
@@ -81,7 +92,7 @@ class SettingsManager {
       final AtomicReference<Stage> stage,
       final AtomicReference<WebView> view) {
     ProxyAuth.add(settings.get().proxy());
-    if (settings().headless() &&
+    if (isMonocle() &&
         com.sun.glass.ui.Application.GetApplication() == null) {
       new Thread(new Runnable() {
         @Override
@@ -91,7 +102,7 @@ class SettingsManager {
                 new String[] {
                     Integer.toString(settings.get().screenWidth()),
                     Integer.toString(settings.get().screenHeight()),
-                    Boolean.toString(settings().headless()) });
+                    Boolean.toString(isMonocle()) });
           } catch (Throwable t) {
             LogsServer.instance().exception(t);
           }
@@ -101,7 +112,7 @@ class SettingsManager {
       final App app = new App();
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
-          settings().headless());
+          isMonocle());
       AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
         public Object perform() {
           try {

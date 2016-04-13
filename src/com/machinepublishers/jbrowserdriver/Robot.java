@@ -586,7 +586,7 @@ class Robot {
           }
 
           Throwable attempt2 = null;
-          if (image == null && SettingsManager.settings().headless()) {
+          if (image == null && SettingsManager.isMonocle()) {
             try {
               final Stage stage = context.item().stage.get();
               final Scene scene = stage.getScene();
