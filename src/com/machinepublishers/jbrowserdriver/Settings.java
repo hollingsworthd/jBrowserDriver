@@ -269,6 +269,7 @@ public class Settings implements Serializable {
 
     /**
      * Script to be injected in the HTML Head section.
+     * <p>
      * Omit &lt;script&gt; tags; they will be added automatically.
      * <p>
      * Defaults to {@link Settings#HEAD_SCRIPT}.
@@ -418,8 +419,7 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Directory where the web cache resides. This enables sharing a cache across instances
-     * and after JVM restarts.
+     * Directory where the web cache resides--this enables sharing a cache across instances and after JVM restarts.
      * <p>
      * Defaults to <code>null</code> meaning a temp directory will be generated, available via {@link JBrowserDriver#cacheDir()}.
      * 
@@ -474,8 +474,8 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI).
-     * This setting configures which ports are available for RMI.
+     * Each browser instance is run in a separate process (via RMI)--this setting configures which ports are available for RMI.
+     * <p>
      * The number of ports determines the maximum number of RMI processes.
      * May overwrite anything set from {@link #portsMax(int, int)} or {@link #processes(int)}.
      * 
@@ -498,8 +498,8 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI).
-     * This setting configures which ports are available for RMI.
+     * Each browser instance is run in a separate process (via RMI)--this setting configures which ports are available for RMI.
+     * <p>
      * The number of ports determines the maximum number of RMI processes.
      * This is a convenience method for those who are allocating a sequential
      * range of ports, as you only need to specify the starting port (inclusive) and
@@ -522,8 +522,8 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI).
-     * This setting configures the maximum number of these processes and allows them to use any available port.
+     * Each browser instance is run in a separate process (via RMI)--this setting configures the maximum number of these processes and allows them to use any available port.
+     * <p>
      * May overwrite anything set from {@link #ports(int...)} or {@link #portsMax(int, int)}.
      * 
      * Defaults to <code>2 * Runtime.getRuntime().availableProcessors()</code>.
@@ -543,7 +543,9 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Whether to run in headless mode (no GUI windows). Screenshots <i>are</i> available in headless mode (see {@link JBrowserDriver#getScreenshotAs(org.openqa.selenium.OutputType)}).
+     * Whether to run in headless mode (no GUI windows).
+     * <p>
+     * Screenshots <i>are</i> available in headless mode (see {@link JBrowserDriver#getScreenshotAs(org.openqa.selenium.OutputType)}).
      * <p>
      * Defaults to <code>true</code>.
      * 
@@ -579,8 +581,9 @@ public class Settings implements Serializable {
     }
 
     /**
-     * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to
-     * have been loaded completely. For very slow or overloaded CPUs, set a higher value.
+     * The idle time (no pending AJAX requests) required in milliseconds before a page is considered to have been loaded completely.
+     * <p>
+     * For very slow or overloaded CPUs, set a higher value.
      * <p>
      * Defaults to <code>150</code>.
      * 
@@ -618,6 +621,7 @@ public class Settings implements Serializable {
 
     /**
      * Whether requests to ad/spam servers should be blocked.
+     * <p>
      * Based on hosts in ad-hosts.txt in the source tree.
      * <p>
      * Defaults to <code>true</code>.
@@ -637,6 +641,7 @@ public class Settings implements Serializable {
 
     /**
      * Exclude web page images and binary data from rendering.
+     * <p>
      * These resources are still requested and can optionally be saved to disk (see the Settings options).
      * Some versions of Java are inefficient (memory-wise) in rendering images.
      * <p>
@@ -712,6 +717,7 @@ public class Settings implements Serializable {
 
     /**
      * Socket timeout in milliseconds, which is the max idle time between any two packets.
+     * <p>
      * Value of 0 means infinite timeout.
      * <p>
      * Defaults to -1 (system default).
@@ -732,6 +738,7 @@ public class Settings implements Serializable {
 
     /**
      * Connect timeout in milliseconds, which the is max time until a connection is established.
+     * <p>
      * Value of 0 means infinite timeout.
      * <p>
      * Defaults to -1 (system default).
@@ -753,6 +760,7 @@ public class Settings implements Serializable {
     /**
      * Connection request timeout in milliseconds,
      * which is the max time to wait when the max number of connections has already been reached.
+     * <p>
      * When the timeout is reached, the connection fails with an exception.
      * Value of 0 means infinite timeout.
      * <p>
@@ -774,6 +782,7 @@ public class Settings implements Serializable {
 
     /**
      * Specifies a source of trusted certificate authorities.
+     * <p>
      * Can take one of four values:
      * <br>(1) <code>compatible</code> to accept standard browser certs,
      * <br>(2) <code>trustanything</code> to accept any SSL cert,
@@ -817,6 +826,7 @@ public class Settings implements Serializable {
 
     /**
      * Mirror trace-level log messages to standard out.
+     * <p>
      * Otherwise these logs are only available through the Selenium APIs.
      * <p>
      * Defaults to <code>false</code>.
@@ -836,6 +846,7 @@ public class Settings implements Serializable {
 
     /**
      * Mirror warning-level log messages to standard error.
+     * <p>
      * Otherwise these logs are only available through the Selenium APIs.
      * <p>
      * Defaults to <code>true</code>.
@@ -855,6 +866,7 @@ public class Settings implements Serializable {
 
     /**
      * Log full requests and responses (except response bodies) to standard out.
+     * <p>
      * This produces an enormous amount of output and logs potentially sensitive data--use only as needed.
      * Regardless of this setting, these log messages are never available via the Selenium logging APIs.
      * <p>
@@ -875,6 +887,7 @@ public class Settings implements Serializable {
 
     /**
      * Maximum number of log entries to store in memory (per process), accessible via the Selenium APIs.
+     * <p>
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
      * <p>
