@@ -525,7 +525,7 @@ public class Settings implements Serializable {
      * Each browser instance is run in a separate process (via RMI)--this setting configures the maximum number of these processes and allows them to use any available port.
      * <p>
      * May overwrite anything set from {@link #ports(int...)} or {@link #portsMax(int, int)}.
-     * 
+     * <p>
      * Defaults to <code>2 * Runtime.getRuntime().availableProcessors()</code>.
      * 
      * <p><ul>
