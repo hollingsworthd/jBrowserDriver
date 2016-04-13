@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.LoadListenerClient;
 
 class HttpListener implements LoadListenerClient {
@@ -156,12 +157,16 @@ class HttpListener implements LoadListenerClient {
   @Override
   public void dispatchLoadEvent(final long frame, final int state, String url,
       String contentType, double progress, int errorCode) {
-    if (SettingsManager.settings() == null) {
+    final Settings settings = SettingsManager.settings();
+    if (settings == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
     synchronized (statusCode) {
       if (state == LoadListenerClient.PAGE_STARTED) {
         contextItem.resetFrameId(frame);
+        if (settings.javascriptLog()) {
+          JavascriptLog.attach(Accessor.getPageFor(contextItem.engine.get()), frame);
+        }
       }
       contextItem.addFrameId(frame);
       if (state == LoadListenerClient.PAGE_STARTED

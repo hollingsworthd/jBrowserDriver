@@ -33,9 +33,10 @@ import java.util.logging.Level;
 import org.openqa.selenium.logging.LogEntries;
 
 class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
-  private final LinkedList<Entry> entriesNormal = new LinkedList<Entry>();
+  private final LinkedList<Entry> entriesWarn = new LinkedList<Entry>();
   private final LinkedList<Entry> entriesTrace = new LinkedList<Entry>();
-  private static final int LOG_TYPES = 2;
+  private final LinkedList<Entry> entriesJavascript = new LinkedList<Entry>();
+  private static final int LOG_TYPES = 3;
   private final Object lock = new Object();
   private static final LogsServer instance;
   static {
@@ -65,16 +66,38 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
 
   private LogsServer() throws RemoteException {}
 
-  public void clear() {
+  public void clear(String type) {
     synchronized (lock) {
-      entriesNormal.clear();
-      entriesTrace.clear();
+      boolean all = type == null || "all".equals(type);
+      if (all || "warn".equals(type)) {
+        entriesWarn.clear();
+      }
+      if (all || "trace".equals(type)) {
+        entriesTrace.clear();
+      }
+      if (all || "javascript".equals(type)) {
+        entriesJavascript.clear();
+      }
+    }
+  }
+
+  public void javascript(String message) {
+    Settings settings = SettingsManager.settings();
+    final Entry entry = new Entry(Level.FINER, System.currentTimeMillis(), message);
+    synchronized (lock) {
+      entriesJavascript.add(entry);
+      if (settings != null && entriesJavascript.size() > settings.maxLogs() / LOG_TYPES) {
+        entriesJavascript.removeFirst();
+      }
+    }
+    if (settings == null || settings.traceConsole()) {
+      System.out.println(entry);
     }
   }
 
   public void trace(String message) {
     Settings settings = SettingsManager.settings();
-    final Entry entry = new Entry(Level.FINEST, System.currentTimeMillis(), message);
+    final Entry entry = new Entry(Level.INFO, System.currentTimeMillis(), message);
     synchronized (lock) {
       entriesTrace.add(entry);
       if (settings != null && entriesTrace.size() > settings.maxLogs() / LOG_TYPES) {
@@ -90,9 +113,9 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
     Settings settings = SettingsManager.settings();
     final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
     synchronized (lock) {
-      entriesNormal.add(entry);
-      if (settings != null && entriesNormal.size() > settings.maxLogs() / LOG_TYPES) {
-        entriesNormal.removeFirst();
+      entriesWarn.add(entry);
+      if (settings != null && entriesWarn.size() > settings.maxLogs() / LOG_TYPES) {
+        entriesWarn.removeFirst();
       }
     }
     if (settings == null || settings.warnConsole()) {
@@ -110,9 +133,9 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
         t.printStackTrace(new PrintWriter(writer));
         entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
         synchronized (lock) {
-          entriesNormal.add(entry);
-          if (settings != null && entriesNormal.size() > settings.maxLogs() / LOG_TYPES) {
-            entriesNormal.removeFirst();
+          entriesWarn.add(entry);
+          if (settings != null && entriesWarn.size() > settings.maxLogs() / LOG_TYPES) {
+            entriesWarn.removeFirst();
           }
         }
       } catch (Throwable t2) {
@@ -133,17 +156,24 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    * {@inheritDoc}
    */
   @Override
-  public Entries getRemote(String s) {
+  public Entries getRemote(String type) {
     synchronized (lock) {
       try {
         List<Entry> combinedLogs = new ArrayList<Entry>();
-        combinedLogs.addAll(entriesNormal);
-        combinedLogs.addAll(entriesTrace);
+        boolean all = type == null || "all".equals(type);
+        if (all || "warn".equals(type)) {
+          combinedLogs.addAll(entriesWarn);
+        }
+        if (all || "trace".equals(type)) {
+          combinedLogs.addAll(entriesTrace);
+        }
+        if (all || "javascript".equals(type)) {
+          combinedLogs.addAll(entriesJavascript);
+        }
         Entries logEntries = new Entries(combinedLogs);
         return logEntries;
       } finally {
-        entriesNormal.clear();
-        entriesTrace.clear();
+        clear(type);
       }
     }
   }
@@ -152,9 +182,9 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    * {@inheritDoc}
    */
   @Override
-  public LogEntries get(String s) {
+  public LogEntries get(String type) {
     synchronized (lock) {
-      return getRemote(null).toLogEntries();
+      return getRemote(type).toLogEntries();
     }
   }
 
@@ -163,6 +193,6 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public Set<String> getAvailableLogTypes() {
-    return new HashSet<String>(Arrays.asList(new String[] { "all" }));
+    return new HashSet<String>(Arrays.asList(new String[] { "all", "warn", "trace", "javascript" }));
   }
 }

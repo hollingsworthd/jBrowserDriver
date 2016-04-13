@@ -4,6 +4,13 @@
       function change() {
         document.getElementById("file-input-onchange").innerHTML = "event-test";
       }
+      console.log("msg1","msg2");
+      console.assert(false, "msg1");
+      try{
+        invalid.test();
+      }catch(ex){
+        console.log(ex);
+      }
     </script>
   </head>
   <body id="testbody">

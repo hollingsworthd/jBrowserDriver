@@ -182,7 +182,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     Accessor.getPageFor(context.get().item().engine.get()).stop();
     ((CookieStore) CookieManager.getDefault()).clear();
     StatusMonitor.instance().clearStatusMonitor();
-    LogsServer.instance().clear();
+    LogsServer.instance().clear(null);
     SettingsManager.register(settings);
     context.get().reset(this);
   }

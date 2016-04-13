@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
@@ -42,6 +43,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.logging.LogEntry;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
 import com.machinepublishers.jbrowserdriver.Settings;
@@ -80,6 +82,7 @@ public class Test {
               .portsMax(TEST_PORT_RMI, 1)
               .screen(new Dimension(1024, 768))
               .traceConsole(true)
+              .javascriptLog(true)
               .ajaxWait(150)
               .cache(true)
               .ignoreDialogs(false)
@@ -106,6 +109,16 @@ public class Test {
       driver.pageWait();
       long waitEnd = System.currentTimeMillis();
       test(waitEnd - waitStart > 145 && waitEnd - waitStart < 155);
+
+      /*
+       * Javascript logs
+       */
+      int messages = 0;
+      for (LogEntry entry : driver.manage().logs().get("javascript").filter(Level.ALL)) {
+        ++messages;
+        test(!StringUtils.isEmpty(entry.getMessage()));
+      }
+      test(messages == 3);
 
       /*
        * Select DOM elements

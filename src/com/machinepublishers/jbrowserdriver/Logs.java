@@ -34,9 +34,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
     this.remote = remote;
   }
 
-  void clear() {
+  void clear(String type) {
     try {
-      remote.clear();
+      remote.clear(type);
     } catch (Throwable t) {
       t.printStackTrace();
     }
@@ -88,9 +88,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
    * {@inheritDoc}
    */
   @Override
-  public LogEntries get(String s) {
+  public LogEntries get(String type) {
     try {
-      return remote.getRemote(s).toLogEntries();
+      return remote.getRemote(type).toLogEntries();
     } catch (Throwable t) {
       t.printStackTrace();
       return null;

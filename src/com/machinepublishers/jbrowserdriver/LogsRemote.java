@@ -24,7 +24,7 @@ import java.rmi.RemoteException;
 import java.util.Set;
 
 interface LogsRemote extends Remote {
-  void clear() throws RemoteException;
+  void clear(String type) throws RemoteException;
 
   void trace(String message) throws RemoteException;
 
@@ -32,7 +32,7 @@ interface LogsRemote extends Remote {
 
   void exception(Throwable t) throws RemoteException;
 
-  Entries getRemote(String s) throws RemoteException;
+  Entries getRemote(String type) throws RemoteException;
 
   Set<String> getAvailableLogTypes() throws RemoteException;
 }

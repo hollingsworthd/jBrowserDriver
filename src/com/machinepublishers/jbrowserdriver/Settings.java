@@ -133,7 +133,8 @@ public class Settings implements Serializable {
     SOCKET_TIMEOUT_MS("jbd.sockettimeout"),
     CONNECT_TIMEOUT_MS("jbd.connecttimeout"),
     CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout"),
-    RESPONSE_INTERCEPTORS("jbd.responseinterceptors");
+    RESPONSE_INTERCEPTORS("jbd.responseinterceptors"),
+    JAVASCRIPT_LOG("jbd.javascriptlog");
 
     private final String propertyName;
 
@@ -176,7 +177,8 @@ public class Settings implements Serializable {
     private boolean traceConsole;
     private boolean warnConsole = true;
     private boolean wireConsole;
-    private int maxLogs = 3000;
+    private boolean javascriptLog;
+    private int maxLogs = 4500;
     private boolean hostnameVerification = true;
     private boolean javascript = true;
     private int socketTimeout = -1;
@@ -886,12 +888,30 @@ public class Settings implements Serializable {
     }
 
     /**
+     * Capture Javascript browser console messages.
+     * <p>
+     * Defaults to <code>false</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.javascriptlog</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.javascriptlog</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param javascriptLog
+     * @return this Builder
+     */
+    public Builder javascriptLog(boolean javascriptLog) {
+      this.javascriptLog = javascriptLog;
+      return this;
+    }
+
+    /**
      * Maximum number of log entries to store in memory (per process), accessible via the Selenium APIs.
      * <p>
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
      * <p>
-     * Defaults to <code>3000</code>.
+     * Defaults to <code>4500</code>.
      * 
      * <p><ul>
      * <li>Java system property <code>jbd.maxlogs</code> overrides this setting.</li>
@@ -948,6 +968,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
+      set(capabilities, PropertyName.JAVASCRIPT_LOG, this.javascriptLog);
       //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
 
       if (this.screen != null) {
@@ -1119,6 +1140,7 @@ public class Settings implements Serializable {
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
+  private final boolean javascriptLog;
   //TODO private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1148,6 +1170,7 @@ public class Settings implements Serializable {
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
+    this.javascriptLog = parse(properties, PropertyName.JAVASCRIPT_LOG, builder.javascriptLog);
     //TODO this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
@@ -1359,6 +1382,10 @@ public class Settings implements Serializable {
 
   boolean wireConsole() {
     return wireConsole;
+  }
+
+  boolean javascriptLog() {
+    return javascriptLog;
   }
 
   int maxLogs() {
