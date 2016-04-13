@@ -34,7 +34,7 @@
   </licenses>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <selenium.version>2.52.0</selenium.version> <!-- note: selenium does not follow semantic versioning -->
+    <selenium.version>2.53.0</selenium.version> <!-- note: selenium does not follow semantic versioning -->
     <httpcomponents.version>[4.5.2, 5.0)</httpcomponents.version>
   </properties>
   <dependencies>
@@ -152,7 +152,7 @@
     <dependency>
       <groupId>org.zeroturnaround</groupId>
       <artifactId>zt-exec</artifactId>
-      <version>[1.8, 2.0)</version>
+      <version>[1.9, 2.0)</version>
     </dependency>
     <dependency>
       <groupId>org.zeroturnaround</groupId>
@@ -162,7 +162,7 @@
     <dependency>
       <groupId>io.github.lukehutch</groupId>
       <artifactId>fast-classpath-scanner</artifactId>
-      <version>[1.9.17, 2.0)</version>
+      <version>[1.9.18, 2.0)</version>
     </dependency>
   </dependencies>
   <distributionManagement>
