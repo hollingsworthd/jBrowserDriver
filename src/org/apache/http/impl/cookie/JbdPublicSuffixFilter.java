@@ -25,11 +25,11 @@ import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.cookie.SetCookie;
 
-public class LaxPublicSuffixFilter implements CommonCookieAttributeHandler {
+public class JbdPublicSuffixFilter implements CommonCookieAttributeHandler {
 
   private CommonCookieAttributeHandler parent;
 
-  public LaxPublicSuffixFilter(CommonCookieAttributeHandler parent) {
+  public JbdPublicSuffixFilter(CommonCookieAttributeHandler parent) {
     this.parent = parent;
   }
 

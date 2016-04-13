@@ -29,11 +29,11 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.execchain.ClientExecChain;
 
-public class CustomExecChain implements ClientExecChain {
+public class JbdExecChain implements ClientExecChain {
 
   private final ClientExecChain execChain;
 
-  public CustomExecChain(final ClientExecChain execChain) {
+  public JbdExecChain(final ClientExecChain execChain) {
     this.execChain = execChain;
   }
 
@@ -43,7 +43,7 @@ public class CustomExecChain implements ClientExecChain {
       HttpRequestWrapper request,
       HttpClientContext clientContext,
       HttpExecutionAware execAware) throws IOException, HttpException {
-    return new CustomResponse(execChain.execute(
-        route, HttpRequestWrapper.wrap(new CustomRequest(request)), clientContext, execAware));
+    return new JbdResponse(execChain.execute(
+        route, HttpRequestWrapper.wrap(new JbdRequest(request)), clientContext, execAware));
   }
 }

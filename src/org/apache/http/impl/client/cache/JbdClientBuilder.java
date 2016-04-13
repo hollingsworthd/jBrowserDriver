@@ -21,10 +21,10 @@ package org.apache.http.impl.client.cache;
 
 import org.apache.http.impl.execchain.ClientExecChain;
 
-public class CustomClientBuilder extends CachingHttpClientBuilder {
+public class JbdClientBuilder extends CachingHttpClientBuilder {
 
   @Override
   protected ClientExecChain decorateMainExec(final ClientExecChain mainExec) {
-    return super.decorateMainExec(new CustomExecChain(mainExec));
+    return super.decorateMainExec(new JbdExecChain(mainExec));
   }
 }

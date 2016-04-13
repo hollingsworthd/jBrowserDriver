@@ -19,179 +19,121 @@
  */
 package org.apache.http.impl.client.cache;
 
-import java.io.IOException;
-import java.util.Locale;
-
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
-import org.apache.http.HttpEntity;
+import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.RequestLine;
 import org.apache.http.params.HttpParams;
 
-public class CustomResponse implements CloseableHttpResponse {
+public class JbdRequest implements HttpRequest {
 
-  private final CloseableHttpResponse resp;
+  private final HttpRequest req;
 
-  public CustomResponse(CloseableHttpResponse resp) {
-    this.resp = resp;
+  public JbdRequest(HttpRequest req) {
+    this.req = req;
   }
 
   private void adjustHeaders() {
-    resp.removeHeaders("Via");
-    if (ArrayUtils.isEmpty(resp.getHeaders("Content-Type"))) {
-      resp.addHeader("Content-Type", "text/html");
-    }
-  }
-
-  @Override
-  public StatusLine getStatusLine() {
-    return resp.getStatusLine();
-  }
-
-  @Override
-  public void setStatusLine(StatusLine statusline) {
-    resp.setStatusLine(statusline);
-  }
-
-  @Override
-  public void setStatusLine(ProtocolVersion ver, int code) {
-    resp.setStatusLine(ver, code);
-  }
-
-  @Override
-  public void setStatusLine(ProtocolVersion ver, int code, String reason) {
-    resp.setStatusLine(ver, code, reason);
-  }
-
-  @Override
-  public void setStatusCode(int code) throws IllegalStateException {
-    resp.setStatusCode(code);
-  }
-
-  @Override
-  public void setReasonPhrase(String reason) throws IllegalStateException {
-    resp.setReasonPhrase(reason);
-  }
-
-  @Override
-  public HttpEntity getEntity() {
-    adjustHeaders();
-    return resp.getEntity();
-  }
-
-  @Override
-  public void setEntity(HttpEntity entity) {
-    resp.setEntity(entity);
-  }
-
-  @Override
-  public Locale getLocale() {
-    return resp.getLocale();
-  }
-
-  @Override
-  public void setLocale(Locale loc) {
-    resp.setLocale(loc);
+    req.removeHeaders("Via");
   }
 
   @Override
   public ProtocolVersion getProtocolVersion() {
-    return resp.getProtocolVersion();
+    return req.getProtocolVersion();
   }
 
   @Override
   public boolean containsHeader(String name) {
     adjustHeaders();
-    return resp.containsHeader(name);
+    return req.containsHeader(name);
   }
 
   @Override
   public Header[] getHeaders(String name) {
     adjustHeaders();
-    return resp.getHeaders(name);
+    return req.getHeaders(name);
   }
 
   @Override
   public Header getFirstHeader(String name) {
     adjustHeaders();
-    return resp.getFirstHeader(name);
+    return req.getFirstHeader(name);
   }
 
   @Override
   public Header getLastHeader(String name) {
     adjustHeaders();
-    return resp.getLastHeader(name);
+    return req.getLastHeader(name);
   }
 
   @Override
   public Header[] getAllHeaders() {
     adjustHeaders();
-    return resp.getAllHeaders();
+    return req.getAllHeaders();
   }
 
   @Override
   public void addHeader(Header header) {
-    resp.addHeader(header);
+    req.addHeader(header);
   }
 
   @Override
   public void addHeader(String name, String value) {
-    resp.addHeader(name, value);
+    req.addHeader(name, value);
   }
 
   @Override
   public void setHeader(Header header) {
-    resp.setHeader(header);
+    req.setHeader(header);
   }
 
   @Override
   public void setHeader(String name, String value) {
-    resp.setHeader(name, value);
+    req.setHeader(name, value);
   }
 
   @Override
   public void setHeaders(Header[] headers) {
-    resp.setHeaders(headers);
+    req.setHeaders(headers);
   }
 
   @Override
   public void removeHeader(Header header) {
-    resp.removeHeader(header);
+    req.removeHeader(header);
   }
 
   @Override
   public void removeHeaders(String name) {
-    resp.removeHeaders(name);
+    req.removeHeaders(name);
   }
 
   @Override
   public HeaderIterator headerIterator() {
     adjustHeaders();
-    return resp.headerIterator();
+    return req.headerIterator();
   }
 
   @Override
   public HeaderIterator headerIterator(String name) {
     adjustHeaders();
-    return resp.headerIterator(name);
+    return req.headerIterator(name);
   }
 
   @Override
   public HttpParams getParams() {
     adjustHeaders();
-    return resp.getParams();
+    return req.getParams();
   }
 
   @Override
   public void setParams(HttpParams params) {
-    resp.setParams(params);
+    req.setParams(params);
   }
 
   @Override
-  public void close() throws IOException {
-    resp.close();
+  public RequestLine getRequestLine() {
+    return req.getRequestLine();
   }
+
 }

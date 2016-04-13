@@ -44,7 +44,7 @@ import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.protocol.HttpContext;
 
-public class LaxCookieSpecProvider implements CookieSpecProvider {
+public class JbdCookieSpecProvider implements CookieSpecProvider {
   private static final String[] DATE_PATTERNS = new String[] {
       "EEE, MMM dd HH:mm:ss yy zzz", "EEE MMM dd HH:mm:ss yy zzz", "EEE, MMM dd HH:mm:ss yy",
       "EEE MMM dd HH:mm:ss yy", "MMM dd HH:mm:ss yy zzz", "MMM dd HH:mm:ss yy",
@@ -81,7 +81,7 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
                   // No validation
                 }
               },
-              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
+              new JbdPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new RFC2965DomainAttributeHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
@@ -104,7 +104,7 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
                   // No validation
                 }
               },
-              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
+              new JbdPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new RFC2109DomainHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
@@ -115,7 +115,7 @@ public class LaxCookieSpecProvider implements CookieSpecProvider {
               new BasicSecureHandler(),
               new BasicCommentHandler());
           final NetscapeDraftSpec netscapeDraft = new NetscapeDraftSpec(
-              new LaxPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
+              new JbdPublicSuffixFilter(PublicSuffixDomainFilter.decorate(
                   new BasicDomainHandler() {
                     @Override
                     public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
