@@ -17,23 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.machinepublishers.jbrowserdriver.diagnostics;
+package org.apache.commons.logging;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.logging.Level;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.openqa.selenium.logging.LogEntry;
-
-public class WireLog implements Log, Serializable {
+public class JbdWireLog implements Log, Serializable {
   private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.+)\"$");
   private static final Pattern response = Pattern.compile(
       "^http-outgoing-[0-9]+\\s<<\\s\"((?:HTTP/.+)|(?:[^:]+:\\s.+))\"$");
   private static final int MAX_LEN = 500;
+  private static final AtomicReference<Appendable> appender = new AtomicReference<Appendable>();
 
-  public WireLog(String s) {}
+  public static void setAppender(Appendable appender) {
+    JbdWireLog.appender.set(appender);
+  }
+
+  public JbdWireLog(String s) {}
 
   @Override
   public void debug(Object objMessage) {
@@ -44,16 +47,22 @@ public class WireLog implements Log, Serializable {
         if (matcher.matches()) {
           message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
           if (!message.isEmpty()) {
-            System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(),
-                "----->> " + message));
+            try {
+              appender.get().append("----->> " + message);
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
           }
         } else {
           matcher = response.matcher(message);
           if (matcher.matches()) {
             message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
             if (!message.isEmpty()) {
-              System.out.println(new LogEntry(Level.FINEST, System.currentTimeMillis(),
-                  "<<----- " + message));
+              try {
+                appender.get().append("<<----- " + message);
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
             }
           }
         }

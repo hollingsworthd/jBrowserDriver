@@ -106,10 +106,6 @@ public class Settings implements Serializable {
     MAX_ROUTE_CONNECTIONS("jbd.maxrouteconnections"),
     MAX_CONNECTIONS("jbd.maxconnections"),
     SSL("jbd.ssl"),
-    TRACE_CONSOLE("jbd.traceconsole"),
-    WARN_CONSOLE("jbd.warnconsole"),
-    WIRE_CONSOLE("jbd.wireconsole"),
-    MAX_LOGS("jbd.maxlogs"),
     USER_AGENT("jbd.useragent"),
     SCREEN_WIDTH("jbd.screenwidth"),
     SCREEN_HEIGHT("jbd.screenheight"),
@@ -134,7 +130,15 @@ public class Settings implements Serializable {
     CONNECT_TIMEOUT_MS("jbd.connecttimeout"),
     CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout"),
     RESPONSE_INTERCEPTORS("jbd.responseinterceptors"),
-    JAVASCRIPT_LOG("jbd.javascriptlog");
+    WIRE_LOG("jbd.wirelog"),
+    JAVASCRIPT_LOG("jbd.javascriptlog"),
+    TRACE_LOG("jbd.tracelog"),
+    WARN_LOG("jbd.warnlog"),
+    WIRE_CONSOLE("jbd.wireconsole"),
+    JAVASCRIPT_CONSOLE("jbd.javascriptconsole"),
+    TRACE_CONSOLE("jbd.traceconsole"),
+    WARN_CONSOLE("jbd.warnconsole"),
+    MAX_LOGS("jbd.maxlogs");
 
     private final String propertyName;
 
@@ -174,11 +178,15 @@ public class Settings implements Serializable {
     private int maxRouteConnections = 8;
     private int maxConnections = 300;
     private String ssl;
+    private boolean wireLog;
+    private boolean javascriptLog;
+    private boolean traceLog;
+    private boolean warnLog = true;
+    private boolean wireConsole;
+    private boolean javascriptConsole;
     private boolean traceConsole;
     private boolean warnConsole = true;
-    private boolean wireConsole;
-    private boolean javascriptLog;
-    private int maxLogs = 4500;
+    private int maxLogs = 1000;
     private boolean hostnameVerification = true;
     private boolean javascript = true;
     private int socketTimeout = -1;
@@ -827,50 +835,7 @@ public class Settings implements Serializable {
     //    }
 
     /**
-     * Mirror trace-level log messages to standard out.
-     * <p>
-     * Otherwise these logs are only available through the Selenium APIs.
-     * <p>
-     * Defaults to <code>false</code>.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting.</li>
-     * </ul><p>
-     * 
-     * @param traceConsole
-     * @return this Builder
-     */
-    public Builder traceConsole(boolean traceConsole) {
-      this.traceConsole = traceConsole;
-      return this;
-    }
-
-    /**
-     * Mirror warning-level log messages to standard error.
-     * <p>
-     * Otherwise these logs are only available through the Selenium APIs.
-     * <p>
-     * Defaults to <code>true</code>.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting.</li>
-     * </ul><p>
-     * 
-     * @param warnConsole
-     * @return this Builder
-     */
-    public Builder warnConsole(boolean warnConsole) {
-      this.warnConsole = warnConsole;
-      return this;
-    }
-
-    /**
-     * Log full requests and responses (except response bodies) to standard out.
-     * <p>
-     * This produces an enormous amount of output and logs potentially sensitive data--use only as needed.
-     * Regardless of this setting, these log messages are never available via the Selenium logging APIs.
+     * Send full requests and responses (except response bodies) to standard out.
      * <p>
      * Defaults to <code>false</code>.
      * 
@@ -888,7 +853,80 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Capture Javascript browser console messages.
+     * Send Javascript browser messages to standard out.
+     * <p>
+     * Defaults to <code>false</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.javascriptconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.javascriptconsole</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param javascriptConsole
+     * @return this Builder
+     */
+    public Builder javascriptConsole(boolean javascriptConsole) {
+      this.javascriptConsole = javascriptConsole;
+      return this;
+    }
+
+    /**
+     * Send trace messages to standard out.
+     * <p>
+     * Defaults to <code>false</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param traceConsole
+     * @return this Builder
+     */
+    public Builder traceConsole(boolean traceConsole) {
+      this.traceConsole = traceConsole;
+      return this;
+    }
+
+    /**
+     * Send important messages to standard error.
+     * <p>
+     * Defaults to <code>true</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param warnConsole
+     * @return this Builder
+     */
+    public Builder warnConsole(boolean warnConsole) {
+      this.warnConsole = warnConsole;
+      return this;
+    }
+
+    /**
+     * Send full requests and responses (except response bodies) to Selenium logger.
+     * <p>
+     * Defaults to <code>false</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.wirelog</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.wirelog</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param wireLog
+     * @return this Builder
+     * @see Settings.Builder#maxLogs(int)
+     */
+    public Builder wireLog(boolean wireLog) {
+      this.wireLog = wireLog;
+      return this;
+    }
+
+    /**
+     * Send Javascript browser messages to Selenium logger.
      * <p>
      * Defaults to <code>false</code>.
      * 
@@ -899,6 +937,7 @@ public class Settings implements Serializable {
      * 
      * @param javascriptLog
      * @return this Builder
+     * @see Settings.Builder#maxLogs(int)
      */
     public Builder javascriptLog(boolean javascriptLog) {
       this.javascriptLog = javascriptLog;
@@ -906,12 +945,50 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Maximum number of log entries to store in memory (per process), accessible via the Selenium APIs.
+     * Send trace messages to Selenium logger.
+     * <p>
+     * Defaults to <code>false</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.tracelog</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.tracelog</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param traceLog
+     * @return this Builder
+     * @see Settings.Builder#maxLogs(int)
+     */
+    public Builder traceLog(boolean traceLog) {
+      this.traceLog = traceLog;
+      return this;
+    }
+
+    /**
+     * Send important messages to Selenium logger.
+     * <p>
+     * Defaults to <code>true</code>.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.warnlog</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.warnlog</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param warnLog
+     * @return this Builder
+     * @see Settings.Builder#maxLogs(int)
+     */
+    public Builder warnLog(boolean warnLog) {
+      this.warnLog = warnLog;
+      return this;
+    }
+
+    /**
+     * Maximum number of log entries (per type) to store in memory (per process), accessible via the Selenium logger.
      * <p>
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
      * <p>
-     * Defaults to <code>4500</code>.
+     * Defaults to <code>1000</code>.
      * 
      * <p><ul>
      * <li>Java system property <code>jbd.maxlogs</code> overrides this setting.</li>
@@ -951,9 +1028,14 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.QUICK_RENDER, this.quickRender);
       set(capabilities, PropertyName.MAX_ROUTE_CONNECTIONS, this.maxRouteConnections);
       set(capabilities, PropertyName.MAX_CONNECTIONS, this.maxConnections);
+      set(capabilities, PropertyName.WIRE_CONSOLE, this.wireConsole);
+      set(capabilities, PropertyName.JAVASCRIPT_CONSOLE, this.javascriptConsole);
       set(capabilities, PropertyName.TRACE_CONSOLE, this.traceConsole);
       set(capabilities, PropertyName.WARN_CONSOLE, this.warnConsole);
-      set(capabilities, PropertyName.WIRE_CONSOLE, this.wireConsole);
+      set(capabilities, PropertyName.WIRE_LOG, this.wireLog);
+      set(capabilities, PropertyName.JAVASCRIPT_LOG, this.javascriptLog);
+      set(capabilities, PropertyName.TRACE_LOG, this.traceLog);
+      set(capabilities, PropertyName.WARN_LOG, this.warnLog);
       set(capabilities, PropertyName.MAX_LOGS, this.maxLogs);
       set(capabilities, PropertyName.HEAD_SCRIPT, this.headScript);
       final String joinedPorts = StringUtils.join(this.ports, ',');
@@ -968,7 +1050,6 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
-      set(capabilities, PropertyName.JAVASCRIPT_LOG, this.javascriptLog);
       //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
 
       if (this.screen != null) {
@@ -1061,7 +1142,7 @@ public class Settings implements Serializable {
       try (ObjectOutputStream objectOut = new ObjectOutputStream(streamOut)) {
         objectOut.writeObject(val);
       } catch (Throwable t) {
-        Logs.fatal(t);
+        Util.handleException(t);
       }
       capabilities.setCapability(name.propertyName, Base64.getEncoder().encodeToString(streamOut.toByteArray()));
     }
@@ -1102,7 +1183,7 @@ public class Settings implements Serializable {
       try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
         return (ResponseInterceptor[]) objectIn.readObject();
       } catch (Throwable t) {
-        Logs.fatal(t);
+        Util.handleException(t);
       }
     }
     return fallback;
@@ -1131,16 +1212,20 @@ public class Settings implements Serializable {
   private final int maxRouteConnections;
   private final int maxConnections;
   private final String ssl;
+  private final boolean wireLog;
+  private final boolean javascriptLog;
+  private final boolean traceLog;
+  private final boolean warnLog;
+  private final boolean wireConsole;
+  private final boolean javascriptConsole;
   private final boolean traceConsole;
   private final boolean warnConsole;
-  private final boolean wireConsole;
   private final int maxLogs;
   private final boolean hostnameVerification;
   private final boolean javascript;
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
-  private final boolean javascriptLog;
   //TODO private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1161,16 +1246,20 @@ public class Settings implements Serializable {
     this.quickRender = parse(properties, PropertyName.QUICK_RENDER, builder.quickRender);
     this.maxRouteConnections = parse(properties, PropertyName.MAX_ROUTE_CONNECTIONS, builder.maxRouteConnections);
     this.maxConnections = parse(properties, PropertyName.MAX_CONNECTIONS, builder.maxConnections);
+    this.javascriptLog = parse(properties, PropertyName.JAVASCRIPT_LOG, builder.javascriptLog);
+    this.wireLog = parse(properties, PropertyName.WIRE_LOG, builder.wireLog);
+    this.traceLog = parse(properties, PropertyName.TRACE_LOG, builder.traceLog);
+    this.warnLog = parse(properties, PropertyName.WARN_LOG, builder.warnLog);
+    this.javascriptConsole = parse(properties, PropertyName.JAVASCRIPT_CONSOLE, builder.javascriptConsole);
+    this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
     this.traceConsole = parse(properties, PropertyName.TRACE_CONSOLE, builder.traceConsole);
     this.warnConsole = parse(properties, PropertyName.WARN_CONSOLE, builder.warnConsole);
-    this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
     this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
     this.hostnameVerification = parse(properties, PropertyName.HOSTNAME_VERIFICATION, builder.hostnameVerification);
     this.javascript = parse(properties, PropertyName.JAVASCRIPT, builder.javascript);
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
-    this.javascriptLog = parse(properties, PropertyName.JAVASCRIPT_LOG, builder.javascriptLog);
     //TODO this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
 
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
@@ -1372,6 +1461,14 @@ public class Settings implements Serializable {
     return connectionReqTimeout;
   }
 
+  boolean wireConsole() {
+    return wireConsole;
+  }
+
+  boolean javascriptConsole() {
+    return javascriptConsole;
+  }
+
   boolean traceConsole() {
     return traceConsole;
   }
@@ -1380,12 +1477,20 @@ public class Settings implements Serializable {
     return warnConsole;
   }
 
-  boolean wireConsole() {
-    return wireConsole;
+  boolean wireLog() {
+    return wireLog;
   }
 
   boolean javascriptLog() {
     return javascriptLog;
+  }
+
+  boolean traceLog() {
+    return traceLog;
+  }
+
+  boolean warnLog() {
+    return warnLog;
   }
 
   int maxLogs() {

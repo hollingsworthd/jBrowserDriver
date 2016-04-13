@@ -69,7 +69,7 @@ class SettingsManager {
           com.machinepublishers.glass.ui.monocle.NativePlatformFactory.setPlatform(
               new com.machinepublishers.glass.ui.monocle.HeadlessPlatform());
         } catch (Throwable t) {
-          Logs.fatal(t);
+          Util.handleException(t);
         }
       } else {
         new JFXPanel();

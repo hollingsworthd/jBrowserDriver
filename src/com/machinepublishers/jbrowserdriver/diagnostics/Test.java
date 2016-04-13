@@ -83,6 +83,7 @@ public class Test {
               .portsMax(TEST_PORT_RMI, 1)
               .screen(new Dimension(1024, 768))
               .traceConsole(true)
+              .javascriptConsole(true)
               .javascriptLog(true)
               .ajaxWait(150)
               .cache(true)

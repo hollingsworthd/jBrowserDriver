@@ -24,13 +24,6 @@ import java.rmi.RemoteException;
 import java.util.Set;
 
 interface LogsRemote extends Remote {
-  void clear(String type) throws RemoteException;
-
-  void trace(String message) throws RemoteException;
-
-  void warn(String message) throws RemoteException;
-
-  void exception(Throwable t) throws RemoteException;
 
   Entries getRemote(String type) throws RemoteException;
 

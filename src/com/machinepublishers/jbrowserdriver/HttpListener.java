@@ -107,7 +107,8 @@ class HttpListener implements LoadListenerClient {
   @Override
   public void dispatchResourceLoadEvent(long frame, int state, String url,
       String contentType, double progress, int errorCode) {
-    if (SettingsManager.settings() == null) {
+    final Settings settings = SettingsManager.settings();
+    if (settings == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
     synchronized (statusCode) {
@@ -125,7 +126,8 @@ class HttpListener implements LoadListenerClient {
         }
       }
     }
-    if (url.startsWith("http://") || url.startsWith("https://")) {
+    if ((settings.traceConsole() || settings.traceLog())
+        && (url.startsWith("http://") || url.startsWith("https://"))) {
       trace("Rsrc", frame, state, url, contentType, progress, errorCode);
     }
   }
@@ -164,7 +166,7 @@ class HttpListener implements LoadListenerClient {
     synchronized (statusCode) {
       if (state == LoadListenerClient.PAGE_STARTED) {
         contextItem.resetFrameId(frame);
-        if (settings.javascriptLog()) {
+        if (settings.javascriptConsole() || settings.javascriptLog()) {
           JavascriptLog.attach(Accessor.getPageFor(contextItem.engine.get()), frame);
         }
       }
@@ -194,7 +196,9 @@ class HttpListener implements LoadListenerClient {
         thread.start();
       }
     }
-    trace("Page", frame, state, url, contentType, progress, errorCode);
+    if (settings.traceConsole() || settings.traceLog()) {
+      trace("Page", frame, state, url, contentType, progress, errorCode);
+    }
   }
 
 }

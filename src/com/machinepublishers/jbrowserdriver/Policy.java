@@ -29,7 +29,7 @@ class Policy extends SecurityManager {
       try {
         System.setSecurityManager(new Policy());
       } catch (Throwable t) {
-        Logs.fatal(t);
+        Util.handleException(t);
       }
     }
   }

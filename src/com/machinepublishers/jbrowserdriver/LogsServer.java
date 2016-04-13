@@ -19,6 +19,8 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
@@ -30,14 +32,36 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import org.apache.commons.logging.JbdWireLog;
 import org.openqa.selenium.logging.LogEntries;
 
 class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
-  private final LinkedList<Entry> entriesWarn = new LinkedList<Entry>();
-  private final LinkedList<Entry> entriesTrace = new LinkedList<Entry>();
-  private final LinkedList<Entry> entriesJavascript = new LinkedList<Entry>();
-  private static final int LOG_TYPES = 3;
-  private final Object lock = new Object();
+  private static class WireAppender implements Appendable {
+    @Override
+    public Appendable append(CharSequence csq) throws IOException {
+      LogsServer.instance().wire(csq.toString());
+      return null;
+    }
+
+    @Override
+    public Appendable append(CharSequence csq, int start, int end) throws IOException {
+      return null;
+    }
+
+    @Override
+    public Appendable append(char c) throws IOException {
+      return null;
+    }
+  }
+
+  static {
+    JbdWireLog.setAppender(new WireAppender());
+  }
+
+  private final LinkedList<Entry> wire = new LinkedList<Entry>();
+  private final LinkedList<Entry> javascript = new LinkedList<Entry>();
+  private final LinkedList<Entry> trace = new LinkedList<Entry>();
+  private final LinkedList<Entry> warn = new LinkedList<Entry>();
   private static final LogsServer instance;
   static {
     LogsServer instanceTmp = null;
@@ -51,8 +75,8 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
 
   static void updateSettings() {
     Settings settings = SettingsManager.settings();
-    if (settings != null && settings.wireConsole()) {
-      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.diagnostics.WireLog");
+    if (settings != null && (settings.wireConsole() || settings.wireLog())) {
+      System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.JbdWireLog");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
     } else {
       System.clearProperty("org.apache.commons.logging.Log");
@@ -67,89 +91,112 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   private LogsServer() throws RemoteException {}
 
   public void clear(String type) {
-    synchronized (lock) {
-      boolean all = type == null || "all".equals(type);
-      if (all || "warn".equals(type)) {
-        entriesWarn.clear();
+    handleEntries(false, type);
+  }
+
+  private static void handleMessage(String message, LinkedList<Entry> entries, Level level,
+      boolean doConsole, boolean doLog, PrintStream consoleStream, int max) {
+    if (doConsole || doLog) {
+      final Entry entry = new Entry(level, System.currentTimeMillis(), message);
+      if (doLog) {
+        synchronized (entries) {
+          entries.add(entry);
+          if (entries.size() > max) {
+            entries.removeFirst();
+          }
+        }
       }
-      if (all || "trace".equals(type)) {
-        entriesTrace.clear();
+      if (doConsole) {
+        consoleStream.println(entry);
       }
-      if (all || "javascript".equals(type)) {
-        entriesJavascript.clear();
+    }
+  }
+
+  private synchronized Entries handleEntries(boolean aggregate, String type) {
+    List<Entry> combinedLogs = new ArrayList<Entry>();
+    boolean all = type == null || "all".equals(type);
+    if (all || "wire".equals(type)) {
+      synchronized (wire) {
+        if (aggregate) {
+          combinedLogs.addAll(wire);
+        }
+        wire.clear();
       }
+    }
+    if (all || "javascript".equals(type)) {
+      synchronized (javascript) {
+        if (aggregate) {
+          combinedLogs.addAll(javascript);
+        }
+        javascript.clear();
+      }
+    }
+    if (all || "trace".equals(type)) {
+      synchronized (trace) {
+        if (aggregate) {
+          combinedLogs.addAll(trace);
+        }
+        trace.clear();
+      }
+    }
+    if (all || "warn".equals(type)) {
+      synchronized (warn) {
+        if (aggregate) {
+          combinedLogs.addAll(warn);
+        }
+        warn.clear();
+      }
+    }
+    Entries logEntries = new Entries(combinedLogs);
+    return logEntries;
+  }
+
+  public void wire(String message) {
+    Settings settings = SettingsManager.settings();
+    if (settings != null) {
+      handleMessage(message, wire, Level.FINEST,
+          settings.wireConsole(), settings.wireLog(), System.out, settings.maxLogs());
     }
   }
 
   public void javascript(String message) {
     Settings settings = SettingsManager.settings();
-    final Entry entry = new Entry(Level.FINER, System.currentTimeMillis(), message);
-    synchronized (lock) {
-      entriesJavascript.add(entry);
-      if (settings != null && entriesJavascript.size() > settings.maxLogs() / LOG_TYPES) {
-        entriesJavascript.removeFirst();
-      }
-    }
-    if (settings == null || settings.traceConsole()) {
-      System.out.println(entry);
+    if (settings != null) {
+      handleMessage(message, javascript, Level.FINER,
+          settings.javascriptConsole(), settings.javascriptLog(), System.out, settings.maxLogs());
     }
   }
 
   public void trace(String message) {
     Settings settings = SettingsManager.settings();
-    final Entry entry = new Entry(Level.INFO, System.currentTimeMillis(), message);
-    synchronized (lock) {
-      entriesTrace.add(entry);
-      if (settings != null && entriesTrace.size() > settings.maxLogs() / LOG_TYPES) {
-        entriesTrace.removeFirst();
-      }
-    }
-    if (settings == null || settings.traceConsole()) {
-      System.out.println(entry);
+    if (settings != null) {
+      handleMessage(message, trace, Level.INFO,
+          settings.traceConsole(), settings.traceLog(), System.out, settings.maxLogs());
     }
   }
 
   public void warn(String message) {
     Settings settings = SettingsManager.settings();
-    final Entry entry = new Entry(Level.WARNING, System.currentTimeMillis(), message);
-    synchronized (lock) {
-      entriesWarn.add(entry);
-      if (settings != null && entriesWarn.size() > settings.maxLogs() / LOG_TYPES) {
-        entriesWarn.removeFirst();
-      }
-    }
-    if (settings == null || settings.warnConsole()) {
-      System.err.println(entry);
+    if (settings == null) {
+      handleMessage(message, warn, Level.WARNING, true, false, System.err, -1);
+    } else {
+      handleMessage(message, warn, Level.WARNING,
+          settings.warnConsole(), settings.warnLog(), System.err, settings.maxLogs());
     }
   }
 
-  public void exception(Throwable t) {
-    Settings settings = SettingsManager.settings();
-    if (t != null) {
-      final Entry entry;
-      StringWriter writer = null;
-      try {
-        writer = new StringWriter();
-        t.printStackTrace(new PrintWriter(writer));
-        entry = new Entry(Level.WARNING, System.currentTimeMillis(), writer.toString());
-        synchronized (lock) {
-          entriesWarn.add(entry);
-          if (settings != null && entriesWarn.size() > settings.maxLogs() / LOG_TYPES) {
-            entriesWarn.removeFirst();
-          }
-        }
-      } catch (Throwable t2) {
-        if (settings == null || settings.warnConsole()) {
-          System.err.println("While logging a message, an error occurred: " + t2.getMessage());
-        }
-        return;
-      } finally {
-        Util.close(writer);
-      }
-      if (settings == null || settings.warnConsole()) {
-        System.err.println(entry);
-      }
+  public void exception(Throwable throwable) {
+    String message = null;
+    StringWriter writer = null;
+    try {
+      writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+    } catch (Throwable t) {
+      message = "While logging a message, an error occurred: " + t.getMessage();
+    } finally {
+      Util.close(writer);
     }
+    warn(message);
   }
 
   /**
@@ -157,25 +204,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public Entries getRemote(String type) {
-    synchronized (lock) {
-      try {
-        List<Entry> combinedLogs = new ArrayList<Entry>();
-        boolean all = type == null || "all".equals(type);
-        if (all || "warn".equals(type)) {
-          combinedLogs.addAll(entriesWarn);
-        }
-        if (all || "trace".equals(type)) {
-          combinedLogs.addAll(entriesTrace);
-        }
-        if (all || "javascript".equals(type)) {
-          combinedLogs.addAll(entriesJavascript);
-        }
-        Entries logEntries = new Entries(combinedLogs);
-        return logEntries;
-      } finally {
-        clear(type);
-      }
-    }
+    return handleEntries(true, type);
   }
 
   /**
@@ -183,9 +212,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public LogEntries get(String type) {
-    synchronized (lock) {
-      return getRemote(type).toLogEntries();
-    }
+    return getRemote(type).toLogEntries();
   }
 
   /**
@@ -193,6 +220,6 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public Set<String> getAvailableLogTypes() {
-    return new HashSet<String>(Arrays.asList(new String[] { "all", "warn", "trace", "javascript" }));
+    return new HashSet<String>(Arrays.asList(new String[] { "all", "wire", "javascript", "trace", "warn" }));
   }
 }
