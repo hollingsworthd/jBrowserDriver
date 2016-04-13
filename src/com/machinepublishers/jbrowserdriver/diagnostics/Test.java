@@ -54,12 +54,16 @@ public class Test {
 
   public static void main(String[] args) {
     final long startTime = System.currentTimeMillis();
-    List<String> errors = new Test().errors;
+    Test test = new Test();
     final long endTime = System.currentTimeMillis();
-    System.out.println("Elapsed Time: " + (endTime - startTime) + " ms");
-    System.out.println("Tests Passed: " + errors.isEmpty());
-    for (String error : errors) {
-      System.out.println("    " + error);
+    List<String> errors = test.errors;
+    System.out.println("Elapsed Time:  " + (endTime - startTime) + " ms  /  " + test.curTest + " tests");
+    if (errors.isEmpty()) {
+      System.out.println("System OK.");
+    } else {
+      for (String error : errors) {
+        System.out.println(error);
+      }
     }
   }
 
@@ -414,7 +418,7 @@ public class Test {
       test(error != null);
 
     } catch (Throwable t) {
-      errors.add("Test #" + (curTest + 1) + " -- " + toString(t));
+      errors.add(failureLabel(curTest + 1, t, 0, true));
     } finally {
       try {
         driver.quit();
@@ -425,16 +429,28 @@ public class Test {
     }
   }
 
+  private static String failureLabel(int curTest, Throwable throwable, int stackTraceIndex, boolean printFullTrace) {
+    StackTraceElement[] elements = throwable.getStackTrace();
+    String lineNumber = "";
+    if (elements != null && elements.length > stackTraceIndex) {
+      lineNumber = elements[stackTraceIndex].toString();
+    } else {
+      lineNumber = "(unknown line number)";
+    }
+    String stackTrace = printFullTrace ? " -- " + toString(throwable) : "";
+    return "Test #" + curTest + " failed -- " + lineNumber + stackTrace;
+  }
+
   private void test(boolean bool) {
     ++curTest;
     if (!bool) {
-      errors.add("Test #" + curTest + " -- " + toString(new Throwable()));
+      errors.add(failureLabel(curTest, new Throwable(), 1, false));
     }
   }
 
   private static String toString(Throwable t) {
     StringWriter writer = new StringWriter();
     t.printStackTrace(new PrintWriter(writer));
-    return "Runtime exception: " + writer.toString().replaceAll("\n", " ");
+    return writer.toString().replace("\n", " ").replace("\t", " ");
   }
 }
