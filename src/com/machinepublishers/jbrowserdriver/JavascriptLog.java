@@ -29,15 +29,24 @@ import netscape.javascript.JSObject;
 
 class JavascriptLog {
 
+  private static final String bridgeName = Util.randomPropertyName();
   private static final Bridge bridge = new Bridge();
   private static final String consoleScript;
   static {
     consoleScript = new StringBuilder()
-        .append("console.error = ").append(jsConsoleFunction("error"))
-        .append("console.warn = ").append(jsConsoleFunction("warn"))
-        .append("console.log = ").append(jsConsoleFunction("log"))
-        .append("console.info = ").append(jsConsoleFunction("info"))
-        .append("console.assert = ").append(jsConsoleFunction("jsAssert")).toString();
+        .append(consoleFunction("error"))
+        .append(consoleFunction("warn"))
+        .append(consoleFunction("log"))
+        .append(consoleFunction("info"))
+        .append(consoleFunction("assert"))
+        .append("window.addEventListener('error',function(){")
+        .append("try{")
+        .append(bridgeName).append(".log(JSON.stringify(")
+        .append("{window_onerror:arguments[0].message, filename:arguments[0].filename, lineno:arguments[0].lineno}")
+        .append("));}catch(ex){")
+        .append(bridgeName).append(".log(JSON.stringify({")
+        .append("window_onerror:'WebDriver message could not be stringified.'}));}")
+        .append("return false;});").toString();
   }
 
   static void attach(WebPage page, long frameId) {
@@ -46,7 +55,7 @@ class JavascriptLog {
       public Object perform() {
         JSObject window = (JSObject) page.executeScript(frameId, "(function(){return window;})();");
         if (window != null) {
-          window.setMember("javascriptLog", bridge);
+          window.setMember(bridgeName, bridge);
           page.executeScript(frameId, consoleScript);
         }
         return null;
@@ -54,10 +63,21 @@ class JavascriptLog {
     });
   }
 
-  private static final String jsConsoleFunction(String functionName) {
+  private static final String consoleFunction(String jsName) {
     return new StringBuilder()
-        .append("function(){try{javascriptLog.").append(functionName).append("(JSON.stringify(arguments));}")
-        .append("catch(ex){javascriptLog.").append(functionName).append("('(WebDriver message could not be stringified.)');}};")
+        .append("try{")
+        .append("Object.defineProperty(console,'")
+        .append(jsName).append("',{get: (function(){return function(){try{")
+        .append("var arr = [];")
+        .append("for(var i in arguments){")
+        .append("arr.push(arguments[i]);")
+        .append("}")
+        .append(bridgeName).append(".log(JSON.stringify({console_").append(jsName).append(":arr}));")
+        .append("}catch(ex){")
+        .append(bridgeName).append(".").append("log(JSON.stringify({")
+        .append("console_")
+        .append(jsName).append(":'WebDriver message could not be stringified.'}));")
+        .append("}};})});}catch(ex){}")
         .toString();
   }
 
@@ -68,24 +88,8 @@ class JavascriptLog {
   public static class Bridge {
     private Bridge() {}
 
-    public void error(String message) {
-      LogsServer.instance().javascript("console.error: " + message);
-    }
-
-    public void warn(String message) {
-      LogsServer.instance().javascript("console.warn: " + message);
-    }
-
     public void log(String message) {
-      LogsServer.instance().javascript("console.log: " + message);
-    }
-
-    public void info(String message) {
-      LogsServer.instance().javascript("console.info: " + message);
-    }
-
-    public void jsAssert(String message) {
-      LogsServer.instance().javascript("console.assert: " + message);
+      LogsServer.instance().javascript(message);
     }
   }
 }
