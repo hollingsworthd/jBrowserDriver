@@ -105,8 +105,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static int curWaiting;
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
-          "Warning: Single GUI Threadiong is enabled, FPS should be slower",
-          "Setting PULSE_DURATION to 3 hz"
+          "Warning: Single GUI Threadiong is enabled, FPS should be slower"
       })));
   private static final AtomicLong sessionIdCounter = new AtomicLong();
   private final Object key = new Object();

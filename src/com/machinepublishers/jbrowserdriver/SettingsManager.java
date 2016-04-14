@@ -54,18 +54,20 @@ class SettingsManager {
       LogsServer.updateSettings();
       StreamConnection.updateSettings();
 
-      System.setProperty("quantum.multithreaded", "false");
-      System.setProperty("prism.vsync", "false");
-      System.setProperty("javafx.animation.pulse", "3");
-      System.setProperty("quantum.singlethreaded", "true");
-      System.setProperty("prism.threadcheck", "false");
-      System.setProperty("prism.dirtyopts", "false");
-      System.setProperty("prism.cacheshapes", "false");
-      System.setProperty("prism.primtextures", "false");
-      System.setProperty("prism.shutdownHook", "false");
-      System.setProperty("prism.disableRegionCaching", "true");
       if (settings.headless() && platformInitialized.compareAndSet(false, true)) {
         monocle.set(true);
+        System.setProperty("quantum.multithreaded", "false");
+        System.setProperty("prism.vsync", "true");
+        System.setProperty("javafx.animation.framerate", "1");
+        System.setProperty("com.sun.scenario.animation.adaptivepulse", "true");
+        System.setProperty("quantum.singlethreaded", "true");
+        System.setProperty("prism.threadcheck", "false");
+        System.setProperty("prism.dirtyopts", "false");
+        System.setProperty("prism.cacheshapes", "false");
+        System.setProperty("prism.primtextures", "false");
+        System.setProperty("prism.shutdownHook", "false");
+        System.setProperty("prism.disableRegionCaching", "true");
+
         System.setProperty("glass.platform", "Monocle");
         System.setProperty("monocle.platform", "Headless");
         System.setProperty("prism.order", "sw");
