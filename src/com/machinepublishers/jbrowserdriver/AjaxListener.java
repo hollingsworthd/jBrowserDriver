@@ -22,7 +22,10 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javafx.application.Platform;
 
 class AjaxListener implements Runnable {
   private static final long MAX_WAIT_DEFAULT = 15000;
@@ -50,6 +53,23 @@ class AjaxListener implements Runnable {
     final long start = System.currentTimeMillis();
     long time = start;
     final Settings settings = SettingsManager.settings();
+    final AtomicBoolean done = new AtomicBoolean();
+    Platform.runLater(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (done) {
+          done.set(true);
+          done.notifyAll();
+        }
+      }
+    });
+    synchronized (done) {
+      while (!done.get()) {
+        try {
+          done.wait();
+        } catch (InterruptedException e) {}
+      }
+    }
     if (settings != null) {
       final long sleepMS = Math.max(settings.ajaxWait() / IDLE_COUNT_TARGET, 0);
       int idleCount = 0;
