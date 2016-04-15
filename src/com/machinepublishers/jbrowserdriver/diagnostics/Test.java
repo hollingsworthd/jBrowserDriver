@@ -90,13 +90,14 @@ public class Test {
         }
       });
       Runtime.getRuntime().addShutdownHook(shutdownHook);
+      final int ajaxWait = 150;
       Settings.Builder builder = Settings.builder()
           .portsMax(TEST_PORT_RMI, 1)
           .screen(new Dimension(1024, 768))
           .traceConsole(true)
           .javascriptConsole(true)
           .javascriptLog(true)
-          .ajaxWait(150)
+          .ajaxWait(ajaxWait)
           .cacheDir(cacheDir)
           .cache(true)
           .ignoreDialogs(false);
@@ -134,7 +135,7 @@ public class Test {
       long waitStart = System.currentTimeMillis();
       driver.pageWait();
       long waitEnd = System.currentTimeMillis();
-      test(waitEnd - waitStart > 145 && waitEnd - waitStart < 155);
+      test(Math.abs(waitEnd - waitStart - ajaxWait) <= 5);
 
       /*
        * Javascript logs
