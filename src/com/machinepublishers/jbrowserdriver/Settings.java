@@ -489,11 +489,11 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @deprecated Will be removed.
+     * @deprecated Will be removed. Use Settings.Builder.processes(..) instead.
      */
     @Deprecated
     public Builder ports(int... ports) {
-      System.err.println("jBrowserDriver: The ports setting is deprecated and will be removed.");
+      System.err.println("jBrowserDriver: The ports setting is deprecated and will be removed. Use Settings.Builder.processes(..) instead.");
       this.ports.clear();
       this.processes = -1;
       this.host = "127.0.0.1";
@@ -505,11 +505,11 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @deprecated Will be removed.
+     * @deprecated Will be removed. Use Settings.Builder.processes(..) instead.
      */
     @Deprecated
     public Builder portsMax(int startingPort, int maxProcesses) {
-      System.err.println("jBrowserDriver: The portsMax setting is deprecated and will be removed.");
+      System.err.println("jBrowserDriver: The portsMax setting is deprecated and will be removed. Use Settings.Builder.processes(..) instead.");
       this.ports.clear();
       this.processes = -1;
       this.host = "127.0.0.1";
@@ -1361,7 +1361,7 @@ public class Settings implements Serializable {
         this.parentPort = childPorts.remove(0);
       }
     } else if (properties.get(PropertyName.PORTS.propertyName) != null) {
-      System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed.");
+      System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed. Refer to Settings.Builder.processes(..) API documentation.");
       this.childPorts = parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
       this.parentPort = childPorts.remove(0);
     } else if (properties.get(PropertyName.PORT_RANGES.propertyName) != null) {
@@ -1379,7 +1379,7 @@ public class Settings implements Serializable {
             ? !Boolean.parseBoolean(System.getProperty("jbd.browsergui")) : headlessTmp;
     this.headless = headlessTmp;
     if (System.getProperty("jbd.browsergui") != null) {
-      System.err.println("jBrowserDriver: The jbd.browsergui property is deprecated and will be removed.");
+      System.err.println("jBrowserDriver: The jbd.browsergui property is deprecated and will be removed. Use jbd.headless property instead.");
     }
 
     //backwards compatible property name for versions <= 0.9.1
@@ -1389,7 +1389,7 @@ public class Settings implements Serializable {
             ? System.getProperty("jbd.pemfile") : sslTmp;
     this.ssl = sslTmp;
     if (System.getProperty("jbd.pemfile") != null) {
-      System.err.println("jBrowserDriver: The jbd.pemfile property is deprecated and will be removed.");
+      System.err.println("jBrowserDriver: The jbd.pemfile property is deprecated and will be removed. Use jbd.ssl property instead.");
     }
 
     RequestHeaders requestHeadersTmp = builder.requestHeaders;
