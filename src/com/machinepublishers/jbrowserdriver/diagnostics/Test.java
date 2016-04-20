@@ -130,14 +130,6 @@ public class Test {
       test(HttpServer.previousRequestId() != initialRequestId);
 
       /*
-       * Waiting for AJAX requests
-       */
-      long waitStart = System.currentTimeMillis();
-      driver.pageWait();
-      long waitEnd = System.currentTimeMillis();
-      test(Math.abs(waitEnd - waitStart - ajaxWait) <= 5);
-
-      /*
        * Javascript logs
        */
       int messages = 0;
