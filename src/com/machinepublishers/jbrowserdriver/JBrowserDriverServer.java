@@ -20,14 +20,15 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMISocketFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -63,8 +64,9 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
-
-  private static final AtomicInteger rmiPort = new AtomicInteger();
+  private static final AtomicInteger parentPort = new AtomicInteger();
+  private static final AtomicInteger childPort = new AtomicInteger();
+  private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
   private static Registry registry;
 
   /*
@@ -94,51 +96,58 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         }
       }
     }
-
-    rmiPort.set(Integer.parseInt(args[0]));
+    final String host = System.getProperty("java.rmi.server.hostname");
+    parentPort.set(Integer.parseInt(args[0]));
+    childPort.set(Integer.parseInt(args[1]));
     Registry registryTmp = null;
     final int maxTries = 5;
-    String localhost;
-    try {
-      localhost = InetAddress.getLocalHost().getHostAddress();
-    } catch (Throwable t) {
-      localhost = "";
-    }
     for (int i = 1; i <= maxTries; i++) {
-      ServerSocket socket = null;
       try {
-        if (rmiPort.get() > 0) {
-          registryTmp = LocateRegistry.createRegistry(rmiPort.get());
-        } else {
-          socket = new ServerSocket();
-          socket.setReuseAddress(true);
-          socket.bind(new InetSocketAddress(localhost, 0));
-          final int curPort = socket.getLocalPort();
-          socket.close();
-          registryTmp = LocateRegistry.createRegistry(curPort);
-          rmiPort.set(curPort);
+        if (childPort.get() <= 0) {
+          childPort.set(findPort(host));
         }
+        if (parentPort.get() <= 0) {
+          parentPort.set(findPort(host));
+        }
+        socketFactory.set(new SocketFactory(host, parentPort.get(), childPort.get()));
+        registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
+        registryTmp.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
         break;
       } catch (Throwable t) {
         if (i == maxTries) {
           Util.handleException(t);
         }
-      } finally {
-        Util.close(socket);
       }
     }
-    registry = registryTmp;
 
+    registry = registryTmp;
     try {
-      registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
-      System.out.println("ready on port " + rmiPort.get());
-    } catch (Throwable t) {
-      Util.handleException(t);
+      RMISocketFactory.setSocketFactory(socketFactory.get());
+    } catch (IOException e) {
+      Util.handleException(e);
+    }
+    System.out.println("parent on port " + parentPort.get());
+    System.out.println("child on port " + childPort.get());
+  }
+
+  private static int findPort(String host) throws IOException {
+    ServerSocket socket = null;
+    try {
+      socket = new ServerSocket();
+      socket.setReuseAddress(true);
+      socket.bind(new InetSocketAddress(host, 0));
+      return socket.getLocalPort();
+    } finally {
+      Util.close(socket);
     }
   }
 
-  static int rmiPort() {
-    return rmiPort.get();
+  static int childPort() {
+    return childPort.get();
+  }
+
+  static SocketFactory socketFactory() {
+    return socketFactory.get();
   }
 
   final AtomicReference<Context> context = new AtomicReference<Context>();

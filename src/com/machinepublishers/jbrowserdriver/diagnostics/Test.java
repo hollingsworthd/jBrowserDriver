@@ -54,7 +54,7 @@ import com.machinepublishers.jbrowserdriver.Settings;
 
 public class Test {
   private static final int TEST_PORT_HTTP = Integer.parseInt(System.getProperty("jbd.testporthttp", "9000"));
-  private static final int TEST_PORT_RMI = Integer.parseInt(System.getProperty("jbd.testportrmi", "10000"));
+  private static final String TEST_PORTS_RMI = System.getProperty("jbd.testportsrmi", "10000-10001");
   private List<String> errors = new ArrayList<String>();
   private int curTest = 0;
 
@@ -91,8 +91,8 @@ public class Test {
       });
       Runtime.getRuntime().addShutdownHook(shutdownHook);
       final int ajaxWait = 150;
-      Settings.Builder builder = Settings.builder()
-          .portsMax(TEST_PORT_RMI, 1)
+      final Settings.Builder builder = Settings.builder()
+          .processes(TEST_PORTS_RMI)
           .screen(new Dimension(1024, 768))
           .traceConsole(true)
           .javascriptConsole(true)

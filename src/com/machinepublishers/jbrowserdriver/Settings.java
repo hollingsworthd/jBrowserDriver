@@ -25,10 +25,12 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -96,8 +98,10 @@ public class Settings implements Serializable {
   }
 
   private static enum PropertyName {
-    PORTS("jbd.ports"),
+    @Deprecated PORTS("jbd.ports"),
+    PORT_RANGES("jbd.portranges"),
     PROCESSES("jbd.processes"),
+    HOST("jbd.host"),
     HEADLESS("jbd.headless"),
     AJAX_WAIT("jbd.ajaxwait"),
     AJAX_RESOURCE_TIMEOUT("jbd.ajaxresourcetimeout"),
@@ -192,6 +196,7 @@ public class Settings implements Serializable {
     private int socketTimeout = -1;
     private int connectTimeout = -1;
     private int connectionReqTimeout = -1;
+    private String host = "127.0.0.1";
     //TODO    private ResponseInterceptor[] responseInterceptors;
 
     /**
@@ -484,23 +489,15 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI)--this setting configures which ports are available for RMI.
-     * <p>
-     * The number of ports determines the maximum number of RMI processes.
-     * May overwrite anything set from {@link #portsMax(int, int)} or {@link #processes(int)}.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.ports</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.ports</code> alternately configures this setting.</li>
-     * <li>Note that ranges (which are inclusive) are specified by "-" and ranges/ports are separated with "," (e.g., 10000-10007,12500,12502,15377-15380).</li>
-     * </ul><p>
-     * 
-     * @param ports
-     * @return this Builder
+     * @deprecated Will be removed.
      */
+    @Deprecated
     public Builder ports(int... ports) {
+      System.err.println("jBrowserDriver: The ports setting is deprecated and will be removed.");
       this.ports.clear();
       this.processes = -1;
+      this.host = "127.0.0.1";
+      this.ports.add(0);
       for (int i = 0; ports != null && i < ports.length; i++) {
         this.ports.add(ports[i]);
       }
@@ -508,23 +505,15 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI)--this setting configures which ports are available for RMI.
-     * <p>
-     * The number of ports determines the maximum number of RMI processes.
-     * This is a convenience method for those who are allocating a sequential
-     * range of ports, as you only need to specify the starting port (inclusive) and
-     * maximum number of ports/processes. May overwrite anything set from
-     * {@link #ports(int...)} or {@link #processes(int)}.
-     * <p>
-     * (Not configurable via Java system properties or {@link Capabilities}. See {@link #ports(int...)} or {@link #processes(int)} instead.)
-     * 
-     * @param startingPort
-     * @param maxProcesses
-     * @return this Builder
+     * @deprecated Will be removed.
      */
+    @Deprecated
     public Builder portsMax(int startingPort, int maxProcesses) {
+      System.err.println("jBrowserDriver: The portsMax setting is deprecated and will be removed.");
       this.ports.clear();
       this.processes = -1;
+      this.host = "127.0.0.1";
+      this.ports.add(0);
       for (int i = 0; i < maxProcesses; i++) {
         this.ports.add(startingPort + i);
       }
@@ -532,11 +521,14 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Each browser instance is run in a separate process (via RMI)--this setting configures the maximum number of these processes and allows them to use any available port.
+     * The number of {@link JBrowserDriver} instances that can run concurrently, using any available port.
      * <p>
-     * May overwrite anything set from {@link #ports(int...)} or {@link #portsMax(int, int)}.
+     * Each instance of JBrowserDriver is backed by a separate Java process operated via RMI.
      * <p>
-     * Defaults to <code>2 * Runtime.getRuntime().availableProcessors()</code>.
+     * Overwrites settings specified by any previous calls to processes(..)
+     * <p>
+     * By default any available ports are used, the host is <code>127.0.0.1</code>, and the max number of concurrent
+     * instances is <code>2 * Runtime.getRuntime().availableProcessors()</code>
      * 
      * <p><ul>
      * <li>Java system property <code>jbd.processes</code> overrides this setting.</li>
@@ -549,6 +541,97 @@ public class Settings implements Serializable {
     public Builder processes(int maxProcesses) {
       this.ports.clear();
       this.processes = maxProcesses;
+      this.host = "127.0.0.1";
+      return this;
+    }
+
+    /**
+     * The number of {@link JBrowserDriver} instances that can run concurrently,
+     * using any available port, and the host name or IP of the local machine.
+     * <p>
+     * Each instance of JBrowserDriver is backed by a separate Java process operated via RMI.
+     * <p>
+     * Overwrites settings specified by any previous calls to processes(..)
+     * <p>
+     * By default any available ports are used, the host is <code>127.0.0.1</code>, and the max number of concurrent
+     * instances is <code>2 * Runtime.getRuntime().availableProcessors()</code>
+     * 
+     * <p><ul>
+     * <li>Java system properties <code>jbd.processes</code> and <code>jbd.host</code> override this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.processes</code> and <code>jbd.host</code> alternately configure this setting.</li>
+     * </ul><p>
+     * 
+     * @param maxProcesses
+     * @param host
+     * @return this Builder
+     */
+    public Builder processes(int maxProcesses, String host) {
+      this.ports.clear();
+      this.processes = maxProcesses;
+      this.host = host;
+      return this;
+    }
+
+    /**
+     * The ports used by {@link JBrowserDriver} instances and the parent process.
+     * 
+     * The max number of instances that can run concurrently is inferred from the number of ports provided
+     * (which will be one less than the number of ports provided, to account for the port dedicated to the parent process).
+     * <p>
+     * Each instance of JBrowserDriver is backed by a separate Java process operated via RMI.
+     * <p>
+     * Overwrites settings specified by any previous calls to processes(..)
+     * <p>
+     * By default any available ports are used, the host is <code>127.0.0.1</code>, and the max number of concurrent
+     * instances is <code>2 * Runtime.getRuntime().availableProcessors()</code>
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.portranges</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.portranges</code> alternately configures this setting.</li>
+     * </ul><p>
+     * 
+     * @param portRanges
+     *          A comma separated list of ports and/or port ranges
+     *          (which are inclusive and separated by a dash) -- e.g., <code>10000-10007,12500,12502,15377-15380</code>
+     * @return this Builder
+     */
+    public Builder processes(String portRanges) {
+      this.ports.clear();
+      this.ports.addAll(parsePorts(portRanges));
+      this.processes = -1;
+      this.host = "127.0.0.1";
+      return this;
+    }
+
+    /**
+     * The ports and host/IP used by {@link JBrowserDriver} instances and the parent process.
+     * 
+     * The max number of instances that can run concurrently is inferred from the number of ports provided
+     * (which will be one less than the number of ports provided, to account for the port dedicated to the parent process).
+     * <p>
+     * Each instance of JBrowserDriver is backed by a separate Java process operated via RMI.
+     * <p>
+     * Overwrites settings specified by any previous calls to processes(..)
+     * <p>
+     * By default any available ports are used, the host is <code>127.0.0.1</code>, and the max number of concurrent
+     * instances is <code>2 * Runtime.getRuntime().availableProcessors()</code>
+     * 
+     * <p><ul>
+     * <li>Java system properties <code>jbd.portranges</code> and <code>jbd.host</code> override this setting.</li>
+     * <li>{@link Capabilities} names <code>jbd.portranges</code> and <code>jbd.host</code> alternately configure this setting.</li>
+     * </ul><p>
+     * 
+     * @param portRanges
+     *          A comma separated list of ports and/or port ranges
+     *          (which are inclusive and separated by a dash) -- e.g., <code>10000-10007,12500,12502,15377-15380</code>
+     * @param host
+     * @return this Builder
+     */
+    public Builder processes(String portRanges, String host) {
+      this.ports.clear();
+      this.ports.addAll(parsePorts(portRanges));
+      this.processes = -1;
+      this.host = host;
       return this;
     }
 
@@ -1038,8 +1121,9 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.WARN_LOG, this.warnLog);
       set(capabilities, PropertyName.MAX_LOGS, this.maxLogs);
       set(capabilities, PropertyName.HEAD_SCRIPT, this.headScript);
+      set(capabilities, PropertyName.HOST, this.host);
       final String joinedPorts = StringUtils.join(this.ports, ',');
-      set(capabilities, PropertyName.PORTS, joinedPorts == null || joinedPorts.isEmpty() ? null : joinedPorts);
+      set(capabilities, PropertyName.PORT_RANGES, joinedPorts == null || joinedPorts.isEmpty() ? null : joinedPorts);
       if (this.processes > -1) {
         set(capabilities, PropertyName.PROCESSES, this.processes);
       }
@@ -1094,7 +1178,7 @@ public class Settings implements Serializable {
     }
   }
 
-  private static Collection<Integer> parsePorts(String portString) {
+  private static List<Integer> parsePorts(String portString) {
     Collection<Integer> ports = new LinkedHashSet<Integer>();
     String[] ranges = portString.split(",");
     for (int i = 0; i < ranges.length; i++) {
@@ -1105,14 +1189,14 @@ public class Settings implements Serializable {
         ports.add(j);
       }
     }
-    return ports;
+    return new ArrayList<Integer>(ports);
   }
 
-  private static Collection<Integer> parseProcesses(String processesMax) {
+  private static List<Integer> parseProcesses(String processesMax) {
     int max = Integer.parseInt(processesMax);
-    Collection<Integer> ports = new LinkedHashSet<Integer>();
+    List<Integer> ports = new ArrayList<Integer>();
     int curPort = -1;
-    for (int i = 0; i < max; i++) {
+    for (int i = 0; i < max + 1; i++) {
       ports.add(curPort--);
     }
     return ports;
@@ -1203,7 +1287,8 @@ public class Settings implements Serializable {
   private final File cacheDir;
   private final int cacheEntries;
   private final long cacheEntrySize;
-  private final Collection<Integer> ports;
+  private final List<Integer> childPorts;
+  private final int parentPort;
   private final boolean headless;
   private final long ajaxWait;
   private final long ajaxResourceTimeout;
@@ -1226,6 +1311,7 @@ public class Settings implements Serializable {
   private final int socketTimeout;
   private final int connectTimeout;
   private final int connectionReqTimeout;
+  private final String host;
   //TODO private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1261,20 +1347,29 @@ public class Settings implements Serializable {
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
     //TODO this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
-
     this.cacheDir = properties.get(PropertyName.CACHE_DIR.propertyName) == null
         ? builder.cacheDir : new File(properties.get(PropertyName.CACHE_DIR.propertyName).toString());
+    this.host = parse(properties, PropertyName.HOST, builder.host);
     if (properties.get(PropertyName.PORTS.propertyName) == null
+        && properties.get(PropertyName.PORT_RANGES.propertyName) == null
         && properties.get(PropertyName.PROCESSES.propertyName) == null) {
       if (builder.processes > -1) {
-        this.ports = parseProcesses(Integer.toString(builder.processes));
+        this.childPorts = parseProcesses(Integer.toString(builder.processes));
+        this.parentPort = childPorts.remove(0);
       } else {
-        this.ports = new LinkedHashSet<Integer>(builder.ports);
+        this.childPorts = new ArrayList<Integer>(builder.ports);
+        this.parentPort = childPorts.remove(0);
       }
     } else if (properties.get(PropertyName.PORTS.propertyName) != null) {
-      this.ports = parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
+      System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed.");
+      this.childPorts = parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
+      this.parentPort = childPorts.remove(0);
+    } else if (properties.get(PropertyName.PORT_RANGES.propertyName) != null) {
+      this.childPorts = parsePorts(properties.get(PropertyName.PORT_RANGES.propertyName).toString());
+      this.parentPort = childPorts.remove(0);
     } else {
-      this.ports = parseProcesses(properties.get(PropertyName.PROCESSES.propertyName).toString());
+      this.childPorts = parseProcesses(properties.get(PropertyName.PROCESSES.propertyName).toString());
+      this.parentPort = childPorts.remove(0);
     }
 
     //backwards compatible property name for versions <= 0.9.1
@@ -1283,6 +1378,9 @@ public class Settings implements Serializable {
         && System.getProperty("jbd.browsergui") != null
             ? !Boolean.parseBoolean(System.getProperty("jbd.browsergui")) : headlessTmp;
     this.headless = headlessTmp;
+    if (System.getProperty("jbd.browsergui") != null) {
+      System.err.println("jBrowserDriver: The jbd.browsergui property is deprecated and will be removed.");
+    }
 
     //backwards compatible property name for versions <= 0.9.1
     String sslTmp = parse(properties, PropertyName.SSL, builder.ssl);
@@ -1290,6 +1388,9 @@ public class Settings implements Serializable {
         && System.getProperty("jbd.pemfile") != null
             ? System.getProperty("jbd.pemfile") : sslTmp;
     this.ssl = sslTmp;
+    if (System.getProperty("jbd.pemfile") != null) {
+      System.err.println("jBrowserDriver: The jbd.pemfile property is deprecated and will be removed.");
+    }
 
     RequestHeaders requestHeadersTmp = builder.requestHeaders;
     UserAgent userAgentTmp = builder.userAgent;
@@ -1409,8 +1510,16 @@ public class Settings implements Serializable {
     return cacheEntrySize;
   }
 
-  Collection<Integer> ports() {
-    return ports;
+  Collection<Integer> childPorts() {
+    return childPorts;
+  }
+
+  int parentPort() {
+    return parentPort;
+  }
+
+  String host() {
+    return host;
   }
 
   boolean headless() {

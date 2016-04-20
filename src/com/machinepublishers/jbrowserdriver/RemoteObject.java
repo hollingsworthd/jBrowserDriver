@@ -25,6 +25,7 @@ import java.rmi.server.UnicastRemoteObject;
 class RemoteObject extends UnicastRemoteObject {
 
   protected RemoteObject() throws RemoteException {
-    super(JBrowserDriverServer.rmiPort());
+    super(JBrowserDriverServer.childPort(),
+        JBrowserDriverServer.socketFactory(), JBrowserDriverServer.socketFactory());
   }
 }

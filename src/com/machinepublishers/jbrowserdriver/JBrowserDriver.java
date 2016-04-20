@@ -98,8 +98,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     }
     intercept = interceptTmp;
   }
-  private static final Set<Integer> portsAvailable = new LinkedHashSet<Integer>();
-  private static final Set<Integer> portsUsed = new LinkedHashSet<Integer>();
+  private static final Set<Integer> childPortsAvailable = new LinkedHashSet<Integer>();
+  private static final Set<Integer> childPortsUsed = new LinkedHashSet<Integer>();
   private static final List<String> args;
   private static final List<Object> waiting = new ArrayList<Object>();
   private static int curWaiting;
@@ -112,8 +112,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private final JBrowserDriverRemote remote;
   private final Logs logs;
   private final AtomicReference<Process> process = new AtomicReference<Process>();
-  private final AtomicInteger configuredPort = new AtomicInteger();
-  private final AtomicInteger actualPort = new AtomicInteger();
+  private final AtomicInteger configuredChildPort = new AtomicInteger();
+  private final AtomicInteger actualChildPort = new AtomicInteger();
+  private final AtomicInteger actualParentPort = new AtomicInteger();
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
   private final SessionId sessionId;
 
@@ -228,20 +229,20 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     this.shutdownHook = new FileRemover(tmpDir);
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-    synchronized (portsAvailable) {
-      for (int curPort : settings.ports()) {
-        if (!portsAvailable.contains(curPort) && !portsUsed.contains(curPort)) {
-          portsAvailable.add(curPort);
+    synchronized (childPortsAvailable) {
+      for (int curPort : settings.childPorts()) {
+        if (!childPortsAvailable.contains(curPort) && !childPortsUsed.contains(curPort)) {
+          childPortsAvailable.add(curPort);
         }
       }
       waiting.add(key);
       while (true) {
         boolean ready = false;
         curWaiting = curWaiting >= waiting.size() ? 0 : curWaiting;
-        if (key.equals(waiting.get(curWaiting)) && !portsAvailable.isEmpty()) {
-          for (int curPort : settings.ports()) {
-            if (portsAvailable.contains(curPort)) {
-              configuredPort.set(curPort);
+        if (key.equals(waiting.get(curWaiting)) && !childPortsAvailable.isEmpty()) {
+          for (int curPort : settings.childPorts()) {
+            if (childPortsAvailable.contains(curPort)) {
+              configuredChildPort.set(curPort);
               ready = true;
               break;
             }
@@ -251,21 +252,24 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
             break;
           } else {
             ++curWaiting;
-            portsAvailable.notifyAll();
+            childPortsAvailable.notifyAll();
           }
         }
         try {
-          portsAvailable.wait();
+          childPortsAvailable.wait();
         } catch (InterruptedException e) {}
       }
       waiting.remove(key);
-      portsAvailable.remove(configuredPort.get());
-      portsUsed.add(configuredPort.get());
+      childPortsAvailable.remove(configuredChildPort.get());
+      childPortsUsed.add(configuredChildPort.get());
     }
-    launchProcess(configuredPort.get());
+    launchProcess(settings.host(), settings.parentPort(), configuredChildPort.get());
     JBrowserDriverRemote instanceTmp = null;
     try {
-      instanceTmp = (JBrowserDriverRemote) LocateRegistry.getRegistry(actualPort.get()).lookup("JBrowserDriverRemote");
+      instanceTmp = (JBrowserDriverRemote) LocateRegistry
+          .getRegistry(settings.host(), actualChildPort.get(),
+              new SocketFactory(settings.host(), actualParentPort.get(), actualChildPort.get()))
+          .lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
       Util.handleException(t);
@@ -281,10 +285,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         .append("[Instance ")
         .append(sessionIdCounter.incrementAndGet())
         .append("][Port ")
-        .append(actualPort.get())
+        .append(actualChildPort.get())
         .append("]")
-        .append(actualPort.get() == configuredPort.get()
-            ? "" : "[Process " + Math.abs(configuredPort.get()) + "]")
+        .append(actualChildPort.get() == configuredChildPort.get()
+            ? "" : "[Process " + Math.abs(configuredChildPort.get()) + "]")
         .toString());
     logs = new Logs(logsRemote);
   }
@@ -300,7 +304,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (Throwable t) {}
   }
 
-  private void launchProcess(final int port) {
+  private void launchProcess(final String host, final int parentPort, final int childPort) {
     final AtomicBoolean ready = new AtomicBoolean();
     final AtomicReference<String> logPrefix = new AtomicReference<String>("");
     new Thread(new Runnable() {
@@ -308,8 +312,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       public void run() {
         List<String> myArgs = new ArrayList<String>(args);
         myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
+        myArgs.add("-Djava.rmi.server.hostname=" + host);
         myArgs.add(JBrowserDriverServer.class.getName());
-        myArgs.add(Integer.toString(port));
+        myArgs.add(Integer.toString(parentPort));
+        myArgs.add(Integer.toString(childPort));
         try {
           new ProcessExecutor()
               .environment(System.getenv())
@@ -334,23 +340,28 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
                 @Override
                 protected void processLine(String line) {
-                  if (!done) {
-                    synchronized (ready) {
-                      if (line != null && line.startsWith("ready on port ")) {
-                        actualPort.set(Integer.parseInt(
-                            line.substring("ready on port ".length())));
-                        String portId = actualPort.get() != port
-                            ? actualPort.get() + "; Process " + Math.abs(port) : Integer.toString(port);
-                        logPrefix.set("[Port " + portId + "] ");
-                        ready.set(true);
-                        ready.notify();
-                        done = true;
-                      } else if (!filteredLogs.contains(line)) {
-                        System.out.println(logPrefix + line);
+                  if (line != null && !line.isEmpty()) {
+                    if (!done) {
+                      synchronized (ready) {
+                        if (line.startsWith("parent on port ")) {
+                          actualParentPort.set(Integer.parseInt(
+                              line.substring("parent on port ".length())));
+                        } else if (line.startsWith("child on port ")) {
+                          actualChildPort.set(Integer.parseInt(
+                              line.substring("child on port ".length())));
+                          String portId = actualChildPort.get() != childPort
+                              ? actualChildPort.get() + "; Process " + Math.abs(childPort) : Integer.toString(childPort);
+                          logPrefix.set("[Port " + portId + "] ");
+                          ready.set(true);
+                          ready.notify();
+                          done = true;
+                        } else if (!filteredLogs.contains(line)) {
+                          System.out.println(logPrefix + line);
+                        }
                       }
+                    } else if (!filteredLogs.contains(line)) {
+                      System.out.println(logPrefix + line);
                     }
-                  } else if (!filteredLogs.contains(line)) {
-                    System.out.println(logPrefix + line);
                   }
                 }
               })
@@ -933,10 +944,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (Throwable t2) {
       process.get().destroyForcibly();
     }
-    synchronized (portsAvailable) {
-      portsAvailable.add(configuredPort.get());
-      portsUsed.remove(configuredPort.get());
-      portsAvailable.notifyAll();
+    synchronized (childPortsAvailable) {
+      childPortsAvailable.add(configuredChildPort.get());
+      childPortsUsed.remove(configuredChildPort.get());
+      childPortsAvailable.notifyAll();
     }
   }
 
