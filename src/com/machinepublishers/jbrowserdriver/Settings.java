@@ -501,11 +501,11 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @deprecated Will be removed. Use Settings.Builder.processes(..) instead.
+     * @deprecated Will be removed in v2.0.0. Use Settings.Builder.processes(..) instead.
      */
     @Deprecated
     public Builder ports(int... ports) {
-      System.err.println("jBrowserDriver: The ports setting is deprecated and will be removed. Use Settings.Builder.processes(..) instead.");
+      System.err.println("jBrowserDriver: The ports setting is deprecated and will be removed in v2.0.0. Use Settings.Builder.processes(..) instead.");
       this.ports.clear();
       this.processes = -1;
       this.host = "127.0.0.1";
@@ -517,11 +517,11 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @deprecated Will be removed. Use Settings.Builder.processes(..) instead.
+     * @deprecated Will be removed in v2.0.0. Use Settings.Builder.processes(..) instead.
      */
     @Deprecated
     public Builder portsMax(int startingPort, int maxProcesses) {
-      System.err.println("jBrowserDriver: The portsMax setting is deprecated and will be removed. Use Settings.Builder.processes(..) instead.");
+      System.err.println("jBrowserDriver: The portsMax setting is deprecated and will be removed in v2.0.0. Use Settings.Builder.processes(..) instead.");
       this.ports.clear();
       this.processes = -1;
       this.host = "127.0.0.1";
@@ -1050,45 +1050,45 @@ public class Settings implements Serializable {
     }
 
     /**
-     * @deprecated Will be removed. Instead use Settings Builder's logWire, logsMax, or logger.
+     * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logWire, logsMax, or logger.
      */
     @Deprecated
     public Builder wireConsole(boolean wireConsole) {
       System.err.println(
-          "jBrowserDriver: The wireConsole setting is deprecated and will be removed. Instead use Settings Builder's logWire, logsMax, or logger.");
+          "jBrowserDriver: The wireConsole setting is deprecated and will be removed in v2.0.0. Instead use Settings Builder's logWire, logsMax, or logger.");
       this.logWire = wireConsole;
       return this;
     }
 
     /**
-     * @deprecated Will be removed. Instead use Settings Builder's logTrace, logsMax, or logger.
+     * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logTrace, logsMax, or logger.
      */
     @Deprecated
     public Builder traceConsole(boolean traceConsole) {
       System.err.println(
-          "jBrowserDriver: The traceConsole setting is deprecated and will be removed. Instead use Settings Builder's logTrace, logsMax, or logger.");
+          "jBrowserDriver: The traceConsole setting is deprecated and will be removed in v2.0.0. Instead use Settings Builder's logTrace, logsMax, or logger.");
       this.logTrace = traceConsole;
       return this;
     }
 
     /**
-     * @deprecated Will be removed. Instead use Settings Builder's logWarnings, logsMax, or logger.
+     * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logWarnings, logsMax, or logger.
      */
     @Deprecated
     public Builder warnConsole(boolean warnConsole) {
       System.err.println(
-          "jBrowserDriver: The warnConsole setting is deprecated and will be removed. Instead use Settings Builder's logWarnings, logsMax, or logger.");
+          "jBrowserDriver: The warnConsole setting is deprecated and will be removed in v2.0.0. Instead use Settings Builder's logWarnings, logsMax, or logger.");
       this.logWarnings = warnConsole;
       return this;
     }
 
     /**
-     * @deprecated Will be removed. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.
+     * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.
      */
     @Deprecated
     public Builder maxLogs(int maxLogs) {
       System.err.println(
-          "jBrowserDriver: The maxLogs setting is deprecated and will be removed. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.");
+          "jBrowserDriver: The maxLogs setting is deprecated and will be removed in v2.0.0. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.");
       this.logsMax = maxLogs;
       return this;
     }
@@ -1350,25 +1350,25 @@ public class Settings implements Serializable {
     this.maxConnections = parse(properties, PropertyName.MAX_CONNECTIONS, builder.maxConnections);
     this.logJavascript = parse(properties, PropertyName.LOG_JAVASCRIPT, builder.logJavascript);
     if (properties.get(PropertyName.WIRE_CONSOLE) != null) {
-      System.err.println("jBrowserDriver: The jbd.wireconsole setting is deprecated and will be removed. Use jbd.logwire, jbd.logger, or jbd.logsmax instead.");
+      System.err.println("jBrowserDriver: The jbd.wireconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logwire, jbd.logger, or jbd.logsmax instead.");
       this.logWire = parse(properties, PropertyName.WIRE_CONSOLE, builder.logWire);
     } else {
       this.logWire = parse(properties, PropertyName.LOG_WIRE, builder.logWire);
     }
     if (properties.get(PropertyName.TRACE_CONSOLE) != null) {
-      System.err.println("jBrowserDriver: The jbd.traceconsole setting is deprecated and will be removed. Use jbd.logtrace, jbd.logger, or jbd.logsmax instead.");
+      System.err.println("jBrowserDriver: The jbd.traceconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logtrace, jbd.logger, or jbd.logsmax instead.");
       this.logTrace = parse(properties, PropertyName.TRACE_CONSOLE, builder.logTrace);
     } else {
       this.logTrace = parse(properties, PropertyName.LOG_TRACE, builder.logTrace);
     }
     if (properties.get(PropertyName.WARN_CONSOLE) != null) {
-      System.err.println("jBrowserDriver: The jbd.warnconsole setting is deprecated and will be removed. Use jbd.logwarnings, jbd.logger, or jbd.logsmax instead.");
+      System.err.println("jBrowserDriver: The jbd.warnconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logwarnings, jbd.logger, or jbd.logsmax instead.");
       this.logWarnings = parse(properties, PropertyName.WARN_CONSOLE, builder.logWarnings);
     } else {
       this.logWarnings = parse(properties, PropertyName.LOG_WARNINGS, builder.logWarnings);
     }
     if (properties.get(PropertyName.MAX_LOGS) != null) {
-      System.err.println("jBrowserDriver: The jbd.maxlogs setting is deprecated and will be removed. Use jbd.logsmax, jbd.logwire, jbd.logtrace, or jbd.logwarnings instead.");
+      System.err.println("jBrowserDriver: The jbd.maxlogs setting is deprecated and will be removed in v2.0.0. Use jbd.logsmax, jbd.logwire, jbd.logtrace, or jbd.logwarnings instead.");
       this.logsMax = parse(properties, PropertyName.MAX_LOGS, builder.logsMax);
     } else {
       this.logsMax = parse(properties, PropertyName.LOGS_MAX, builder.logsMax);
@@ -1400,7 +1400,7 @@ public class Settings implements Serializable {
         this.parentPort = childPorts.remove(0);
       }
     } else if (properties.get(PropertyName.PORTS.propertyName) != null) {
-      System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed. Refer to Settings.Builder.processes(..) API documentation.");
+      System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed in v2.0.0. Refer to Settings.Builder.processes(..) API documentation.");
       this.childPorts = parsePorts(properties.get(PropertyName.PORTS.propertyName).toString());
       this.parentPort = childPorts.remove(0);
     } else if (properties.get(PropertyName.PORT_RANGES.propertyName) != null) {
@@ -1418,7 +1418,7 @@ public class Settings implements Serializable {
             ? !Boolean.parseBoolean(System.getProperty("jbd.browsergui")) : headlessTmp;
     this.headless = headlessTmp;
     if (System.getProperty("jbd.browsergui") != null) {
-      System.err.println("jBrowserDriver: The jbd.browsergui property is deprecated and will be removed. Use jbd.headless property instead.");
+      System.err.println("jBrowserDriver: The jbd.browsergui property is deprecated and will be removed in v2.0.0. Use jbd.headless property instead.");
     }
 
     //backwards compatible property name for versions <= 0.9.1
@@ -1428,7 +1428,7 @@ public class Settings implements Serializable {
             ? System.getProperty("jbd.pemfile") : sslTmp;
     this.ssl = sslTmp;
     if (System.getProperty("jbd.pemfile") != null) {
-      System.err.println("jBrowserDriver: The jbd.pemfile property is deprecated and will be removed. Use jbd.ssl property instead.");
+      System.err.println("jBrowserDriver: The jbd.pemfile property is deprecated and will be removed in v2.0.0. Use jbd.ssl property instead.");
     }
 
     RequestHeaders requestHeadersTmp = builder.requestHeaders;
