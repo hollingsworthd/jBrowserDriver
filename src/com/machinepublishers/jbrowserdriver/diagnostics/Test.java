@@ -57,27 +57,30 @@ public class Test {
   private static final String TEST_PORTS_RMI = System.getProperty("jbd.testportsrmi", "10000-10001");
   private List<String> errors = new ArrayList<String>();
   private int curTest = 0;
+  private final boolean inlineOutput;
 
   public static void main(String[] args) {
+    Test test = new Test(true);
     final long startTime = System.currentTimeMillis();
-    Test test = new Test();
+    test.doTests();
     final long endTime = System.currentTimeMillis();
-    List<String> errors = test.errors;
     System.out.println("Elapsed Time:  " + (endTime - startTime) + " ms  /  " + test.curTest + " tests");
-    if (errors.isEmpty()) {
+    if (test.errors.isEmpty()) {
       System.out.println("System OK.");
-    } else {
-      for (String error : errors) {
-        System.out.println(error);
-      }
     }
   }
 
   public static List<String> run() {
-    return new Test().errors;
+    Test test = new Test(false);
+    test.doTests();
+    return test.errors;
   }
 
-  private Test() {
+  private Test(boolean inlineOutput) {
+    this.inlineOutput = inlineOutput;
+  }
+
+  private void doTests() {
     JBrowserDriver driver = null;
     Thread shutdownHook = null;
     try {
@@ -94,8 +97,6 @@ public class Test {
       final Settings.Builder builder = Settings.builder()
           .processes(TEST_PORTS_RMI)
           .screen(new Dimension(1024, 768))
-          .traceConsole(true)
-          .javascriptConsole(true)
           .javascriptLog(true)
           .ajaxWait(ajaxWait)
           .cacheDir(cacheDir)
@@ -295,7 +296,7 @@ public class Test {
        */
       driver.findElement(By.id("upload")).sendKeys("some-file");
       test("event-test".equals(driver.findElement(By.id("file-input-onchange")).getText()));
-      test(driver.findElement(By.id("upload")).getAttribute("value").endsWith("some-file"));
+      test(driver.findElement(By.id("upload")).getAttribute("value").endsWith("some-file")); //FIXME -- occasionally hangs
 
       /*
        * Javascript alerts
@@ -464,13 +465,13 @@ public class Test {
       test(error != null);
 
     } catch (Throwable t) {
-      errors.add(failureLabel(curTest + 1, t));
+      outputError(testLabel("failed", curTest + 1, t));
     } finally {
       try {
         driver.quit();
         HttpServer.stop();
       } catch (Throwable t) {
-        errors.add(toString(t));
+        outputError(toString(t));
       }
       try {
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
@@ -479,25 +480,37 @@ public class Test {
     }
   }
 
-  private static String failureLabel(int curTest, Throwable throwable) {
+  private void outputError(String label) {
+    errors.add(label);
+    if (inlineOutput) {
+      System.err.println(label);
+    }
+  }
+
+  private static String testLabel(String result, int curTest, Throwable throwable) {
     String stackTrace = throwable == null ? "" : " -- " + toString(throwable);
 
     StackTraceElement[] elements = throwable == null ? new Throwable().getStackTrace() : throwable.getStackTrace();
     String testLocation = "";
     for (int i = 0; i < elements.length; i++) {
       if (Test.class.getName().equals(elements[i].getClassName())
-          && "<init>".equals(elements[i].getMethodName())) {
+          && "doTests".equals(elements[i].getMethodName())) {
         testLocation = elements[i].toString();
+        break;
       }
     }
 
-    return "Test #" + curTest + " failed -- " + testLocation + stackTrace;
+    return "Test #" + curTest + " " + result + " -- " + testLocation + stackTrace;
   }
 
   private void test(boolean bool) {
     ++curTest;
-    if (!bool) {
-      errors.add(failureLabel(curTest, null));
+    if (bool) {
+      if (inlineOutput) {
+        System.out.println(testLabel("passed", curTest, null));
+      }
+    } else {
+      outputError(testLabel("failed", curTest, null));
     }
   }
 
