@@ -603,13 +603,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   public synchronized void kill() {
     final ContextItem item = context.get().item();
     if (item != null) {
-      AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
-        @Override
-        public Object perform() {
-          item.engine.get().getLoadWorker().cancel();
-          return null;
-        }
-      });
+      item.engine.get().getLoadWorker().cancel();
       Accessor.getPageFor(item.engine.get()).stop();
     }
     SettingsManager.register(null);
