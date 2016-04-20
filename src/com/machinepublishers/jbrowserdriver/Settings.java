@@ -32,6 +32,9 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -47,6 +50,17 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  * @see JBrowserDriver#JBrowserDriver(Settings)
  */
 public class Settings implements Serializable {
+  private static final Logger defaultLogger;
+  static {
+    if (LogManager.getLogManager().getLogger("com.machinepublishers.jbrowserdriver") == null) {
+      defaultLogger = Logger.getLogger("com.machinepublishers.jbrowserdriver");
+      defaultLogger.setUseParentHandlers(false);
+      defaultLogger.addHandler(new LogHandler());
+      defaultLogger.setLevel(Level.ALL);
+    } else {
+      defaultLogger = LogManager.getLogManager().getLogger("com.machinepublishers.jbrowserdriver");
+    }
+  }
   /**
    * A script to guard against canvas fingerprinting and also add some typical navigator properties.
    */
@@ -134,15 +148,16 @@ public class Settings implements Serializable {
     CONNECT_TIMEOUT_MS("jbd.connecttimeout"),
     CONNECTION_REQ_TIMEOUT_MS("jbd.connectionreqtimeout"),
     RESPONSE_INTERCEPTORS("jbd.responseinterceptors"),
-    WIRE_LOG("jbd.wirelog"),
-    JAVASCRIPT_LOG("jbd.javascriptlog"),
-    TRACE_LOG("jbd.tracelog"),
-    WARN_LOG("jbd.warnlog"),
-    WIRE_CONSOLE("jbd.wireconsole"),
-    JAVASCRIPT_CONSOLE("jbd.javascriptconsole"),
-    TRACE_CONSOLE("jbd.traceconsole"),
-    WARN_CONSOLE("jbd.warnconsole"),
-    MAX_LOGS("jbd.maxlogs");
+    LOG_WIRE("jbd.logwire"),
+    LOG_JAVASCRIPT("jbd.logjavascript"),
+    LOG_TRACE("jbd.logtrace"),
+    LOG_WARNINGS("jbd.logwarnings"),
+    LOGS_MAX("jbd.logsmax"),
+    LOGGER("jbd.logger"),
+    @Deprecated WIRE_CONSOLE("jbd.wireconsole"),
+    @Deprecated TRACE_CONSOLE("jbd.traceconsole"),
+    @Deprecated WARN_CONSOLE("jbd.warnconsole"),
+    @Deprecated MAX_LOGS("jbd.maxlogs");
 
     private final String propertyName;
 
@@ -182,15 +197,12 @@ public class Settings implements Serializable {
     private int maxRouteConnections = 8;
     private int maxConnections = 300;
     private String ssl;
-    private boolean wireLog;
-    private boolean javascriptLog;
-    private boolean traceLog;
-    private boolean warnLog = true;
-    private boolean wireConsole;
-    private boolean javascriptConsole;
-    private boolean traceConsole;
-    private boolean warnConsole = true;
-    private int maxLogs = 1000;
+    private boolean logWire;
+    private boolean logJavascript;
+    private boolean logTrace;
+    private boolean logWarnings = true;
+    private Logger logger = defaultLogger;
+    private int logsMax = 1000;
     private boolean hostnameVerification = true;
     private boolean javascript = true;
     private int socketTimeout = -1;
@@ -918,171 +930,166 @@ public class Settings implements Serializable {
     //    }
 
     /**
-     * Send full requests and responses (except response bodies) to standard out.
+     * Log full requests and responses (excluding response bodies).
      * <p>
-     * Defaults to <code>false</code>.
+     * Defaults to <code>false</code>
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.wireconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.wireconsole</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logwire</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logwire</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param wireConsole
+     * @param logWire
      * @return this Builder
      */
-    public Builder wireConsole(boolean wireConsole) {
-      this.wireConsole = wireConsole;
+    public Builder logWire(boolean logWire) {
+      this.logWire = logWire;
       return this;
     }
 
     /**
-     * Send Javascript browser messages to standard out.
+     * Log the browser console output.
      * <p>
-     * Defaults to <code>false</code>.
+     * Defaults to <code>false</code>
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.javascriptconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.javascriptconsole</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logjavascript</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logjavascript</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param javascriptConsole
-     * @return this Builder
+     * @param logJavascript
+     * @return
      */
-    public Builder javascriptConsole(boolean javascriptConsole) {
-      this.javascriptConsole = javascriptConsole;
+    public Builder logJavascript(boolean logJavascript) {
+      this.logJavascript = logJavascript;
       return this;
     }
 
     /**
-     * Send trace messages to standard out.
+     * Log details of HTTP requests performed and other info useful for monitoring runtime performance.
      * <p>
-     * Defaults to <code>false</code>.
+     * Defaults to <code>false</code>
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.traceconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.traceconsole</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logtrace</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logtrace</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param traceConsole
+     * @param logTrace
      * @return this Builder
      */
-    public Builder traceConsole(boolean traceConsole) {
-      this.traceConsole = traceConsole;
+    public Builder logTrace(boolean logTrace) {
+      this.logTrace = logTrace;
       return this;
     }
 
     /**
-     * Send important messages to standard error.
+     * Log errors, exceptions, and important notices.
      * <p>
-     * Defaults to <code>true</code>.
+     * Defaults to <code>true</code>
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.warnconsole</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.warnconsole</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logwarnings</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logwarnings</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param warnConsole
+     * @param logWarnings
      * @return this Builder
      */
-    public Builder warnConsole(boolean warnConsole) {
-      this.warnConsole = warnConsole;
+    public Builder logWarnings(boolean logWarnings) {
+      this.logWarnings = logWarnings;
       return this;
     }
 
     /**
-     * Send full requests and responses (except response bodies) to Selenium logger.
+     * The name of a Java Logger to handle log messages.
      * <p>
-     * Defaults to <code>false</code>.
+     * Logs are also available via the Selenium logging APIs--this logger has no effect on that.
+     * <p>
+     * The name can be <code>null</code> or <code>""</code> meaning no Java Logger will be used.
+     * <p>
+     * Defaults to <code>com.machinepublishers.jbrowserdriver</code> which echos messages to standard out/error.
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.wirelog</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.wirelog</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logger</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logger</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param wireLog
+     * @param name
      * @return this Builder
-     * @see Settings.Builder#maxLogs(int)
      */
-    public Builder wireLog(boolean wireLog) {
-      this.wireLog = wireLog;
+    public Builder logger(String name) {
+      this.logger = name == null ? null : Logger.getLogger(name);
       return this;
     }
 
     /**
-     * Send Javascript browser messages to Selenium logger.
+     * Maximum number of log messages (per log type) to store in memory (per process),
+     * accessible via the Selenium logging APIs.
      * <p>
-     * Defaults to <code>false</code>.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.javascriptlog</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.javascriptlog</code> alternately configures this setting.</li>
-     * </ul><p>
-     * 
-     * @param javascriptLog
-     * @return this Builder
-     * @see Settings.Builder#maxLogs(int)
-     */
-    public Builder javascriptLog(boolean javascriptLog) {
-      this.javascriptLog = javascriptLog;
-      return this;
-    }
-
-    /**
-     * Send trace messages to Selenium logger.
-     * <p>
-     * Defaults to <code>false</code>.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.tracelog</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.tracelog</code> alternately configures this setting.</li>
-     * </ul><p>
-     * 
-     * @param traceLog
-     * @return this Builder
-     * @see Settings.Builder#maxLogs(int)
-     */
-    public Builder traceLog(boolean traceLog) {
-      this.traceLog = traceLog;
-      return this;
-    }
-
-    /**
-     * Send important messages to Selenium logger.
-     * <p>
-     * Defaults to <code>true</code>.
-     * 
-     * <p><ul>
-     * <li>Java system property <code>jbd.warnlog</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.warnlog</code> alternately configures this setting.</li>
-     * </ul><p>
-     * 
-     * @param warnLog
-     * @return this Builder
-     * @see Settings.Builder#maxLogs(int)
-     */
-    public Builder warnLog(boolean warnLog) {
-      this.warnLog = warnLog;
-      return this;
-    }
-
-    /**
-     * Maximum number of log entries (per type) to store in memory (per process), accessible via the Selenium logger.
+     * Logs are also available via a Java Logger--this max has no effect on that.
      * <p>
      * The oldest log entry is dropped once the max is reached. Regardless of this setting,
      * logs are cleared per instance of JBrowserDriver after a call to quit(), reset(), or Logs.get(String).
      * <p>
+     * A value of zero disables Selenium logging.
+     * <p>
      * Defaults to <code>1000</code>.
      * 
      * <p><ul>
-     * <li>Java system property <code>jbd.maxlogs</code> overrides this setting.</li>
-     * <li>{@link Capabilities} name <code>jbd.maxlogs</code> alternately configures this setting.</li>
+     * <li>Java system property <code>jbd.logsmax</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.logsmax</code> alternately configures this setting.</li>
      * </ul><p>
      * 
-     * @param maxLogs
+     * @param logsMax
      * @return this Builder
      */
+    public Builder logsMax(int logsMax) {
+      this.logsMax = logsMax;
+      return this;
+    }
+
+    /**
+     * @deprecated Will be removed. Instead use Settings Builder's logWire, logsMax, or logger.
+     */
+    @Deprecated
+    public Builder wireConsole(boolean wireConsole) {
+      System.err.println(
+          "jBrowserDriver: The wireConsole setting is deprecated and will be removed. Instead use Settings Builder's logWire, logsMax, or logger.");
+      this.logWire = wireConsole;
+      return this;
+    }
+
+    /**
+     * @deprecated Will be removed. Instead use Settings Builder's logTrace, logsMax, or logger.
+     */
+    @Deprecated
+    public Builder traceConsole(boolean traceConsole) {
+      System.err.println(
+          "jBrowserDriver: The traceConsole setting is deprecated and will be removed. Instead use Settings Builder's logTrace, logsMax, or logger.");
+      this.logTrace = traceConsole;
+      return this;
+    }
+
+    /**
+     * @deprecated Will be removed. Instead use Settings Builder's logWarnings, logsMax, or logger.
+     */
+    @Deprecated
+    public Builder warnConsole(boolean warnConsole) {
+      System.err.println(
+          "jBrowserDriver: The warnConsole setting is deprecated and will be removed. Instead use Settings Builder's logWarnings, logsMax, or logger.");
+      this.logWarnings = warnConsole;
+      return this;
+    }
+
+    /**
+     * @deprecated Will be removed. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.
+     */
+    @Deprecated
     public Builder maxLogs(int maxLogs) {
-      this.maxLogs = maxLogs;
+      System.err.println(
+          "jBrowserDriver: The maxLogs setting is deprecated and will be removed. Instead use Settings Builder's logsMax, logWire, logTrace, or logWarnings.");
+      this.logsMax = maxLogs;
       return this;
     }
 
@@ -1111,15 +1118,12 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.QUICK_RENDER, this.quickRender);
       set(capabilities, PropertyName.MAX_ROUTE_CONNECTIONS, this.maxRouteConnections);
       set(capabilities, PropertyName.MAX_CONNECTIONS, this.maxConnections);
-      set(capabilities, PropertyName.WIRE_CONSOLE, this.wireConsole);
-      set(capabilities, PropertyName.JAVASCRIPT_CONSOLE, this.javascriptConsole);
-      set(capabilities, PropertyName.TRACE_CONSOLE, this.traceConsole);
-      set(capabilities, PropertyName.WARN_CONSOLE, this.warnConsole);
-      set(capabilities, PropertyName.WIRE_LOG, this.wireLog);
-      set(capabilities, PropertyName.JAVASCRIPT_LOG, this.javascriptLog);
-      set(capabilities, PropertyName.TRACE_LOG, this.traceLog);
-      set(capabilities, PropertyName.WARN_LOG, this.warnLog);
-      set(capabilities, PropertyName.MAX_LOGS, this.maxLogs);
+      set(capabilities, PropertyName.LOG_WIRE, this.logWire);
+      set(capabilities, PropertyName.LOG_JAVASCRIPT, this.logJavascript);
+      set(capabilities, PropertyName.LOG_TRACE, this.logTrace);
+      set(capabilities, PropertyName.LOG_WARNINGS, this.logWarnings);
+      set(capabilities, PropertyName.LOGS_MAX, this.logsMax);
+      set(capabilities, PropertyName.LOGGER, this.logger);
       set(capabilities, PropertyName.HEAD_SCRIPT, this.headScript);
       set(capabilities, PropertyName.HOST, this.host);
       final String joinedPorts = StringUtils.join(this.ports, ',');
@@ -1214,6 +1218,10 @@ public class Settings implements Serializable {
     capabilities.setCapability(name.propertyName, Boolean.toString(val));
   }
 
+  private static void set(DesiredCapabilities capabilities, PropertyName name, Logger val) {
+    capabilities.setCapability(name.propertyName, val == null ? null : val.getName());
+  }
+
   private static void set(DesiredCapabilities capabilities, PropertyName name, String val) {
     if (val != null) {
       capabilities.setCapability(name.propertyName, val);
@@ -1260,6 +1268,16 @@ public class Settings implements Serializable {
     return fallback;
   }
 
+  private static Logger parse(Map capabilities, PropertyName name, Logger fallback) {
+    if (capabilities.containsKey(name.propertyName)) {
+      if (capabilities.get(name.propertyName) == null || capabilities.get(name.propertyName).equals("")) {
+        return null;
+      }
+      return Logger.getLogger(capabilities.get(name.propertyName).toString());
+    }
+    return fallback;
+  }
+
   private static ResponseInterceptor[] parse(Map capabilities, PropertyName name, ResponseInterceptor[] fallback) {
     if (capabilities.get(name.propertyName) != null) {
       BufferedInputStream bufferIn = new BufferedInputStream(new ByteArrayInputStream(
@@ -1297,15 +1315,13 @@ public class Settings implements Serializable {
   private final int maxRouteConnections;
   private final int maxConnections;
   private final String ssl;
-  private final boolean wireLog;
-  private final boolean javascriptLog;
-  private final boolean traceLog;
-  private final boolean warnLog;
-  private final boolean wireConsole;
-  private final boolean javascriptConsole;
-  private final boolean traceConsole;
-  private final boolean warnConsole;
-  private final int maxLogs;
+  private final boolean logWire;
+  private final boolean logJavascript;
+  private final boolean logTrace;
+  private final boolean logWarnings;
+  private final int logsMax;
+  private final transient Logger logger;
+  private final int loggerLevel;
   private final boolean hostnameVerification;
   private final boolean javascript;
   private final int socketTimeout;
@@ -1332,15 +1348,38 @@ public class Settings implements Serializable {
     this.quickRender = parse(properties, PropertyName.QUICK_RENDER, builder.quickRender);
     this.maxRouteConnections = parse(properties, PropertyName.MAX_ROUTE_CONNECTIONS, builder.maxRouteConnections);
     this.maxConnections = parse(properties, PropertyName.MAX_CONNECTIONS, builder.maxConnections);
-    this.javascriptLog = parse(properties, PropertyName.JAVASCRIPT_LOG, builder.javascriptLog);
-    this.wireLog = parse(properties, PropertyName.WIRE_LOG, builder.wireLog);
-    this.traceLog = parse(properties, PropertyName.TRACE_LOG, builder.traceLog);
-    this.warnLog = parse(properties, PropertyName.WARN_LOG, builder.warnLog);
-    this.javascriptConsole = parse(properties, PropertyName.JAVASCRIPT_CONSOLE, builder.javascriptConsole);
-    this.wireConsole = parse(properties, PropertyName.WIRE_CONSOLE, builder.wireConsole);
-    this.traceConsole = parse(properties, PropertyName.TRACE_CONSOLE, builder.traceConsole);
-    this.warnConsole = parse(properties, PropertyName.WARN_CONSOLE, builder.warnConsole);
-    this.maxLogs = parse(properties, PropertyName.MAX_LOGS, builder.maxLogs);
+    this.logJavascript = parse(properties, PropertyName.LOG_JAVASCRIPT, builder.logJavascript);
+    if (properties.get(PropertyName.WIRE_CONSOLE) != null) {
+      System.err.println("jBrowserDriver: The jbd.wireconsole setting is deprecated and will be removed. Use jbd.logwire, jbd.logger, or jbd.logsmax instead.");
+      this.logWire = parse(properties, PropertyName.WIRE_CONSOLE, builder.logWire);
+    } else {
+      this.logWire = parse(properties, PropertyName.LOG_WIRE, builder.logWire);
+    }
+    if (properties.get(PropertyName.TRACE_CONSOLE) != null) {
+      System.err.println("jBrowserDriver: The jbd.traceconsole setting is deprecated and will be removed. Use jbd.logtrace, jbd.logger, or jbd.logsmax instead.");
+      this.logTrace = parse(properties, PropertyName.TRACE_CONSOLE, builder.logTrace);
+    } else {
+      this.logTrace = parse(properties, PropertyName.LOG_TRACE, builder.logTrace);
+    }
+    if (properties.get(PropertyName.WARN_CONSOLE) != null) {
+      System.err.println("jBrowserDriver: The jbd.warnconsole setting is deprecated and will be removed. Use jbd.logwarnings, jbd.logger, or jbd.logsmax instead.");
+      this.logWarnings = parse(properties, PropertyName.WARN_CONSOLE, builder.logWarnings);
+    } else {
+      this.logWarnings = parse(properties, PropertyName.LOG_WARNINGS, builder.logWarnings);
+    }
+    if (properties.get(PropertyName.MAX_LOGS) != null) {
+      System.err.println("jBrowserDriver: The jbd.maxlogs setting is deprecated and will be removed. Use jbd.logsmax, jbd.logwire, jbd.logtrace, or jbd.logwarnings instead.");
+      this.logsMax = parse(properties, PropertyName.MAX_LOGS, builder.logsMax);
+    } else {
+      this.logsMax = parse(properties, PropertyName.LOGS_MAX, builder.logsMax);
+    }
+    this.logger = parse(properties, PropertyName.LOGGER, builder.logger);
+    if (this.logger == null) {
+      this.loggerLevel = Level.OFF.intValue();
+    } else {
+      Level curLevel = logger.getLevel();
+      this.loggerLevel = curLevel == null ? Level.INFO.intValue() : curLevel.intValue();
+    }
     this.hostnameVerification = parse(properties, PropertyName.HOSTNAME_VERIFICATION, builder.hostnameVerification);
     this.javascript = parse(properties, PropertyName.JAVASCRIPT, builder.javascript);
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
@@ -1570,46 +1609,37 @@ public class Settings implements Serializable {
     return connectionReqTimeout;
   }
 
-  boolean wireConsole() {
-    return wireConsole;
-  }
-
-  boolean javascriptConsole() {
-    return javascriptConsole;
-  }
-
-  boolean traceConsole() {
-    return traceConsole;
-  }
-
-  boolean warnConsole() {
-    return warnConsole;
-  }
-
-  boolean wireLog() {
-    return wireLog;
-  }
-
-  boolean javascriptLog() {
-    return javascriptLog;
-  }
-
-  boolean traceLog() {
-    return traceLog;
-  }
-
-  boolean warnLog() {
-    return warnLog;
-  }
-
-  int maxLogs() {
-    return maxLogs;
-  }
-
   boolean hostnameVerification() {
     return hostnameVerification;
   }
 
+  boolean logWire() {
+    return logWire;
+  }
+
+  boolean logJavascript() {
+    return logJavascript;
+  }
+
+  boolean logTrace() {
+    return logTrace;
+  }
+
+  boolean logWarnings() {
+    return logWarnings;
+  }
+
+  int logsMax() {
+    return logsMax;
+  }
+
+  Logger logger() {
+    return logger;
+  }
+
+  int loggerLevel() {
+    return loggerLevel;
+  }
   //TODO
   //  ResponseInterceptor[] responseInterceptors() {
   //    return responseInterceptors;

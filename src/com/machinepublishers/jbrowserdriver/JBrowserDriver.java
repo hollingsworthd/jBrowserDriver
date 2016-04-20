@@ -41,6 +41,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -263,7 +266,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       childPortsAvailable.remove(configuredChildPort.get());
       childPortsUsed.add(configuredChildPort.get());
     }
-    launchProcess(settings.host(), settings.parentPort(), configuredChildPort.get());
+    launchProcess(settings.host(), settings.parentPort(), configuredChildPort.get(), settings.logger());
     JBrowserDriverRemote instanceTmp = null;
     try {
       instanceTmp = (JBrowserDriverRemote) LocateRegistry
@@ -304,7 +307,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (Throwable t) {}
   }
 
-  private void launchProcess(final String host, final int parentPort, final int childPort) {
+  private void launchProcess(final String host, final int parentPort, final int childPort, final Logger logger) {
     final AtomicBoolean ready = new AtomicBoolean();
     final AtomicReference<String> logPrefix = new AtomicReference<String>("");
     new Thread(new Runnable() {
@@ -355,12 +358,12 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
                           ready.set(true);
                           ready.notify();
                           done = true;
-                        } else if (!filteredLogs.contains(line)) {
-                          System.out.println(logPrefix + line);
+                        } else {
+                          log(logger, logPrefix.get(), line);
                         }
                       }
-                    } else if (!filteredLogs.contains(line)) {
-                      System.out.println(logPrefix + line);
+                    } else {
+                      log(logger, logPrefix.get(), line);
                     }
                   }
                 }
@@ -368,9 +371,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
               .redirectError(new LogOutputStream() {
                 @Override
                 protected void processLine(String line) {
-                  if (!filteredLogs.contains(line)) {
-                    System.err.println(logPrefix + line);
-                  }
+                  log(logger, logPrefix.get(), line);
                 }
               })
               .destroyOnExit()
@@ -388,6 +389,23 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           break;
         } catch (InterruptedException e) {}
       }
+    }
+  }
+
+  private static void log(Logger logger, String prefix, String message) {
+    if (logger != null && !filteredLogs.contains(message)) {
+      LogRecord record = null;
+      if (message.startsWith(">")) {
+        String[] parts = message.substring(1).split("/", 3);
+        record = new LogRecord(Level.parse(parts[0]), prefix + parts[2]);
+        record.setSourceMethodName(parts[1]);
+        record.setSourceClassName(JBrowserDriver.class.getName());
+      } else {
+        record = new LogRecord(Level.WARNING, prefix + message);
+        record.setSourceMethodName(null);
+        record.setSourceClassName(JBrowserDriver.class.getName());
+      }
+      logger.log(record);
     }
   }
 

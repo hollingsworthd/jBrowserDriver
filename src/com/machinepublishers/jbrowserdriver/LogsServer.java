@@ -20,7 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
@@ -75,7 +74,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
 
   static void updateSettings() {
     Settings settings = SettingsManager.settings();
-    if (settings != null && (settings.wireConsole() || settings.wireLog())) {
+    if (settings != null && settings.logWire()) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.JbdWireLog");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
     } else {
@@ -95,20 +94,18 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   }
 
   private static void handleMessage(String message, LinkedList<Entry> entries, Level level,
-      boolean doConsole, boolean doLog, PrintStream consoleStream, int max) {
-    if (doConsole || doLog) {
+      String type, Settings settings) {
+    if (settings != null && settings.logsMax() > 0) {
       final Entry entry = new Entry(level, System.currentTimeMillis(), message);
-      if (doLog) {
-        synchronized (entries) {
-          entries.add(entry);
-          if (entries.size() > max) {
-            entries.removeFirst();
-          }
+      synchronized (entries) {
+        entries.add(entry);
+        if (entries.size() > settings.logsMax()) {
+          entries.removeFirst();
         }
       }
-      if (doConsole) {
-        consoleStream.println(entry);
-      }
+    }
+    if (settings == null || level.intValue() >= settings.loggerLevel()) {
+      System.err.println(">" + level.getName() + "/" + type + "/" + message);
     }
   }
 
@@ -139,7 +136,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
         trace.clear();
       }
     }
-    if (all || "warn".equals(type)) {
+    if (all || "warnings".equals(type)) {
       synchronized (warn) {
         if (aggregate) {
           combinedLogs.addAll(warn);
@@ -153,35 +150,29 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
 
   public void wire(String message) {
     Settings settings = SettingsManager.settings();
-    if (settings != null) {
-      handleMessage(message, wire, Level.FINEST,
-          settings.wireConsole(), settings.wireLog(), System.out, settings.maxLogs());
+    if (settings != null && settings.logWire()) {
+      handleMessage(message, wire, Level.FINEST, "wire", settings);
     }
   }
 
   public void javascript(String message) {
     Settings settings = SettingsManager.settings();
-    if (settings != null) {
-      handleMessage(message, javascript, Level.FINER,
-          settings.javascriptConsole(), settings.javascriptLog(), System.out, settings.maxLogs());
+    if (settings != null && settings.logJavascript()) {
+      handleMessage(message, javascript, Level.FINER, "javascript", settings);
     }
   }
 
   public void trace(String message) {
     Settings settings = SettingsManager.settings();
-    if (settings != null) {
-      handleMessage(message, trace, Level.INFO,
-          settings.traceConsole(), settings.traceLog(), System.out, settings.maxLogs());
+    if (settings != null && settings.logTrace()) {
+      handleMessage(message, trace, Level.INFO, "trace", settings);
     }
   }
 
   public void warn(String message) {
     Settings settings = SettingsManager.settings();
-    if (settings == null) {
-      handleMessage(message, warn, Level.WARNING, true, false, System.err, -1);
-    } else {
-      handleMessage(message, warn, Level.WARNING,
-          settings.warnConsole(), settings.warnLog(), System.err, settings.maxLogs());
+    if (settings == null || settings.logWarnings()) {
+      handleMessage(message, warn, Level.WARNING, "warnings", settings);
     }
   }
 
@@ -220,6 +211,6 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
    */
   @Override
   public Set<String> getAvailableLogTypes() {
-    return new HashSet<String>(Arrays.asList(new String[] { "all", "wire", "javascript", "trace", "warn" }));
+    return new HashSet<String>(Arrays.asList(new String[] { "all", "wire", "javascript", "trace", "warnings" }));
   }
 }

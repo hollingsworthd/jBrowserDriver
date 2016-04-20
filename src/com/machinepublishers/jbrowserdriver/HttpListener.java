@@ -126,7 +126,7 @@ class HttpListener implements LoadListenerClient {
         }
       }
     }
-    if ((settings.traceConsole() || settings.traceLog())
+    if ((settings.logTrace())
         && (url.startsWith("http://") || url.startsWith("https://"))) {
       trace("Rsrc", frame, state, url, contentType, progress, errorCode);
     }
@@ -166,7 +166,7 @@ class HttpListener implements LoadListenerClient {
     synchronized (statusCode) {
       if (state == LoadListenerClient.PAGE_STARTED) {
         contextItem.resetFrameId(frame);
-        if (settings.javascriptConsole() || settings.javascriptLog()) {
+        if (settings.logJavascript()) {
           JavascriptLog.attach(Accessor.getPageFor(contextItem.engine.get()), frame);
         }
       }
@@ -196,7 +196,7 @@ class HttpListener implements LoadListenerClient {
         thread.start();
       }
     }
-    if (settings.traceConsole() || settings.traceLog()) {
+    if (settings.logTrace()) {
       trace("Page", frame, state, url, contentType, progress, errorCode);
     }
   }
