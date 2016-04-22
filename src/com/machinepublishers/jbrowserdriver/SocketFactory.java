@@ -27,11 +27,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
+import java.util.concurrent.atomic.AtomicReference;
 
 class SocketFactory extends RMISocketFactory implements Serializable {
   private final InetAddress host;
   private final int parentPort;
   private final int childPort;
+  private final transient AtomicReference<ServerSocket> serverSocket = new AtomicReference<ServerSocket>();
+  private final transient AtomicReference<Socket> clientSocket = new AtomicReference<Socket>();
 
   SocketFactory(String host, int parentPort, int childPort) {
     InetAddress hostTmp = null;
@@ -47,6 +50,11 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public ServerSocket createServerSocket(int p) throws IOException {
+    serverSocket.compareAndSet(null, newServerSocket());
+    return serverSocket.get();
+  }
+
+  private ServerSocket newServerSocket() throws IOException {
     ServerSocket serverSocket = new ServerSocket();
     serverSocket.setReuseAddress(true);
     serverSocket.bind(new InetSocketAddress(host, childPort), Integer.MAX_VALUE);
@@ -55,6 +63,11 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public Socket createSocket(String h, int p) throws IOException {
+    clientSocket.compareAndSet(null, newClientSocket());
+    return clientSocket.get();
+  }
+
+  private Socket newClientSocket() throws IOException {
     Socket clientSocket = new Socket();
     clientSocket.setReuseAddress(true);
     clientSocket.setTcpNoDelay(true);
