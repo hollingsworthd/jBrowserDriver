@@ -24,9 +24,11 @@ import java.util.List;
 
 class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   private final ImeHandlerRemote remote;
+  private final SocketLock lock;
 
-  ImeHandler(ImeHandlerRemote remote) {
+  ImeHandler(ImeHandlerRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -35,7 +37,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public void activateEngine(String name) {
     try {
-      remote.activateEngine(name);
+      synchronized (lock) {
+        remote.activateEngine(name);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -47,7 +51,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public void deactivate() {
     try {
-      remote.deactivate();
+      synchronized (lock) {
+        remote.deactivate();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -59,7 +65,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public String getActiveEngine() {
     try {
-      return remote.getActiveEngine();
+      synchronized (lock) {
+        return remote.getActiveEngine();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -72,7 +80,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public List<String> getAvailableEngines() {
     try {
-      return remote.getAvailableEngines();
+      synchronized (lock) {
+        return remote.getAvailableEngines();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<String>();
@@ -85,7 +95,9 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public boolean isActivated() {
     try {
-      return remote.isActivated();
+      synchronized (lock) {
+        return remote.isActivated();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return false;

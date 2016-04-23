@@ -22,9 +22,11 @@ package com.machinepublishers.jbrowserdriver;
 class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   private final KeyboardRemote remote;
+  private final SocketLock lock;
 
-  Keyboard(KeyboardRemote remote) {
+  Keyboard(KeyboardRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -33,7 +35,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void pressKey(CharSequence key) {
     try {
-      remote.pressKey(key);
+      synchronized (lock) {
+        remote.pressKey(key);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -45,7 +49,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void releaseKey(CharSequence key) {
     try {
-      remote.releaseKey(key);
+      synchronized (lock) {
+        remote.releaseKey(key);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -57,7 +63,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void sendKeys(CharSequence... keys) {
     try {
-      remote.sendKeys(keys);
+      synchronized (lock) {
+        remote.sendKeys(keys);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -65,7 +73,9 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   boolean isShiftPressed() {
     try {
-      return remote.isShiftPressed();
+      synchronized (lock) {
+        return remote.isShiftPressed();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return false;

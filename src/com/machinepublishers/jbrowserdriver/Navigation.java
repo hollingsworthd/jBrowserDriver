@@ -23,9 +23,11 @@ import java.net.URL;
 
 class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   private final NavigationRemote remote;
+  private final SocketLock lock;
 
-  Navigation(NavigationRemote remote) {
+  Navigation(NavigationRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -34,7 +36,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void back() {
     try {
-      remote.back();
+      synchronized (lock) {
+        remote.back();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -46,7 +50,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void forward() {
     try {
-      remote.forward();
+      synchronized (lock) {
+        remote.forward();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -58,7 +64,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void refresh() {
     try {
-      remote.refresh();
+      synchronized (lock) {
+        remote.refresh();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -70,7 +78,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void to(String url) {
     try {
-      remote.to(url);
+      synchronized (lock) {
+        remote.to(url);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -82,7 +92,9 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void to(URL url) {
     try {
-      remote.to(url);
+      synchronized (lock) {
+        remote.to(url);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }

@@ -21,9 +21,11 @@ package com.machinepublishers.jbrowserdriver;
 
 class Window implements org.openqa.selenium.WebDriver.Window {
   private final WindowRemote remote;
+  private final SocketLock lock;
 
-  Window(WindowRemote remote) {
+  Window(WindowRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -32,7 +34,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public org.openqa.selenium.Point getPosition() {
     try {
-      return remote.remoteGetPosition().toSelenium();
+      synchronized (lock) {
+        return remote.remoteGetPosition().toSelenium();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -45,7 +49,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public org.openqa.selenium.Dimension getSize() {
     try {
-      return remote.remoteGetSize().toSelenium();
+      synchronized (lock) {
+        return remote.remoteGetSize().toSelenium();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -58,7 +64,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void maximize() {
     try {
-      remote.maximize();
+      synchronized (lock) {
+        remote.maximize();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -70,7 +78,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void setPosition(final org.openqa.selenium.Point point) {
     try {
-      remote.setPosition(new Point(point));
+      synchronized (lock) {
+        remote.setPosition(new Point(point));
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -82,7 +92,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void setSize(final org.openqa.selenium.Dimension dimension) {
     try {
-      remote.setSize(new Dimension(dimension));
+      synchronized (lock) {
+        remote.setSize(new Dimension(dimension));
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -94,7 +106,9 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void fullscreen() {
     try {
-      remote.fullscreen();
+      synchronized (lock) {
+        remote.fullscreen();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }

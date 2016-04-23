@@ -30,10 +30,12 @@ import org.openqa.selenium.logging.Logs;
 class Options implements org.openqa.selenium.WebDriver.Options {
   private final OptionsRemote remote;
   private final com.machinepublishers.jbrowserdriver.Logs logs;
+  private final SocketLock lock;
 
-  Options(OptionsRemote remote, com.machinepublishers.jbrowserdriver.Logs logs) {
+  Options(OptionsRemote remote, com.machinepublishers.jbrowserdriver.Logs logs, SocketLock lock) {
     this.remote = remote;
     this.logs = logs;
+    this.lock = lock;
   }
 
   /**
@@ -42,7 +44,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public void addCookie(Cookie cookie) {
     try {
-      remote.addCookie(cookie);
+      synchronized (lock) {
+        remote.addCookie(cookie);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -54,7 +58,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public void deleteAllCookies() {
     try {
-      remote.deleteAllCookies();
+      synchronized (lock) {
+        remote.deleteAllCookies();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -66,7 +72,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public void deleteCookie(Cookie cookie) {
     try {
-      remote.deleteCookie(cookie);
+      synchronized (lock) {
+        remote.deleteCookie(cookie);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -78,7 +86,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public void deleteCookieNamed(String name) {
     try {
-      remote.deleteCookieNamed(name);
+      synchronized (lock) {
+        remote.deleteCookieNamed(name);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -90,7 +100,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Cookie getCookieNamed(String name) {
     try {
-      return remote.getCookieNamed(name);
+      synchronized (lock) {
+        return remote.getCookieNamed(name);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -103,7 +115,9 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Set<Cookie> getCookies() {
     try {
-      return remote.getCookies();
+      synchronized (lock) {
+        return remote.getCookies();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -116,11 +130,13 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public ImeHandler ime() {
     try {
-      ImeHandlerRemote imeHandler = remote.ime();
-      if (imeHandler == null) {
-        return null;
+      synchronized (lock) {
+        ImeHandlerRemote imeHandler = remote.ime();
+        if (imeHandler == null) {
+          return null;
+        }
+        return new com.machinepublishers.jbrowserdriver.ImeHandler(imeHandler, lock);
       }
-      return new com.machinepublishers.jbrowserdriver.ImeHandler(imeHandler);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -141,11 +157,13 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Timeouts timeouts() {
     try {
-      TimeoutsRemote timeouts = remote.timeouts();
-      if (timeouts == null) {
-        return null;
+      synchronized (lock) {
+        TimeoutsRemote timeouts = remote.timeouts();
+        if (timeouts == null) {
+          return null;
+        }
+        return new com.machinepublishers.jbrowserdriver.Timeouts(timeouts, lock);
       }
-      return new com.machinepublishers.jbrowserdriver.Timeouts(timeouts);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -158,11 +176,13 @@ class Options implements org.openqa.selenium.WebDriver.Options {
   @Override
   public Window window() {
     try {
-      WindowRemote window = remote.window();
-      if (window == null) {
-        return null;
+      synchronized (lock) {
+        WindowRemote window = remote.window();
+        if (window == null) {
+          return null;
+        }
+        return new com.machinepublishers.jbrowserdriver.Window(window, lock);
       }
-      return new com.machinepublishers.jbrowserdriver.Window(window);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;

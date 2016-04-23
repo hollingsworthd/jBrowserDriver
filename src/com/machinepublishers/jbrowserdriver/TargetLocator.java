@@ -25,10 +25,12 @@ import org.openqa.selenium.WebElement;
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
   private final JBrowserDriver driver;
+  private final SocketLock lock;
 
-  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver) {
+  TargetLocator(TargetLocatorRemote remote, JBrowserDriver driver, SocketLock lock) {
     this.remote = remote;
     this.driver = driver;
+    this.lock = lock;
   }
 
   /**
@@ -37,7 +39,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebElement activeElement() {
     try {
-      return Element.constructElement(remote.activeElement(), driver);
+      synchronized (lock) {
+        return Element.constructElement(remote.activeElement(), driver, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -50,7 +54,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public org.openqa.selenium.Alert alert() {
     try {
-      return new Alert(remote.alert());
+      synchronized (lock) {
+        return new Alert(remote.alert(), lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -63,7 +69,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver defaultContent() {
     try {
-      remote.defaultContent();
+      synchronized (lock) {
+        remote.defaultContent();
+      }
       return driver;
     } catch (Throwable t) {
       Util.handleException(t);
@@ -77,7 +85,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver frame(int index) {
     try {
-      remote.frame(index);
+      synchronized (lock) {
+        remote.frame(index);
+      }
       return driver;
     } catch (Throwable t) {
       Util.handleException(t);
@@ -91,7 +101,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver frame(String nameOrId) {
     try {
-      remote.frame(nameOrId);
+      synchronized (lock) {
+        remote.frame(nameOrId);
+      }
       return driver;
     } catch (Throwable t) {
       Util.handleException(t);
@@ -114,7 +126,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver parentFrame() {
     try {
-      remote.parentFrame();
+      synchronized (lock) {
+        remote.parentFrame();
+      }
       return driver;
     } catch (Throwable t) {
       Util.handleException(t);
@@ -128,7 +142,9 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver window(String windowHandle) {
     try {
-      remote.window(windowHandle);
+      synchronized (lock) {
+        remote.window(windowHandle);
+      }
       return driver;
     } catch (Throwable t) {
       Util.handleException(t);

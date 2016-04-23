@@ -51,7 +51,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
   @Override
   public void click(CoordinatesRemote coords) {
     if (coords != null) {
-      click(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+      click(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
     } else {
       click((Coordinates) null);
     }
@@ -73,7 +73,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void contextClick(CoordinatesRemote coords) {
-    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
   }
 
   /**
@@ -93,7 +93,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void doubleClick(CoordinatesRemote coords) {
-    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
   }
 
   /**
@@ -112,7 +112,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void mouseDown(CoordinatesRemote coords) {
-    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
   }
 
   /**
@@ -128,7 +128,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void mouseMove(CoordinatesRemote coords) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
   }
 
   /**
@@ -148,7 +148,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords), xOffset, yOffset);
+    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()), xOffset, yOffset);
   }
 
   /**
@@ -167,7 +167,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    */
   @Override
   public void mouseUp(CoordinatesRemote coords) {
-    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords));
+    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
   }
 
 }

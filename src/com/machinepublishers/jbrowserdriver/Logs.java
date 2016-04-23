@@ -25,9 +25,11 @@ import org.openqa.selenium.logging.LogEntries;
 
 class Logs implements org.openqa.selenium.logging.Logs {
   private final LogsRemote remote;
+  private final SocketLock lock;
 
-  Logs(LogsRemote remote) {
+  Logs(LogsRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -36,7 +38,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
   @Override
   public LogEntries get(String type) {
     try {
-      return remote.getRemote(type).toLogEntries();
+      synchronized (lock) {
+        return remote.getRemote(type).toLogEntries();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -49,7 +53,9 @@ class Logs implements org.openqa.selenium.logging.Logs {
   @Override
   public Set<String> getAvailableLogTypes() {
     try {
-      return remote.getAvailableLogTypes();
+      synchronized (lock) {
+        return remote.getAvailableLogTypes();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;

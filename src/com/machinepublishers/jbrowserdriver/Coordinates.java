@@ -23,9 +23,11 @@ import java.rmi.RemoteException;
 
 class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates {
   final CoordinatesRemote remote;
+  private final SocketLock lock;
 
-  Coordinates(CoordinatesRemote remote) {
+  Coordinates(CoordinatesRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -34,7 +36,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
   @Override
   public org.openqa.selenium.Point onScreen() {
     try {
-      return remote == null ? null : remote.remoteOnScreen().toSelenium();
+      synchronized (lock) {
+        return remote == null ? null : remote.remoteOnScreen().toSelenium();
+      }
     } catch (RemoteException e) {
       Util.handleException(e);
       return null;
@@ -47,7 +51,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
   @Override
   public org.openqa.selenium.Point inViewPort() {
     try {
-      return remote == null ? null : remote.remoteInViewPort().toSelenium();
+      synchronized (lock) {
+        return remote == null ? null : remote.remoteInViewPort().toSelenium();
+      }
     } catch (RemoteException e) {
       Util.handleException(e);
       return null;
@@ -60,7 +66,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
   @Override
   public org.openqa.selenium.Point onPage() {
     try {
-      return remote == null ? null : remote.remoteOnPage().toSelenium();
+      synchronized (lock) {
+        return remote == null ? null : remote.remoteOnPage().toSelenium();
+      }
     } catch (RemoteException e) {
       Util.handleException(e);
       return null;
@@ -73,7 +81,9 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
   @Override
   public Object getAuxiliary() {
     try {
-      return remote == null ? null : remote.getAuxiliary();
+      synchronized (lock) {
+        return remote == null ? null : remote.getAuxiliary();
+      }
     } catch (RemoteException e) {
       Util.handleException(e);
       return null;

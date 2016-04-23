@@ -24,9 +24,11 @@ import org.openqa.selenium.security.Credentials;
 class Alert implements org.openqa.selenium.Alert {
 
   private final AlertRemote remote;
+  private final SocketLock lock;
 
-  Alert(AlertRemote remote) {
+  Alert(AlertRemote remote, SocketLock lock) {
     this.remote = remote;
+    this.lock = lock;
   }
 
   /**
@@ -35,7 +37,9 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void accept() {
     try {
-      remote.accept();
+      synchronized (lock) {
+        remote.accept();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -47,7 +51,9 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void dismiss() {
     try {
-      remote.dismiss();
+      synchronized (lock) {
+        remote.dismiss();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -59,7 +65,9 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public String getText() {
     try {
-      return remote.getText();
+      synchronized (lock) {
+        return remote.getText();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -72,7 +80,9 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void sendKeys(String text) {
     try {
-      remote.sendKeys(text);
+      synchronized (lock) {
+        remote.sendKeys(text);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }

@@ -120,6 +120,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private final AtomicInteger actualParentPort = new AtomicInteger();
   private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
   private final SessionId sessionId;
+  private final SocketLock lock = new SocketLock();
 
   static {
     Policy.init();
@@ -210,7 +211,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       capabilities = new DesiredCapabilities(capabilities);
     }
     try {
-      remote.storeCapabilities(capabilities);
+      synchronized (lock) {
+        remote.storeCapabilities(capabilities);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -271,7 +274,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     try {
       instanceTmp = (JBrowserDriverRemote) LocateRegistry
           .getRegistry(settings.host(), actualChildPort.get(),
-              new SocketFactory(settings.host(), actualParentPort.get(), actualChildPort.get()))
+              new SocketFactory(settings.host(), actualParentPort.get(), actualChildPort.get(), lock))
           .lookup("JBrowserDriverRemote");
       instanceTmp.setUp(settings);
     } catch (Throwable t) {
@@ -280,7 +283,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     remote = instanceTmp;
     LogsRemote logsRemote = null;
     try {
-      logsRemote = remote.logs();
+      synchronized (lock) {
+        logsRemote = remote.logs();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -293,7 +298,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         .append(actualChildPort.get() == configuredChildPort.get()
             ? "" : "[Process " + Math.abs(configuredChildPort.get()) + "]")
         .toString());
-    logs = new Logs(logsRemote);
+    logs = new Logs(logsRemote, lock);
   }
 
   @Override
@@ -415,7 +420,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public void init() {
     try {
-      remote.init();
+      synchronized (lock) {
+        remote.init();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -434,7 +441,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public void reset(final Settings settings) {
     //TODO clear out tmp files except cache
     try {
-      remote.reset(settings);
+      synchronized (lock) {
+        remote.reset(settings);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -454,7 +463,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     //TODO clear out tmp files except cache
     Settings settings = Settings.builder().build(capabilities);
     try {
-      remote.reset(settings);
+      synchronized (lock) {
+        remote.reset(settings);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -462,7 +473,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       capabilities = new DesiredCapabilities(capabilities);
     }
     try {
-      remote.storeCapabilities(capabilities);
+      synchronized (lock) {
+        remote.storeCapabilities(capabilities);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -474,7 +487,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public void reset() {
     try {
-      remote.reset();
+      synchronized (lock) {
+        remote.reset();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -486,7 +501,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public String getPageSource() {
     try {
-      return remote.getPageSource();
+      synchronized (lock) {
+        return remote.getPageSource();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -499,7 +516,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public String getCurrentUrl() {
     try {
-      return remote.getCurrentUrl();
+      synchronized (lock) {
+        return remote.getCurrentUrl();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -511,7 +530,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public int getStatusCode() {
     try {
-      return remote.getStatusCode();
+      synchronized (lock) {
+        return remote.getStatusCode();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return -1;
@@ -532,7 +553,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public void pageWait() {
     try {
-      remote.pageWait();
+      synchronized (lock) {
+        remote.pageWait();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -544,7 +567,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public String getTitle() {
     try {
-      return remote.getTitle();
+      synchronized (lock) {
+        return remote.getTitle();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -557,7 +582,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public void get(final String url) {
     try {
-      remote.get(url);
+      synchronized (lock) {
+        remote.get(url);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -569,7 +596,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElement(By by) {
     try {
-      return Element.constructElement(remote.findElement(by), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElement(by), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -582,7 +611,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElements(By by) {
     try {
-      return Element.constructList(remote.findElements(by), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElements(by);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -595,7 +628,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementById(String id) {
     try {
-      return Element.constructElement(remote.findElementById(id), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementById(id), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -608,7 +643,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsById(String id) {
     try {
-      return Element.constructList(remote.findElementsById(id), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsById(id);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -621,7 +660,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByXPath(String expr) {
     try {
-      return Element.constructElement(remote.findElementByXPath(expr), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByXPath(expr), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -634,7 +675,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByXPath(String expr) {
     try {
-      return Element.constructList(remote.findElementsByXPath(expr), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByXPath(expr);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -647,7 +692,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
-      return Element.constructElement(remote.findElementByLinkText(text), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByLinkText(text), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -660,7 +707,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
-      return Element.constructElement(remote.findElementByPartialLinkText(text), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByPartialLinkText(text), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -673,7 +722,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByLinkText(text), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByLinkText(text);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -686,7 +739,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
-      return Element.constructList(remote.findElementsByPartialLinkText(text), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByPartialLinkText(text);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -699,7 +756,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
-      return Element.constructElement(remote.findElementByClassName(cssClass), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByClassName(cssClass), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -712,7 +771,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
-      return Element.constructList(remote.findElementsByClassName(cssClass), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByClassName(cssClass);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -725,7 +788,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByName(String name) {
     try {
-      return Element.constructElement(remote.findElementByName(name), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByName(name), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -738,7 +803,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByName(String name) {
     try {
-      return Element.constructList(remote.findElementsByName(name), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByName(name);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -751,7 +820,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByCssSelector(String expr) {
     try {
-      return Element.constructElement(remote.findElementByCssSelector(expr), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByCssSelector(expr), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -764,7 +835,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByCssSelector(String expr) {
     try {
-      return Element.constructList(remote.findElementsByCssSelector(expr), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByCssSelector(expr);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -777,7 +852,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
-      return Element.constructElement(remote.findElementByTagName(tagName), this);
+      synchronized (lock) {
+        return Element.constructElement(remote.findElementByTagName(tagName), this, lock);
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -790,7 +867,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
-      return Element.constructList(remote.findElementsByTagName(tagName), this);
+      List<ElementRemote> elements;
+      synchronized (lock) {
+        elements = remote.findElementsByTagName(tagName);
+      }
+      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -803,7 +884,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Object executeAsyncScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeAsyncScript(script, Element.scriptParams(args)), this);
+      Object result;
+      synchronized (lock) {
+        result = remote.executeAsyncScript(script, Element.scriptParams(args));
+      }
+      return Element.constructObject(result, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -816,7 +901,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Object executeScript(String script, Object... args) {
     try {
-      return Element.constructObject(remote.executeScript(script, Element.scriptParams(args)), this);
+      Object result;
+      synchronized (lock) {
+        result = remote.executeScript(script, Element.scriptParams(args));
+      }
+      return Element.constructObject(result, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -829,11 +918,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public org.openqa.selenium.interactions.Keyboard getKeyboard() {
     try {
-      KeyboardRemote keyboard = remote.getKeyboard();
-      if (keyboard == null) {
-        return null;
+      synchronized (lock) {
+        KeyboardRemote keyboard = remote.getKeyboard();
+        if (keyboard == null) {
+          return null;
+        }
+        return new Keyboard(keyboard, lock);
       }
-      return new Keyboard(keyboard);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -846,11 +937,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public org.openqa.selenium.interactions.Mouse getMouse() {
     try {
-      MouseRemote mouse = remote.getMouse();
-      if (mouse == null) {
-        return null;
+      synchronized (lock) {
+        MouseRemote mouse = remote.getMouse();
+        if (mouse == null) {
+          return null;
+        }
+        return new Mouse(mouse, lock);
       }
-      return new Mouse(mouse);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -863,7 +956,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Capabilities getCapabilities() {
     try {
-      return remote.getCapabilities();
+      synchronized (lock) {
+        return remote.getCapabilities();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -876,14 +971,18 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public void close() {
     try {
-      remote.close();
+      synchronized (lock) {
+        remote.close();
+      }
       Set<String> handles = getWindowHandles();
       if (handles == null || handles.isEmpty()) {
         quit();
       }
     } catch (Throwable t) {
       try {
-        remote.kill();
+        synchronized (lock) {
+          remote.kill();
+        }
       } catch (Throwable t2) {}
       endProcess();
     }
@@ -895,7 +994,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public String getWindowHandle() {
     try {
-      return remote.getWindowHandle();
+      synchronized (lock) {
+        return remote.getWindowHandle();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -908,7 +1009,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Set<String> getWindowHandles() {
     try {
-      return remote.getWindowHandles();
+      synchronized (lock) {
+        return remote.getWindowHandles();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -922,11 +1025,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public Options manage() {
     if (options.get() == null) {
       try {
-        OptionsRemote optionsRemote = remote.manage();
-        if (optionsRemote == null) {
-          return null;
+        synchronized (lock) {
+          OptionsRemote optionsRemote = remote.manage();
+          if (optionsRemote == null) {
+            return null;
+          }
+          return new com.machinepublishers.jbrowserdriver.Options(optionsRemote, logs, lock);
         }
-        return new com.machinepublishers.jbrowserdriver.Options(optionsRemote, logs);
       } catch (Throwable t) {
         Util.handleException(t);
         return null;
@@ -942,11 +1047,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public Navigation navigate() {
     try {
-      NavigationRemote navigation = remote.navigate();
-      if (navigation == null) {
-        return null;
+      synchronized (lock) {
+        NavigationRemote navigation = remote.navigate();
+        if (navigation == null) {
+          return null;
+        }
+        return new com.machinepublishers.jbrowserdriver.Navigation(navigation, lock);
       }
-      return new com.machinepublishers.jbrowserdriver.Navigation(navigation);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -971,7 +1078,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   private void saveData() {
     try {
-      OptionsRemote optionsRemote = remote.manage();
+      OptionsRemote optionsRemote;
+      synchronized (lock) {
+        optionsRemote = remote.manage();
+      }
       Set<Cookie> cookiesLocal = optionsRemote.getCookies();
       LogsRemote logsRemote = optionsRemote.logs();
       final LogEntries entries = logsRemote.getRemote(null).toLogEntries();
@@ -998,10 +1108,14 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public void quit() {
     saveData();
     try {
-      remote.quit();
+      synchronized (lock) {
+        remote.quit();
+      }
     } catch (Throwable t) {
       try {
-        remote.kill();
+        synchronized (lock) {
+          remote.kill();
+        }
       } catch (Throwable t2) {}
     }
     endProcess();
@@ -1013,11 +1127,13 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public TargetLocator switchTo() {
     try {
-      TargetLocatorRemote locator = remote.switchTo();
-      if (locator == null) {
-        return null;
+      synchronized (lock) {
+        TargetLocatorRemote locator = remote.switchTo();
+        if (locator == null) {
+          return null;
+        }
+        return new com.machinepublishers.jbrowserdriver.TargetLocator(locator, this, lock);
       }
-      return new com.machinepublishers.jbrowserdriver.TargetLocator(locator, this);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -1031,7 +1147,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public void kill() {
     saveData();
     try {
-      remote.kill();
+      synchronized (lock) {
+        remote.kill();
+      }
     } catch (Throwable t) {}
     endProcess();
   }
@@ -1042,7 +1160,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     try {
-      byte[] bytes = remote.getScreenshot();
+      byte[] bytes;
+      synchronized (lock) {
+        bytes = remote.getScreenshot();
+      }
       if (bytes == null) {
         return null;
       }
@@ -1058,7 +1179,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public File cacheDir() {
     try {
-      return remote.cacheDir();
+      synchronized (lock) {
+        return remote.cacheDir();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -1070,7 +1193,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public File attachmentsDir() {
     try {
-      return remote.attachmentsDir();
+      synchronized (lock) {
+        return remote.attachmentsDir();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -1082,7 +1207,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public File mediaDir() {
     try {
-      return remote.mediaDir();
+      synchronized (lock) {
+        return remote.mediaDir();
+      }
     } catch (Throwable t) {
       Util.handleException(t);
       return null;

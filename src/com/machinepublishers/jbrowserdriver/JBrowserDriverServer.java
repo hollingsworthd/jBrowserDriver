@@ -73,6 +73,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * RMI entry point.
    */
   public static void main(String[] args) {
+    System.setProperty("sun.rmi.dgc.server.gcInterval", Long.toString(Long.MAX_VALUE));
     CookieManager.setDefault(new CookieStore());
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
@@ -109,7 +110,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         if (parentPort.get() <= 0) {
           parentPort.set(findPort(host));
         }
-        socketFactory.set(new SocketFactory(host, parentPort.get(), childPort.get()));
+        socketFactory.set(new SocketFactory(host, parentPort.get(), childPort.get(), new SocketLock()));
         registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
         registryTmp.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
         break;

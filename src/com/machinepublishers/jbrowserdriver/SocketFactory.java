@@ -27,16 +27,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
-import java.util.concurrent.atomic.AtomicReference;
 
 class SocketFactory extends RMISocketFactory implements Serializable {
   private final InetAddress host;
   private final int parentPort;
   private final int childPort;
-  private final transient AtomicReference<ServerSocket> serverSocket = new AtomicReference<ServerSocket>();
-  private final transient AtomicReference<Socket> clientSocket = new AtomicReference<Socket>();
+  private transient Socket clientSocket = new Socket();
+  private final SocketLock lock;
 
-  SocketFactory(String host, int parentPort, int childPort) {
+  SocketFactory(String host, int parentPort, int childPort, SocketLock lock) {
     InetAddress hostTmp = null;
     try {
       hostTmp = InetAddress.getByName(host);
@@ -46,15 +45,11 @@ class SocketFactory extends RMISocketFactory implements Serializable {
     this.host = hostTmp;
     this.parentPort = parentPort;
     this.childPort = childPort;
+    this.lock = lock;
   }
 
   @Override
   public ServerSocket createServerSocket(int p) throws IOException {
-    serverSocket.compareAndSet(null, newServerSocket());
-    return serverSocket.get();
-  }
-
-  private ServerSocket newServerSocket() throws IOException {
     ServerSocket serverSocket = new ServerSocket();
     serverSocket.setReuseAddress(true);
     serverSocket.bind(new InetSocketAddress(host, childPort), Integer.MAX_VALUE);
@@ -63,17 +58,32 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public Socket createSocket(String h, int p) throws IOException {
-    clientSocket.compareAndSet(null, newClientSocket());
-    return clientSocket.get();
-  }
-
-  private Socket newClientSocket() throws IOException {
-    Socket clientSocket = new Socket();
-    clientSocket.setReuseAddress(true);
-    clientSocket.setTcpNoDelay(true);
-    clientSocket.bind(new InetSocketAddress(host, parentPort));
-    clientSocket.connect(new InetSocketAddress(host, childPort));
-    return clientSocket;
+    synchronized (lock) {
+      final int retries = 5;
+      for (int i = 1; i <= retries; i++) {
+        Socket prevClientSocket = clientSocket;
+        try {
+          clientSocket = new Socket();
+          clientSocket.setReuseAddress(true);
+          clientSocket.setTcpNoDelay(true);
+          clientSocket.setKeepAlive(true);
+          //TODO for binding, require parent port and daemon port for each process
+          clientSocket.bind(new InetSocketAddress(host, parentPort));
+          clientSocket.connect(new InetSocketAddress(host, childPort));
+          return clientSocket;
+        } catch (IOException e) {
+          if (i == retries) {
+            throw e;
+          }
+          try {
+            Thread.sleep(50);
+          } catch (InterruptedException e2) {}
+          prevClientSocket.close();
+          clientSocket.close();
+        }
+      }
+    }
+    throw new IOException();
   }
 
   @Override
