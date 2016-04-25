@@ -20,7 +20,7 @@ Or install via Maven:
 ```
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.11.0|jar).
 
-#### Pre-requisites
+#### Prerequisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
 
 Currently only Java is supported (Scala, Groovy, etc might have compatibility issues--pull requests or paid support could help address this gap). As a workaround for non-Java tech stacks, Selenium Server is recommended.
