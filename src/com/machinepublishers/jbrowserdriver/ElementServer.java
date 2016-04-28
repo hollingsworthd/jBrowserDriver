@@ -759,8 +759,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             List<ElementServer> elements = new ArrayList<ElementServer>();
             List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
             for (ElementServer cur : nodes) {
-              if ((partial && cur.getText().contains(text))
-                  || (!partial && cur.getText().equals(text))) {
+              String curText = cur.getText();
+              if (curText == null) {
+                continue;
+              }
+              if ((partial && curText.contains(text))
+                  || (!partial && curText.equals(text))) {
                 elements.add(cur);
                 if (!multiple) {
                   break;
