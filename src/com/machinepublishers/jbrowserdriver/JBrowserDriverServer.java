@@ -64,7 +64,6 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
     TakesScreenshot, Killable {
-  private static final AtomicInteger parentPort = new AtomicInteger();
   private static final AtomicInteger childPort = new AtomicInteger();
   private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
   private static Registry registry;
@@ -73,7 +72,6 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * RMI entry point.
    */
   public static void main(String[] args) {
-    System.setProperty("sun.rmi.dgc.server.gcInterval", Long.toString(Long.MAX_VALUE));
     CookieManager.setDefault(new CookieStore());
     try {
       URL.setURLStreamHandlerFactory(new StreamHandler());
@@ -98,8 +96,9 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
       }
     }
     final String host = System.getProperty("java.rmi.server.hostname");
-    parentPort.set(Integer.parseInt(args[0]));
-    childPort.set(Integer.parseInt(args[1]));
+    childPort.set((int) Long.parseLong(args[0]));
+    long parentPort = Long.parseLong(args[1]);
+    long parentAltPort = Long.parseLong(args[2]);
     Registry registryTmp = null;
     final int maxTries = 5;
     for (int i = 1; i <= maxTries; i++) {
@@ -107,10 +106,14 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         if (childPort.get() <= 0) {
           childPort.set(findPort(host));
         }
-        if (parentPort.get() <= 0) {
-          parentPort.set(findPort(host));
+        if (parentPort <= 0) {
+          parentPort = findPort(host);
         }
-        socketFactory.set(new SocketFactory(host, parentPort.get(), childPort.get(), new SocketLock()));
+        if (parentAltPort <= 0) {
+          parentAltPort = findPort(host);
+        }
+        socketFactory.set(new SocketFactory(host,
+            new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
         registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
         registryTmp.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
         break;
@@ -127,8 +130,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     } catch (IOException e) {
       Util.handleException(e);
     }
-    System.out.println("parent on port " + parentPort.get());
-    System.out.println("child on port " + childPort.get());
+    System.out.println("ready on ports " + childPort.get() + "/" + parentPort + "/" + parentAltPort);
   }
 
   private static int findPort(String host) throws IOException {
@@ -156,13 +158,13 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   public JBrowserDriverServer() throws RemoteException {}
 
   @Override
-  public synchronized void setUp(final Settings settings) {
+  public void setUp(final Settings settings) {
     SettingsManager.register(settings);
     context.set(new Context());
   }
 
   @Override
-  public synchronized void storeCapabilities(final Capabilities capabilities) {
+  public void storeCapabilities(final Capabilities capabilities) {
     context.get().capabilities.set(capabilities);
   }
 
@@ -170,7 +172,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * Optionally call this method if you want JavaFX initialized and the browser
    * window opened immediately. Otherwise, initialization will happen lazily.
    */
-  public synchronized void init() {
+  public void init() {
     context.get().init(this);
   }
 
@@ -181,7 +183,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * @param settings
    *          New settings to take effect, superseding the original ones
    */
-  public synchronized void reset(final Settings settings) {
+  public void reset(final Settings settings) {
     AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -201,7 +203,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * Reset the state of the browser. More efficient than quitting the
    * browser and creating a new instance.
    */
-  public synchronized void reset() {
+  public void reset() {
     reset(SettingsManager.settings());
   }
 
@@ -209,7 +211,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized String getPageSource() {
+  public String getPageSource() {
     init();
     WebElement element = ElementServer.create(context.get()).findElementByTagName("html");
     if (element != null) {
@@ -230,7 +232,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized String getCurrentUrl() {
+  public String getCurrentUrl() {
     init();
     return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
@@ -243,16 +245,16 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void pageWait() {
+  public void pageWait() {
     context.get().item().httpListener.get().resetStatusCode();
     getStatusCode();
   }
 
-  public synchronized int getStatusCode() {
+  public int getStatusCode() {
     return getStatusCode(context.get().timeouts.get().getPageLoadTimeoutMS());
   }
 
-  private synchronized int getStatusCode(long waitMS) {
+  private int getStatusCode(long waitMS) {
     init();
     try {
       synchronized (context.get().statusCode) {
@@ -270,7 +272,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized String getTitle() {
+  public String getTitle() {
     init();
     return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
       public String perform() {
@@ -283,7 +285,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void get(final String url) {
+  public void get(final String url) {
     init();
     long start = System.currentTimeMillis();
     try {
@@ -323,7 +325,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElement(By by) {
+  public ElementServer findElement(By by) {
     init();
     return ElementServer.create(context.get()).findElement(by);
   }
@@ -332,7 +334,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElements(By by) {
+  public List findElements(By by) {
     init();
     return ElementServer.create(context.get()).findElements(by);
   }
@@ -341,7 +343,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementById(String id) {
+  public ElementServer findElementById(String id) {
     init();
     return ElementServer.create(context.get()).findElementById(id);
   }
@@ -350,7 +352,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsById(String id) {
+  public List findElementsById(String id) {
     init();
     return ElementServer.create(context.get()).findElementsById(id);
   }
@@ -359,7 +361,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByXPath(String expr) {
+  public ElementServer findElementByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByXPath(expr);
   }
@@ -368,7 +370,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByXPath(String expr) {
+  public List findElementsByXPath(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByXPath(expr);
   }
@@ -386,7 +388,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByPartialLinkText(String text) {
+  public ElementServer findElementByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementByPartialLinkText(text);
   }
@@ -395,7 +397,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByLinkText(String text) {
+  public List findElementsByLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByLinkText(text);
   }
@@ -404,7 +406,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByPartialLinkText(String text) {
+  public List findElementsByPartialLinkText(String text) {
     init();
     return ElementServer.create(context.get()).findElementsByPartialLinkText(text);
   }
@@ -413,7 +415,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByClassName(String cssClass) {
+  public ElementServer findElementByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementByClassName(cssClass);
   }
@@ -422,7 +424,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByClassName(String cssClass) {
+  public List findElementsByClassName(String cssClass) {
     init();
     return ElementServer.create(context.get()).findElementsByClassName(cssClass);
   }
@@ -431,7 +433,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByName(String name) {
+  public ElementServer findElementByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementByName(name);
   }
@@ -440,7 +442,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByName(String name) {
+  public List findElementsByName(String name) {
     init();
     return ElementServer.create(context.get()).findElementsByName(name);
   }
@@ -449,7 +451,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByCssSelector(String expr) {
+  public ElementServer findElementByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementByCssSelector(expr);
   }
@@ -458,7 +460,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByCssSelector(String expr) {
+  public List findElementsByCssSelector(String expr) {
     init();
     return ElementServer.create(context.get()).findElementsByCssSelector(expr);
   }
@@ -467,7 +469,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized ElementServer findElementByTagName(String tagName) {
+  public ElementServer findElementByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementByTagName(tagName);
   }
@@ -476,7 +478,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized List findElementsByTagName(String tagName) {
+  public List findElementsByTagName(String tagName) {
     init();
     return ElementServer.create(context.get()).findElementsByTagName(tagName);
   }
@@ -485,7 +487,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized Object executeAsyncScript(String script, Object... args) {
+  public Object executeAsyncScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeAsyncScript(script, args);
   }
@@ -494,7 +496,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized Object executeScript(String script, Object... args) {
+  public Object executeScript(String script, Object... args) {
     init();
     return ElementServer.create(context.get()).executeScript(script, args);
   }
@@ -503,7 +505,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized KeyboardServer getKeyboard() {
+  public KeyboardServer getKeyboard() {
     init();
     return context.get().keyboard.get();
   }
@@ -512,7 +514,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized MouseServer getMouse() {
+  public MouseServer getMouse() {
     init();
     return context.get().mouse.get();
   }
@@ -521,7 +523,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized Capabilities getCapabilities() {
+  public Capabilities getCapabilities() {
     init();
     return context.get().capabilities.get();
   }
@@ -530,7 +532,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void close() {
+  public void close() {
     init();
     context.get().removeItem();
   }
@@ -539,7 +541,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized String getWindowHandle() {
+  public String getWindowHandle() {
     init();
     return context.get().itemId();
   }
@@ -548,7 +550,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized Set<String> getWindowHandles() {
+  public Set<String> getWindowHandles() {
     init();
     return context.get().itemIds();
   }
@@ -557,7 +559,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized OptionsServer manage() {
+  public OptionsServer manage() {
     init();
     return context.get().options.get();
   }
@@ -566,7 +568,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized LogsServer logs() {
+  public LogsServer logs() {
     return LogsServer.instance();
   }
 
@@ -574,7 +576,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized NavigationServer navigate() {
+  public NavigationServer navigate() {
     init();
     return context.get().navigation.get();
   }
@@ -583,7 +585,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void quit() {
+  public void quit() {
     getStatusCode();
     kill();
   }
@@ -592,7 +594,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized TargetLocatorServer switchTo() {
+  public TargetLocatorServer switchTo() {
     init();
     return context.get().targetLocator.get();
   }
@@ -601,7 +603,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized void kill() {
+  public void kill() {
     final ContextItem item = context.get().item();
     if (item != null) {
       item.engine.get().getLoadWorker().cancel();
@@ -615,7 +617,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
+  public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     return outputType.convertFromPngBytes(getScreenshot());
   }
 
@@ -623,7 +625,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized byte[] getScreenshot() throws WebDriverException {
+  public byte[] getScreenshot() throws WebDriverException {
     init();
     return context.get().robot.get().screenshot();
   }
@@ -632,7 +634,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized File cacheDir() {
+  public File cacheDir() {
     return StreamConnection.cacheDir();
   }
 
@@ -640,7 +642,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized File attachmentsDir() {
+  public File attachmentsDir() {
     return StreamConnection.attachmentsDir();
   }
 
@@ -648,7 +650,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public synchronized File mediaDir() {
+  public File mediaDir() {
     return StreamConnection.mediaDir();
   }
 }

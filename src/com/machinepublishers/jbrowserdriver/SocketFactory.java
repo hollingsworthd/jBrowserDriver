@@ -27,15 +27,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
+import java.util.concurrent.atomic.AtomicReference;
 
 class SocketFactory extends RMISocketFactory implements Serializable {
+  private static final String apiPackage = Util.class.getPackage().getName() + ".";
   private final InetAddress host;
-  private final int parentPort;
   private final int childPort;
-  private transient Socket clientSocket = new Socket();
+  private final int parentPort;
+  private final int parentAltPort;
   private final SocketLock lock;
+  private transient final AtomicReference<Socket> clientSocket = new AtomicReference<Socket>(new Socket());
+  private transient final AtomicReference<Socket> clientAltSocket = new AtomicReference<Socket>(new Socket());
 
-  SocketFactory(String host, int parentPort, int childPort, SocketLock lock) {
+  SocketFactory(String host, PortGroup ports, SocketLock lock) {
     InetAddress hostTmp = null;
     try {
       hostTmp = InetAddress.getByName(host);
@@ -43,8 +47,9 @@ class SocketFactory extends RMISocketFactory implements Serializable {
       Util.handleException(e);
     }
     this.host = hostTmp;
-    this.parentPort = parentPort;
-    this.childPort = childPort;
+    this.childPort = (int) ports.child;
+    this.parentPort = (int) ports.parent;
+    this.parentAltPort = (int) ports.parentAlt;
     this.lock = lock;
   }
 
@@ -58,32 +63,52 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public Socket createSocket(String h, int p) throws IOException {
-    synchronized (lock) {
-      final int retries = 5;
-      for (int i = 1; i <= retries; i++) {
-        Socket prevClientSocket = clientSocket;
-        try {
-          clientSocket = new Socket();
-          clientSocket.setReuseAddress(true);
-          clientSocket.setTcpNoDelay(true);
-          clientSocket.setKeepAlive(true);
-          //TODO for binding, require parent port and daemon port for each process
-          clientSocket.bind(new InetSocketAddress(host, parentPort));
-          clientSocket.connect(new InetSocketAddress(host, childPort));
-          return clientSocket;
-        } catch (IOException e) {
-          if (i == retries) {
-            throw e;
-          }
-          try {
-            Thread.sleep(50);
-          } catch (InterruptedException e2) {}
-          prevClientSocket.close();
-          clientSocket.close();
-        }
+    if (Thread.holdsLock(lock) || isDriverApi(new Throwable().getStackTrace())) {
+      return createSocket(clientSocket, parentPort, childPort, true);
+    }
+    return createSocket(clientAltSocket, parentAltPort, childPort, false);
+  }
+
+  private static boolean isDriverApi(StackTraceElement[] elements) {
+    for (int i = 1; i < elements.length; i++) {
+      if (elements[i].getClassName().startsWith(apiPackage)) {
+        return true;
       }
     }
-    throw new IOException();
+    return false;
+  }
+
+  private Socket createSocket(AtomicReference<Socket> socket,
+      int localPort, int foreignPort, boolean closePrevious) throws IOException {
+    synchronized (Object.class) {
+      final int retries = 15;
+      for (int i = 1, sleep = 2; i <= retries; i++, sleep *= 2) {
+        try {
+          if (closePrevious) {
+            Util.close(socket.get());
+          }
+          socket.set(new Socket());
+          socket.get().setReuseAddress(true);
+          socket.get().setTcpNoDelay(true);
+          socket.get().setKeepAlive(true);
+          socket.get().bind(new InetSocketAddress(host, localPort));
+          socket.get().connect(new InetSocketAddress(host, foreignPort));
+          return socket.get();
+        } catch (IOException e) {
+          try {
+            if (i == retries) {
+              throw e;
+            }
+            try {
+              Thread.sleep(sleep);
+            } catch (InterruptedException e2) {}
+          } finally {
+            Util.close(socket.get());
+          }
+        }
+      }
+      throw new IOException();
+    }
   }
 
   @Override
