@@ -104,7 +104,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final Set<PortGroup> portGroupsUsed = new LinkedHashSet<PortGroup>();
   private static final List<String> args;
   private static final List<Object> waiting = new ArrayList<Object>();
-  private static int curWaiting;
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
           "Warning: Single GUI Threadiong is enabled, FPS should be slower"
@@ -243,28 +242,33 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       waiting.add(key);
       while (true) {
         boolean ready = false;
-        curWaiting = curWaiting >= waiting.size() ? 0 : curWaiting;
-        if (key.equals(waiting.get(curWaiting)) && !portGroupsAvailable.isEmpty()) {
+        if (key.equals(waiting.get(0)) && !portGroupsAvailable.isEmpty()) {
           for (PortGroup curPortGroup : settings.portGroups()) {
             if (portGroupsAvailable.contains(curPortGroup)) {
-              configuredPortGroup.set(curPortGroup);
-              ready = true;
-              break;
+              boolean conflicts = false;
+              for (PortGroup curUsed : portGroupsUsed) {
+                if (curUsed.conflicts(curPortGroup)) {
+                  conflicts = true;
+                  break;
+                }
+              }
+              if (!conflicts) {
+                configuredPortGroup.set(curPortGroup);
+                ready = true;
+                break;
+              }
             }
           }
           if (ready) {
-            curWaiting = 0;
             break;
-          } else {
-            ++curWaiting;
-            portGroupsAvailable.notifyAll();
           }
+          portGroupsAvailable.notifyAll();
         }
         try {
           portGroupsAvailable.wait();
         } catch (InterruptedException e) {}
       }
-      waiting.remove(key);
+      waiting.remove(0);
       portGroupsAvailable.remove(configuredPortGroup.get());
       portGroupsUsed.add(configuredPortGroup.get());
     }

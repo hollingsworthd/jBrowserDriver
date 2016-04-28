@@ -20,6 +20,8 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 class PortGroup implements Serializable {
   static final int SIZE = 3;
@@ -45,5 +47,18 @@ class PortGroup implements Serializable {
   @Override
   public boolean equals(Object obj) {
     return obj instanceof PortGroup && ((PortGroup) obj).id.equals(id);
+  }
+
+  boolean conflicts(PortGroup other) {
+    Set<Long> allPorts = new HashSet<Long>();
+    if (other != null) {
+      allPorts.add(other.child);
+      allPorts.add(other.parent);
+      allPorts.add(other.parentAlt);
+      allPorts.add(child);
+      allPorts.add(parent);
+      allPorts.add(parentAlt);
+    }
+    return allPorts.size() != SIZE * 2;
   }
 }
