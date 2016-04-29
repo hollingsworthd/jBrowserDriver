@@ -98,55 +98,33 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
       parentPort = parentPort < 0 ? 0 : parentPort;
       long parentAltPort = Long.parseLong(args[2]);
       parentAltPort = parentAltPort < 0 ? 0 : parentAltPort;
-      if (childPort.get() <= 0) {
-        childPort.set((Integer) attempt(new Operation() {
-          @Override
-          public Object run() throws Exception {
-            return findPort(host);
+      Registry registryTmp = null;
+      final int maxTries = 5;
+      for (int i = 1; i <= maxTries; i++) {
+        try {
+          if (childPort.get() <= 0) {
+            childPort.set(findPort(host));
           }
-        }));
+          socketFactory.set(new SocketFactory(host,
+              new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
+
+          registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
+          break;
+        } catch (Throwable t) {
+          if (i == maxTries) {
+            Util.handleException(t);
+          }
+        }
       }
-      socketFactory.set(new SocketFactory(host,
-          new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
-      registry = (Registry) attempt(new Operation() {
-        @Override
-        public Object run() throws Exception {
-          return LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
-        }
-      });
-      final JBrowserDriverServer instance = new JBrowserDriverServer();
-      attempt(new Operation() {
-        @Override
-        public Object run() throws Exception {
-          registry.rebind("JBrowserDriverRemote", instance);
-          return null;
-        }
-      });
+      registry = registryTmp;
+      registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
+
       RMISocketFactory.setSocketFactory(socketFactory.get());
       System.out.println("ready on ports " + childPort.get() + "/" + parentPort + "/" + parentAltPort);
     } catch (Throwable t) {
       t.printStackTrace();
       System.exit(1);
     }
-  }
-
-  private static interface Operation {
-    Object run() throws Exception;
-  }
-
-  private static Object attempt(Operation operation) {
-    final int maxTries = 5;
-    for (int i = 1; i <= maxTries; i++) {
-      try {
-        return operation.run();
-      } catch (Throwable t) {
-        if (i == maxTries) {
-          Util.handleException(t);
-        }
-      }
-    }
-    Util.handleException(new IllegalStateException());
-    return null;
   }
 
   private static int findPort(String host) throws IOException {
