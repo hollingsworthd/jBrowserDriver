@@ -19,14 +19,9 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
@@ -1237,17 +1231,18 @@ public class Settings implements Serializable {
     }
   }
 
-  private static void set(DesiredCapabilities capabilities, PropertyName name, ResponseInterceptor[] val) {
-    if (val != null && val.length > 0) {
-      ByteArrayOutputStream streamOut = new ByteArrayOutputStream();
-      try (ObjectOutputStream objectOut = new ObjectOutputStream(streamOut)) {
-        objectOut.writeObject(val);
-      } catch (Throwable t) {
-        Util.handleException(t);
-      }
-      capabilities.setCapability(name.propertyName, Base64.getEncoder().encodeToString(streamOut.toByteArray()));
-    }
-  }
+  //TODO
+  //  private static void set(DesiredCapabilities capabilities, PropertyName name, ResponseInterceptor[] val) {
+  //    if (val != null && val.length > 0) {
+  //      ByteArrayOutputStream streamOut = new ByteArrayOutputStream();
+  //      try (ObjectOutputStream objectOut = new ObjectOutputStream(streamOut)) {
+  //        objectOut.writeObject(val);
+  //      } catch (Throwable t) {
+  //        Util.handleException(t);
+  //      }
+  //      capabilities.setCapability(name.propertyName, Base64.getEncoder().encodeToString(streamOut.toByteArray()));
+  //    }
+  //  }
 
   private static int parse(Map capabilities, PropertyName name, int fallback) {
     if (capabilities.get(name.propertyName) != null) {
@@ -1287,18 +1282,19 @@ public class Settings implements Serializable {
     return fallback;
   }
 
-  private static ResponseInterceptor[] parse(Map capabilities, PropertyName name, ResponseInterceptor[] fallback) {
-    if (capabilities.get(name.propertyName) != null) {
-      BufferedInputStream bufferIn = new BufferedInputStream(new ByteArrayInputStream(
-          Base64.getDecoder().decode(capabilities.get(name.propertyName).toString())));
-      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
-        return (ResponseInterceptor[]) objectIn.readObject();
-      } catch (Throwable t) {
-        Util.handleException(t);
-      }
-    }
-    return fallback;
-  }
+  //TODO
+  //  private static ResponseInterceptor[] parse(Map capabilities, PropertyName name, ResponseInterceptor[] fallback) {
+  //    if (capabilities.get(name.propertyName) != null) {
+  //      BufferedInputStream bufferIn = new BufferedInputStream(new ByteArrayInputStream(
+  //          Base64.getDecoder().decode(capabilities.get(name.propertyName).toString())));
+  //      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
+  //        return (ResponseInterceptor[]) objectIn.readObject();
+  //      } catch (Throwable t) {
+  //        Util.handleException(t);
+  //      }
+  //    }
+  //    return fallback;
+  //  }
 
   private static long curAnonPort;
   private static final Object curAnonPortLock = new Object();

@@ -66,6 +66,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     TakesScreenshot, Killable {
   private static final AtomicInteger childPort = new AtomicInteger();
   private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
+  @SuppressWarnings("unused") //keep reference to prevent garbage collection
   private static Registry registry;
 
   /*

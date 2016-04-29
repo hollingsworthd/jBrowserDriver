@@ -20,6 +20,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 //TODO
-//interface InterceptRemote extends Remote {
-//  void intercept() throws RemoteException;
-//}
+interface InterceptRemote /* extends Remote */ {
+  //  void intercept() throws RemoteException;
+}

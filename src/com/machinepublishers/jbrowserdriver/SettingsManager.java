@@ -90,6 +90,7 @@ class SettingsManager {
     }
   }
 
+  @SuppressWarnings("deprecation") //App class is for internal use only; it's not actually deprecated
   static void register(
       final AtomicReference<Stage> stage,
       final AtomicReference<WebView> view) {
