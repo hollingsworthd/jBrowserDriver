@@ -66,72 +66,87 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     TakesScreenshot, Killable {
   private static final AtomicInteger childPort = new AtomicInteger();
   private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
-  @SuppressWarnings("unused") //keep reference to prevent garbage collection
   private static Registry registry;
 
   /*
    * RMI entry point.
    */
   public static void main(String[] args) {
-    CookieManager.setDefault(new CookieStore());
     try {
-      URL.setURLStreamHandlerFactory(new StreamHandler());
-    } catch (Throwable t) {
-      Field factory = null;
+      CookieManager.setDefault(new CookieStore());
       try {
-        factory = URL.class.getDeclaredField("factory");
-        factory.setAccessible(true);
-        Object curFac = factory.get(null);
-
-        //assume we're in the Eclipse jar-in-jar loader
-        Field chainedFactory = curFac.getClass().getDeclaredField("chainFac");
-        chainedFactory.setAccessible(true);
-        chainedFactory.set(curFac, new StreamHandler());
-      } catch (Throwable t2) {
+        URL.setURLStreamHandlerFactory(new StreamHandler());
+      } catch (Throwable t) {
+        Field factory = null;
         try {
+          factory = URL.class.getDeclaredField("factory");
+          factory.setAccessible(true);
+          Object curFac = factory.get(null);
+
+          //assume we're in the Eclipse jar-in-jar loader
+          Field chainedFactory = curFac.getClass().getDeclaredField("chainFac");
+          chainedFactory.setAccessible(true);
+          chainedFactory.set(curFac, new StreamHandler());
+        } catch (Throwable t2) {
           //this should work regardless
           factory.set(null, new StreamHandler());
-        } catch (Throwable t3) {
-          Util.handleException(t3);
         }
       }
+      final String host = System.getProperty("java.rmi.server.hostname");
+      childPort.set((int) Long.parseLong(args[0]));
+      long parentPort = Long.parseLong(args[1]);
+      parentPort = parentPort < 0 ? 0 : parentPort;
+      long parentAltPort = Long.parseLong(args[2]);
+      parentAltPort = parentAltPort < 0 ? 0 : parentAltPort;
+      if (childPort.get() <= 0) {
+        childPort.set((Integer) attempt(new Operation() {
+          @Override
+          public Object run() throws Exception {
+            return findPort(host);
+          }
+        }));
+      }
+      socketFactory.set(new SocketFactory(host,
+          new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
+      registry = (Registry) attempt(new Operation() {
+        @Override
+        public Object run() throws Exception {
+          return LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
+        }
+      });
+      final JBrowserDriverServer instance = new JBrowserDriverServer();
+      attempt(new Operation() {
+        @Override
+        public Object run() throws Exception {
+          registry.rebind("JBrowserDriverRemote", instance);
+          return null;
+        }
+      });
+      RMISocketFactory.setSocketFactory(socketFactory.get());
+      System.out.println("ready on ports " + childPort.get() + "/" + parentPort + "/" + parentAltPort);
+    } catch (Throwable t) {
+      t.printStackTrace();
+      System.exit(1);
     }
-    final String host = System.getProperty("java.rmi.server.hostname");
-    childPort.set((int) Long.parseLong(args[0]));
-    long parentPort = Long.parseLong(args[1]);
-    long parentAltPort = Long.parseLong(args[2]);
-    Registry registryTmp = null;
+  }
+
+  private static interface Operation {
+    Object run() throws Exception;
+  }
+
+  private static Object attempt(Operation operation) {
     final int maxTries = 5;
     for (int i = 1; i <= maxTries; i++) {
       try {
-        if (childPort.get() <= 0) {
-          childPort.set(findPort(host));
-        }
-        if (parentPort <= 0) {
-          parentPort = findPort(host);
-        }
-        if (parentAltPort <= 0) {
-          parentAltPort = findPort(host);
-        }
-        socketFactory.set(new SocketFactory(host,
-            new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
-        registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
-        registryTmp.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
-        break;
+        return operation.run();
       } catch (Throwable t) {
         if (i == maxTries) {
           Util.handleException(t);
         }
       }
     }
-
-    registry = registryTmp;
-    try {
-      RMISocketFactory.setSocketFactory(socketFactory.get());
-    } catch (IOException e) {
-      Util.handleException(e);
-    }
-    System.out.println("ready on ports " + childPort.get() + "/" + parentPort + "/" + parentAltPort);
+    Util.handleException(new IllegalStateException());
+    return null;
   }
 
   private static int findPort(String host) throws IOException {
