@@ -379,9 +379,9 @@ class Robot {
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
           if (converted != null) {
-            for (int i = converted.length - 1; i > -1; i--) {
-              if (converted[i] != -1) {
-                robot.get().keyRelease(converted[i]);
+            for (int j = converted.length - 1; j > -1; j--) {
+              if (converted[j] != -1) {
+                robot.get().keyRelease(converted[j]);
               }
             }
           }
