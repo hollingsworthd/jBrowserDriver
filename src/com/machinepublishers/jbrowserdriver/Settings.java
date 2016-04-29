@@ -1407,7 +1407,18 @@ public class Settings implements Serializable {
       }
     } else if (properties.get(PropertyName.PORTS.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.ports property is deprecated and will be removed in v2.0.0. Refer to Settings.Builder.processes(..) API documentation.");
-      portRangesTmp = properties.get(PropertyName.PORTS.propertyName).toString();
+      String portString = properties.get(PropertyName.PORTS.propertyName).toString();
+      Collection<Long> ports = new LinkedHashSet<Long>();
+      String[] ranges = portString.split(",");
+      for (int i = 0; i < ranges.length; i++) {
+        String[] bounds = ranges[i].split("-");
+        long low = Long.parseLong(bounds[0]);
+        long high = bounds.length > 1 ? Long.parseLong(bounds[1]) : low;
+        for (long j = low; j <= high; j++) {
+          ports.add(j);
+        }
+      }
+      processesTmp = ports.size();
     } else if (properties.get(PropertyName.PORT_RANGES.propertyName) != null) {
       portRangesTmp = properties.get(PropertyName.PORT_RANGES.propertyName).toString();
     } else {
