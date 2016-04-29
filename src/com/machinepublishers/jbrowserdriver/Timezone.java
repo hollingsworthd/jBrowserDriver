@@ -167,11 +167,11 @@ public class Timezone {
   static {
     Map<String, Timezone> zonesByNameTmp = new HashMap<String, Timezone>();
     Field[] fields = Timezone.class.getDeclaredFields();
-    for (int i = 0; i < fields.length; i++) {
+    for (Field field : fields) {
       try {
-        Object obj = fields[i].get(null);
+        Object obj = field.get(null);
         if (obj instanceof Timezone) {
-          Timezone cur = (Timezone) fields[i].get(null);
+          Timezone cur = (Timezone) field.get(null);
           zonesByNameTmp.put(cur.timeZoneName, cur);
         }
       } catch (Throwable t) {}
