@@ -402,7 +402,7 @@ public class Timezone {
     boolean foundStart = false;
     boolean foundEnd = false;
     final int[][] span = new int[2][4];
-    final int[] pos = new int[] { 0, 1, 14, 15, 16, 29, 30, 31, 44, 45, 46, 59 };
+    final int[] pos = new int[] { 0, 30 };
     for (int month = 0; month < 12; month++) {
       for (int day = 1; day < 32; day++) {
         for (int hour = 0; hour < 24; hour++) {
