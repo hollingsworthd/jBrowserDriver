@@ -345,9 +345,9 @@ class Robot {
         @Override
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
-          for (int i = 0; converted != null && i < converted.length; i++) {
-            if (converted[i] != -1) {
-              robot.get().keyPress(converted[i]);
+          for (int j = 0; converted != null && j < converted.length; j++) {
+            if (converted[j] != -1) {
+              robot.get().keyPress(converted[j]);
             }
           }
           return null;
