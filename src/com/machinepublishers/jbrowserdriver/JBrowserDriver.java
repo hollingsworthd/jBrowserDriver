@@ -100,25 +100,14 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     }
     intercept = interceptTmp;
   }
-  private static final Set<PortGroup> portGroupsAvailable = new LinkedHashSet<PortGroup>();
-  private static final Set<PortGroup> portGroupsUsed = new LinkedHashSet<PortGroup>();
+  private static final Set<Job> waiting = new LinkedHashSet<Job>();
+  private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
   private static final List<String> args;
-  private static final List<Object> waiting = new ArrayList<Object>();
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
           "Warning: Single GUI Threadiong is enabled, FPS should be slower"
       })));
   private static final AtomicLong sessionIdCounter = new AtomicLong();
-  private final Object key = new Object();
-  private final JBrowserDriverRemote remote;
-  private final Logs logs;
-  private final AtomicReference<Process> process = new AtomicReference<Process>();
-  private final AtomicBoolean processEnded = new AtomicBoolean();
-  private final AtomicReference<PortGroup> configuredPortGroup = new AtomicReference<PortGroup>();
-  private final AtomicReference<PortGroup> actualPortGroup = new AtomicReference<PortGroup>();
-  private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
-  private final SessionId sessionId;
-  private final SocketLock lock = new SocketLock();
 
   static {
     Policy.init();
@@ -177,6 +166,50 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     args = Collections.unmodifiableList(argsTmp);
   }
 
+  static {
+    Thread work = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (waiting) {
+          while (true) {
+            List<Job> selectedJobs = new ArrayList<Job>();
+            for (Job job : waiting) {
+              for (PortGroup curPortGroup : job.settings.portGroups()) {
+                boolean conflicts = false;
+                for (PortGroup curUsed : portGroupsActive) {
+                  if (curUsed.conflicts(curPortGroup)) {
+                    conflicts = true;
+                    break;
+                  }
+                }
+                if (!conflicts) {
+                  job.portGroup.set(curPortGroup);
+                  break;
+                }
+              }
+              if (job.portGroup.get() != null) {
+                selectedJobs.add(job);
+                portGroupsActive.add(job.portGroup.get());
+              }
+            }
+            for (Job job : selectedJobs) {
+              waiting.remove(job);
+              synchronized (job) {
+                job.notifyAll();
+              }
+            }
+            try {
+              waiting.wait();
+            } catch (InterruptedException e) {}
+          }
+        }
+      }
+    });
+    work.setDaemon(true);
+    work.setName("JBrowserDriver queued instance handler");
+    work.start();
+  }
+
   /**
    * Run diagnostic tests.
    * 
@@ -186,6 +219,15 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     return Test.run();
   }
 
+  private final JBrowserDriverRemote remote;
+  private final Logs logs;
+  private final AtomicReference<Process> process = new AtomicReference<Process>();
+  private final AtomicBoolean processEnded = new AtomicBoolean();
+  private final AtomicReference<PortGroup> configuredPortGroup = new AtomicReference<PortGroup>();
+  private final AtomicReference<PortGroup> actualPortGroup = new AtomicReference<PortGroup>();
+  private final AtomicReference<OptionsLocal> options = new AtomicReference<OptionsLocal>();
+  private final SessionId sessionId;
+  private final SocketLock lock = new SocketLock();
   private final File tmpDir;
   private final FileRemover shutdownHook;
 
@@ -233,44 +275,17 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     this.shutdownHook = new FileRemover(tmpDir);
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-    synchronized (portGroupsAvailable) {
-      for (PortGroup curPortGroup : settings.portGroups()) {
-        if (!portGroupsAvailable.contains(curPortGroup) && !portGroupsUsed.contains(curPortGroup)) {
-          portGroupsAvailable.add(curPortGroup);
-        }
-      }
-      waiting.add(key);
-      while (true) {
-        boolean ready = false;
-        if (key.equals(waiting.get(0)) && !portGroupsAvailable.isEmpty()) {
-          for (PortGroup curPortGroup : settings.portGroups()) {
-            if (portGroupsAvailable.contains(curPortGroup)) {
-              boolean conflicts = false;
-              for (PortGroup curUsed : portGroupsUsed) {
-                if (curUsed.conflicts(curPortGroup)) {
-                  conflicts = true;
-                  break;
-                }
-              }
-              if (!conflicts) {
-                configuredPortGroup.set(curPortGroup);
-                ready = true;
-                break;
-              }
-            }
-          }
-          if (ready) {
-            break;
-          }
-          portGroupsAvailable.notifyAll();
-        }
+    final Job job = new Job(settings, configuredPortGroup);
+    synchronized (waiting) {
+      waiting.add(job);
+      waiting.notifyAll();
+    }
+    synchronized (job) {
+      while (configuredPortGroup.get() == null) {
         try {
-          portGroupsAvailable.wait();
+          job.wait();
         } catch (InterruptedException e) {}
       }
-      waiting.remove(0);
-      portGroupsAvailable.remove(configuredPortGroup.get());
-      portGroupsUsed.add(configuredPortGroup.get());
     }
     sessionId = new SessionId(launchProcess(settings.host(), configuredPortGroup.get(), settings.logger()));
     if (actualPortGroup.get() == null) {
@@ -1083,10 +1098,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           proc.destroyForcibly();
         }
       }
-      synchronized (portGroupsAvailable) {
-        portGroupsAvailable.add(configuredPortGroup.get());
-        portGroupsUsed.remove(configuredPortGroup.get());
-        portGroupsAvailable.notifyAll();
+      synchronized (waiting) {
+        portGroupsActive.remove(configuredPortGroup.get());
+        waiting.notifyAll();
       }
     }
   }
