@@ -20,14 +20,13 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 class PortGroup implements Serializable {
   static final int SIZE = 3;
   final long child;
   final long parent;
   final long parentAlt;
+  private final long[] ports;
   private final String id;
   private final int hashCode;
 
@@ -35,8 +34,9 @@ class PortGroup implements Serializable {
     this.child = child;
     this.parent = parent;
     this.parentAlt = parentAlt;
-    id = new StringBuilder().append(child).append("/").append(parent).append("/").append(parentAlt).toString();
-    hashCode = id.hashCode();
+    this.ports = new long[] { child, parent, parentAlt };
+    this.id = new StringBuilder().append(child).append("/").append(parent).append("/").append(parentAlt).toString();
+    this.hashCode = id.hashCode();
   }
 
   @Override
@@ -50,15 +50,15 @@ class PortGroup implements Serializable {
   }
 
   boolean conflicts(PortGroup other) {
-    Set<Long> allPorts = new HashSet<Long>();
     if (other != null) {
-      allPorts.add(other.child);
-      allPorts.add(other.parent);
-      allPorts.add(other.parentAlt);
-      allPorts.add(child);
-      allPorts.add(parent);
-      allPorts.add(parentAlt);
+      for (long thisPort : ports) {
+        for (long otherPort : other.ports) {
+          if (thisPort == otherPort) {
+            return true;
+          }
+        }
+      }
     }
-    return allPorts.size() != SIZE * 2;
+    return false;
   }
 }
