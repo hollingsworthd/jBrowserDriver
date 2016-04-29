@@ -470,6 +470,10 @@ public class Test {
     } finally {
       try {
         driver.quit();
+      } catch (Throwable t) {
+        outputError(toString(t));
+      }
+      try {
         HttpServer.stop();
       } catch (Throwable t) {
         outputError(toString(t));
