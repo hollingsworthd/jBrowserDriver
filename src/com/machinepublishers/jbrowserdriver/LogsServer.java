@@ -182,6 +182,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
     try {
       writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
+      message = writer.toString();
     } catch (Throwable t) {
       message = "While logging a message, an error occurred: " + t.getMessage();
     } finally {
