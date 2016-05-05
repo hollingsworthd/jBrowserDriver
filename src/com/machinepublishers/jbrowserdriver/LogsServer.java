@@ -78,8 +78,9 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.JbdWireLog");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
     } else {
-      System.clearProperty("org.apache.commons.logging.Log");
-      System.clearProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire");
+      System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "OFF");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "OFF");
     }
   }
 
