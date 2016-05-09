@@ -187,7 +187,7 @@ public class Settings implements Serializable {
     private boolean headless = true;
     private long ajaxWait = 150;
     private long ajaxResourceTimeout = 2000;
-    private boolean blockAds = true;
+    private boolean blockAds;
     private boolean quickRender = true;
     private int maxRouteConnections = 8;
     private int maxConnections = 300;
@@ -714,7 +714,7 @@ public class Settings implements Serializable {
      * <p>
      * Based on hosts in ad-hosts.txt in the source tree.
      * <p>
-     * Defaults to <code>true</code>.
+     * Defaults to <code>false</code>.
      * 
      * <p><ul>
      * <li>Java system property <code>jbd.blockads</code> overrides this setting.</li>
