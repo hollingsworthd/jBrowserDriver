@@ -73,7 +73,6 @@ class SettingsManager {
         System.setProperty("prism.order", "sw");
         System.setProperty("prism.allowhidpi", "false");
         System.setProperty("prism.text", "t2k");
-        System.setProperty("prism.maxvram", Long.toString(1024 * 1024 * 16));
         try {
           Class<?> platformFactory = Class.forName("com.sun.glass.ui.PlatformFactory");
           Field field = platformFactory.getDeclaredField("instance");
