@@ -20,8 +20,10 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,25 +34,37 @@ class StatusMonitor {
   private final Set<String> primaryDocuments = new HashSet<String>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
+  private final List<String> startedUrls = new ArrayList<String>();
   private boolean monitoring;
 
   static StatusMonitor instance() {
     return instance;
   }
 
+  private static String canonicalUrl(String url) {
+    if (url == null) {
+      return null;
+    }
+    int fragmentIndex = url.indexOf("#");
+    url = fragmentIndex > -1 ? url.substring(0, fragmentIndex) : url;
+    return url.endsWith("/") ? url : new StringBuilder().append(url).append("/").toString();
+  }
+
   boolean isPrimaryDocument(String url) {
     synchronized (lock) {
-      return primaryDocuments.contains(url);
+      return primaryDocuments.contains(canonicalUrl(url));
     }
   }
 
   boolean isDiscarded(String url) {
     synchronized (lock) {
-      return discarded.contains(url);
+      return discarded.contains(canonicalUrl(url));
     }
   }
 
   void addRedirect(String original, String redirected) {
+    original = canonicalUrl(original);
+    redirected = canonicalUrl(redirected);
     if (original != null
         && redirected != null
         && !original.equals(redirected)) {
@@ -62,33 +76,34 @@ class StatusMonitor {
 
   String originalFromRedirect(String redirected) {
     synchronized (lock) {
-      return redirects.get(redirected);
+      return redirects.get(canonicalUrl(redirected));
     }
   }
 
   void startStatusMonitor(String url) {
     synchronized (lock) {
       monitoring = true;
+      startedUrls.add(canonicalUrl(url));
     }
   }
 
   void addPrimaryDocument(String url) {
     synchronized (lock) {
-      primaryDocuments.add(url);
+      primaryDocuments.add(canonicalUrl(url));
     }
   }
 
   void addStatusMonitor(URL url, StreamConnection conn) {
     synchronized (lock) {
       if (monitoring) {
-        connections.put(url.toExternalForm(), conn);
+        connections.put(canonicalUrl(url.toExternalForm()), conn);
       }
     }
   }
 
   void addDiscarded(String url) {
     synchronized (lock) {
-      discarded.add(url);
+      discarded.add(canonicalUrl(url));
     }
   }
 
@@ -96,7 +111,10 @@ class StatusMonitor {
     StreamConnection conn = null;
     synchronized (lock) {
       monitoring = false;
-      conn = connections.get(url);
+      conn = connections.get(canonicalUrl(url));
+      for (int i = startedUrls.size() - 1; conn == null && i > -1; i--) {
+        conn = connections.get(startedUrls.get(i));
+      }
     }
     int code = 499;
     if (conn != null) {
@@ -121,6 +139,7 @@ class StatusMonitor {
         primaryDocuments.clear();
         discarded.clear();
         redirects.clear();
+        startedUrls.clear();
       }
     }
   }

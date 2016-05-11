@@ -358,10 +358,10 @@ public class Test {
       /*
        * Redirects and cookies
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/redirect/site1");
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/redirect/site1#testfragment");
       test(HttpServer.previousRequestId() != initialRequestId);
       test(driver.getStatusCode() == 200);
-      test(driver.getCurrentUrl().endsWith("/redirect/site2"));
+      test(driver.getCurrentUrl().endsWith("/redirect/site2#testfragment"));
       cookie = driver.manage().getCookieNamed("JSESSIONID");
       test(cookie.getValue().equals("ABC123"));
       test(InetAddress.getLoopbackAddress().getHostAddress().equals(cookie.getDomain()));

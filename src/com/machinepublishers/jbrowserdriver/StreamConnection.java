@@ -54,6 +54,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -68,6 +69,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 
@@ -104,6 +106,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private final AtomicReference<RequestConfig.Builder> config = new AtomicReference<RequestConfig.Builder>(RequestConfig.custom());
   private final URL url;
   private final String urlString;
+  private final String urlFragment;
   private final AtomicBoolean skip = new AtomicBoolean();
   private final AtomicReference<String> method = new AtomicReference<String>();
   private final AtomicBoolean connected = new AtomicBoolean();
@@ -207,6 +210,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
     super(url);
     this.url = new URL(url.getProtocol(), url.getHost(), url.getPort(), url.getFile());
     this.urlString = url.toExternalForm();
+    this.urlFragment = url.getRef();
   }
 
   private String hostHeader() {
@@ -336,6 +340,32 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           if (response.get() != null && response.get().getEntity() != null) {
             entity.set(response.get().getEntity());
             response.get().setHeader("Cache-Control", "no-store, no-cache");
+          }
+          if (this.urlFragment != null && response.get() != null) {
+            Header header = response.get().getFirstHeader("Location");
+            String location = header == null ? null : header.getValue();
+            if (!StringUtils.isEmpty(location)) {
+              try {
+                URI uri = new URIBuilder(location).build();
+                if (StringUtils.isEmpty(uri.getRawFragment())) {
+                  String path = uri.getPath();
+                  path = StringUtils.isEmpty(path) ? "/" : path;
+                  response.get().setHeader("Location",
+                      new URIBuilder(location).setPath(path).setFragment(this.urlFragment).build().toString());
+                }
+              } catch (Throwable t) {
+                if (!location.contains("#")) {
+                  int fromIndex = location.indexOf("//") + 2;
+                  if (fromIndex <= location.length() && location.substring(fromIndex).contains("/")) {
+                    response.get().setHeader("Location",
+                        new StringBuilder().append(location).append("#").append(this.urlFragment).toString());
+                  } else {
+                    response.get().setHeader("Location",
+                        new StringBuilder().append(location).append("/#").append(this.urlFragment).toString());
+                  }
+                }
+              }
+            }
           }
         }
       }
