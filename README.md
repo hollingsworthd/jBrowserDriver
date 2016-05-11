@@ -23,7 +23,7 @@ For other install options, see the [Central Repository](http://search.maven.org/
 #### Prerequisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
 
-Currently only Java is supported (Scala, Groovy, etc might have compatibility issues--pull requests or paid support could help address this gap). As a workaround for non-Java tech stacks, Selenium Server is recommended.
+Any JRE language (Java, Scala, etc) should work, but Groovy is not yet supported.
 
 Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
 
