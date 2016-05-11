@@ -7,7 +7,7 @@ Licensed under the Apache License v2.0 ([details](https://raw.githubusercontent.
 
 - - -
 
-#### Download
+## Download
 Get a ZIP archive of the [latest release](https://github.com/MachinePublishers/jBrowserDriver/releases/latest).
 
 Or install via Maven:
@@ -20,27 +20,27 @@ Or install via Maven:
 ```
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.13.0|jar).
 
-#### Prerequisites
+## Prerequisites
 There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
 
-Any JRE language (Java, Scala, etc) should work, but Groovy is not yet supported.
+Any JRE language (Java, Scala, etc.) should work, but Groovy is not yet supported. And with Selenium Grid or Selenium Server, you can use any language that has Selenium bindings (including non-JRE languages).
 
-Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
+Prerequisites on Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
 
-Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
+Prerequisites on Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
 
-#### Usage
+## Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
 
-Use this library like any other Selenium WebDriver or RemoteWebDriver. It also works with Selenium Server (use browser name "jbrowserdriver").
+Use this library like any other Selenium WebDriver or RemoteWebDriver. It also works with Selenium Server and Selenium Grid (see example below).
 
 You can optionally create a [Settings](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.html) object, [configure it](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.Builder.html), and pass it to the [JBrowserDriver constructor](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/JBrowserDriver.html#JBrowserDriver-com.machinepublishers.jbrowserdriver.Settings-) to specify a proxy, request headers, time zone, user agent, or navigator details. By default, the browser mimics the fingerprint of Tor Browser.
 
 Settings can alternately be configured using Java system properties or Selenium Capabilities. See [Settings builder](http://machinepublishers.github.io/jBrowserDriver/com/machinepublishers/jbrowserdriver/Settings.Builder.html) documentation for details.
 
-Each instance of JBrowserDriver is backed by a separate Java process, so any native browser crashes will not take down your app.
+Each instance of JBrowserDriver is backed by a separate Java process.
 
-Example:
+#### Example:
 ```java
 import org.openqa.selenium.WebDriver;
 import com.machinepublishers.jbrowserdriver.Timezone;
@@ -74,10 +74,56 @@ public class Example {
 }
 ```
 
-#### Building
+#### Selenium Grid Example:
+
+Start the hub: `java -jar selenium-server-standalone-2.53.0.jar -role hub`
+
+Start the node: `java -classpath "selenium-server-standalone-2.53.0.jar:jBrowserDriver-v0.13.0/dist/*" org.openqa.grid.selenium.GridLauncher -role node http://localhost:4444/grid/register -browser browserName=jbrowserdriver,version=1,platform=ANY`
+
+&nbsp;&nbsp;*On Windows, replace the colon in the classpath with a semi-colon.*
+
+```java
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import com.machinepublishers.jbrowserdriver.Settings;
+import com.machinepublishers.jbrowserdriver.Timezone;
+
+public class Example {
+  public static void main(String[] args) throws MalformedURLException {
+  
+    DesiredCapabilities capabilities = 
+        new DesiredCapabilities("jbrowserdriver", "1", Platform.ANY);
+    
+    // Optionally customize the settings
+    capabilities.merge(
+        Settings.builder().
+        timezone(Timezone.AMERICA_NEWYORK).
+        buildCapabilities());
+    
+    WebDriver driver = new RemoteWebDriver(
+        new URL("http://localhost:4444/wd/hub"), capabilities);
+    
+    driver.get("http://example.com");
+    
+    System.out.println(driver.getPageSource());
+    
+    driver.quit();
+  }
+}
+```
+
+
+
+## Building
 Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the pom.xml file via the [M2E plugin](https://marketplace.eclipse.org/content/maven-integration-eclipse-luna-and-newer). However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section.
 
-#### Contributing
+## Contributing
 Pull requests are welcome, and we ask contributors to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-individual.txt). Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
 
 - - -
