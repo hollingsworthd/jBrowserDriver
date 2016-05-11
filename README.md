@@ -86,7 +86,6 @@ Start the node: `java -classpath "selenium-server-standalone-2.53.0.jar:jBrowser
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import com.machinepublishers.jbrowserdriver.Settings;
@@ -104,7 +103,7 @@ public class Example {
         timezone(Timezone.AMERICA_NEWYORK).
         buildCapabilities());
     
-    WebDriver driver = new RemoteWebDriver(
+    RemoteWebDriver driver = new RemoteWebDriver(
         new URL("http://localhost:4444/wd/hub"), capabilities);
     
     driver.get("http://example.com");
