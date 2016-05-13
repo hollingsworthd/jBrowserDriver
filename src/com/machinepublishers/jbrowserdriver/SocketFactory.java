@@ -27,6 +27,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 class SocketFactory extends RMISocketFactory implements Serializable {
@@ -35,12 +36,11 @@ class SocketFactory extends RMISocketFactory implements Serializable {
   private final int childPort;
   private final int parentPort;
   private final int parentAltPort;
-  private final SocketLock lock;
-  private final SocketLock globalLock;
+  private final Set<SocketLock> locks;
   private transient final AtomicReference<Socket> clientSocket = new AtomicReference<Socket>(new Socket());
   private transient final AtomicReference<Socket> clientAltSocket = new AtomicReference<Socket>(new Socket());
 
-  SocketFactory(String host, PortGroup ports, SocketLock lock, SocketLock globalLock) {
+  SocketFactory(String host, PortGroup ports, final Set<SocketLock> locks) {
     InetAddress hostTmp = null;
     try {
       hostTmp = InetAddress.getByName(host);
@@ -51,8 +51,7 @@ class SocketFactory extends RMISocketFactory implements Serializable {
     this.childPort = (int) ports.child;
     this.parentPort = (int) ports.parent;
     this.parentAltPort = (int) ports.parentAlt;
-    this.lock = lock;
-    this.globalLock = globalLock;
+    this.locks = locks;
   }
 
   @Override
@@ -65,16 +64,18 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public Socket createSocket(String h, int p) throws IOException {
-    if (Thread.holdsLock(lock) || Thread.holdsLock(globalLock) || isDriverApi(new Throwable().getStackTrace())) {
+    if (holdsLock()) {
       return createSocket(clientSocket, parentPort, childPort, false);
     }
     return createSocket(clientAltSocket, parentAltPort, childPort, true);
   }
 
-  private static boolean isDriverApi(StackTraceElement[] elements) {
-    for (int i = 1; i < elements.length; i++) {
-      if (elements[i].getClassName().startsWith(apiPackage)) {
-        return true;
+  private boolean holdsLock() {
+    synchronized (locks) {
+      for (SocketLock lock : locks) {
+        if (Thread.holdsLock(lock)) {
+          return true;
+        }
       }
     }
     return false;

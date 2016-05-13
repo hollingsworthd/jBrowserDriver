@@ -29,6 +29,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMISocketFactory;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,7 +106,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
             childPort.set(findPort(host));
           }
           socketFactory.set(new SocketFactory(host,
-              new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock(), new SocketLock()));
+              new PortGroup(childPort.get(), parentPort, parentAltPort), new HashSet<SocketLock>()));
 
           registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
           break;

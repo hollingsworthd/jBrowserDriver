@@ -100,7 +100,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     }
     intercept = interceptTmp;
   }
-  private static final SocketLock globalLock = new SocketLock();
+  private static final Set<SocketLock> locks = new HashSet<SocketLock>();
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
   private static final List<String> args;
@@ -266,6 +266,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
+    synchronized (locks) {
+      locks.add(lock);
+    }
     File tmpDir = null;
     try {
       tmpDir = Files.createTempDirectory("jbd_tmp_").toFile();
@@ -295,12 +298,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     JBrowserDriverRemote instanceTmp = null;
     try {
       synchronized (lock) {
-        synchronized (globalLock) {
-          instanceTmp = (JBrowserDriverRemote) LocateRegistry
-              .getRegistry(settings.host(), (int) actualPortGroup.get().child,
-                  new SocketFactory(settings.host(), actualPortGroup.get(), lock, globalLock))
-              .lookup("JBrowserDriverRemote");
-        }
+        instanceTmp = (JBrowserDriverRemote) LocateRegistry
+            .getRegistry(settings.host(), (int) actualPortGroup.get().child,
+                new SocketFactory(settings.host(), actualPortGroup.get(), locks))
+            .lookup("JBrowserDriverRemote");
         instanceTmp.setUp(settings);
       }
     } catch (Throwable t) {
@@ -1095,6 +1096,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         } catch (Throwable t2) {
           proc.destroyForcibly();
         }
+      }
+      synchronized (locks) {
+        locks.remove(lock);
       }
       synchronized (waiting) {
         portGroupsActive.remove(configuredPortGroup.get());
