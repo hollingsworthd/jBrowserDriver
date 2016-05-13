@@ -105,7 +105,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
             childPort.set(findPort(host));
           }
           socketFactory.set(new SocketFactory(host,
-              new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock()));
+              new PortGroup(childPort.get(), parentPort, parentAltPort), new SocketLock(), new SocketLock()));
 
           registryTmp = LocateRegistry.createRegistry(childPort.get(), socketFactory.get(), socketFactory.get());
           break;
@@ -599,7 +599,6 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   public void kill() {
     final ContextItem item = context.get().item();
     if (item != null) {
-      item.engine.get().getLoadWorker().cancel();
       Accessor.getPageFor(item.engine.get()).stop();
     }
     SettingsManager.register(null);

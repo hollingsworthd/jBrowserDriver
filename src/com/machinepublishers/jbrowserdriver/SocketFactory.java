@@ -36,10 +36,11 @@ class SocketFactory extends RMISocketFactory implements Serializable {
   private final int parentPort;
   private final int parentAltPort;
   private final SocketLock lock;
+  private final SocketLock globalLock;
   private transient final AtomicReference<Socket> clientSocket = new AtomicReference<Socket>(new Socket());
   private transient final AtomicReference<Socket> clientAltSocket = new AtomicReference<Socket>(new Socket());
 
-  SocketFactory(String host, PortGroup ports, SocketLock lock) {
+  SocketFactory(String host, PortGroup ports, SocketLock lock, SocketLock globalLock) {
     InetAddress hostTmp = null;
     try {
       hostTmp = InetAddress.getByName(host);
@@ -51,6 +52,7 @@ class SocketFactory extends RMISocketFactory implements Serializable {
     this.parentPort = (int) ports.parent;
     this.parentAltPort = (int) ports.parentAlt;
     this.lock = lock;
+    this.globalLock = globalLock;
   }
 
   @Override
@@ -63,10 +65,10 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   @Override
   public Socket createSocket(String h, int p) throws IOException {
-    if (Thread.holdsLock(lock) || isDriverApi(new Throwable().getStackTrace())) {
-      return createSocket(clientSocket, parentPort, childPort, true);
+    if (Thread.holdsLock(lock) || Thread.holdsLock(globalLock) || isDriverApi(new Throwable().getStackTrace())) {
+      return createSocket(clientSocket, parentPort, childPort, false);
     }
-    return createSocket(clientAltSocket, parentAltPort, childPort, false);
+    return createSocket(clientAltSocket, parentAltPort, childPort, true);
   }
 
   private static boolean isDriverApi(StackTraceElement[] elements) {
@@ -79,12 +81,12 @@ class SocketFactory extends RMISocketFactory implements Serializable {
   }
 
   private Socket createSocket(AtomicReference<Socket> socket,
-      int localPort, int foreignPort, boolean closePrevious) throws IOException {
+      int localPort, int foreignPort, boolean background) throws IOException {
     synchronized (Object.class) {
       final int retries = 15;
       for (int i = 1, sleep = 2; i <= retries; i++, sleep *= 2) {
         try {
-          if (closePrevious) {
+          if (!background) {
             Util.close(socket.get());
           }
           socket.set(new Socket());
@@ -96,7 +98,7 @@ class SocketFactory extends RMISocketFactory implements Serializable {
           return socket.get();
         } catch (IOException e) {
           try {
-            if (i == retries) {
+            if (background || i == retries) {
               throw e;
             }
             try {

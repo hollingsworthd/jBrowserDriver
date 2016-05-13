@@ -100,6 +100,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     }
     intercept = interceptTmp;
   }
+  private static final SocketLock globalLock = new SocketLock();
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
   private static final List<String> args;
@@ -294,10 +295,12 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     JBrowserDriverRemote instanceTmp = null;
     try {
       synchronized (lock) {
-        instanceTmp = (JBrowserDriverRemote) LocateRegistry
-            .getRegistry(settings.host(), (int) actualPortGroup.get().child,
-                new SocketFactory(settings.host(), actualPortGroup.get(), lock))
-            .lookup("JBrowserDriverRemote");
+        synchronized (globalLock) {
+          instanceTmp = (JBrowserDriverRemote) LocateRegistry
+              .getRegistry(settings.host(), (int) actualPortGroup.get().child,
+                  new SocketFactory(settings.host(), actualPortGroup.get(), lock, globalLock))
+              .lookup("JBrowserDriverRemote");
+        }
         instanceTmp.setUp(settings);
       }
     } catch (Throwable t) {
