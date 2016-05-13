@@ -140,8 +140,8 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              initial = false;
               lock.wait(timeouts.get().getScriptTimeoutMS());
+              initial = false;
             } else {
               break;
             }
@@ -173,8 +173,8 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              initial = false;
               lock.wait(timeouts.get().getScriptTimeoutMS());
+              initial = false;
             } else {
               break;
             }
@@ -207,8 +207,8 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              initial = false;
               lock.wait(timeouts.get().getScriptTimeoutMS());
+              initial = false;
             } else {
               break;
             }
