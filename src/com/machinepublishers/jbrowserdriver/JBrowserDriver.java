@@ -1088,13 +1088,23 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     if (processEnded.compareAndSet(false, true)) {
       final Process proc = process.get();
       if (proc != null) {
-        try {
-          PidProcess pidProcess = Processes.newPidProcess(proc);
-          if (!pidProcess.destroyGracefully().waitFor(10, TimeUnit.SECONDS)) {
-            pidProcess.destroyForcefully();
+        while (proc.isAlive()) {
+          try {
+            PidProcess pidProcess = Processes.newPidProcess(proc);
+            try {
+              if (!pidProcess.destroyGracefully().waitFor(10, TimeUnit.SECONDS)) {
+                throw new RuntimeException();
+              }
+            } catch (Throwable t1) {
+              if (!pidProcess.destroyForcefully().waitFor(10, TimeUnit.SECONDS)) {
+                throw new RuntimeException();
+              }
+            }
+          } catch (Throwable t2) {
+            try {
+              proc.destroyForcibly().waitFor(10, TimeUnit.SECONDS);
+            } catch (Throwable t3) {}
           }
-        } catch (Throwable t2) {
-          proc.destroyForcibly();
         }
       }
       synchronized (locks) {
