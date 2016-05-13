@@ -1002,17 +1002,12 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       synchronized (lock) {
         remote.close();
       }
-      Set<String> handles = getWindowHandles();
-      if (handles == null || handles.isEmpty()) {
-        quit();
-      }
     } catch (Throwable t) {
-      try {
-        synchronized (lock) {
-          remote.kill();
-        }
-      } catch (Throwable t2) {}
-      endProcess();
+      Util.handleException(t);
+    }
+    Set<String> handles = getWindowHandles();
+    if (handles == null || handles.isEmpty()) {
+      quit();
     }
   }
 
@@ -1144,13 +1139,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         remote.quit();
       }
     } catch (Throwable t) {
-      try {
-        synchronized (lock) {
-          remote.kill();
-        }
-      } catch (Throwable t2) {}
+      Util.handleException(t);
+    } finally {
+      endProcess();
     }
-    endProcess();
   }
 
   /**
@@ -1177,12 +1169,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public void kill() {
-    saveData();
-    try {
-      synchronized (lock) {
-        remote.kill();
-      }
-    } catch (Throwable t) {}
     endProcess();
   }
 

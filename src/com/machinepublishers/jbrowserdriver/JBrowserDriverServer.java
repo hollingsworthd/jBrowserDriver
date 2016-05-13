@@ -580,7 +580,6 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public void quit() {
     getStatusCode();
-    kill();
   }
 
   /**
@@ -596,14 +595,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
-  public void kill() {
-    final ContextItem item = context.get().item();
-    if (item != null) {
-      Accessor.getPageFor(item.engine.get()).stop();
-    }
-    SettingsManager.register(null);
-    StatusMonitor.instance().clearStatusMonitor();
-  }
+  public void kill() {}
 
   /**
    * {@inheritDoc}
