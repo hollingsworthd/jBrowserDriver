@@ -54,7 +54,6 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Killable;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
@@ -178,7 +177,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    *          New settings to take effect, superseding the original ones
    */
   public void reset(final Settings settings) {
-    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         context.get().item().engine.get().getLoadWorker().cancel();
@@ -228,7 +227,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public String getCurrentUrl() {
     init();
-    return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
+    return AppThread.exec(context.get().statusCode, new Sync<String>() {
       public String perform() {
         return context.get().item().view.get().getEngine().getLocation();
       }
@@ -268,7 +267,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public String getTitle() {
     init();
-    return AppThread.exec(Pause.NONE, context.get().statusCode, new Sync<String>() {
+    return AppThread.exec(context.get().statusCode, new Sync<String>() {
       public String perform() {
         return context.get().item().view.get().getEngine().getTitle();
       }
@@ -283,7 +282,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     init();
     long start = System.currentTimeMillis();
     try {
-      AppThread.exec(Pause.SHORT, context.get().statusCode,
+      AppThread.exec(context.get().statusCode,
           context.get().timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
             public Object perform() {
               context.get().item().engine.get().load(url);
@@ -301,7 +300,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
       }
     } finally {
       if (context.get().statusCode.get() == 0) {
-        AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+        AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
           @Override
           public Object perform() {
             context.get().item().engine.get().getLoadWorker().cancel();

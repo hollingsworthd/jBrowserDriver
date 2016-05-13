@@ -297,7 +297,7 @@ public class Test {
        */
       driver.findElement(By.id("upload")).sendKeys("some-file");
       test("event-test".equals(driver.findElement(By.id("file-input-onchange")).getText()));
-      test(driver.findElement(By.id("upload")).getAttribute("value").endsWith("some-file")); //FIXME -- occasionally hangs
+      test(driver.findElement(By.id("upload")).getAttribute("value").endsWith("some-file"));
 
       /*
        * Javascript alerts

@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.w3c.dom.Document;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.WebPage;
@@ -154,7 +153,7 @@ class ContextItem {
         Util.handleException(e);
       }
       final ContextItem thisObject = this;
-      AppThread.exec(Pause.SHORT, context.statusCode, new Sync<Object>() {
+      AppThread.exec(context.statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           engine.get().setJavaScriptEnabled(SettingsManager.settings().javascript());

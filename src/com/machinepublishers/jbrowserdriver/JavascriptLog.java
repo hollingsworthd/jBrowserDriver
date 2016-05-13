@@ -2,7 +2,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.webkit.WebPage;
 
@@ -50,7 +49,7 @@ class JavascriptLog {
   }
 
   static void attach(WebPage page, long frameId) {
-    AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         JSObject window = (JSObject) page.executeScript(frameId, "(function(){return window;})();");

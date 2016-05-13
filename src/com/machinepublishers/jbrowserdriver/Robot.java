@@ -42,7 +42,6 @@ import javax.imageio.ImageIO;
 
 import org.openqa.selenium.Keys;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.Pixels;
@@ -248,7 +247,7 @@ class Robot {
   private final KeyCode keyUndefined;
 
   Robot(final Context context) {
-    robot.set(AppThread.exec(Pause.SHORT, context.statusCode, new Sync<com.sun.glass.ui.Robot>() {
+    robot.set(AppThread.exec(context.statusCode, new Sync<com.sun.glass.ui.Robot>() {
       public com.sun.glass.ui.Robot perform() {
         return Application.GetApplication().createRobot();
       }
@@ -302,7 +301,7 @@ class Robot {
         } catch (InterruptedException e) {}
       }
     }
-    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         return null;
@@ -311,7 +310,7 @@ class Robot {
   }
 
   private void unlock() {
-    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         return null;
@@ -341,7 +340,7 @@ class Robot {
     final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
     for (int i = 0; i < codePoints.length(); i++) {
       final int cur = i;
-      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
@@ -374,7 +373,7 @@ class Robot {
     final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
     for (int i = 0; i < codePoints.length(); i++) {
       final int cur = i;
-      AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+      AppThread.exec(true, statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           int[] converted = convertKey(codePoints.get(cur));
@@ -429,7 +428,7 @@ class Robot {
             reset = false;
           }
           if (fireEvent) {
-            AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+            AppThread.exec(true, statusCode, new Sync<Object>() {
               @Override
               public Object perform() {
                 if (reset) {
@@ -457,7 +456,7 @@ class Robot {
   void mouseMove(final double pageX, final double pageY) {
     lock();
     try {
-      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -481,7 +480,7 @@ class Robot {
   void mouseMoveBy(final double pageX, final double pageY) {
     lock();
     try {
-      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -518,7 +517,7 @@ class Robot {
   }
 
   private void mousePressHelper(final MouseButton button) {
-    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         robot.get().mousePress(button.getValue());
@@ -537,7 +536,7 @@ class Robot {
   }
 
   private void mouseReleaseHelper(final MouseButton button) {
-    AppThread.exec(Pause.LONG, statusCode, new Sync<Object>() {
+    AppThread.exec(true, statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         if (button == MouseButton.LEFT) {
@@ -552,7 +551,7 @@ class Robot {
   void mouseWheel(final int wheelAmt) {
     lock();
     try {
-      AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+      AppThread.exec(statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().mouseWheel(wheelAmt);
@@ -567,7 +566,7 @@ class Robot {
   byte[] screenshot() {
     lock();
     try {
-      return AppThread.exec(Pause.NONE, statusCode, new Sync<byte[]>() {
+      return AppThread.exec(statusCode, new Sync<byte[]>() {
         @Override
         public byte[] perform() {
           BufferedImage image = null;

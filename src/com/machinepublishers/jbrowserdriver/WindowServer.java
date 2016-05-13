@@ -23,7 +23,6 @@ import java.rmi.RemoteException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 import javafx.stage.Stage;
@@ -45,7 +44,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void close() {
-    AppThread.exec(Pause.SHORT, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().close();
@@ -59,7 +58,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public org.openqa.selenium.Point getPosition() {
-    return AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<org.openqa.selenium.Point>() {
+    return AppThread.exec(new AtomicInteger(-1), new Sync<org.openqa.selenium.Point>() {
       @Override
       public org.openqa.selenium.Point perform() {
         return new org.openqa.selenium.Point((int) Math.rint((Double) stage.get().getX()),
@@ -81,7 +80,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public org.openqa.selenium.Dimension getSize() {
-    return AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<org.openqa.selenium.Dimension>() {
+    return AppThread.exec(new AtomicInteger(-1), new Sync<org.openqa.selenium.Dimension>() {
       @Override
       public org.openqa.selenium.Dimension perform() {
         return new org.openqa.selenium.Dimension((int) Math.rint((Double) stage.get().getWidth()),
@@ -103,7 +102,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void maximize() {
-    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().setMaximized(!stage.get().isMaximized());
@@ -125,7 +124,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setPosition(final org.openqa.selenium.Point point) {
-    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         if (!stage.get().isFullScreen()) {
@@ -162,7 +161,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setSize(final org.openqa.selenium.Dimension dimension) {
-    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         if (!stage.get().isFullScreen()) {
@@ -199,7 +198,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void fullscreen() {
-    AppThread.exec(Pause.SHORT, new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().setFullScreen(!stage.get().isFullScreen());

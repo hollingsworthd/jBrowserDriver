@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.Capabilities;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class Context {
@@ -110,7 +109,7 @@ class Context {
   }
 
   String itemId() {
-    return AppThread.exec(Pause.NONE, statusCode,
+    return AppThread.exec(statusCode,
         new Sync<String>() {
           @Override
           public String perform() {
@@ -122,7 +121,7 @@ class Context {
   }
 
   Set<String> itemIds() {
-    return AppThread.exec(Pause.NONE, statusCode,
+    return AppThread.exec(statusCode,
         new Sync<Set<String>>() {
           @Override
           public Set<String> perform() {
@@ -135,7 +134,7 @@ class Context {
 
   ContextItem spawn(final JBrowserDriverServer driver) {
     final Context thisObj = this;
-    return AppThread.exec(Pause.SHORT, statusCode,
+    return AppThread.exec(statusCode,
         new Sync<ContextItem>() {
           @Override
           public ContextItem perform() {
@@ -152,7 +151,7 @@ class Context {
   }
 
   void setCurrent(final String id) {
-    AppThread.exec(Pause.SHORT, statusCode,
+    AppThread.exec(statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -166,7 +165,7 @@ class Context {
   }
 
   void removeItem() {
-    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -180,7 +179,7 @@ class Context {
   }
 
   void removeItem(final String itemId) {
-    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {
@@ -194,7 +193,7 @@ class Context {
   }
 
   void removeItems() {
-    AppThread.exec(Pause.NONE, statusCode, new Sync<Object>() {
+    AppThread.exec(statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         synchronized (lock) {

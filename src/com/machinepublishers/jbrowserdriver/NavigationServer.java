@@ -24,7 +24,6 @@ import java.rmi.RemoteException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Pause;
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class NavigationServer extends RemoteObject implements NavigationRemote,
@@ -46,7 +45,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void back() {
-    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -64,7 +63,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void forward() {
-    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -82,7 +81,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void refresh() {
-    AppThread.exec(Pause.SHORT, statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             context.item().view.get().getEngine().reload();

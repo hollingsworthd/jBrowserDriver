@@ -33,10 +33,6 @@ import javafx.application.Platform;
 class AppThread {
   private static final Random rand = new Random();
 
-  static enum Pause {
-    LONG, SHORT, NONE
-  }
-
   static interface Sync<T> {
     T perform();
   }
@@ -111,24 +107,16 @@ class AppThread {
     }
   }
 
-  private static void pause(final Pause pauseLength) {
-    AppThread.exec(Pause.NONE, new AtomicInteger(-1), new Sync<Object>() {
+  private static void pause() {
+    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
         try {
-          if (pauseLength == Pause.SHORT) {
-            Thread.sleep(0, 1);
-          } else if (pauseLength == Pause.LONG) {
-            Thread.sleep(30 + rand.nextInt(40));
-          }
+          Thread.sleep(30 + rand.nextInt(40));
         } catch (Throwable t) {}
         return null;
       }
     });
-  }
-
-  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action) {
-    return exec(pauseAfterExec, statusCode, 0, action);
   }
 
   static void handleExecutionException(Object obj) {
@@ -143,7 +131,19 @@ class AppThread {
     }
   }
 
-  static <T> T exec(Pause pauseAfterExec, final AtomicInteger statusCode, final long timeout,
+  static <T> T exec(final AtomicInteger statusCode, final Sync<T> action) {
+    return exec(false, statusCode, 0, action);
+  }
+
+  static <T> T exec(final boolean pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action) {
+    return exec(pauseAfterExec, statusCode, 0, action);
+  }
+
+  static <T> T exec(final AtomicInteger statusCode, final long timeout, final Sync<T> action) {
+    return exec(false, statusCode, timeout, action);
+  }
+
+  static <T> T exec(final boolean pauseAfterExec, final AtomicInteger statusCode, final long timeout,
       final Sync<T> action) {
     try {
       if ((boolean) Platform.isFxApplicationThread()) {
@@ -170,8 +170,8 @@ class AppThread {
         return runner.returned.get();
       }
     } finally {
-      if (pauseAfterExec != Pause.NONE) {
-        pause(pauseAfterExec);
+      if (pauseAfterExec) {
+        pause();
       }
     }
   }
