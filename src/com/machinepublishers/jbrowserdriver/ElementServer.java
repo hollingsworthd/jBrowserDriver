@@ -489,7 +489,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getText() {
-    return getAttribute("textContent");
+    return AppThread.exec(context.statusCode,
+        new Sync<String>() {
+          @Override
+          public String perform() {
+            validate(true);
+            Object text = node.getMember("innerText");
+            return text instanceof String ? ((String) text).trim() : "";
+          }
+        });
   }
 
   /**

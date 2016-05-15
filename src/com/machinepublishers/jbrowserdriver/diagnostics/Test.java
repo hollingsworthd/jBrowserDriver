@@ -278,6 +278,8 @@ public class Test {
       test(rect.y == point.getY());
       test(rect.width == dimension.getWidth());
       test(rect.height == dimension.getHeight());
+      test("Testing\ntext.".equals(driver.findElement(By.id("text-node1")).getText()));
+      test("".equals(driver.findElement(By.id("text-node2")).getText()));
 
       /*
        * Cookie manager
