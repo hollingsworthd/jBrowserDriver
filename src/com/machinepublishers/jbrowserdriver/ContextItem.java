@@ -72,7 +72,6 @@ class ContextItem {
           deselectFrame();
         }
       }
-      //TODO after returning this frame it might be possible for it to become invalid
       return frame;
     }
   }

@@ -182,31 +182,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void activate() {
-    final ElementServer thisObj = this;
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            try {
-              boolean set = false;
-              Object contentWindow = node.getMember("contentWindow");
-              if (contentWindow instanceof JSObject) {
-                Object document = ((JSObject) contentWindow).getMember("document");
-                if (document instanceof JSObject) {
-                  context.item().selectFrame(new ElementServer((JSObject) document, context));
-                  set = true;
-                }
-              }
-              if (!set) {
-                context.item().selectFrame(thisObj);
-              }
-            } catch (RemoteException e) {
-              Util.handleException(e);
-            }
-            return null;
-          }
-        });
+    context.item().selectFrame(this);
   }
 
   /**
@@ -1016,26 +992,26 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         public org.openqa.selenium.Point onPage() {
           AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<Object>() {
-                @Override
-                public Point perform() {
-                  validate(false);
-                  node.call("scrollIntoView");
-                  return null;
-                }
-              });
+            @Override
+            public Point perform() {
+              validate(false);
+              node.call("scrollIntoView");
+              return null;
+            }
+          });
           return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
               new Sync<org.openqa.selenium.Point>() {
-                @Override
-                public org.openqa.selenium.Point perform() {
-                  validate(true);
-                  JSObject obj = (JSObject) node.call("getBoundingClientRect");
-                  double y = Double.parseDouble(obj.getMember("top").toString());
-                  double x = Double.parseDouble(obj.getMember("left").toString());
-                  y = y < 0d ? 0d : y;
-                  x = x < 0d ? 0d : x;
-                  return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-                }
-              });
+            @Override
+            public org.openqa.selenium.Point perform() {
+              validate(true);
+              JSObject obj = (JSObject) node.call("getBoundingClientRect");
+              double y = Double.parseDouble(obj.getMember("top").toString());
+              double x = Double.parseDouble(obj.getMember("left").toString());
+              y = y < 0d ? 0d : y;
+              x = x < 0d ? 0d : x;
+              return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
+            }
+          });
         }
 
         @Override
