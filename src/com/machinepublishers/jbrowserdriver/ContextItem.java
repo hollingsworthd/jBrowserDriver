@@ -56,7 +56,8 @@ class ContextItem {
 
   ElementServer selectedFrame() {
     synchronized (frames) {
-      if (frame != null && !frames.conatins(frame.node())) {
+      if (frame != null
+          && (!(frame.node() instanceof Document) || !frames.conatins(frame.node()))) {
         boolean foundFrame = false;
         try {
           if (frame.frameId() > 0) {
@@ -129,7 +130,8 @@ class ContextItem {
   void addFrameId(long frameId) {
     synchronized (frames) {
       WebPage webPage = Accessor.getPageFor(engine.get());
-      frames.add(frameId, (JSObject) webPage.getDocument(frameId), webPage.getParentFrame(frameId));
+      frames.add(frameId, (JSObject) webPage.getDocument(frameId),
+          (JSObject) webPage.getOwnerElement(frameId), webPage.getParentFrame(frameId));
     }
   }
 

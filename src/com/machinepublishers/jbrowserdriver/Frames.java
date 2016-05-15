@@ -40,8 +40,8 @@ class Frames {
     }
   }
 
-  void add(long id, JSObject doc, long parentId) {
-    Frame frame = new Frame(id, doc, parentId);
+  void add(long id, JSObject doc, JSObject owner, long parentId) {
+    Frame frame = new Frame(id, doc, owner, parentId);
     Frame foundFrame = findFrame(root, id);
     if (foundFrame != null) {
       frame.children.addAll(foundFrame.children);
@@ -82,7 +82,7 @@ class Frames {
     if (cur == null) {
       return 0;
     }
-    if (cur.doc.equals(toFind)) {
+    if (cur.doc.equals(toFind) || (cur.owner != null && cur.owner.equals(toFind))) {
       return cur.id;
     }
     for (Frame next : cur.children) {
@@ -113,12 +113,14 @@ class Frames {
   private static final class Frame {
     final Long id;
     final JSObject doc;
+    final JSObject owner;
     final Long parentId;
     final Set<Frame> children = new HashSet<Frame>();
 
-    Frame(long id, JSObject doc, long parentId) {
+    Frame(long id, JSObject doc, JSObject owner, long parentId) {
       this.id = id;
       this.doc = doc;
+      this.owner = owner;
       this.parentId = parentId;
     }
 
