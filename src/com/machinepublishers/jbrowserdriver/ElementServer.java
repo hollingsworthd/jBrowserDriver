@@ -493,9 +493,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         new Sync<String>() {
           @Override
           public String perform() {
-            validate(true);
-            Object text = node.getMember("innerText");
-            return text instanceof String ? ((String) text).trim() : "";
+            validate(false);
+            if ((Boolean) node.eval(IS_VISIBLE)) {
+              Object text = node.getMember("innerText");
+              return text instanceof String ? ((String) text).trim() : "";
+            }
+            return "";
           }
         });
   }

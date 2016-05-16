@@ -280,6 +280,7 @@ public class Test {
       test(rect.height == dimension.getHeight());
       test("Testing\ntext.".equals(driver.findElement(By.id("text-node1")).getText()));
       test("".equals(driver.findElement(By.id("text-node2")).getText()));
+      test("".equals(driver.findElement(By.id("text-node3")).getText()));
 
       /*
        * Cookie manager
