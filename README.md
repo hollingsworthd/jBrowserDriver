@@ -31,7 +31,7 @@ Prerequisites on Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && 
 
 Prerequisites for Mac: Java 8
 
-Prerequisites for Windows and Linux: Oracle JRE/JDK or OpenJDK, including JavaFX (which is part of the JRE but not the "Server JRE")
+Prerequisites for Windows and Linux: Oracle JRE/JDK or OpenJDK 8 that includes JavaFX (which is part of the standard JRE/JDK but not the "Server JRE")
 
 ## Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
