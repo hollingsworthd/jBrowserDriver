@@ -33,7 +33,11 @@ import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,6 +69,8 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 
 class StreamConnectionClient {
+  private static final Set<String> nonCachedMethods = Collections.unmodifiableSet(new HashSet<String>(
+      Arrays.asList(new String[] { "POST", "PUT", "DELETE" })));
   private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
       .register("custom", new JbdCookieSpecProvider())
       .build();
@@ -158,8 +164,8 @@ class StreamConnectionClient {
 
   CloseableHttpResponse execute(HttpRequestBase req, HttpClientContext context)
       throws ClientProtocolException, IOException {
-    return SettingsManager.settings().cache()
-        ? cachingClient.execute(req, context) : client.execute(req, context);
+    return !SettingsManager.settings().cache() || nonCachedMethods.contains(req.getMethod())
+        ? client.execute(req, context) : cachingClient.execute(req, context);
   }
 
   private static SSLContext sslContext() {
