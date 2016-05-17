@@ -34,7 +34,6 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -307,7 +306,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     }
     context.robot.get().keysType(keys);
     if (fileChooser) {
-      context.robot.get().keysType(Keys.ENTER);
+      context.robot.get().typeEnter();
     }
   }
 

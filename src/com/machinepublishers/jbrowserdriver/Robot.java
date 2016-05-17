@@ -239,6 +239,7 @@ class Robot {
 
   private static final int LINE_FEED = "\n".codePointAt(0);
   private static final int CARRIAGE_RETURN = "\r".codePointAt(0);
+  private static final int ENTER = Keys.ENTER.toString().codePointAt(0);
   private final AtomicReference<com.sun.glass.ui.Robot> robot = new AtomicReference<com.sun.glass.ui.Robot>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
@@ -417,7 +418,7 @@ class Robot {
           String myChar;
           boolean fireEvent;
           final boolean reset;
-          if (codePoint == LINE_FEED || codePoint == CARRIAGE_RETURN) {
+          if (codePoint == LINE_FEED || codePoint == CARRIAGE_RETURN || codePoint == ENTER) {
             //replace linefeed with carriage returns due to idiosyncrasy of WebView
             myChar = "\r";
             fireEvent = true;
@@ -448,6 +449,22 @@ class Robot {
           }
         }
       }
+    } finally {
+      unlock();
+    }
+  }
+
+  void typeEnter() {
+    lock();
+    try {
+      AppThread.exec(statusCode, new Sync<Object>() {
+        @Override
+        public Object perform() {
+          robot.get().keyPress(KeyEvent.VK_ENTER);
+          robot.get().keyRelease(KeyEvent.VK_ENTER);
+          return null;
+        }
+      });
     } finally {
       unlock();
     }
