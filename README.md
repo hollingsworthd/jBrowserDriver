@@ -23,13 +23,15 @@ For other install options, see the [Central Repository](http://search.maven.org/
 ## Prerequisites
 There's no need to install any web browser and this works headlessly on a server (headed is also supported which is useful for debugging).
 
-Any JRE language (Java, Scala, etc.) should work, but Groovy is not yet supported. And with Selenium Grid or Selenium Server, you can use any language that has Selenium bindings (including non-JRE languages).
+This library can be used with any JRE language (Java, Scala, etc.), but Groovy is not yet supported. And with Selenium Server or Selenium Grid, you can use any language that has Selenium bindings (including non-JRE languages).
 
 Prerequisites on Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
 
 Prerequisites on Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
 
-Prerequisites for Mac, Windows, and other systems: install Oracle's Java 8.
+Prerequisites for Mac: Java 8
+
+Prerequisites for Windows and Linux: Oracle JRE/JDK or OpenJDK, including JavaFX (which is part of the JRE but not the "Server JRE")
 
 ## Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
