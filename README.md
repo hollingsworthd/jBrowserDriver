@@ -21,13 +21,15 @@ Or install via Maven:
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.13.4|jar).
 
 ## Prerequisites
-There's no need to install any web browser and this works fine on a server (headless). Java 8 (Oracle JDK/JRE or OpenJDK) is required.
+There's no need to install any web browser and this works headlessly on a server (headed is also supported which is useful for debugging).
 
 Any JRE language (Java, Scala, etc.) should work, but Groovy is not yet supported. And with Selenium Grid or Selenium Server, you can use any language that has Selenium bindings (including non-JRE languages).
 
 Prerequisites on Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
 
 Prerequisites on Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
+
+Prerequisites for Mac, Windows, and other systems: install Oracle's Java 8.
 
 ## Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
