@@ -28,7 +28,7 @@ This library can be used with any JRE language (Java, Scala, etc.), but Groovy i
 Installing Java:
  * Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
  * Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
- * Mac, Windows, Linux: [install Oracle Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (note: choose either the JRE or JDK but not the "Server JRE" since it doesn't include JavaFX)
+ * Mac, Windows, Linux: [install Oracle Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) *(note: choose either the JRE or JDK but not the "Server JRE" since it doesn't include JavaFX)*
 
 ## Usage
 For specific details, refer to the [API documentation](http://machinepublishers.github.io/jBrowserDriver/).
