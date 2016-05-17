@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 class SocketFactory extends RMISocketFactory implements Serializable {
-  private static final String apiPackage = Util.class.getPackage().getName() + ".";
   private final InetAddress host;
   private final int childPort;
   private final int parentPort;
@@ -52,6 +51,18 @@ class SocketFactory extends RMISocketFactory implements Serializable {
     this.parentPort = (int) ports.parent;
     this.parentAltPort = (int) ports.parentAlt;
     this.locks = locks;
+  }
+
+  private SocketFactory(SocketFactory other) {
+    this.host = other.host;
+    this.childPort = other.childPort;
+    this.parentPort = other.parentPort;
+    this.parentAltPort = other.parentAltPort;
+    this.locks = other.locks;
+  }
+
+  private Object readResolve() {
+    return new SocketFactory(this);
   }
 
   @Override
