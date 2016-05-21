@@ -30,13 +30,13 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javax.imageio.ImageIO;
 
@@ -54,174 +54,177 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
 class Robot {
-  private static final Map<Keys, Integer> keyConvert = new HashMap<Keys, Integer>();
+  private static final Map<Keys, int[]> keysMap;
 
   static {
-    keyConvert.put(Keys.ADD, KeyEvent.VK_ADD);
-    keyConvert.put(Keys.ALT, KeyEvent.VK_ALT);
-    keyConvert.put(Keys.ARROW_DOWN, KeyEvent.VK_DOWN);
-    keyConvert.put(Keys.ARROW_LEFT, KeyEvent.VK_LEFT);
-    keyConvert.put(Keys.ARROW_RIGHT, KeyEvent.VK_RIGHT);
-    keyConvert.put(Keys.ARROW_UP, KeyEvent.VK_UP);
-    keyConvert.put(Keys.BACK_SPACE, KeyEvent.VK_BACK_SPACE);
-    keyConvert.put(Keys.CANCEL, KeyEvent.VK_CANCEL);
-    keyConvert.put(Keys.CLEAR, KeyEvent.VK_CLEAR);
-    keyConvert.put(Keys.COMMAND, KeyEvent.VK_META);
-    keyConvert.put(Keys.CONTROL, KeyEvent.VK_CONTROL);
-    keyConvert.put(Keys.DECIMAL, KeyEvent.VK_DECIMAL);
-    keyConvert.put(Keys.DELETE, KeyEvent.VK_DELETE);
-    keyConvert.put(Keys.DIVIDE, KeyEvent.VK_DIVIDE);
-    keyConvert.put(Keys.DOWN, KeyEvent.VK_DOWN);
-    keyConvert.put(Keys.END, KeyEvent.VK_END);
-    keyConvert.put(Keys.ENTER, KeyEvent.VK_ENTER);
-    keyConvert.put(Keys.EQUALS, KeyEvent.VK_EQUALS);
-    keyConvert.put(Keys.ESCAPE, KeyEvent.VK_ESCAPE);
-    keyConvert.put(Keys.F1, KeyEvent.VK_F1);
-    keyConvert.put(Keys.F10, KeyEvent.VK_F10);
-    keyConvert.put(Keys.F11, KeyEvent.VK_F11);
-    keyConvert.put(Keys.F12, KeyEvent.VK_F12);
-    keyConvert.put(Keys.F2, KeyEvent.VK_F2);
-    keyConvert.put(Keys.F3, KeyEvent.VK_F3);
-    keyConvert.put(Keys.F4, KeyEvent.VK_F4);
-    keyConvert.put(Keys.F5, KeyEvent.VK_F5);
-    keyConvert.put(Keys.F6, KeyEvent.VK_F6);
-    keyConvert.put(Keys.F7, KeyEvent.VK_F7);
-    keyConvert.put(Keys.F8, KeyEvent.VK_F8);
-    keyConvert.put(Keys.F9, KeyEvent.VK_F9);
-    keyConvert.put(Keys.HELP, KeyEvent.VK_HELP);
-    keyConvert.put(Keys.HOME, KeyEvent.VK_HOME);
-    keyConvert.put(Keys.INSERT, KeyEvent.VK_INSERT);
-    keyConvert.put(Keys.LEFT, KeyEvent.VK_LEFT);
-    keyConvert.put(Keys.LEFT_ALT, KeyEvent.VK_ALT);
-    keyConvert.put(Keys.LEFT_CONTROL, KeyEvent.VK_CONTROL);
-    keyConvert.put(Keys.LEFT_SHIFT, KeyEvent.VK_SHIFT);
-    keyConvert.put(Keys.META, KeyEvent.VK_META);
-    keyConvert.put(Keys.MULTIPLY, KeyEvent.VK_MULTIPLY);
-    keyConvert.put(Keys.NUMPAD0, KeyEvent.VK_NUMPAD0);
-    keyConvert.put(Keys.NUMPAD1, KeyEvent.VK_NUMPAD1);
-    keyConvert.put(Keys.NUMPAD2, KeyEvent.VK_NUMPAD2);
-    keyConvert.put(Keys.NUMPAD3, KeyEvent.VK_NUMPAD3);
-    keyConvert.put(Keys.NUMPAD4, KeyEvent.VK_NUMPAD4);
-    keyConvert.put(Keys.NUMPAD5, KeyEvent.VK_NUMPAD5);
-    keyConvert.put(Keys.NUMPAD6, KeyEvent.VK_NUMPAD6);
-    keyConvert.put(Keys.NUMPAD7, KeyEvent.VK_NUMPAD7);
-    keyConvert.put(Keys.NUMPAD8, KeyEvent.VK_NUMPAD8);
-    keyConvert.put(Keys.NUMPAD9, KeyEvent.VK_NUMPAD9);
-    keyConvert.put(Keys.PAGE_DOWN, KeyEvent.VK_PAGE_DOWN);
-    keyConvert.put(Keys.PAGE_UP, KeyEvent.VK_PAGE_UP);
-    keyConvert.put(Keys.PAUSE, KeyEvent.VK_PAUSE);
-    keyConvert.put(Keys.RETURN, KeyEvent.VK_ENTER);
-    keyConvert.put(Keys.RIGHT, KeyEvent.VK_RIGHT);
-    keyConvert.put(Keys.SEMICOLON, KeyEvent.VK_SEMICOLON);
-    keyConvert.put(Keys.SEPARATOR, KeyEvent.VK_SEPARATOR);
-    keyConvert.put(Keys.SHIFT, KeyEvent.VK_SHIFT);
-    keyConvert.put(Keys.SPACE, KeyEvent.VK_SPACE);
-    keyConvert.put(Keys.SUBTRACT, KeyEvent.VK_SUBTRACT);
-    keyConvert.put(Keys.TAB, KeyEvent.VK_TAB);
-    keyConvert.put(Keys.UP, KeyEvent.VK_UP);
-    keyConvert.put(Keys.NULL, -1);
+    Map<Keys, int[]> keysMapTmp = new HashMap<Keys, int[]>();
+    keysMapTmp.put(Keys.ADD, new int[] { KeyEvent.VK_ADD });
+    keysMapTmp.put(Keys.ALT, new int[] { KeyEvent.VK_ALT });
+    keysMapTmp.put(Keys.ARROW_DOWN, new int[] { KeyEvent.VK_DOWN });
+    keysMapTmp.put(Keys.ARROW_LEFT, new int[] { KeyEvent.VK_LEFT });
+    keysMapTmp.put(Keys.ARROW_RIGHT, new int[] { KeyEvent.VK_RIGHT });
+    keysMapTmp.put(Keys.ARROW_UP, new int[] { KeyEvent.VK_UP });
+    keysMapTmp.put(Keys.BACK_SPACE, new int[] { KeyEvent.VK_BACK_SPACE });
+    keysMapTmp.put(Keys.CANCEL, new int[] { KeyEvent.VK_CANCEL });
+    keysMapTmp.put(Keys.CLEAR, new int[] { KeyEvent.VK_CLEAR });
+    keysMapTmp.put(Keys.COMMAND, new int[] { KeyEvent.VK_META });
+    keysMapTmp.put(Keys.CONTROL, new int[] { KeyEvent.VK_CONTROL });
+    keysMapTmp.put(Keys.DECIMAL, new int[] { KeyEvent.VK_DECIMAL });
+    keysMapTmp.put(Keys.DELETE, new int[] { KeyEvent.VK_DELETE });
+    keysMapTmp.put(Keys.DIVIDE, new int[] { KeyEvent.VK_DIVIDE });
+    keysMapTmp.put(Keys.DOWN, new int[] { KeyEvent.VK_DOWN });
+    keysMapTmp.put(Keys.END, new int[] { KeyEvent.VK_END });
+    keysMapTmp.put(Keys.ENTER, new int[] { KeyEvent.VK_ENTER });
+    keysMapTmp.put(Keys.EQUALS, new int[] { KeyEvent.VK_EQUALS });
+    keysMapTmp.put(Keys.ESCAPE, new int[] { KeyEvent.VK_ESCAPE });
+    keysMapTmp.put(Keys.F1, new int[] { KeyEvent.VK_F1 });
+    keysMapTmp.put(Keys.F10, new int[] { KeyEvent.VK_F10 });
+    keysMapTmp.put(Keys.F11, new int[] { KeyEvent.VK_F11 });
+    keysMapTmp.put(Keys.F12, new int[] { KeyEvent.VK_F12 });
+    keysMapTmp.put(Keys.F2, new int[] { KeyEvent.VK_F2 });
+    keysMapTmp.put(Keys.F3, new int[] { KeyEvent.VK_F3 });
+    keysMapTmp.put(Keys.F4, new int[] { KeyEvent.VK_F4 });
+    keysMapTmp.put(Keys.F5, new int[] { KeyEvent.VK_F5 });
+    keysMapTmp.put(Keys.F6, new int[] { KeyEvent.VK_F6 });
+    keysMapTmp.put(Keys.F7, new int[] { KeyEvent.VK_F7 });
+    keysMapTmp.put(Keys.F8, new int[] { KeyEvent.VK_F8 });
+    keysMapTmp.put(Keys.F9, new int[] { KeyEvent.VK_F9 });
+    keysMapTmp.put(Keys.HELP, new int[] { KeyEvent.VK_HELP });
+    keysMapTmp.put(Keys.HOME, new int[] { KeyEvent.VK_HOME });
+    keysMapTmp.put(Keys.INSERT, new int[] { KeyEvent.VK_INSERT });
+    keysMapTmp.put(Keys.LEFT, new int[] { KeyEvent.VK_LEFT });
+    keysMapTmp.put(Keys.LEFT_ALT, new int[] { KeyEvent.VK_ALT });
+    keysMapTmp.put(Keys.LEFT_CONTROL, new int[] { KeyEvent.VK_CONTROL });
+    keysMapTmp.put(Keys.LEFT_SHIFT, new int[] { KeyEvent.VK_SHIFT });
+    keysMapTmp.put(Keys.META, new int[] { KeyEvent.VK_META });
+    keysMapTmp.put(Keys.MULTIPLY, new int[] { KeyEvent.VK_MULTIPLY });
+    keysMapTmp.put(Keys.NUMPAD0, new int[] { KeyEvent.VK_NUMPAD0 });
+    keysMapTmp.put(Keys.NUMPAD1, new int[] { KeyEvent.VK_NUMPAD1 });
+    keysMapTmp.put(Keys.NUMPAD2, new int[] { KeyEvent.VK_NUMPAD2 });
+    keysMapTmp.put(Keys.NUMPAD3, new int[] { KeyEvent.VK_NUMPAD3 });
+    keysMapTmp.put(Keys.NUMPAD4, new int[] { KeyEvent.VK_NUMPAD4 });
+    keysMapTmp.put(Keys.NUMPAD5, new int[] { KeyEvent.VK_NUMPAD5 });
+    keysMapTmp.put(Keys.NUMPAD6, new int[] { KeyEvent.VK_NUMPAD6 });
+    keysMapTmp.put(Keys.NUMPAD7, new int[] { KeyEvent.VK_NUMPAD7 });
+    keysMapTmp.put(Keys.NUMPAD8, new int[] { KeyEvent.VK_NUMPAD8 });
+    keysMapTmp.put(Keys.NUMPAD9, new int[] { KeyEvent.VK_NUMPAD9 });
+    keysMapTmp.put(Keys.PAGE_DOWN, new int[] { KeyEvent.VK_PAGE_DOWN });
+    keysMapTmp.put(Keys.PAGE_UP, new int[] { KeyEvent.VK_PAGE_UP });
+    keysMapTmp.put(Keys.PAUSE, new int[] { KeyEvent.VK_PAUSE });
+    keysMapTmp.put(Keys.RETURN, new int[] { KeyEvent.VK_ENTER });
+    keysMapTmp.put(Keys.RIGHT, new int[] { KeyEvent.VK_RIGHT });
+    keysMapTmp.put(Keys.SEMICOLON, new int[] { KeyEvent.VK_SEMICOLON });
+    keysMapTmp.put(Keys.SEPARATOR, new int[] { KeyEvent.VK_SEPARATOR });
+    keysMapTmp.put(Keys.SHIFT, new int[] { KeyEvent.VK_SHIFT });
+    keysMapTmp.put(Keys.SPACE, new int[] { KeyEvent.VK_SPACE });
+    keysMapTmp.put(Keys.SUBTRACT, new int[] { KeyEvent.VK_SUBTRACT });
+    keysMapTmp.put(Keys.TAB, new int[] { KeyEvent.VK_TAB });
+    keysMapTmp.put(Keys.UP, new int[] { KeyEvent.VK_UP });
+    keysMap = Collections.unmodifiableMap(keysMapTmp);
   }
 
-  private static final Map<String, int[]> keyMap = new HashMap<String, int[]>();
+  private static final Map<String, int[]> textMap;
 
   static {
-    keyMap.put("1", new int[] { KeyEvent.VK_1 });
-    keyMap.put("2", new int[] { KeyEvent.VK_2 });
-    keyMap.put("3", new int[] { KeyEvent.VK_3 });
-    keyMap.put("4", new int[] { KeyEvent.VK_4 });
-    keyMap.put("5", new int[] { KeyEvent.VK_5 });
-    keyMap.put("6", new int[] { KeyEvent.VK_6 });
-    keyMap.put("7", new int[] { KeyEvent.VK_7 });
-    keyMap.put("8", new int[] { KeyEvent.VK_8 });
-    keyMap.put("9", new int[] { KeyEvent.VK_9 });
-    keyMap.put("0", new int[] { KeyEvent.VK_0 });
-    keyMap.put("a", new int[] { KeyEvent.VK_A });
-    keyMap.put("b", new int[] { KeyEvent.VK_B });
-    keyMap.put("c", new int[] { KeyEvent.VK_C });
-    keyMap.put("d", new int[] { KeyEvent.VK_D });
-    keyMap.put("e", new int[] { KeyEvent.VK_E });
-    keyMap.put("f", new int[] { KeyEvent.VK_F });
-    keyMap.put("g", new int[] { KeyEvent.VK_G });
-    keyMap.put("h", new int[] { KeyEvent.VK_H });
-    keyMap.put("i", new int[] { KeyEvent.VK_I });
-    keyMap.put("j", new int[] { KeyEvent.VK_J });
-    keyMap.put("k", new int[] { KeyEvent.VK_K });
-    keyMap.put("l", new int[] { KeyEvent.VK_L });
-    keyMap.put("m", new int[] { KeyEvent.VK_M });
-    keyMap.put("n", new int[] { KeyEvent.VK_N });
-    keyMap.put("o", new int[] { KeyEvent.VK_O });
-    keyMap.put("p", new int[] { KeyEvent.VK_P });
-    keyMap.put("q", new int[] { KeyEvent.VK_Q });
-    keyMap.put("r", new int[] { KeyEvent.VK_R });
-    keyMap.put("s", new int[] { KeyEvent.VK_S });
-    keyMap.put("t", new int[] { KeyEvent.VK_T });
-    keyMap.put("u", new int[] { KeyEvent.VK_U });
-    keyMap.put("v", new int[] { KeyEvent.VK_V });
-    keyMap.put("w", new int[] { KeyEvent.VK_W });
-    keyMap.put("x", new int[] { KeyEvent.VK_X });
-    keyMap.put("y", new int[] { KeyEvent.VK_Y });
-    keyMap.put("z", new int[] { KeyEvent.VK_Z });
-    keyMap.put("A", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_A });
-    keyMap.put("B", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_B });
-    keyMap.put("C", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_C });
-    keyMap.put("D", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_D });
-    keyMap.put("E", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_E });
-    keyMap.put("F", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_F });
-    keyMap.put("G", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_G });
-    keyMap.put("H", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_H });
-    keyMap.put("I", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_I });
-    keyMap.put("J", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_J });
-    keyMap.put("K", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_K });
-    keyMap.put("L", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_L });
-    keyMap.put("M", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_M });
-    keyMap.put("N", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_N });
-    keyMap.put("O", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_O });
-    keyMap.put("P", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_P });
-    keyMap.put("Q", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Q });
-    keyMap.put("R", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_R });
-    keyMap.put("S", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_S });
-    keyMap.put("T", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_T });
-    keyMap.put("U", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_U });
-    keyMap.put("V", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_V });
-    keyMap.put("W", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_W });
-    keyMap.put("X", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_X });
-    keyMap.put("Y", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Y });
-    keyMap.put("Z", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Z });
-    keyMap.put("`", new int[] { KeyEvent.VK_BACK_QUOTE });
-    keyMap.put("-", new int[] { KeyEvent.VK_MINUS });
-    keyMap.put("=", new int[] { KeyEvent.VK_EQUALS });
-    keyMap.put("[", new int[] { KeyEvent.VK_OPEN_BRACKET });
-    keyMap.put("]", new int[] { KeyEvent.VK_CLOSE_BRACKET });
-    keyMap.put("\\", new int[] { KeyEvent.VK_BACK_SLASH });
-    keyMap.put(";", new int[] { KeyEvent.VK_SEMICOLON });
-    keyMap.put("'", new int[] { KeyEvent.VK_QUOTE });
-    keyMap.put(",", new int[] { KeyEvent.VK_COMMA });
-    keyMap.put(".", new int[] { KeyEvent.VK_PERIOD });
-    keyMap.put("/", new int[] { KeyEvent.VK_SLASH });
-    keyMap.put("~", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_QUOTE });
-    keyMap.put("_", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_MINUS });
-    keyMap.put("+", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_EQUALS });
-    keyMap.put("{", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET });
-    keyMap.put("}", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET });
-    keyMap.put("|", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH });
-    keyMap.put(":", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SEMICOLON });
-    keyMap.put("\"", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_QUOTE });
-    keyMap.put("<", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_COMMA });
-    keyMap.put(">", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_PERIOD });
-    keyMap.put("?", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SLASH });
-    keyMap.put("!", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_1 });
-    keyMap.put("@", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_2 });
-    keyMap.put("#", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_3 });
-    keyMap.put("$", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_4 });
-    keyMap.put("%", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_5 });
-    keyMap.put("^", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_6 });
-    keyMap.put("&", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_7 });
-    keyMap.put("*", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_8 });
-    keyMap.put("(", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_9 });
-    keyMap.put(")", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_0 });
-    keyMap.put("\t", new int[] { KeyEvent.VK_TAB });
-    keyMap.put("\n", new int[] { KeyEvent.VK_ENTER });
-    keyMap.put(" ", new int[] { KeyEvent.VK_SPACE });
+    Map<String, int[]> textMapTmp = new HashMap<String, int[]>();
+    textMapTmp.put("1", new int[] { KeyEvent.VK_1 });
+    textMapTmp.put("2", new int[] { KeyEvent.VK_2 });
+    textMapTmp.put("3", new int[] { KeyEvent.VK_3 });
+    textMapTmp.put("4", new int[] { KeyEvent.VK_4 });
+    textMapTmp.put("5", new int[] { KeyEvent.VK_5 });
+    textMapTmp.put("6", new int[] { KeyEvent.VK_6 });
+    textMapTmp.put("7", new int[] { KeyEvent.VK_7 });
+    textMapTmp.put("8", new int[] { KeyEvent.VK_8 });
+    textMapTmp.put("9", new int[] { KeyEvent.VK_9 });
+    textMapTmp.put("0", new int[] { KeyEvent.VK_0 });
+    textMapTmp.put("a", new int[] { KeyEvent.VK_A });
+    textMapTmp.put("b", new int[] { KeyEvent.VK_B });
+    textMapTmp.put("c", new int[] { KeyEvent.VK_C });
+    textMapTmp.put("d", new int[] { KeyEvent.VK_D });
+    textMapTmp.put("e", new int[] { KeyEvent.VK_E });
+    textMapTmp.put("f", new int[] { KeyEvent.VK_F });
+    textMapTmp.put("g", new int[] { KeyEvent.VK_G });
+    textMapTmp.put("h", new int[] { KeyEvent.VK_H });
+    textMapTmp.put("i", new int[] { KeyEvent.VK_I });
+    textMapTmp.put("j", new int[] { KeyEvent.VK_J });
+    textMapTmp.put("k", new int[] { KeyEvent.VK_K });
+    textMapTmp.put("l", new int[] { KeyEvent.VK_L });
+    textMapTmp.put("m", new int[] { KeyEvent.VK_M });
+    textMapTmp.put("n", new int[] { KeyEvent.VK_N });
+    textMapTmp.put("o", new int[] { KeyEvent.VK_O });
+    textMapTmp.put("p", new int[] { KeyEvent.VK_P });
+    textMapTmp.put("q", new int[] { KeyEvent.VK_Q });
+    textMapTmp.put("r", new int[] { KeyEvent.VK_R });
+    textMapTmp.put("s", new int[] { KeyEvent.VK_S });
+    textMapTmp.put("t", new int[] { KeyEvent.VK_T });
+    textMapTmp.put("u", new int[] { KeyEvent.VK_U });
+    textMapTmp.put("v", new int[] { KeyEvent.VK_V });
+    textMapTmp.put("w", new int[] { KeyEvent.VK_W });
+    textMapTmp.put("x", new int[] { KeyEvent.VK_X });
+    textMapTmp.put("y", new int[] { KeyEvent.VK_Y });
+    textMapTmp.put("z", new int[] { KeyEvent.VK_Z });
+    textMapTmp.put("A", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_A });
+    textMapTmp.put("B", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_B });
+    textMapTmp.put("C", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_C });
+    textMapTmp.put("D", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_D });
+    textMapTmp.put("E", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_E });
+    textMapTmp.put("F", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_F });
+    textMapTmp.put("G", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_G });
+    textMapTmp.put("H", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_H });
+    textMapTmp.put("I", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_I });
+    textMapTmp.put("J", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_J });
+    textMapTmp.put("K", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_K });
+    textMapTmp.put("L", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_L });
+    textMapTmp.put("M", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_M });
+    textMapTmp.put("N", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_N });
+    textMapTmp.put("O", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_O });
+    textMapTmp.put("P", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_P });
+    textMapTmp.put("Q", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Q });
+    textMapTmp.put("R", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_R });
+    textMapTmp.put("S", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_S });
+    textMapTmp.put("T", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_T });
+    textMapTmp.put("U", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_U });
+    textMapTmp.put("V", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_V });
+    textMapTmp.put("W", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_W });
+    textMapTmp.put("X", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_X });
+    textMapTmp.put("Y", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Y });
+    textMapTmp.put("Z", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Z });
+    textMapTmp.put("`", new int[] { KeyEvent.VK_BACK_QUOTE });
+    textMapTmp.put("-", new int[] { KeyEvent.VK_MINUS });
+    textMapTmp.put("=", new int[] { KeyEvent.VK_EQUALS });
+    textMapTmp.put("[", new int[] { KeyEvent.VK_OPEN_BRACKET });
+    textMapTmp.put("]", new int[] { KeyEvent.VK_CLOSE_BRACKET });
+    textMapTmp.put("\\", new int[] { KeyEvent.VK_BACK_SLASH });
+    textMapTmp.put(";", new int[] { KeyEvent.VK_SEMICOLON });
+    textMapTmp.put("'", new int[] { KeyEvent.VK_QUOTE });
+    textMapTmp.put(",", new int[] { KeyEvent.VK_COMMA });
+    textMapTmp.put(".", new int[] { KeyEvent.VK_PERIOD });
+    textMapTmp.put("/", new int[] { KeyEvent.VK_SLASH });
+    textMapTmp.put("~", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_QUOTE });
+    textMapTmp.put("_", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_MINUS });
+    textMapTmp.put("+", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_EQUALS });
+    textMapTmp.put("{", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET });
+    textMapTmp.put("}", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET });
+    textMapTmp.put("|", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH });
+    textMapTmp.put(":", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SEMICOLON });
+    textMapTmp.put("\"", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_QUOTE });
+    textMapTmp.put("<", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_COMMA });
+    textMapTmp.put(">", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_PERIOD });
+    textMapTmp.put("?", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SLASH });
+    textMapTmp.put("!", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_1 });
+    textMapTmp.put("@", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_2 });
+    textMapTmp.put("#", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_3 });
+    textMapTmp.put("$", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_4 });
+    textMapTmp.put("%", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_5 });
+    textMapTmp.put("^", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_6 });
+    textMapTmp.put("&", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_7 });
+    textMapTmp.put("*", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_8 });
+    textMapTmp.put("(", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_9 });
+    textMapTmp.put(")", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_0 });
+    textMapTmp.put("\t", new int[] { KeyEvent.VK_TAB });
+    textMapTmp.put("\n", new int[] { KeyEvent.VK_ENTER });
+    textMapTmp.put(" ", new int[] { KeyEvent.VK_SPACE });
+    textMap = Collections.unmodifiableMap(textMapTmp);
   }
 
   static enum MouseButton {
@@ -245,7 +248,6 @@ class Robot {
   private final AtomicLong curThread = new AtomicLong();
   private final Context context;
   private final AtomicInteger statusCode;
-  private final KeyCode keyUndefined;
 
   Robot(final Context context) {
     robot.set(AppThread.exec(context.statusCode, new Sync<com.sun.glass.ui.Robot>() {
@@ -255,31 +257,19 @@ class Robot {
     }));
     this.context = context;
     this.statusCode = context.statusCode;
-    this.keyUndefined = KeyCode.UNDEFINED;
   }
 
-  private int[] convertKey(int codePoint) {
+  private static int[] convertKey(int codePoint) {
     char[] chars = Character.toChars(codePoint);
     if (chars.length == 1) {
       Keys key = Keys.getKeyFromUnicode(chars[0]);
       if (key != null) {
-        Integer mapping = keyConvert.get(key);
-        if (mapping != null) {
-          return new int[] { mapping };
-        }
+        return keysMap.get(key);
       }
     }
     String str = new String(new int[] { codePoint }, 0, 1);
-    int[] mapping = keyMap.get(str);
-    if (mapping != null) {
-      return mapping;
-    }
-    int keyCode = KeyEvent.getExtendedKeyCodeForChar(codePoint);
-    if (keyCode != KeyEvent.VK_UNDEFINED) {
-      return new int[] { keyCode };
-    }
-    return null;
-
+    int[] mapping = textMap.get(str);
+    return mapping;
   }
 
   private static boolean isChord(CharSequence charSequence) {
@@ -326,68 +316,49 @@ class Robot {
   void keysPress(final CharSequence chars) {
     lock();
     try {
-      keysPressHelper(chars);
+      final int[] ints = chars.chars().toArray();
+      if (ints.length > 0) {
+        final int[] converted = convertKey(ints[0]);
+        if (converted != null) {
+          AppThread.exec(statusCode, new Sync<Object>() {
+            @Override
+            public Object perform() {
+              for (int j = 0; j < converted.length; j++) {
+                robot.get().keyPress(converted[j]);
+              }
+              return null;
+            }
+          });
+        }
+      }
     } finally {
       unlock();
-    }
-  }
-
-  private void keysPressHelper(final CharSequence chars) {
-    final int[] ints = chars.codePoints().toArray();
-    final Integer[] integers = new Integer[ints.length];
-    for (int i = 0; i < ints.length; i++) {
-      integers[i] = ints[i];
-    }
-    final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
-    for (int i = 0; i < codePoints.length(); i++) {
-      final int cur = i;
-      AppThread.exec(statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          int[] converted = convertKey(codePoints.get(cur));
-          for (int j = 0; converted != null && j < converted.length; j++) {
-            if (converted[j] != -1) {
-              robot.get().keyPress(converted[j]);
-            }
-          }
-          return null;
-        }
-      });
     }
   }
 
   void keysRelease(final CharSequence chars) {
     lock();
     try {
-      keysReleaseHelper(chars);
-    } finally {
-      unlock();
-    }
-  }
-
-  private void keysReleaseHelper(final CharSequence chars) {
-    final int[] ints = chars.codePoints().toArray();
-    final Integer[] integers = new Integer[ints.length];
-    for (int i = 0; i < ints.length; i++) {
-      integers[i] = ints[i];
-    }
-    final AtomicReferenceArray<Integer> codePoints = new AtomicReferenceArray<Integer>(integers);
-    for (int i = 0; i < codePoints.length(); i++) {
-      final int cur = i;
-      AppThread.exec(true, statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          int[] converted = convertKey(codePoints.get(cur));
-          if (converted != null) {
-            for (int j = converted.length - 1; j > -1; j--) {
-              if (converted[j] != -1) {
+      final int[] ints = chars.chars().toArray();
+      if (ints.length > 0) {
+        final int[] converted = convertKey(ints[0]);
+        if (converted != null) {
+          AppThread.exec(statusCode, new Sync<Object>() {
+            @Override
+            public Object perform() {
+              for (int j = converted.length - 1; j > -1; j--) {
+                if (j == 0) {
+                  context.item().httpListener.get().resetStatusCode();
+                }
                 robot.get().keyRelease(converted[j]);
               }
+              return null;
             }
-          }
-          return null;
+          });
         }
-      });
+      }
+    } finally {
+      unlock();
     }
   }
 
@@ -405,48 +376,82 @@ class Robot {
     }
   }
 
-  void keysTypeHelper(final CharSequence chars) {
+  private void keysTypeHelper(final CharSequence chars) {
     lock();
     try {
       if (isChord(chars)) {
-        keysPressHelper(chars);
-        keysReleaseHelper(new StringBuilder(chars).reverse());
-      } else {
-        int[] ints = chars.codePoints().toArray();
+        //TODO handle non-ascii chords
+
+        int[] ints = chars.chars().toArray();
         for (int i = 0; i < ints.length; i++) {
-          final int codePoint = ints[i];
-          String myChar;
-          boolean fireEvent;
-          final boolean reset;
-          if (codePoint == LINE_FEED || codePoint == CARRIAGE_RETURN || codePoint == ENTER) {
-            //replace linefeed with carriage returns due to idiosyncrasy of WebView
-            myChar = "\r";
-            fireEvent = true;
-            reset = true;
-          } else {
-            myChar = new String(new int[] { codePoint }, 0, 1);
-            fireEvent = convertKey(codePoint) == null;
-            reset = false;
-          }
-          if (fireEvent) {
+          final int[] converted = convertKey(ints[i]);
+          if (converted != null) {
             AppThread.exec(true, statusCode, new Sync<Object>() {
               @Override
               public Object perform() {
-                if (reset) {
+                for (int j = 0; j < converted.length; j++) {
+                  robot.get().keyPress(converted[j]);
+                }
+                return null;
+              }
+            });
+          }
+        }
+        for (int i = ints.length - 1; i > -1; i--) {
+          final boolean lastKey = i == 0;
+          final int[] converted = convertKey(ints[i]);
+          if (converted != null) {
+            AppThread.exec(false, statusCode, new Sync<Object>() {
+              @Override
+              public Object perform() {
+                for (int j = converted.length - 1; j > -1; j--) {
+                  if (lastKey && j == 0) {
+                    context.item().httpListener.get().resetStatusCode();
+                  }
+                  robot.get().keyRelease(converted[j]);
+                }
+                return null;
+              }
+            });
+          }
+        }
+      } else {
+        int[] ints = chars.chars().toArray();
+        for (int i = 0; i < ints.length; i++) {
+          final int codePoint;
+          final boolean lastKey = i == ints.length - 1;
+          if (ints[i] == LINE_FEED || ints[i] == CARRIAGE_RETURN || ints[i] == ENTER) {
+            //replace linefeed with carriage returns due to idiosyncrasy of WebView
+            codePoint = '\r';
+          } else {
+            codePoint = ints[i];
+          }
+          AppThread.exec(!lastKey && !Character.isHighSurrogate((char) codePoint), statusCode, new Sync<Object>() {
+            @Override
+            public Object perform() {
+              int[] converted = convertKey(codePoint);
+              if (converted == null) {
+                if (lastKey) {
                   context.item().httpListener.get().resetStatusCode();
                 }
                 context.item().view.get().fireEvent(
                     new javafx.scene.input.KeyEvent(
-                        javafx.scene.input.KeyEvent.KEY_TYPED, myChar, "", keyUndefined,
-                        //TODO track meta keys
+                        javafx.scene.input.KeyEvent.KEY_TYPED, new String(new int[] { codePoint }, 0, 1), "", KeyCode.UNDEFINED,
                         false, false, false, false));
-                return null;
+              } else {
+                for (int j = 0; j < converted.length; j++) {
+                  robot.get().keyPress(converted[j]);
+                }
+                for (int j = converted.length - 1; j > -1; j--) {
+                  if (lastKey && j == 0) {
+                    context.item().httpListener.get().resetStatusCode();
+                  }
+                  robot.get().keyRelease(converted[j]);
+                }
               }
-            });
-          } else {
-            keysPressHelper(myChar);
-            keysReleaseHelper(myChar);
-          }
+              return null;
+            }
+          });
         }
       }
     } finally {
