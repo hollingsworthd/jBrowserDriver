@@ -353,7 +353,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             context.item().httpListener.get().resetStatusCode();
             node.call("scrollIntoView");
             node.call("focus");
-            node.call("setValue", new Object[] { "" });
+            node.eval("this.value='';");
             return null;
           }
         });

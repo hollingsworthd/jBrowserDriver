@@ -208,6 +208,10 @@ public class Test {
       test(driver.findElement(By.id("text-input")).getAttribute("value").equals("testing"));
       driver.findElement(By.id("text-input")).sendKeys(JBrowserDriver.KEYBOARD_DELETE);
       test(driver.findElement(By.id("text-input")).getAttribute("value") == null);
+      driver.findElement(By.id("text-input")).sendKeys("testing");
+      test(driver.findElement(By.id("text-input")).getAttribute("value").equals("testing"));
+      driver.findElement(By.id("text-input")).clear();
+      test(driver.findElement(By.id("text-input")).getAttribute("value") == null);
 
       /*
        * Execute javascript
