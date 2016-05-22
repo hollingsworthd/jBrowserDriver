@@ -426,7 +426,7 @@ class Robot {
           } else {
             codePoint = ints[i];
           }
-          AppThread.exec(!lastKey && !Character.isHighSurrogate((char) codePoint), statusCode, new Sync<Object>() {
+          AppThread.exec(!lastKey, statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               int[] converted = convertKey(codePoint);
