@@ -291,7 +291,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         } catch (InterruptedException e) {}
       }
     }
-    sessionId = new SessionId(launchProcess(settings.host(), configuredPortGroup.get(), settings.logger()));
+    sessionId = new SessionId(launchProcess(settings, configuredPortGroup.get()));
     if (actualPortGroup.get() == null) {
       Util.handleException(new IllegalStateException("Could not launch browser."));
     }
@@ -330,7 +330,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (Throwable t) {}
   }
 
-  private String launchProcess(final String host, final PortGroup portGroup, final Logger logger) {
+  private String launchProcess(final Settings settings, final PortGroup portGroup) {
     final AtomicBoolean ready = new AtomicBoolean();
     final AtomicReference<String> logPrefix = new AtomicReference<String>("");
     new Thread(new Runnable() {
@@ -338,7 +338,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       public void run() {
         List<String> myArgs = new ArrayList<String>(args);
         myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
-        myArgs.add("-Djava.rmi.server.hostname=" + host);
+        myArgs.add("-Djava.rmi.server.hostname=" + settings.host());
+        myArgs.addAll(settings.javaOptions());
         myArgs.add(JBrowserDriverServer.class.getName());
         myArgs.add(Long.toString(portGroup.child));
         myArgs.add(Long.toString(portGroup.parent));
@@ -385,11 +386,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
                       ready.notifyAll();
                       done = true;
                     } else {
-                      log(logger, logPrefix.get(), line);
+                      log(settings.logger(), logPrefix.get(), line);
                     }
                   }
                 } else {
-                  log(logger, logPrefix.get(), line);
+                  log(settings.logger(), logPrefix.get(), line);
                 }
               }
             }
@@ -397,7 +398,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
               .redirectError(new LogOutputStream() {
             @Override
             protected void processLine(String line) {
-              log(logger, logPrefix.get(), line);
+              log(settings.logger(), logPrefix.get(), line);
             }
           })
               .destroyOnExit()

@@ -22,6 +22,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
@@ -149,6 +151,7 @@ public class Settings implements Serializable {
     LOG_WARNINGS("jbd.logwarnings"),
     LOGS_MAX("jbd.logsmax"),
     LOGGER("jbd.logger"),
+    JAVA_OPTIONS("jbd.javaoptions"),
     @Deprecated WIRE_CONSOLE("jbd.wireconsole"),
     @Deprecated TRACE_CONSOLE("jbd.traceconsole"),
     @Deprecated WARN_CONSOLE("jbd.warnconsole"),
@@ -204,6 +207,7 @@ public class Settings implements Serializable {
     private int connectTimeout = -1;
     private int connectionReqTimeout = -1;
     private String host = "127.0.0.1";
+    private String[] javaOptions;
     //TODO    private ResponseInterceptor[] responseInterceptors;
 
     /**
@@ -1035,6 +1039,33 @@ public class Settings implements Serializable {
     }
 
     /**
+     * JVM options, such as Java system properties or Java HotSpot VM options.
+     * <p>
+     * Each option is a separate string in the array passed in. E.g.,
+     * <p>
+     * <code>
+     * .javaOptions("-XX:+PrintCommandLineFlags", "-Xmx1g", "-Djsse.enableSNIExtension=false")
+     * </code>
+     * <p>
+     * Note that browser instances are run in a separate Java process which doesn't inherit any
+     * options set in the parent process (thus the need for this API).
+     * <p>
+     * By default no options are set.
+     * 
+     * <p><ul>
+     * <li>Java system property <code>jbd.javaoptions</code> overrides this setting. The options must be separated by tab (\t).</li>
+     * <li>{@link Capabilities} name <code>jbd.javaoptions</code> alternately configures this setting. The options must be separated by tab (\t).</li>
+     * </ul><p>
+     * 
+     * @param options
+     * @return this Builder
+     */
+    public Builder javaOptions(String... options) {
+      this.javaOptions = options;
+      return this;
+    }
+
+    /**
      * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logWire, logsMax, or logger.
      */
     @Deprecated
@@ -1123,6 +1154,7 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
       //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
+      set(capabilities, PropertyName.JAVA_OPTIONS, StringUtils.join(this.javaOptions, "\t"));
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -1334,6 +1366,7 @@ public class Settings implements Serializable {
   private final int connectTimeout;
   private final int connectionReqTimeout;
   private final String host;
+  private final List<String> javaOptions;
   //TODO private final ResponseInterceptor[] responseInterceptors;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1355,25 +1388,33 @@ public class Settings implements Serializable {
     this.maxRouteConnections = parse(properties, PropertyName.MAX_ROUTE_CONNECTIONS, builder.maxRouteConnections);
     this.maxConnections = parse(properties, PropertyName.MAX_CONNECTIONS, builder.maxConnections);
     this.logJavascript = parse(properties, PropertyName.LOG_JAVASCRIPT, builder.logJavascript);
-    if (properties.get(PropertyName.WIRE_CONSOLE) != null) {
+    if (properties.get(PropertyName.JAVA_OPTIONS.propertyName) != null) {
+      this.javaOptions = Collections.unmodifiableList(Arrays.asList(
+          properties.get(PropertyName.JAVA_OPTIONS.propertyName).toString().split("\t")));
+    } else if (builder.javaOptions == null) {
+      this.javaOptions = Collections.unmodifiableList(new ArrayList<String>());
+    } else {
+      this.javaOptions = Collections.unmodifiableList(Arrays.asList(builder.javaOptions));
+    }
+    if (properties.get(PropertyName.WIRE_CONSOLE.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.wireconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logwire, jbd.logger, or jbd.logsmax instead.");
       this.logWire = parse(properties, PropertyName.WIRE_CONSOLE, builder.logWire);
     } else {
       this.logWire = parse(properties, PropertyName.LOG_WIRE, builder.logWire);
     }
-    if (properties.get(PropertyName.TRACE_CONSOLE) != null) {
+    if (properties.get(PropertyName.TRACE_CONSOLE.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.traceconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logtrace, jbd.logger, or jbd.logsmax instead.");
       this.logTrace = parse(properties, PropertyName.TRACE_CONSOLE, builder.logTrace);
     } else {
       this.logTrace = parse(properties, PropertyName.LOG_TRACE, builder.logTrace);
     }
-    if (properties.get(PropertyName.WARN_CONSOLE) != null) {
+    if (properties.get(PropertyName.WARN_CONSOLE.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.warnconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logwarnings, jbd.logger, or jbd.logsmax instead.");
       this.logWarnings = parse(properties, PropertyName.WARN_CONSOLE, builder.logWarnings);
     } else {
       this.logWarnings = parse(properties, PropertyName.LOG_WARNINGS, builder.logWarnings);
     }
-    if (properties.get(PropertyName.MAX_LOGS) != null) {
+    if (properties.get(PropertyName.MAX_LOGS.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.maxlogs setting is deprecated and will be removed in v2.0.0. Use jbd.logsmax, jbd.logwire, jbd.logtrace, or jbd.logwarnings instead.");
       this.logsMax = parse(properties, PropertyName.MAX_LOGS, builder.logsMax);
     } else {
@@ -1654,6 +1695,10 @@ public class Settings implements Serializable {
 
   int loggerLevel() {
     return loggerLevel;
+  }
+
+  List<String> javaOptions() {
+    return javaOptions;
   }
   //TODO
   //  ResponseInterceptor[] responseInterceptors() {
