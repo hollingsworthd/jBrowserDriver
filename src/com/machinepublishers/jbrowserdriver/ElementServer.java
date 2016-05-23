@@ -1117,7 +1117,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             validate(false);
             ElementServer other;
             synchronized (map) {
-              other = map.get(id);
+              other = map.remove(id);
             }
             other.validate(false);
             return node.equals(other.node);
