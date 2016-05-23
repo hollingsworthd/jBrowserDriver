@@ -201,6 +201,12 @@ public class Test {
       test(error != null);
 
       /*
+       * WebElement Equals/HashCode
+       */
+      test(driver.findElements(By.name("divs")).get(0).equals(driver.findElements(By.name("divs")).get(0)));
+      test(driver.findElements(By.name("divs")).get(0).hashCode() == driver.findElements(By.name("divs")).get(0).hashCode());
+
+      /*
        * Typing text
        */
       driver.findElement(By.id("text-input")).sendKeys("testing");

@@ -1087,4 +1087,42 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     LogsServer.instance().warn("Screenshot not supported on jBrowserDriver WebElements");
     return null;
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int remoteHashCode() {
+    return AppThread.exec(
+        context.statusCode,
+        new Sync<Integer>() {
+          @Override
+          public Integer perform() {
+            validate(false);
+            return node.hashCode();
+          }
+        });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean remoteEquals(ElementId id) {
+    return AppThread.exec(
+        context.statusCode,
+        new Sync<Boolean>() {
+          @Override
+          public Boolean perform() {
+            validate(false);
+            ElementServer other;
+            synchronized (map) {
+              other = map.get(id);
+            }
+            other.validate(false);
+            return node.equals(other.node);
+          }
+        });
+  }
+
 }

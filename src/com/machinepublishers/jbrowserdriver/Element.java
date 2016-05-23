@@ -709,4 +709,38 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public WebDriver getWrappedDriver() {
     return driver;
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public int hashCode() {
+    synchronized (lock) {
+      try {
+        return remote.remoteHashCode();
+      } catch (Throwable t) {
+        Util.handleException(t);
+        return 0;
+      }
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof Element) {
+      ElementId id = new ElementId();
+      ((Element) obj).scriptParam(id);
+      synchronized (lock) {
+        try {
+          return remote.remoteEquals(id);
+        } catch (Throwable t) {
+          Util.handleException(t);
+        }
+      }
+    }
+    return false;
+  }
 }

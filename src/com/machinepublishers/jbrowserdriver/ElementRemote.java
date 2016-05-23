@@ -102,4 +102,8 @@ interface ElementRemote extends Remote {
   CoordinatesRemote getCoordinates() throws RemoteException;
 
   byte[] getScreenshot() throws WebDriverException, RemoteException;
+
+  int remoteHashCode() throws RemoteException;
+
+  boolean remoteEquals(ElementId id) throws RemoteException;
 }
