@@ -291,6 +291,12 @@ public class Test {
       test("Testing\ntext.".equals(driver.findElement(By.id("text-node1")).getText()));
       test("".equals(driver.findElement(By.id("text-node2")).getText()));
       test("".equals(driver.findElement(By.id("text-node3")).getText()));
+      List<WebElement> options = driver.findElementsByCssSelector("#testselect option");
+      test(options.size() == 2);
+      test(options.get(0).isSelected());
+      test(!options.get(1).isSelected());
+      test(driver.findElementById("checkbox1").isSelected());
+      test(!driver.findElementById("checkbox2").isSelected());
 
       /*
        * Cookie manager

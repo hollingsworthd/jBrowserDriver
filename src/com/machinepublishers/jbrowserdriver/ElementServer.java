@@ -575,8 +575,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             validate(false);
             String selected = node.getMember("selected").toString();
             String checked = node.getMember("checked").toString();
-            return (selected != null && !"undefined".equals(selected) && !selected.isEmpty())
-                || (checked != null && !"undefined".equals(checked) && !checked.isEmpty());
+            return (selected != null && !"undefined".equals(selected) && !"false".equals(selected) && !selected.isEmpty())
+                || (checked != null && !"undefined".equals(checked) && !"false".equals(checked) && !checked.isEmpty());
           }
         });
   }
