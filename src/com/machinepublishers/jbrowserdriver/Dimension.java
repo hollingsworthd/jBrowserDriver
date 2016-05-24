@@ -25,9 +25,9 @@ class Dimension implements Serializable {
   private final int width;
   private final int height;
 
-  Dimension() {
-    this.width = 0;
-    this.height = 0;
+  Dimension(int width, int height) {
+    this.width = width;
+    this.height = height;
   }
 
   Dimension(org.openqa.selenium.Dimension dimension) {

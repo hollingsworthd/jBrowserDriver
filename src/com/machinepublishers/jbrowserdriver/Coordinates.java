@@ -19,15 +19,18 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.rmi.RemoteException;
+import java.io.Serializable;
 
-class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates {
-  final CoordinatesRemote remote;
-  private final SocketLock lock;
+class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates, Serializable {
 
-  Coordinates(CoordinatesRemote remote, SocketLock lock) {
-    this.remote = remote;
-    this.lock = lock;
+  private final Point page;
+
+  Coordinates(int pageX, int pageY) {
+    this.page = new Point(pageX, pageY);
+  }
+
+  Coordinates(org.openqa.selenium.interactions.internal.Coordinates coords) {
+    this.page = coords.onPage() == null ? null : new Point(coords.onPage());
   }
 
   /**
@@ -35,14 +38,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public org.openqa.selenium.Point onScreen() {
-    try {
-      synchronized (lock) {
-        return remote == null ? null : remote.remoteOnScreen().toSelenium();
-      }
-    } catch (RemoteException e) {
-      Util.handleException(e);
-      return null;
-    }
+    return null;
   }
 
   /**
@@ -50,14 +46,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public org.openqa.selenium.Point inViewPort() {
-    try {
-      synchronized (lock) {
-        return remote == null ? null : remote.remoteInViewPort().toSelenium();
-      }
-    } catch (RemoteException e) {
-      Util.handleException(e);
-      return null;
-    }
+    return null;
   }
 
   /**
@@ -65,14 +54,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public org.openqa.selenium.Point onPage() {
-    try {
-      synchronized (lock) {
-        return remote == null ? null : remote.remoteOnPage().toSelenium();
-      }
-    } catch (RemoteException e) {
-      Util.handleException(e);
-      return null;
-    }
+    return page.toSelenium();
   }
 
   /**
@@ -80,13 +62,6 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public Object getAuxiliary() {
-    try {
-      synchronized (lock) {
-        return remote == null ? null : remote.getAuxiliary();
-      }
-    } catch (RemoteException e) {
-      Util.handleException(e);
-      return null;
-    }
+    return null;
   }
 }

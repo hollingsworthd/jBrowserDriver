@@ -79,7 +79,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   public void setPosition(final org.openqa.selenium.Point point) {
     try {
       synchronized (lock) {
-        remote.setPosition(new Point(point));
+        remote.remoteSetPosition(new Point(point));
       }
     } catch (Throwable t) {
       Util.handleException(t);
@@ -93,7 +93,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   public void setSize(final org.openqa.selenium.Dimension dimension) {
     try {
       synchronized (lock) {
-        remote.setSize(new Dimension(dimension));
+        remote.remoteSetSize(new Dimension(dimension));
       }
     } catch (Throwable t) {
       Util.handleException(t);

@@ -58,10 +58,18 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public org.openqa.selenium.Point getPosition() {
-    return AppThread.exec(new AtomicInteger(-1), new Sync<org.openqa.selenium.Point>() {
+    return remoteGetPosition().toSelenium();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Point remoteGetPosition() {
+    return AppThread.exec(new AtomicInteger(-1), new Sync<Point>() {
       @Override
-      public org.openqa.selenium.Point perform() {
-        return new org.openqa.selenium.Point((int) Math.rint((Double) stage.get().getX()),
+      public Point perform() {
+        return new Point((int) Math.rint((Double) stage.get().getX()),
             (int) Math.rint((Double) stage.get().getY()));
       }
     });
@@ -71,22 +79,8 @@ class WindowServer extends RemoteObject implements WindowRemote,
    * {@inheritDoc}
    */
   @Override
-  public Point remoteGetPosition() {
-    return new Point(getPosition());
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public org.openqa.selenium.Dimension getSize() {
-    return AppThread.exec(new AtomicInteger(-1), new Sync<org.openqa.selenium.Dimension>() {
-      @Override
-      public org.openqa.selenium.Dimension perform() {
-        return new org.openqa.selenium.Dimension((int) Math.rint((Double) stage.get().getWidth()),
-            (int) Math.rint((Double) stage.get().getHeight()));
-      }
-    });
+    return remoteGetSize().toSelenium();
   }
 
   /**
@@ -94,7 +88,13 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public Dimension remoteGetSize() {
-    return new Dimension(getSize());
+    return AppThread.exec(new AtomicInteger(-1), new Sync<Dimension>() {
+      @Override
+      public Dimension perform() {
+        return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
+            (int) Math.rint((Double) stage.get().getHeight()));
+      }
+    });
   }
 
   /**
@@ -115,15 +115,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    * {@inheritDoc}
    */
   @Override
-  public void setPosition(final Point point) {
-    setPosition(point.toSelenium());
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setPosition(final org.openqa.selenium.Point point) {
+  public void setPosition(org.openqa.selenium.Point point) {
     AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -152,15 +144,15 @@ class WindowServer extends RemoteObject implements WindowRemote,
    * {@inheritDoc}
    */
   @Override
-  public void setSize(final Dimension dimension) {
-    setSize(dimension.toSelenium());
+  public void remoteSetPosition(final Point point) {
+    setPosition(point.toSelenium());
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void setSize(final org.openqa.selenium.Dimension dimension) {
+  public void setSize(org.openqa.selenium.Dimension dimension) {
     AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
       @Override
       public Object perform() {
@@ -191,6 +183,14 @@ class WindowServer extends RemoteObject implements WindowRemote,
         return null;
       }
     });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void remoteSetSize(final Dimension dimension) {
+    setSize(dimension.toSelenium());
   }
 
   /**

@@ -670,11 +670,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Coordinates getCoordinates() {
     try {
       synchronized (lock) {
-        CoordinatesRemote coords = remote.getCoordinates();
-        if (coords == null) {
-          return null;
-        }
-        return new com.machinepublishers.jbrowserdriver.Coordinates(coords, lock);
+        return remote.getCoordinates();
       }
     } catch (Throwable t) {
       Util.handleException(t);

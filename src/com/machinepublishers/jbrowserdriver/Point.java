@@ -22,17 +22,17 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.Serializable;
 
 class Point implements Serializable {
-  private int x;
-  private int y;
+  private final int x;
+  private final int y;
 
-  Point() {
-    this.x = 0;
-    this.y = 0;
+  Point(int x, int y) {
+    this.x = x;
+    this.y = y;
   }
 
   Point(org.openqa.selenium.Point point) {
-    this.x = point.getX();
-    this.y = point.getY();
+    this.x = point.x;
+    this.y = point.y;
   }
 
   org.openqa.selenium.Point toSelenium() {

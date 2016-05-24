@@ -22,8 +22,6 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.RemoteException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.openqa.selenium.interactions.internal.Coordinates;
-
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
 
 class MouseServer extends RemoteObject implements MouseRemote,
@@ -38,7 +36,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void click(Coordinates coords) {
+  public void click(org.openqa.selenium.interactions.internal.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
@@ -49,19 +47,15 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void click(CoordinatesRemote coords) {
-    if (coords != null) {
-      click(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
-    } else {
-      click((Coordinates) null);
-    }
+  public void remoteClick(Coordinates coords) {
+    click(coords);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void contextClick(Coordinates coords) {
+  public void contextClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
@@ -72,15 +66,15 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void contextClick(CoordinatesRemote coords) {
-    contextClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
+  public void remoteContextClick(Coordinates coords) {
+    contextClick(coords);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void doubleClick(Coordinates coords) {
+  public void doubleClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
@@ -92,15 +86,15 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void doubleClick(CoordinatesRemote coords) {
-    doubleClick(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
+  public void remoteDoubleClick(Coordinates coords) {
+    doubleClick(coords);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void mouseDown(Coordinates coords) {
+  public void mouseDown(org.openqa.selenium.interactions.internal.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
@@ -111,15 +105,15 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseDown(CoordinatesRemote coords) {
-    mouseDown(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
+  public void remoteMouseDown(Coordinates coords) {
+    mouseDown(coords);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(Coordinates coords) {
+  public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords) {
     robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
   }
 
@@ -127,19 +121,19 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(CoordinatesRemote coords) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
+  public void remoteMouseMove(Coordinates coords) {
+    mouseMove(coords);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(Coordinates coords, long xOffset, long yOffset) {
-    if (coords == null || coords.onPage() == null) {
-      robot.get().mouseMoveBy(xOffset, yOffset);
-    } else {
+  public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords, long xOffset, long yOffset) {
+    if (coords != null) {
       robot.get().mouseMove(coords.onPage().x + xOffset, coords.onPage().y + yOffset);
+    } else {
+      robot.get().mouseMoveBy(xOffset, yOffset);
     }
   }
 
@@ -147,15 +141,15 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(CoordinatesRemote coords, long xOffset, long yOffset) {
-    mouseMove(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()), xOffset, yOffset);
+  public void remoteMouseMove(Coordinates coords, long xOffset, long yOffset) {
+    mouseMove(coords, xOffset, yOffset);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void mouseUp(Coordinates coords) {
+  public void mouseUp(org.openqa.selenium.interactions.internal.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.onPage().x, coords.onPage().y);
     }
@@ -166,8 +160,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseUp(CoordinatesRemote coords) {
-    mouseUp(new com.machinepublishers.jbrowserdriver.Coordinates(coords, new SocketLock()));
+  public void remoteMouseUp(Coordinates coords) {
+    mouseUp(coords);
   }
-
 }

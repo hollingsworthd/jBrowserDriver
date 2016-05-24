@@ -22,23 +22,24 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.Serializable;
 
 class Rectangle implements Serializable {
+
   private final int x;
   private final int y;
-  private final int width;
   private final int height;
+  private final int width;
 
-  Rectangle() {
-    this.x = 0;
-    this.y = 0;
-    this.width = 0;
-    this.height = 0;
+  Rectangle(int x, int y, int height, int width) {
+    this.x = x;
+    this.y = y;
+    this.height = height;
+    this.width = width;
   }
 
   Rectangle(org.openqa.selenium.Rectangle rect) {
     this.x = rect.x;
     this.y = rect.y;
-    this.width = rect.width;
     this.height = rect.height;
+    this.width = rect.width;
   }
 
   org.openqa.selenium.Rectangle toSelenium() {

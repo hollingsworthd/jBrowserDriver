@@ -33,7 +33,7 @@ interface WindowRemote extends Remote {
 
   void fullscreen() throws RemoteException;
 
-  void setPosition(final Point point) throws RemoteException;
+  void remoteSetPosition(final Point point) throws RemoteException;
 
-  void setSize(final Dimension dimension) throws RemoteException;
+  void remoteSetSize(final Dimension dimension) throws RemoteException;
 }

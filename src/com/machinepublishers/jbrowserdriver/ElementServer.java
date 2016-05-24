@@ -427,46 +427,26 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    * {@inheritDoc}
    */
   @Override
-  public org.openqa.selenium.Point getLocation() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<org.openqa.selenium.Point>() {
-          @Override
-          public org.openqa.selenium.Point perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            return new org.openqa.selenium.Point(x + 1, y + 1);
-          }
-        });
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public Point remoteGetLocation() {
-    return new Point(getLocation());
+    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Point>() {
+          @Override
+          public Point perform() {
+            validate(true);
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            return new Point(x + 1, y + 1);
+          }
+        });
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public org.openqa.selenium.Dimension getSize() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<org.openqa.selenium.Dimension>() {
-          @Override
-          public org.openqa.selenium.Dimension perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-            return new org.openqa.selenium.Dimension(x2 - x, y2 - y);
-          }
-        });
+  public org.openqa.selenium.Point getLocation() {
+    return remoteGetLocation().toSelenium();
   }
 
   /**
@@ -474,7 +454,27 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Dimension remoteGetSize() {
-    return new Dimension(getSize());
+    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Dimension>() {
+          @Override
+          public Dimension perform() {
+            validate(true);
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+            return new Dimension(x2 - x, y2 - y);
+          }
+        });
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public org.openqa.selenium.Dimension getSize() {
+    return remoteGetSize().toSelenium();
   }
 
   /**
@@ -482,7 +482,19 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Rectangle remoteGetRect() {
-    return new Rectangle(getRect());
+    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Rectangle>() {
+          @Override
+          public Rectangle perform() {
+            validate(true);
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+            return new Rectangle(x + 1, y + 1, y2 - y, x2 - x);
+          }
+        });
   }
 
   /**
@@ -490,19 +502,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public org.openqa.selenium.Rectangle getRect() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<org.openqa.selenium.Rectangle>() {
-          @Override
-          public org.openqa.selenium.Rectangle perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-            return new org.openqa.selenium.Rectangle(x + 1, y + 1, y2 - y, x2 - x);
-          }
-        });
+    return remoteGetRect().toSelenium();
   }
 
   /**
@@ -1019,55 +1019,31 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    * {@inheritDoc}
    */
   @Override
-  public CoordinatesServer getCoordinates() {
-    try {
-      return new CoordinatesServer(new org.openqa.selenium.interactions.internal.Coordinates() {
-
-        @Override
-        public org.openqa.selenium.Point onScreen() {
-          return null;
-        }
-
-        @Override
-        public org.openqa.selenium.Point onPage() {
-          AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-              new Sync<Object>() {
-            @Override
-            public Point perform() {
-              validate(false);
-              node.call("scrollIntoView");
-              return null;
-            }
-          });
-          return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-              new Sync<org.openqa.selenium.Point>() {
-            @Override
-            public org.openqa.selenium.Point perform() {
-              validate(true);
-              JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              double y = Double.parseDouble(obj.getMember("top").toString());
-              double x = Double.parseDouble(obj.getMember("left").toString());
-              y = y < 0d ? 0d : y;
-              x = x < 0d ? 0d : x;
-              return new org.openqa.selenium.Point((int) Math.rint(x) + 1, (int) Math.rint(y) + 1);
-            }
-          });
-        }
-
-        @Override
-        public org.openqa.selenium.Point inViewPort() {
-          return null;
-        }
-
-        @Override
-        public Object getAuxiliary() {
-          return null;
-        }
-      });
-    } catch (RemoteException e) {
-      Util.handleException(e);
-      return null;
-    }
+  public Coordinates getCoordinates() {
+    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Object>() {
+          @Override
+          public Point perform() {
+            validate(false);
+            node.call("scrollIntoView");
+            return null;
+          }
+        });
+    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+        new Sync<Coordinates>() {
+          @Override
+          public Coordinates perform() {
+            validate(true);
+            JSObject obj = (JSObject) node.call("getBoundingClientRect");
+            double y = Double.parseDouble(obj.getMember("top").toString());
+            double x = Double.parseDouble(obj.getMember("left").toString());
+            y = y < 0d ? 0d : y;
+            x = x < 0d ? 0d : x;
+            final org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
+            return new Coordinates((int) Math.rint(x) + 1 + frameLocation.getX(),
+                (int) Math.rint(y) + 1 + frameLocation.getY());
+          }
+        });
   }
 
   /**

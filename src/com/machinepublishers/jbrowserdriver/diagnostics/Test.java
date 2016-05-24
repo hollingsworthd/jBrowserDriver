@@ -47,6 +47,8 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.logging.LogEntry;
 
 import com.machinepublishers.jbrowserdriver.JBrowserDriver;
@@ -367,7 +369,21 @@ public class Test {
       driver.findElement(By.id("anchor3")).click();
       test(driver.getPageSource() != null);
       driver.switchTo().frame(driver.findElementByTagName("iframe"));
-      driver.findElement(By.id("iframe-anchor")).click(); //TODO iframe coord offset needed on other methods too besides click() ?
+      driver.findElement(By.id("iframe-anchor")).click(); //TODO iframe coord offset needed on any other methods?
+      driver.pageWait();
+      test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      Actions actions = new Actions(driver);
+      actions.moveToElement(driver.findElement(By.id("iframe-anchor")));
+      actions.click();
+      actions.build().perform();
+      driver.pageWait();
+      test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.switchTo().frame(driver.findElementByTagName("iframe"));
+      driver.getMouse().click(((Locatable) driver.findElement(By.id("iframe-anchor"))).getCoordinates());
+      driver.getMouse().mouseMove(((Locatable) driver.findElement(By.id("iframe-anchor"))).getCoordinates(), 5, 5);
       driver.pageWait();
       test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
       //TODO fingerprinting

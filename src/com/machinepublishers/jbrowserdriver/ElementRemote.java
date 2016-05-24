@@ -99,7 +99,7 @@ interface ElementRemote extends Remote {
 
   Object executeScript(final String script, final Object... args) throws RemoteException;
 
-  CoordinatesRemote getCoordinates() throws RemoteException;
+  Coordinates getCoordinates() throws RemoteException;
 
   byte[] getScreenshot() throws WebDriverException, RemoteException;
 
