@@ -23,14 +23,20 @@ import java.io.Serializable;
 
 class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates, Serializable {
 
-  private final Point page;
+  private final Point inViewport;
+  private final ElementRemote remote;
+  private final SocketLock lock;
 
-  Coordinates(int pageX, int pageY) {
-    this.page = new Point(pageX, pageY);
+  Coordinates(ElementRemote remote, SocketLock lock) {
+    this.remote = remote;
+    this.lock = lock;
+    this.inViewport = null;
   }
 
   Coordinates(org.openqa.selenium.interactions.internal.Coordinates coords) {
-    this.page = coords.onPage() == null ? null : new Point(coords.onPage());
+    this.inViewport = coords.inViewPort() == null ? null : new Point(coords.inViewPort());
+    this.remote = null;
+    this.lock = null;
   }
 
   /**
@@ -46,6 +52,17 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public org.openqa.selenium.Point inViewPort() {
+    if (inViewport == null) {
+      synchronized (lock) {
+        try {
+          return remote.locate().toSelenium();
+        } catch (Throwable t) {
+          Util.handleException(t);
+        }
+      }
+    } else if (inViewport != null) {
+      return inViewport.toSelenium();
+    }
     return null;
   }
 
@@ -54,7 +71,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
    */
   @Override
   public org.openqa.selenium.Point onPage() {
-    return page.toSelenium();
+    return null;
   }
 
   /**

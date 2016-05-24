@@ -31,7 +31,6 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.internal.Coordinates;
 import org.openqa.selenium.internal.FindsByClassName;
 import org.openqa.selenium.internal.FindsByCssSelector;
 import org.openqa.selenium.internal.FindsById;
@@ -670,7 +669,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Coordinates getCoordinates() {
     try {
       synchronized (lock) {
-        return remote.getCoordinates();
+        return new Coordinates(remote, lock);
       }
     } catch (Throwable t) {
       Util.handleException(t);

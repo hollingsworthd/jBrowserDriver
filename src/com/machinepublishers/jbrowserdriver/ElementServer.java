@@ -46,7 +46,6 @@ import org.openqa.selenium.internal.FindsByLinkText;
 import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
-import org.openqa.selenium.internal.Locatable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
@@ -60,7 +59,7 @@ import netscape.javascript.JSObject;
 
 class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
-    FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable {
+    FindsByCssSelector, FindsByTagName, FindsByXPath {
 
   private static final String IS_VISIBLE;
 
@@ -1019,7 +1018,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    * {@inheritDoc}
    */
   @Override
-  public Coordinates getCoordinates() {
+  public Point locate() {
     AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
         new Sync<Object>() {
           @Override
@@ -1030,9 +1029,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           }
         });
     return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Coordinates>() {
+        new Sync<Point>() {
           @Override
-          public Coordinates perform() {
+          public Point perform() {
             validate(true);
             JSObject obj = (JSObject) node.call("getBoundingClientRect");
             double y = Double.parseDouble(obj.getMember("top").toString());
@@ -1040,7 +1039,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             y = y < 0d ? 0d : y;
             x = x < 0d ? 0d : x;
             final org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
-            return new Coordinates((int) Math.rint(x) + 1 + frameLocation.getX(),
+            return new Point((int) Math.rint(x) + 1 + frameLocation.getX(),
                 (int) Math.rint(y) + 1 + frameLocation.getY());
           }
         });

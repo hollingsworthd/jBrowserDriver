@@ -475,20 +475,24 @@ class Robot {
     }
   }
 
-  void mouseMove(final double pageX, final double pageY) {
+  void mouseMove(final org.openqa.selenium.Point point) {
+    mouseMove(point.getX(), point.getY());
+  }
+
+  void mouseMove(final double viewportX, final double viewportY) {
     lock();
     try {
       AppThread.exec(statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
-          double adjustedPageX = Math.max(0, Math.min(pageX, stage.getScene().getWidth() - 1));
-          double adjustedPageY = Math.max(0, Math.min(pageY, stage.getScene().getHeight() - 1));
+          double adjustedX = Math.max(0, Math.min(viewportX, stage.getScene().getWidth() - 1));
+          double adjustedY = Math.max(0, Math.min(viewportY, stage.getScene().getHeight() - 1));
           robot.get().mouseMove(
-              (int) Math.rint(adjustedPageX
+              (int) Math.rint(adjustedX
                   + (Double) stage.getX()
                   + (Double) stage.getScene().getX()),
-              (int) Math.rint(adjustedPageY
+              (int) Math.rint(adjustedY
                   + (Double) stage.getY()
                   + (Double) stage.getScene().getY()));
           return null;
@@ -499,7 +503,7 @@ class Robot {
     }
   }
 
-  void mouseMoveBy(final double pageX, final double pageY) {
+  void mouseMoveBy(final double viewportX, final double viewportY) {
     lock();
     try {
       AppThread.exec(statusCode, new Sync<Object>() {
@@ -508,9 +512,9 @@ class Robot {
           Stage stage = context.item().stage.get();
           robot.get().mouseMove(
               (int) Math.rint(Math.max(0, Math.min(stage.getScene().getWidth() - 1,
-                  pageX + new Double((Integer) robot.get().getMouseX())))),
+                  viewportX + new Double((Integer) robot.get().getMouseX())))),
               (int) Math.rint(Math.max(0, Math.min(stage.getScene().getHeight() - 1,
-                  pageY + new Double((Integer) robot.get().getMouseY())))));
+                  viewportY + new Double((Integer) robot.get().getMouseY())))));
           return null;
         }
       });
