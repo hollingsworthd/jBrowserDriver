@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -50,6 +51,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
+import org.w3c.dom.html.HTMLOptionElement;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
@@ -247,50 +249,71 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           }
         });
 
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(true);
-            final JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            final double top = Double.parseDouble(obj.getMember("top").toString());
-            final double left = Double.parseDouble(obj.getMember("left").toString());
-            final double bottom = Double.parseDouble(obj.getMember("bottom").toString());
-            final double right = Double.parseDouble(obj.getMember("right").toString());
-            double clickX = (left + right) / 2d;
-            double clickY = (top + bottom) / 2d;
-            ElementServer doc = ElementServer.create(context);
-            if (!node.equals(doc.node.eval(
-                "(function(){return document.elementFromPoint(" + clickX + "," + clickY + ");})();"))) {
-              final Stage stage = context.item().stage.get();
-              final int minX = Math.max(0, (int) Math.floor(left));
-              final int maxX = Math.min((int) Math.ceil(stage.getScene().getWidth()), (int) Math.ceil(right));
-              final int minY = Math.max(0, (int) Math.floor(top));
-              final int maxY = Math.min((int) Math.ceil(stage.getScene().getHeight()), (int) Math.ceil(bottom));
-              final int incX = (int) Math.max(1, .05d * (double) (maxX - minX));
-              final int incY = (int) Math.max(1, .05d * (double) (maxY - minY));
-              for (int x = minX; x <= maxX; x += incX) {
-                boolean found = false;
-                for (int y = minY; y <= maxY; y += incY) {
-                  if (node.equals(doc.node.eval(
-                      "(function(){return document.elementFromPoint(" + x + "," + y + ");})();"))) {
-                    clickX = x;
-                    clickY = y;
-                    found = true;
+    if (node instanceof HTMLOptionElement) {
+      AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          new Sync<Object>() {
+            @Override
+            public Object perform() {
+              validate(false);
+              try {
+                new ElementServer((JSObject) ((HTMLOptionElement) node).getParentNode(), context).click();
+              } catch (RemoteException e) {
+                Util.handleException(e);
+              }
+              int index = ((HTMLOptionElement) node).getIndex();
+              for (int i = 0; i <= index; i++) {
+                context.robot.get().keysType(Keys.DOWN);
+              }
+              context.robot.get().keysType(Keys.SPACE);
+              return null;
+            }
+          });
+    } else {
+      AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          new Sync<Object>() {
+            @Override
+            public Object perform() {
+              validate(true);
+              final JSObject obj = (JSObject) node.call("getBoundingClientRect");
+              final double top = Double.parseDouble(obj.getMember("top").toString());
+              final double left = Double.parseDouble(obj.getMember("left").toString());
+              final double bottom = Double.parseDouble(obj.getMember("bottom").toString());
+              final double right = Double.parseDouble(obj.getMember("right").toString());
+              double clickX = (left + right) / 2d;
+              double clickY = (top + bottom) / 2d;
+              ElementServer doc = ElementServer.create(context);
+              if (!node.equals(doc.node.eval(
+                  "(function(){return document.elementFromPoint(" + clickX + "," + clickY + ");})();"))) {
+                final Stage stage = context.item().stage.get();
+                final int minX = Math.max(0, (int) Math.floor(left));
+                final int maxX = Math.min((int) Math.ceil(stage.getScene().getWidth()), (int) Math.ceil(right));
+                final int minY = Math.max(0, (int) Math.floor(top));
+                final int maxY = Math.min((int) Math.ceil(stage.getScene().getHeight()), (int) Math.ceil(bottom));
+                final int incX = (int) Math.max(1, .05d * (double) (maxX - minX));
+                final int incY = (int) Math.max(1, .05d * (double) (maxY - minY));
+                for (int x = minX; x <= maxX; x += incX) {
+                  boolean found = false;
+                  for (int y = minY; y <= maxY; y += incY) {
+                    if (node.equals(doc.node.eval(
+                        "(function(){return document.elementFromPoint(" + x + "," + y + ");})();"))) {
+                      clickX = x;
+                      clickY = y;
+                      found = true;
+                      break;
+                    }
+                  }
+                  if (found) {
                     break;
                   }
                 }
-                if (found) {
-                  break;
-                }
               }
+              final org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
+              context.robot.get().mouseMove(clickX + frameLocation.getX(), clickY + frameLocation.getY());
+              context.robot.get().mouseClick(MouseButton.LEFT);
+              return null;
             }
-            final org.openqa.selenium.Point frameLocation = context.item().selectedFrameLocation();
-            context.robot.get().mouseMove(clickX + frameLocation.getX(), clickY + frameLocation.getY());
-            context.robot.get().mouseClick(MouseButton.LEFT);
-            return null;
-          }
-        });
+          });
+    }
   }
 
   /**

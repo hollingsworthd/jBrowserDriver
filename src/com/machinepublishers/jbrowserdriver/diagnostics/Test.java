@@ -222,6 +222,15 @@ public class Test {
       test(driver.findElement(By.id("text-input")).getAttribute("value") == null);
 
       /*
+       * Clicking on HTML Select/Options
+       */
+      test(!driver.findElement(By.id("testoption2")).isSelected());
+      driver.findElement(By.id("testoption2")).click();
+      test(driver.findElement(By.id("testoption2")).isSelected());
+      driver.findElement(By.id("testoption1")).click();
+      test(driver.findElement(By.id("testoption1")).isSelected());
+
+      /*
        * Execute javascript
        */
       test(((WebElement) driver.executeScript("return arguments[0];",
