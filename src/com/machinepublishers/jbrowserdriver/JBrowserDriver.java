@@ -111,10 +111,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final AtomicLong sessionIdCounter = new AtomicLong();
 
   static {
-    Policy.init();
-  }
-
-  static {
     List<String> argsTmp = new ArrayList<String>();
     try {
       File javaBin = new File(System.getProperty("java.home") + "/bin/java");
