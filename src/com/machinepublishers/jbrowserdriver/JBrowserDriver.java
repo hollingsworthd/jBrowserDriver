@@ -70,7 +70,7 @@ import org.zeroturnaround.process.Processes;
 
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
-import io.github.lukehutch.fastclasspathscanner.scanner.ClasspathFinder;
+import io.github.lukehutch.fastclasspathscanner.classpath.ClasspathFinder;
 
 /**
  * A Selenium-compatible and WebKit-based web driver written in pure Java.
@@ -344,59 +344,59 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           new ProcessExecutor()
               .environment(System.getenv())
               .addListener(new ProcessListener() {
-            @Override
-            public void afterStop(Process process) {
-              intercept.deallocate();
-            }
+                @Override
+                public void afterStop(Process process) {
+                  intercept.deallocate();
+                }
 
-            @Override
-            public void beforeStart(ProcessExecutor executor) {
-              intercept.allocate();
-            }
+                @Override
+                public void beforeStart(ProcessExecutor executor) {
+                  intercept.allocate();
+                }
 
-            @Override
-            public void afterStart(Process proc, ProcessExecutor executor) {
-              process.set(proc);
-            }
-          })
+                @Override
+                public void afterStart(Process proc, ProcessExecutor executor) {
+                  process.set(proc);
+                }
+              })
               .redirectOutput(new LogOutputStream() {
-            boolean done = false;
+                boolean done = false;
 
-            @Override
-            protected void processLine(String line) {
-              if (line != null && !line.isEmpty()) {
-                if (!done) {
-                  synchronized (ready) {
-                    if (line.startsWith("ready on ports ")) {
-                      String[] parts = line.substring("ready on ports ".length()).split("/");
-                      actualPortGroup.set(new PortGroup(
-                          Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
-                      logPrefix.set(new StringBuilder()
-                          .append("[Instance ")
-                          .append(sessionIdCounter.incrementAndGet())
-                          .append("][Port ")
-                          .append(actualPortGroup.get().child)
-                          .append("]")
-                          .toString());
-                      ready.set(true);
-                      ready.notifyAll();
-                      done = true;
+                @Override
+                protected void processLine(String line) {
+                  if (line != null && !line.isEmpty()) {
+                    if (!done) {
+                      synchronized (ready) {
+                        if (line.startsWith("ready on ports ")) {
+                          String[] parts = line.substring("ready on ports ".length()).split("/");
+                          actualPortGroup.set(new PortGroup(
+                              Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
+                          logPrefix.set(new StringBuilder()
+                              .append("[Instance ")
+                              .append(sessionIdCounter.incrementAndGet())
+                              .append("][Port ")
+                              .append(actualPortGroup.get().child)
+                              .append("]")
+                              .toString());
+                          ready.set(true);
+                          ready.notifyAll();
+                          done = true;
+                        } else {
+                          log(settings.logger(), logPrefix.get(), line);
+                        }
+                      }
                     } else {
                       log(settings.logger(), logPrefix.get(), line);
                     }
                   }
-                } else {
+                }
+              })
+              .redirectError(new LogOutputStream() {
+                @Override
+                protected void processLine(String line) {
                   log(settings.logger(), logPrefix.get(), line);
                 }
-              }
-            }
-          })
-              .redirectError(new LogOutputStream() {
-            @Override
-            protected void processLine(String line) {
-              log(settings.logger(), logPrefix.get(), line);
-            }
-          })
+              })
               .destroyOnExit()
               .command(myArgs).execute();
         } catch (Throwable t) {
