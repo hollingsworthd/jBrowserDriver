@@ -103,3 +103,4 @@ Joakim Särehag, https://github.com/sarehag, 2016-03-08
 Florian Geyer, https://github.com/BlueIce, 2016-03-10
 Farid Zakaria, https://github.com/fzakaria, 2016-04-17
 Jason Miller, https://github.com/heinousjay, 2016-03-19
+Valery Yatsynovich, https://github.com/valfirst, 2016-06-24
