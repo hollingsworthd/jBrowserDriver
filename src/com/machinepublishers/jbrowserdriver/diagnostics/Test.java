@@ -256,7 +256,7 @@ public class Test {
       test(((List) map.get("key1")).get(2).equals("value3"));
       test(((List) map.get("key1")).get(2) instanceof String);
       test(map.get("key2").equals(new Long(5)));
-      test("function () {return 'testing';}".equals(map.get("key3")));
+      test("function () {return 'testing';}".equals(map.get("key3")) || "function (){return 'testing';}".equals(map.get("key3")));
       test(map.get("key4") == null);
       test(map.get("key5") == null);
       test(Double.isInfinite(((Double) map.get("key6")).doubleValue()));

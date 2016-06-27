@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.nio.IntBuffer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.CommonDialogs.ExtensionFilter;
@@ -196,10 +197,15 @@ public final class MonocleApplication extends Application {
     return new MonoclePixels(width, height, data);
   }
 
-  @Override
+  //  @Override
   public Pixels createPixels(int width, int height, IntBuffer data,
-      float scale) {
-    return new MonoclePixels(width, height, data, scale);
+      float scalex, float scaley) {
+    return new MonoclePixels(width, height, data);//Java 8 and Java 9 constructors conflict--work around: use a constructor they both have
+  }
+
+  //  @Override
+  public Pixels createPixels(int width, int height, IntBuffer data, float scale) {
+    return new MonoclePixels(width, height, data);//Java 8 and Java 9 constructors conflict--work around: use a constructor they both have
   }
 
   @Override
@@ -222,6 +228,7 @@ public final class MonocleApplication extends Application {
     Screen screen = null;
     try {
       NativeScreen ns = platform.getScreen();
+      final AtomicBoolean java9 = new AtomicBoolean();
       Constructor c = AccessController.doPrivileged(
           new PrivilegedAction<Constructor>() {
             @Override
@@ -238,29 +245,61 @@ public final class MonocleApplication extends Application {
                 c.setAccessible(true);
                 return c;
               } catch (Exception e) {
-                e.printStackTrace();
-                return null;
+                try {
+                  Constructor c = Screen.class.getDeclaredConstructor(
+                      Long.TYPE,
+                      Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Integer.TYPE, Integer.TYPE,
+                      Float.TYPE, Float.TYPE,
+                      Float.TYPE, Float.TYPE);
+                  c.setAccessible(true);
+                  java9.set(true);
+                  return c;
+                } catch (Exception e2) {
+                  e2.printStackTrace();
+                  return null;
+                }
               }
             }
           });
       if (c != null) {
-        screen = (Screen) c.newInstance(
-            1l, // dummy native pointer;
-            ns.getDepth(),
-            0, 0, ns.getWidth(), ns.getHeight(),
-            0, 0, ns.getWidth(), ns.getHeight(),
-            ns.getDPI(), ns.getDPI(),
-            ns.getScale());
-        // Move the cursor to the middle of the screen
-        MouseState mouseState = new MouseState();
-        mouseState.setX(ns.getWidth() / 2);
-        mouseState.setY(ns.getHeight() / 2);
-        MouseInput.getInstance().setState(mouseState, false);
+        if (java9.get()) {
+          screen = (Screen) c.newInstance(1l, // dummy native pointer;
+              ns.getDepth(),
+              0, 0, ns.getWidth(), ns.getHeight(),
+              0, 0, ns.getWidth(), ns.getHeight(),
+              0, 0, ns.getWidth(), ns.getHeight(),
+              ns.getDPI(), ns.getDPI(),
+              ns.getScale(), ns.getScale(),
+              ns.getScale(), ns.getScale());
+          // Move the cursor to the middle of the screen
+          MouseState mouseState = new MouseState();
+          mouseState.setX(ns.getWidth() / 2);
+          mouseState.setY(ns.getHeight() / 2);
+          MouseInput.getInstance().setState(mouseState, false);
+        } else {
+          screen = (Screen) c.newInstance(
+              1l, // dummy native pointer;
+              ns.getDepth(),
+              0, 0, ns.getWidth(), ns.getHeight(),
+              0, 0, ns.getWidth(), ns.getHeight(),
+              ns.getDPI(), ns.getDPI(),
+              ns.getScale());
+          // Move the cursor to the middle of the screen
+          MouseState mouseState = new MouseState();
+          mouseState.setX(ns.getWidth() / 2);
+          mouseState.setY(ns.getHeight() / 2);
+          MouseInput.getInstance().setState(mouseState, false);
+        }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-    } catch (UnsatisfiedLinkError e) {
-      e.printStackTrace();
+    } catch (Throwable t) {
+      t.printStackTrace();
     }
     return new Screen[] { screen };
   }

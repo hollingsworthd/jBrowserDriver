@@ -157,6 +157,28 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       new JarOutputStream(new FileOutputStream(classpathJar), manifest).close();
       argsTmp.add("-classpath");
       argsTmp.add(classpathJar.getCanonicalPath());
+      String version = System.getProperty("java.specification.version");
+      if (version != null) {
+        try {
+          if (Double.parseDouble(version) >= 9) {
+            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network.data=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.http=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.https=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.file=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.netdoc=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
+            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
+          }
+        } catch (NumberFormatException e) {
+          Util.handleException(e);
+        }
+      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -333,6 +355,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       @Override
       public void run() {
         List<String> myArgs = new ArrayList<String>(args);
+
         myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
         myArgs.add("-Djava.rmi.server.hostname=" + settings.host());
         myArgs.addAll(settings.javaOptions());
