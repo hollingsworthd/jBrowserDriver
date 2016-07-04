@@ -100,6 +100,11 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   private static final Pattern downloadHeader = Pattern.compile(
       "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private static final AtomicReference<StreamConnectionClient> client = new AtomicReference<StreamConnectionClient>();
+  private static final Set<String> mediaExtensions = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(new String[] {
+      ".svg", ".gif", ".jpeg", ".jpg", ".png",
+      ".ico", ".webm", ".mp4", ".ogg", ".ogv",
+      ".mp3", ".aac", ".wav", ".swf", ".woff",
+      ".otf", ".ttf" })));
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final Map<String, String> reqHeadersCasing = new HashMap<String, String>();
@@ -175,35 +180,27 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   }
 
   boolean isMedia() {
-    String contentType = getContentType();
-    String urlLowercase = urlString.toLowerCase();
-    return (contentType != null
+    String contentType = entity.get() == null || entity.get().getContentType() == null
+        ? null : entity.get().getContentType().getValue();
+    contentType = contentType == null ? null : contentType.toLowerCase();
+    if (contentType != null
         && (contentType.startsWith("image/")
             || contentType.startsWith("video/")
             || contentType.startsWith("audio/")
-            || contentType.startsWith("model/")
             || contentType.startsWith("font/")
             || contentType.startsWith("application/octet-stream")
-            || contentType.contains("/font-")
-            || contentType.contains("/vnd.")
-            || contentType.contains("/x.")))
-        || urlLowercase.endsWith(".svg")
-        || urlLowercase.endsWith(".gif")
-        || urlLowercase.endsWith(".jpeg")
-        || urlLowercase.endsWith(".jpg")
-        || urlLowercase.endsWith(".png")
-        || urlLowercase.endsWith(".ico")
-        || urlLowercase.endsWith(".webm")
-        || urlLowercase.endsWith(".mp4")
-        || urlLowercase.endsWith(".ogg")
-        || urlLowercase.endsWith(".ogv")
-        || urlLowercase.endsWith(".mp3")
-        || urlLowercase.endsWith(".aac")
-        || urlLowercase.endsWith(".wav")
-        || urlLowercase.endsWith(".swf")
-        || urlLowercase.endsWith(".woff")
-        || urlLowercase.endsWith(".otf")
-        || urlLowercase.endsWith(".ttf");
+            || contentType.contains("/font-"))) {
+      return true;
+    }
+    String path = url.getPath() == null ? null : url.getPath().toLowerCase();
+    if (path != null) {
+      for (String extension : mediaExtensions) {
+        if (path.endsWith(extension)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   StreamConnection(URL url) throws MalformedURLException {
