@@ -176,7 +176,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
             argsTmp.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
           }
         } catch (NumberFormatException e) {
-          Util.handleException(e);
+          //ignore this
         }
       }
     } catch (Throwable t) {
