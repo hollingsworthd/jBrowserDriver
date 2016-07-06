@@ -124,7 +124,7 @@ Pull requests are welcome, and we ask people contributing code to agree to the [
 
 Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
 
-If you're interested in financially support this project, consider hiring a developer to fix one of the [open issues](https://github.com/machinepublishers/jbrowserdriver/issues).
+If you're interested in financially supporting this project, consider hiring a developer to fix one of the [open issues](https://github.com/machinepublishers/jbrowserdriver/issues).
 
 - - -
 
