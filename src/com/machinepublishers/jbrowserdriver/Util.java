@@ -41,6 +41,7 @@ import org.apache.http.ConnectionClosedException;
 import org.openqa.selenium.WebDriverException;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.thoughtworks.selenium.SeleniumException;
 
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
@@ -115,17 +116,26 @@ class Util {
 
   static void handleException(Throwable throwable) {
     if (throwable != null) {
-      throwable = throwable instanceof UncheckedExecutionException ? throwable.getCause() : throwable;
-      if (throwable.getClass().getName().startsWith("org.openqa.selenium.")) {
-        if (throwable instanceof RuntimeException) {
-          throw (RuntimeException) throwable;
+      String message = throwable.getMessage();
+      if ((throwable instanceof UncheckedExecutionException || throwable instanceof RemoteException)
+          && throwable.getCause() != null) {
+        throwable = throwable.getCause();
+        message = throwable.getMessage();
+      }
+      if ((throwable instanceof WebDriverException || throwable instanceof SeleniumException)
+          && (throwable instanceof RuntimeException)) {
+        //Preserve the original type; catch blocks often expect something more specific than WebDriverException 
+        try {
+          throw throwable.getClass().getConstructor(String.class, Throwable.class).newInstance(message, throwable);
+        } catch (Throwable t) {
+          try {
+            throw throwable.getClass().getConstructor(Throwable.class).newInstance(throwable);
+          } catch (Throwable t2) {
+            throw (RuntimeException) throwable;
+          }
         }
-        throw new WebDriverException(throwable);
       }
-      if (throwable instanceof RemoteException) {
-        throw new WebDriverException("Remote browser exception.", throwable.getCause());
-      }
-      throw new WebDriverException(throwable);
+      throw new WebDriverException(message, throwable);
     }
   }
 }
