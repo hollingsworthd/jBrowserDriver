@@ -26,8 +26,8 @@ There's no need to install any web browser and this works headlessly on a server
 This library can be used with any JRE language (Java, Scala, etc.), but Groovy is not yet supported. And with Selenium Server or Selenium Grid, you can use any language that has Selenium bindings (including non-JRE languages).
 
 Installing Java:
- * Ubuntu 16.04 or Debian Jessie: `sudo apt-get install openjdk-8-jre openjfx`
- * Ubuntu 14.04: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2`
+ * Ubuntu Xenial 16.04 LTS, Debian 8 Jessie ([Backports](https://backports.debian.org/Instructions/#index2h2)), Debian 9 Stretch: `sudo apt-get install openjdk-8-jre openjfx`
+ * Ubuntu Trusty 14.04 LTS: `sudo add-apt-repository ppa:webupd8team/java && sudo apt-get update && sudo apt-get install oracle-java8-installer libgtk2.0 libxtst6 libxslt1.1 fonts-freefont-ttf libasound2 && sudo update-alternatives --config java`
  * Mac, Windows, Linux: [install Oracle Java 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) *(note: choose either the JRE or JDK but not the "Server JRE" since it doesn't include JavaFX)*
 
 ## Usage
