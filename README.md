@@ -3,8 +3,6 @@ A programmable, embedded web browser driver compatible with the Selenium WebDriv
 
 Licensed under the Apache License v2.0 ([details](https://raw.githubusercontent.com/MachinePublishers/jBrowserDriver/master/LICENSE)).
 
-[Machine Publishers, LLC](https://machinepublishers.com/about) provides commercial support and consulting for jBrowserDriver.
-
 - - -
 
 ## Download
@@ -119,10 +117,14 @@ public class Example {
 
 
 ## Building
-Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the pom.xml file via the [M2E plugin](https://marketplace.eclipse.org/content/maven-integration-eclipse-luna-and-newer). However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section.
+Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the Maven pom.xml file. However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section.
 
 ## Contributing
-Pull requests are welcome, and we ask contributors to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-individual.txt). Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
+Pull requests are welcome, and we ask people contributing code to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-individual.txt) which is similar to the agreement used by the Apache Software Foundation. Signing the CLA is simply a matter of editing the file to add your digital "signature" and adding it to your pull request.
+
+Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
+
+If you're interested in financially support this project, consider hiring a developer to fix one of the [open issues](https://github.com/machinepublishers/jbrowserdriver/issues).
 
 - - -
 
