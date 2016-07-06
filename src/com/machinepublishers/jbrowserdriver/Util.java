@@ -123,17 +123,16 @@ class Util {
         message = throwable.getMessage();
       }
       if ((throwable instanceof WebDriverException || throwable instanceof SeleniumException)
-          && (throwable instanceof RuntimeException)) {
-        //Preserve the original type; catch blocks often expect something more specific than WebDriverException 
+          && throwable instanceof RuntimeException) {
+        //Wrap the exception to ensure complete/helpful stack trace info and also preserve the original subtype 
         try {
-          throw throwable.getClass().getConstructor(String.class, Throwable.class).newInstance(message, throwable);
+          throwable = throwable.getClass().getConstructor(String.class, Throwable.class).newInstance(message, throwable);
         } catch (Throwable t) {
           try {
-            throw throwable.getClass().getConstructor(Throwable.class).newInstance(throwable);
-          } catch (Throwable t2) {
-            throw (RuntimeException) throwable;
-          }
+            throwable = throwable.getClass().getConstructor(Throwable.class).newInstance(throwable);
+          } catch (Throwable t2) {}
         }
+        throw (RuntimeException) throwable;
       }
       throw new WebDriverException(message, throwable);
     }
