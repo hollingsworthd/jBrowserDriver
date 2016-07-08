@@ -59,6 +59,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.JbdClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -117,17 +118,16 @@ class StreamConnectionClient {
     manager = new PoolingHttpClientConnectionManager(registry);
     manager.setDefaultMaxPerRoute(SettingsManager.settings().maxRouteConnections());
     manager.setMaxTotal(SettingsManager.settings().maxConnections());
-    client = new JbdClientBuilder()
-        .disableRedirectHandling()
-        .disableAutomaticRetries()
-        .setDefaultCookieSpecRegistry(cookieProvider)
-        .setConnectionManager(manager)
-        .setDefaultCredentialsProvider(ProxyAuth.instance())
-        .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
-        .build();
-    cachingClient = new JbdClientBuilder()
+    client = clientBuilderHelper(new JbdClientBuilder()
         .setCacheConfig(cacheConfig)
-        .setHttpCacheStorage(httpCache)
+        .setHttpCacheStorage(new HttpCacheNoOp()), manager);
+    cachingClient = clientBuilderHelper(new JbdClientBuilder()
+        .setCacheConfig(cacheConfig)
+        .setHttpCacheStorage(httpCache), manager);
+  }
+
+  private static CloseableHttpClient clientBuilderHelper(HttpClientBuilder builder, PoolingHttpClientConnectionManager manager) {
+    return builder
         .disableRedirectHandling()
         .disableAutomaticRetries()
         .setDefaultCookieSpecRegistry(cookieProvider)
