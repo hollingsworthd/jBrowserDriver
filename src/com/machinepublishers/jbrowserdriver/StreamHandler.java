@@ -84,9 +84,6 @@ class StreamHandler implements URLStreamHandlerFactory {
     if ("mailto".equals(protocol)) {
       return new sun.net.www.protocol.mailto.Handler();
     }
-    if ("netdoc".equals(protocol)) {
-      return new sun.net.www.protocol.netdoc.Handler();
-    }
     return null;
   }
 

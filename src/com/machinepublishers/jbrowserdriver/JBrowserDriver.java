@@ -170,7 +170,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
             argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
             argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
             argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.netdoc=ALL-UNNAMED");
             argsTmp.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
             argsTmp.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
             argsTmp.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
