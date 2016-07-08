@@ -59,7 +59,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.JbdClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -118,7 +117,7 @@ class StreamConnectionClient {
     manager = new PoolingHttpClientConnectionManager(registry);
     manager.setDefaultMaxPerRoute(SettingsManager.settings().maxRouteConnections());
     manager.setMaxTotal(SettingsManager.settings().maxConnections());
-    client = HttpClients.custom()
+    client = new JbdClientBuilder()
         .disableRedirectHandling()
         .disableAutomaticRetries()
         .setDefaultCookieSpecRegistry(cookieProvider)
