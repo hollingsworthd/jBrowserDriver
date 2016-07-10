@@ -646,7 +646,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   public WebElement findElement(By by) {
     try {
       synchronized (lock) {
-        return Element.constructElement(remote.findElement(by), this, lock);
+        return by.findElement(this);
       }
     } catch (Throwable t) {
       Util.handleException(t);
@@ -660,11 +660,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElements(By by) {
     try {
-      List<ElementRemote> elements;
       synchronized (lock) {
-        elements = remote.findElements(by);
+        return by.findElements(this);
       }
-      return Element.constructList(elements, this, lock);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
