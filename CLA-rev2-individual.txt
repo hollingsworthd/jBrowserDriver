@@ -9,4 +9,4 @@ appropriate copyright notice required by the license.
 The following have accepted the terms above as evidenced by their digital
 signatures and information below.
 
-[Full Name] [GitHub profile URL] [YYYY-MM-DD]
+[Full Name], [GitHub profile URL], [YYYY-MM-DD]
