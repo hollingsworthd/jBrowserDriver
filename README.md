@@ -120,7 +120,7 @@ public class Example {
 Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the Maven pom.xml file. However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section.
 
 ## Contributing
-Pull requests are welcome, and we ask people contributing code to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-rev2-individual.txt) which is similar to the agreement used by the Selenium Project. Signing the CLA is simply a matter of editing the file to add your digital "signature" and adding it to your pull request.
+Pull requests are welcome, and we ask people contributing code to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-rev2-digital.txt) which is similar to the agreement used by the Selenium Project. Signing the CLA is simply a matter of editing the file to add your digital "signature" and adding it to your pull request.
 
 Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
 

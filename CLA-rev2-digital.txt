@@ -6,38 +6,8 @@ By submitting your Contribution to jBrowserDriver, You hereby agree to license
 your Contribution under the Apache License, Version 2.0, and to include the
 appropriate copyright notice required by the license.
 
+The following have accepted the terms above as evidenced by their digital
+signatures and information below. If a corporation name is listed, then this
+Contribution is being made on behalf of a corporation.
 
-
-
-________________________________________
-Full Name
-
-
-
-
-________________________________________
-Signature                           Date
-
-
-
-
-________________________________________
-Email
-
-
-
-
-________________________________________
-Corporation Name
-
-
-
-
-________________________________________
-Mailing Address
-
-
-
-
-________________________________________
-Country
+[Full Name] [GitHub Profile URL] [YYYY-MM-DD] [Corporation Name--if applicable]
