@@ -1,0 +1,43 @@
+Machine Publishers, LLC, maintainers of jBrowserDriver, requests that You sign a
+Contributor License Agreement ("CLA") regarding any software code and/or
+documentation You desire to contribute to jBrowserDriver ("Contribution").
+
+By submitting your Contribution to jBrowserDriver, You hereby agree to license
+your Contribution under the Apache License, Version 2.0, and to include the
+appropriate copyright notice required by the license.
+
+
+
+
+________________________________________
+Full Name
+
+
+
+
+________________________________________
+Signature                           Date
+
+
+
+
+________________________________________
+Email
+
+
+
+
+________________________________________
+Corporation Name
+
+
+
+
+________________________________________
+Mailing Address
+
+
+
+
+________________________________________
+Country
