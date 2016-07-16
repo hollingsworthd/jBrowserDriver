@@ -1,7 +1,6 @@
 jBrowserDriver (TM)
-Copyright (C) 2014-2016 Machine Publishers, LLC
-Sales and support: ops@machinepublishers.com
-Updates: https://github.com/MachinePublishers/jBrowserDriver
+Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
+https://github.com/MachinePublishers/jBrowserDriver
 
 
 INSTALLATION:
@@ -11,5 +10,5 @@ INSTALLATION:
     <dependency>
       <groupId>com.machinepublishers</groupId>
       <artifactId>jbrowserdriver</artifactId>
-      <version>[0.14.0, 2.0)</version>
+      <version>0.14.12</version>
     </dependency>

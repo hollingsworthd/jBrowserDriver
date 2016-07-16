@@ -124,8 +124,6 @@ Pull requests are welcome, and we ask people contributing code to agree to the [
 
 Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
 
-If you're interested in financially supporting this project, consider hiring a developer to fix one of the [open issues](https://github.com/machinepublishers/jbrowserdriver/issues).
-
 - - -
 
-Copyright (C) 2014-2016 [Machine Publishers, LLC](https://machinepublishers.com)
+Copyright (C) 2014-2016 [Machine Publishers, LLC](https://machinepublishers.com) and the jBrowserDriver contributors

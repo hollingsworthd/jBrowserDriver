@@ -219,7 +219,7 @@
             com.machinepublishers.jbrowserdriver.diagnostics;com.machinepublishers.glass.ui.monocle;com.sun.glass.ui.accessible;com.sun.glass.ui.monocle;com.thoughtworks.selenium;org.apache.commons.logging;org.apache.http.impl.client.cache;org.apache.http.impl.cookie;org.openqa.selenium.html5;org.openqa.selenium.interactions.internal;org.openqa.selenium.interactions.touch;org.openqa.selenium.logging.profiler;org.openqa.selenium.remote;org.openqa.selenium.remote.server;org.openqa.selenium.security
           </excludePackageNames>
           <bottom>
-            <![CDATA[Copyright &copy; 2014-2016 Machine Publishers, LLC.<br>Project homepage: <a target="_blank" href="https://github.com/machinepublishers/jbrowserdriver">https://github.com/machinepublishers/jbrowserdriver<a>]]>
+            <![CDATA[Copyright &copy; 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors.<br>Project homepage: <a target="_blank" href="https://github.com/machinepublishers/jbrowserdriver">https://github.com/machinepublishers/jbrowserdriver<a>]]>
           </bottom>
         </configuration>
         <executions>

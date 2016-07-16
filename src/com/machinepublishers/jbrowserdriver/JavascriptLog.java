@@ -1,16 +1,7 @@
-package com.machinepublishers.jbrowserdriver;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.machinepublishers.jbrowserdriver.AppThread.Sync;
-import com.sun.webkit.WebPage;
-
 /* 
  * jBrowserDriver (TM)
- * Copyright (C) 2014-2016 Machine Publishers, LLC
- * 
- * Sales and support: ops@machinepublishers.com
- * Updates: https://github.com/MachinePublishers/jBrowserDriver
+ * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
+ * https://github.com/MachinePublishers/jBrowserDriver
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +15,13 @@ import com.sun.webkit.WebPage;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.machinepublishers.jbrowserdriver;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
+import com.sun.webkit.WebPage;
+
 import netscape.javascript.JSObject;
 
 class JavascriptLog {

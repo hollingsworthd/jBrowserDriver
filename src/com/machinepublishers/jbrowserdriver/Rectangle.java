@@ -1,9 +1,7 @@
 /* 
  * jBrowserDriver (TM)
- * Copyright (C) 2014-2016 Machine Publishers, LLC
- * 
- * Sales and support: ops@machinepublishers.com
- * Updates: https://github.com/MachinePublishers/jBrowserDriver
+ * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
+ * https://github.com/MachinePublishers/jBrowserDriver
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
