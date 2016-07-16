@@ -120,6 +120,14 @@ public class Test {
       driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
+      boolean viaHeader = false;
+      for (String line : HttpServer.previousRequest()) {
+        if (line.toLowerCase().startsWith("via:")) {
+          viaHeader = true;
+          break;
+        }
+      }
+      test(!viaHeader);
 
       /*
        * Driver reset
@@ -359,6 +367,13 @@ public class Test {
         }
       }
       test(request.size() - 2 == headers.size());
+
+      /*
+       * HTTP Post
+       */
+      driver.findElement(By.id("form-submit")).click();
+      test(driver.getStatusCode() == 201);
+      test("form-field=test-form-value".equals(HttpServer.previousRequest().get(HttpServer.previousRequest().size() - 1)));
 
       /*
        * Frames

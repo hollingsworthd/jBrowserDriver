@@ -39,15 +39,21 @@ public class HttpServer {
   private static final AtomicLong previousRequestId = new AtomicLong();
   private static final byte[] indexBody;
   private static final byte[] indexContent;
+  private static final byte[] postBody;
+  private static final byte[] postContent;
   private static final byte[] iframeBody;
   private static final byte[] iframeContent;
   private static final byte[] redirectContent;
   static {
-    byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm");
+    byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "200 OK");
     indexBody = resource[0];
     indexContent = resource[1];
 
-    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm");
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "201 Created");
+    postBody = resource[0];
+    postContent = resource[1];
+
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm", "200 OK");
     iframeBody = resource[0];
     iframeContent = resource[1];
 
@@ -71,7 +77,7 @@ public class HttpServer {
     redirectContent = redirectContentTmp;
   }
 
-  private static byte[][] resource(String path) {
+  private static byte[][] resource(String path, String status) {
     final char[] chars = new char[8192];
     StringBuilder builder = new StringBuilder(chars.length);
     byte[] bodyTmp = null;
@@ -80,7 +86,7 @@ public class HttpServer {
         new InputStreamReader(HttpServer.class.getResourceAsStream(path)))) {
       for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
       bodyTmp = builder.toString().getBytes("utf-8");
-      contentTmp = new String("HTTP/1.1 200 OK\n"
+      contentTmp = new String("HTTP/1.1 " + status + "\n"
           + "Content-Length: " + bodyTmp.length + "\n"
           //Don't set content-type -- test that it's added automatically
           + "Expires: Sun, 09 Feb 2116 01:01:01 GMT\n"
@@ -116,6 +122,9 @@ public class HttpServer {
                   if (line.startsWith("GET / ")) {
                     output.write(indexContent, 0, indexContent.length);
                     output.write(indexBody, 0, indexBody.length);
+                  } else if (line.startsWith("POST / ")) {
+                    output.write(postContent, 0, postContent.length);
+                    output.write(postBody, 0, postBody.length);
                   } else if (line.startsWith("GET /iframe.htm")) {
                     output.write(iframeContent, 0, iframeContent.length);
                     output.write(iframeBody, 0, iframeBody.length);

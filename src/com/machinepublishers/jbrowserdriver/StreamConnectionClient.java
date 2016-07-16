@@ -46,6 +46,10 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -61,10 +65,11 @@ import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.cache.CacheConfig;
-import org.apache.http.impl.client.cache.JbdClientBuilder;
+import org.apache.http.impl.client.cache.CachingHttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.cookie.JbdCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
 
@@ -118,12 +123,11 @@ class StreamConnectionClient {
     manager = new PoolingHttpClientConnectionManager(registry);
     manager.setDefaultMaxPerRoute(SettingsManager.settings().maxRouteConnections());
     manager.setMaxTotal(SettingsManager.settings().maxConnections());
-    client = clientBuilderHelper(new JbdClientBuilder()
+    client = clientBuilderHelper(HttpClientBuilder.create(), manager);
+    cachingClient = clientBuilderHelper(CachingHttpClientBuilder.create()
         .setCacheConfig(cacheConfig)
-        .setHttpCacheStorage(new HttpCacheNoOp()), manager);
-    cachingClient = clientBuilderHelper(new JbdClientBuilder()
-        .setCacheConfig(cacheConfig)
-        .setHttpCacheStorage(httpCache), manager);
+        .setHttpCacheStorage(httpCache),
+        manager);
   }
 
   private static CloseableHttpClient clientBuilderHelper(HttpClientBuilder builder, PoolingHttpClientConnectionManager manager) {
@@ -132,6 +136,13 @@ class StreamConnectionClient {
         .disableAutomaticRetries()
         .setDefaultCookieSpecRegistry(cookieProvider)
         .setConnectionManager(manager)
+        .setRequestExecutor(new HttpRequestExecutor() {
+          @Override
+          protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+            request.removeHeaders("Via");
+            return super.doSendRequest(request, conn, context);
+          }
+        })
         .setDefaultCredentialsProvider(ProxyAuth.instance())
         .setConnectionReuseStrategy(DefaultConnectionReuseStrategy.INSTANCE)
         .build();

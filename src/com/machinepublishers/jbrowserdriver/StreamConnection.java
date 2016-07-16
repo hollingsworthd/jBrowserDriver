@@ -550,7 +550,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
    */
   @Override
   public String getContentType() {
-    return entity.get() == null || entity.get().getContentType() == null || skip.get() ? null : entity.get().getContentType().getValue();
+    return entity.get() == null || skip.get() ? null
+        : (entity.get().getContentType() == null ? "text/html" : entity.get().getContentType().getValue());
   }
 
   /**
