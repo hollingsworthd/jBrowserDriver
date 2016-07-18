@@ -44,21 +44,26 @@ import com.thoughtworks.selenium.SeleniumException;
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
       "charset\\s*=\\s*([^;]+)", Pattern.CASE_INSENSITIVE);
-  private static final Random rand = new Random();
   private static final Random secureRand = new Random();
   static final String KEYBOARD_DELETE = "jbrowserdriver-keyboard-delete";
 
   static String randomPropertyName() {
-    return RandomStringUtils.randomAlphabetic(12 + rand.nextInt(12));
+    return new StringBuilder()
+        .append(RandomStringUtils.randomAlphabetic(1))
+        .append(randomAlphanumeric())
+        .toString();
   }
 
   static String randomFileName() {
-    long num = secureRand.nextLong();
-    if (num == Long.MIN_VALUE) {
-      num = 0;
+    return randomAlphanumeric();
+  }
+
+  private static String randomAlphanumeric() {
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < 4; i++) {
+      builder.append(Long.toString(Math.abs(secureRand.nextInt()), Math.min(36, Character.MAX_RADIX)));
     }
-    return new StringBuilder().append(RandomStringUtils.randomAlphabetic(5).toLowerCase())
-        .append(Long.toString(Math.abs(num), Math.min(36, Character.MAX_RADIX))).toString();
+    return builder.toString();
   }
 
   static void close(Closeable closeable) {

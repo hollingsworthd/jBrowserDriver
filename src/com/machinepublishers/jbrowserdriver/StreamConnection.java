@@ -95,8 +95,6 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       "cookie", "pragma", "cache-control", "content-length" })));
   private static final Pattern invalidUrlChar = Pattern.compile("[^-A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=]");
   private static final Set<String> adHosts = new HashSet<String>();
-  private static final Pattern downloadHeader = Pattern.compile(
-      "^\\s*attachment\\s*(?:;\\s*filename\\s*=\\s*[\"']?\\s*(.*?)\\s*[\"']?\\s*)?", Pattern.CASE_INSENSITIVE);
   private static final AtomicReference<StreamConnectionClient> client = new AtomicReference<StreamConnectionClient>();
   private static final Set<String> mediaExtensions = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(new String[] {
       ".svg", ".gif", ".jpeg", ".jpg", ".png",
@@ -406,25 +404,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         try {
           InputStream entityStream = entity.get().getContent();
           if (entityStream != null && !skip.get()) {
-            String disposition = getHeaderField("Content-Disposition");
-            if (disposition != null && !disposition.isEmpty()
-                && "application/octet-stream".equals(getContentType())) {
-              Matcher matcher = downloadHeader.matcher(disposition);
-              if (matcher.matches()) {
-                Settings settings = SettingsManager.settings();
-                if (settings != null && settings.saveAttachments()) {
-                  File downloadFile = new File(attachmentsDir,
-                      matcher.group(1) == null || matcher.group(1).isEmpty()
-                          ? Long.toString(System.nanoTime()) : matcher.group(1));
-                  downloadFile.deleteOnExit();
-                  Files.write(downloadFile.toPath(), Util.toBytes(entityStream));
-                }
-                skip.set(true);
-              }
-            }
-            if (!skip.get()) {
-              return ResponseHandler.handleResponse(this, entityStream, urlString);
-            }
+            return ResponseHandler.handleResponse(this, entityStream);
           }
         } finally {
           close();
@@ -550,6 +530,11 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   public String getContentType() {
     return entity.get() == null || skip.get() ? null
         : (entity.get().getContentType() == null ? "text/html" : entity.get().getContentType().getValue());
+  }
+
+  public String getContentTypeRaw() {
+    return entity.get() == null || entity.get().getContentType() == null
+        ? null : entity.get().getContentType().getValue();
   }
 
   /**

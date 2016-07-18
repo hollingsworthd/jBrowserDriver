@@ -29,7 +29,7 @@ class StatusMonitor {
   private static final StatusMonitor instance = new StatusMonitor();
   private final Object lock = new Object();
   private final Map<String, StreamConnection> connections = new HashMap<String, StreamConnection>();
-  private final Set<String> primaryDocuments = new HashSet<String>();
+  private final Map<String, Boolean> primaryDocuments = new HashMap<String, Boolean>();
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
   private final List<String> startedUrls = new ArrayList<String>();
@@ -48,9 +48,11 @@ class StatusMonitor {
     return url.endsWith("/") ? url : new StringBuilder().append(url).append("/").toString();
   }
 
-  boolean isPrimaryDocument(String url) {
+  boolean isPrimaryDocument(boolean requireSelectedFrame, String url) {
     synchronized (lock) {
-      return primaryDocuments.contains(canonicalUrl(url));
+      String canonicalUrl = canonicalUrl(url);
+      return primaryDocuments.containsKey(canonicalUrl)
+          && (!requireSelectedFrame || primaryDocuments.get(canonicalUrl));
     }
   }
 
@@ -85,9 +87,9 @@ class StatusMonitor {
     }
   }
 
-  void addPrimaryDocument(String url) {
+  void addPrimaryDocument(boolean selectedFrame, String url) {
     synchronized (lock) {
-      primaryDocuments.add(canonicalUrl(url));
+      primaryDocuments.put(canonicalUrl(url), selectedFrame);
     }
   }
 

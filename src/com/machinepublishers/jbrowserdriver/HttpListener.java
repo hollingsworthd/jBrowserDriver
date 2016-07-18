@@ -179,8 +179,10 @@ class HttpListener implements LoadListenerClient {
           resetStatusCode(false);
           resources.put(frame + url, System.currentTimeMillis());
           statusMonitor.startStatusMonitor(url);
+          statusMonitor.addPrimaryDocument(true, url);
+        } else {
+          statusMonitor.addPrimaryDocument(false, url);
         }
-        statusMonitor.addPrimaryDocument(url);
       } else if (statusCode.get() == 0
           && contextItem.currentFrameId() == frame
           && (state == LoadListenerClient.PAGE_FINISHED

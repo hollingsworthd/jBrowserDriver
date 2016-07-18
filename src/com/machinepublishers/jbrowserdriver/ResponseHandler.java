@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.commons.lang.StringUtils;
+
 class ResponseHandler {
   private static final Pattern head = Pattern.compile("<head\\b[^>]*>", Pattern.CASE_INSENSITIVE);
   private static final Pattern html = Pattern.compile("<html\\b[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -38,8 +40,8 @@ class ResponseHandler {
   private static final Set<Integer> redirectCodes = Collections.unmodifiableSet(
       new HashSet<Integer>(Arrays.asList(new Integer[] { 301, 302, 303, 307, 308 })));
 
-  static InputStream handleResponse(StreamConnection conn, InputStream inputStream,
-      String originalUrl) throws IOException {
+  static InputStream handleResponse(StreamConnection conn, InputStream inputStream) throws IOException {
+    String url = conn.getURL().toExternalForm();
     byte[] bytes = new byte[0];
     try {
       if ("gzip".equalsIgnoreCase(conn.getContentEncoding())) {
@@ -51,7 +53,21 @@ class ResponseHandler {
       }
       conn.removeContentEncoding();
       conn.setContentLength(bytes.length);
-      byte[] newContent = getBody(conn, bytes, originalUrl);
+
+      Settings settings = SettingsManager.settings();
+      if (settings != null) {
+        String disposition = conn.getHeaderField("Content-Disposition");
+
+        if (settings.saveAttachments() && disposition != null
+            && StatusMonitor.instance().isPrimaryDocument(true, url)) {
+          writeContentToDisk(bytes, StreamConnection.attachmentsDir(), url, conn.getContentTypeRaw(), disposition);
+        }
+
+        if (settings.saveMedia() && ((StreamConnection) conn).isMedia()) {
+          writeContentToDisk(bytes, StreamConnection.mediaDir(), url, conn.getContentTypeRaw(), disposition);
+        }
+      }
+      byte[] newContent = getBody(conn, bytes, url);
       if (newContent != null) {
         bytes = newContent;
       }
@@ -64,39 +80,39 @@ class ResponseHandler {
     return new ByteArrayInputStream(bytes);
   }
 
-  private static byte[] getBody(StreamConnection connection, byte[] inflatedContent, String originalUrl) {
+  private static void writeContentToDisk(byte[] content, File dir, String url, String contentType, String contentDisposition) {
+    String filename = Util.randomFileName();
+
+    File contentFile = new File(dir,
+        new StringBuilder().append(filename).append(".content").toString());
+
+    File metaFile = new File(dir,
+        new StringBuilder().append(filename).append(".metadata").toString());
+
+    contentFile.deleteOnExit();
+    metaFile.deleteOnExit();
+
+    try {
+      Files.write(contentFile.toPath(), content);
+      Files.write(metaFile.toPath(),
+          (new StringBuilder()
+              .append(StringUtils.isEmpty(url) ? "" : url).append("\n")
+              .append(StringUtils.isEmpty(contentType) ? "" : contentType).append("\n")
+              .append(StringUtils.isEmpty(contentDisposition) ? "" : contentDisposition)
+              .toString()).getBytes("utf-8"));
+    } catch (Throwable t) {}
+  }
+
+  private static byte[] getBody(StreamConnection connection, byte[] inflatedContent, String url) {
     final Settings settings = SettingsManager.settings();
     try {
-      if (settings.saveMedia()
-          && ((StreamConnection) connection).isMedia()) {
-        String filename = Long.toString(System.nanoTime());
-        File contentFile = new File(StreamConnection.mediaDir(),
-            new StringBuilder().append(filename).append(".content").toString());
-        File metaFile = new File(StreamConnection.mediaDir(),
-            new StringBuilder().append(filename).append(".metadata").toString());
-        while (contentFile.exists() || metaFile.exists()) {
-          filename = Util.randomFileName();
-          contentFile = new File(StreamConnection.mediaDir(),
-              new StringBuilder().append(filename).append(".content").toString());
-          metaFile = new File(StreamConnection.mediaDir(),
-              new StringBuilder().append(filename).append(".metadata").toString());
-        }
-        contentFile.deleteOnExit();
-        metaFile.deleteOnExit();
-        Files.write(contentFile.toPath(), inflatedContent);
-        Files.write(metaFile.toPath(),
-            (new StringBuilder().append(originalUrl).append("\n").append(connection.getContentType())
-                .toString()).getBytes("utf-8"));
-      }
-    } catch (Throwable t) {}
-    try {
       if (settings.quickRender() && ((StreamConnection) connection).isMedia()) {
-        LogsServer.instance().trace("Media discarded: " + connection.getURL().toExternalForm());
-        StatusMonitor.instance().addDiscarded(connection.getURL().toExternalForm());
+        LogsServer.instance().trace("Media discarded: " + url);
+        StatusMonitor.instance().addDiscarded(url);
         return new byte[0];
       } else if (!redirectCodes.contains(connection.getResponseCode())
           && (connection.getContentType() == null || connection.getContentType().indexOf("text/html") > -1)
-          && StatusMonitor.instance().isPrimaryDocument(connection.getURL().toExternalForm())) {
+          && StatusMonitor.instance().isPrimaryDocument(false, url)) {
         String intercepted = null;
         String charset = Util.charset(connection);
         String content = new String(inflatedContent, charset);

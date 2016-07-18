@@ -340,8 +340,8 @@ public class Settings implements Serializable {
      * <p>
      * Media is saved as two files in the mediaDir: &lt;identifier&gt;.content (which
      * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
-     * file is the original URL of the request for this media, and the second line is
-     * the mime type).
+     * file is the URL of the request for this media, the second line is
+     * the Content-Type header, and the third line is the Content-Disposition header).
      * <p>
      * Saved media files are deleted when the JVM exits, so copy them to a different
      * location to persist them permanently.
@@ -368,6 +368,11 @@ public class Settings implements Serializable {
 
     /**
      * Whether to save links to disk when prompted by the browser.
+     * <p>
+     * Attachments are saved as two files in the mediaDir: &lt;identifier&gt;.content (which
+     * has the binary content) and &lt;identifier&gt;.metadata (the first line of this
+     * file is the URL of the request for this media, the second line is
+     * the Content-Type header, and the third line is the Content-Disposition header).
      * <p>
      * Saved files are deleted when the JVM exits, so copy them to a different
      * location to persist them permanently.
