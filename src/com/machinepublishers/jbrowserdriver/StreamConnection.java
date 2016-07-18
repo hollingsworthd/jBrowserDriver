@@ -33,7 +33,7 @@ import java.net.ProtocolException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.security.Permission;
 import java.util.ArrayList;
@@ -49,7 +49,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
@@ -271,17 +270,12 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           try {
             uri = url.toURI();
           } catch (URISyntaxException e) {
-            String urlString = url.toExternalForm();
-            Matcher matcher = invalidUrlChar.matcher(urlString);
-            StringBuilder builder = new StringBuilder();
-            int left = 0;
-            while (matcher.find()) {
-              builder.append(urlString.substring(left, matcher.start()));
-              builder.append(URLEncoder.encode(matcher.group(), "utf-8"));
-              left = matcher.start() + 1;
-            }
-            builder.append(urlString.substring(left));
-            uri = new URI(builder.toString());
+            //decode components of the url first, because often the problem is partially encoded urls
+            uri = new URI(url.getProtocol(),
+                url.getAuthority(),
+                url.getPath() == null ? null : URLDecoder.decode(url.getPath(), "utf-8"),
+                url.getQuery() == null ? null : URLDecoder.decode(url.getQuery(), "utf-8"),
+                url.getRef() == null ? null : URLDecoder.decode(url.getRef(), "utf-8"));
           }
           if ("OPTIONS".equals(method.get())) {
             req.set(new HttpOptions(uri));
