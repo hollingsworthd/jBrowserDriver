@@ -63,13 +63,13 @@ class StatusMonitor {
   }
 
   void addRedirect(String original, String redirected) {
-    original = canonicalUrl(original);
-    redirected = canonicalUrl(redirected);
-    if (original != null
-        && redirected != null
-        && !original.equals(redirected)) {
+    String canonicalOriginal = canonicalUrl(original);
+    String canonicalRedirected = canonicalUrl(redirected);
+    if (canonicalOriginal != null
+        && canonicalRedirected != null
+        && !canonicalOriginal.equals(canonicalRedirected)) {
       synchronized (lock) {
-        redirects.put(redirected, original);
+        redirects.put(canonicalRedirected, original);
       }
     }
   }

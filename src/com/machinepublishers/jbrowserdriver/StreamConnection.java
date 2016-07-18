@@ -444,7 +444,14 @@ class StreamConnection extends HttpURLConnection implements Closeable {
   @Override
   public int getResponseCode() throws IOException {
     exec();
-    StatusMonitor.instance().addRedirect(urlString, getHeaderField("Location"));
+    try {
+      String location = getHeaderField("Location");
+      if (!StringUtils.isEmpty(location)) {
+        StatusMonitor.instance().addRedirect(urlString, new URL(url, location).toExternalForm());
+      }
+    } catch (Throwable t) {
+      //ignore
+    }
     if (skip.get()) {
       return 204;
     }
