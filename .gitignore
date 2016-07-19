@@ -8,3 +8,6 @@ jBrowserDriver*.zip
 **/*.log.*
 **/pemfile_cached
 target/
+
+.idea
+*.iml
