@@ -22,6 +22,7 @@ import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -50,7 +51,6 @@ class HttpCache implements HttpCacheStorage {
   @Override
   public void updateEntry(String key, HttpCacheUpdateCallback callback) throws IOException, HttpCacheUpdateException {
     HttpCacheEntry entry = callback.update(getEntry(key));
-    removeEntry(key);
     putEntry(key, entry);
   }
 
@@ -59,11 +59,10 @@ class HttpCache implements HttpCacheStorage {
    */
   @Override
   public void removeEntry(String key) throws IOException {
-    File file = new File(cacheDir, DigestUtils.sha1Hex(key));
-    if (file.exists()) {
-      try (Lock lock = new Lock(file, false)) {
-        file.delete();
-      }
+    try (Lock lock = new Lock(new File(cacheDir, DigestUtils.sha1Hex(key)), false, false)) {
+      lock.file.delete();
+    } catch (FileNotFoundException e) {
+      //ignore
     }
   }
 
@@ -72,16 +71,10 @@ class HttpCache implements HttpCacheStorage {
    */
   @Override
   public void putEntry(String key, HttpCacheEntry entry) throws IOException {
-    File file = new File(cacheDir, DigestUtils.sha1Hex(key));
-    if (!file.exists()) {
-      try {
-        file.createNewFile();
-      } catch (Throwable t) {}
-      try (Lock lock = new Lock(file, false)) {
-        BufferedOutputStream bufferOut = new BufferedOutputStream(lock.streamOut);
-        try (ObjectOutputStream objectOut = new ObjectOutputStream(bufferOut)) {
-          objectOut.writeObject(entry);
-        }
+    try (Lock lock = new Lock(new File(cacheDir, DigestUtils.sha1Hex(key)), false, true)) {
+      BufferedOutputStream bufferOut = new BufferedOutputStream(lock.streamOut);
+      try (ObjectOutputStream objectOut = new ObjectOutputStream(bufferOut)) {
+        objectOut.writeObject(entry);
       }
     }
   }
@@ -91,29 +84,31 @@ class HttpCache implements HttpCacheStorage {
    */
   @Override
   public HttpCacheEntry getEntry(String key) throws IOException {
-    File file = new File(cacheDir, DigestUtils.sha1Hex(key));
-    if (file.exists()) {
-      try (Lock lock = new Lock(file, true)) {
-        BufferedInputStream bufferIn = new BufferedInputStream(lock.streamIn);
-        try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
-          return (HttpCacheEntry) objectIn.readObject();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
+    try (Lock lock = new Lock(new File(cacheDir, DigestUtils.sha1Hex(key)), true, false)) {
+      BufferedInputStream bufferIn = new BufferedInputStream(lock.streamIn);
+      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
+        return (HttpCacheEntry) objectIn.readObject();
+      } catch (Throwable t) {
+        LogsServer.instance().exception(t);
       }
+    } catch (FileNotFoundException e) {
+      return null;
     }
     return null;
   }
 
   private static class Lock implements Closeable {
+    private static final int MAX_RETRIES = 20;
+    private static final int RETRY_SLEEP = 100;
     private static final Set<String> locks = new HashSet<String>();
     private String lockName;
+    private File file;
     private FileLock fileLock;
     private FileInputStream streamIn;
     private FileOutputStream streamOut;
     private FileChannel channel;
 
-    Lock(File file, boolean read) {
+    Lock(File file, boolean read, boolean create) throws IOException {
       this.lockName = file.getAbsolutePath();
       synchronized (locks) {
         while (true) {
@@ -127,27 +122,57 @@ class HttpCache implements HttpCacheStorage {
           } catch (Throwable t) {}
         }
       }
-      try {
-        if (read) {
-          streamIn = new FileInputStream(file);
-          channel = streamIn.getChannel();
-        } else {
-          streamOut = new FileOutputStream(file);
-          channel = streamOut.getChannel();
-        }
-        while (true) {
+      for (int i = 0; i < MAX_RETRIES; i++) {
+        if (i > 0) {
           try {
-            fileLock = channel.lock(0, Long.MAX_VALUE, read);
-            break;
-          } catch (Throwable t) {
-            try {
-              Thread.sleep(50);
-            } catch (InterruptedException e) {}
-          }
+            Thread.sleep(RETRY_SLEEP);
+          } catch (InterruptedException e2) {}
         }
-      } catch (Throwable t) {
-        LogsServer.instance().exception(t);
-        close();
+        try {
+          if (create) {
+            file.createNewFile();
+          }
+          if (read) {
+            streamIn = new FileInputStream(file);
+            channel = streamIn.getChannel();
+          } else {
+            streamOut = new FileOutputStream(file);
+            channel = streamOut.getChannel();
+          }
+          fileLock = channel.lock(0, Long.MAX_VALUE, read);
+          break;
+        } catch (Throwable t) {
+          if (!create && t instanceof FileNotFoundException) {
+            close();
+            throw t;
+          }
+          if (i + 1 == MAX_RETRIES) {
+            LogsServer.instance().exception(t);
+            close();
+            if (t instanceof IOException) {
+              throw t;
+            }
+            throw new IOException(t);
+          }
+          closeStreams();
+        }
+      }
+    }
+
+    private void closeStreams() {
+      if (streamIn != null) {
+        try {
+          streamIn.close();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
+      }
+      if (streamOut != null) {
+        try {
+          streamOut.close();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
+        }
       }
     }
 
@@ -163,20 +188,7 @@ class HttpCache implements HttpCacheStorage {
           LogsServer.instance().exception(t);
         }
       }
-      if (streamIn != null) {
-        try {
-          streamIn.close();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
-      }
-      if (streamOut != null) {
-        try {
-          streamOut.close();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
-      }
+      closeStreams();
       synchronized (locks) {
         locks.remove(lockName);
         locks.notifyAll();
