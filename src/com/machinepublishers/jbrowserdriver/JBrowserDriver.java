@@ -641,9 +641,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public WebElement findElement(By by) {
     try {
-      synchronized (lock) {
-        return by.findElement(this);
-      }
+      return by.findElement(this);
     } catch (Throwable t) {
       Util.handleException(t);
       return null;
@@ -656,9 +654,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   @Override
   public List<WebElement> findElements(By by) {
     try {
-      synchronized (lock) {
-        return by.findElements(this);
-      }
+      return by.findElements(this);
     } catch (Throwable t) {
       Util.handleException(t);
       return new ArrayList<WebElement>();
@@ -1133,26 +1129,26 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   private void saveData() {
     try {
-      OptionsRemote optionsRemote;
       synchronized (lock) {
-        optionsRemote = remote.manage();
-      }
-      Set<Cookie> cookiesLocal = optionsRemote.getCookies();
-      LogsRemote logsRemote = optionsRemote.logs();
-      final LogEntries entries = logsRemote.getRemote(null).toLogEntries();
-      final Set<String> types = logsRemote.getAvailableLogTypes();
-      org.openqa.selenium.logging.Logs logsLocal = new org.openqa.selenium.logging.Logs() {
-        @Override
-        public Set<String> getAvailableLogTypes() {
-          return types;
-        }
+        OptionsRemote optionsRemote = remote.manage();
+        Set<Cookie> cookiesLocal = optionsRemote.getCookies();
+        LogsRemote logsRemote = optionsRemote.logs();
+        final LogEntries entries = logsRemote.getRemote(null).toLogEntries();
+        final Set<String> types = logsRemote.getAvailableLogTypes();
 
-        @Override
-        public LogEntries get(String logType) {
-          return entries;
-        }
-      };
-      options.set(new OptionsLocal(cookiesLocal, logsLocal));
+        org.openqa.selenium.logging.Logs logsLocal = new org.openqa.selenium.logging.Logs() {
+          @Override
+          public Set<String> getAvailableLogTypes() {
+            return types;
+          }
+
+          @Override
+          public LogEntries get(String logType) {
+            return entries;
+          }
+        };
+        options.set(new OptionsLocal(cookiesLocal, logsLocal));
+      }
     } catch (Throwable t) {}
   }
 
