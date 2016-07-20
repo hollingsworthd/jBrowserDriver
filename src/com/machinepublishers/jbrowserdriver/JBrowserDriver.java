@@ -84,7 +84,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   /**
    * This can be passed to sendKeys to delete all the text in a text field.
+   * @deprecated send {@link org.openqa.selenium.Keys#CONTROL Ctrl}+a (not Ctrl+A) chord and then {@link org.openqa.selenium.Keys#BACK_SPACE BACK_SPACE}.
    */
+  @Deprecated
   public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
   private static final Intercept intercept;
   static {

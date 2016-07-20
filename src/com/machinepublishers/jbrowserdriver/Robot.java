@@ -361,16 +361,13 @@ class Robot {
   }
 
   void keysType(final CharSequence... charsList) {
-    StringJoiner joiner = new StringJoiner("");
     for (CharSequence chars : charsList) {
-      joiner.add(chars);
-    }
-    final String toSend = joiner.toString();
-    if (toSend.equals(Util.KEYBOARD_DELETE)) {
-      keysTypeHelper(Keys.chord(Keys.CONTROL, "a"));
-      keysTypeHelper(Keys.BACK_SPACE.toString());
-    } else {
-      keysTypeHelper(toSend);
+      if (Util.KEYBOARD_DELETE.equals(chars.toString())) {
+        keysTypeHelper(Keys.chord(Keys.CONTROL, "a"));
+        keysTypeHelper(Keys.BACK_SPACE.toString());
+      } else {
+        keysTypeHelper(chars);
+      }
     }
   }
 
