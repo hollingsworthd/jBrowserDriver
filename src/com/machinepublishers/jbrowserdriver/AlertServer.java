@@ -87,7 +87,7 @@ class AlertServer extends RemoteObject implements AlertRemote,
     synchronized (lock) {
       if (text.get() == NO_TEXT_VALUE) {
         try {
-          lock.wait(timeouts.get().getScriptTimeoutMS());
+          lock.wait(timeouts.get().getAlertTimeoutMS());
         } catch (InterruptedException e) {}
       }
       return text.get() == NO_TEXT_VALUE ? null : text.get();
@@ -138,7 +138,7 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              lock.wait(timeouts.get().getScriptTimeoutMS());
+              lock.wait(timeouts.get().getAlertTimeoutMS());
               initial = false;
             } else {
               break;
@@ -171,7 +171,7 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              lock.wait(timeouts.get().getScriptTimeoutMS());
+              lock.wait(timeouts.get().getAlertTimeoutMS());
               initial = false;
             } else {
               break;
@@ -205,7 +205,7 @@ class AlertServer extends RemoteObject implements AlertRemote,
               break;
             }
             if (initial) {
-              lock.wait(timeouts.get().getScriptTimeoutMS());
+              lock.wait(timeouts.get().getAlertTimeoutMS());
               initial = false;
             } else {
               break;

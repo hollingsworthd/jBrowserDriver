@@ -26,6 +26,7 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
   private final AtomicLong implicit = new AtomicLong();
   private final AtomicLong load = new AtomicLong();
   private final AtomicLong script = new AtomicLong();
+  private final AtomicLong alert = new AtomicLong();
 
   TimeoutsServer() throws RemoteException {}
 
@@ -60,6 +61,15 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
    * {@inheritDoc}
    */
   @Override
+  public TimeoutsServer setAlertTimeout(long duration, TimeUnit unit) {
+    alert.set(TimeUnit.MILLISECONDS.convert(duration, unit));
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public long getImplicitlyWaitMS() {
     return implicit.get();
   }
@@ -84,6 +94,14 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
    * {@inheritDoc}
    */
   @Override
+  public long getAlertTimeoutMS() {
+    return alert.get();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public AtomicLong getImplicitlyWaitObjMS() {
     return implicit;
   }
@@ -102,5 +120,13 @@ class TimeoutsServer extends RemoteObject implements TimeoutsRemote,
   @Override
   public AtomicLong getScriptTimeoutObjMS() {
     return script;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AtomicLong getAlertTimeoutObjMS() {
+    return alert;
   }
 }

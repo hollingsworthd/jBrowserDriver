@@ -85,6 +85,21 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     }
   }
 
+  public Timeouts setAlertTimeout(long duration, TimeUnit unit) {
+    try {
+      synchronized (lock) {
+        TimeoutsRemote timeouts = remote.setAlertTimeout(duration, unit);
+        if (timeouts == null) {
+          return null;
+        }
+        return new Timeouts(timeouts, lock);
+      }
+    } catch (Throwable t) {
+      Util.handleException(t);
+      return null;
+    }
+  }
+
   long getImplicitlyWaitMS() {
     try {
       synchronized (lock) {
@@ -111,6 +126,17 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
     try {
       synchronized (lock) {
         return remote.getScriptTimeoutMS();
+      }
+    } catch (Throwable t) {
+      Util.handleException(t);
+      return -1;
+    }
+  }
+
+  long getAlertTimeoutMS() {
+    try {
+      synchronized (lock) {
+        return remote.getAlertTimeoutMS();
       }
     } catch (Throwable t) {
       Util.handleException(t);
