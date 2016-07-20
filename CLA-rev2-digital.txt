@@ -11,3 +11,5 @@ signatures and information below. If a corporation name is listed, then this
 Contribution is being made on behalf of a corporation.
 
 [Full Name] [GitHub Profile URL] [YYYY-MM-DD] [Corporation Name--if applicable]
+
+Arseniy Skvortsov https://github.com/askvortsov/ 2016-07-19

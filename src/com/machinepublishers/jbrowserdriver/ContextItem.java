@@ -1,4 +1,4 @@
-/* 
+/*
  * jBrowserDriver (TM)
  * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
  * https://github.com/MachinePublishers/jBrowserDriver
@@ -8,7 +8,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,22 +17,19 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import com.sun.javafx.webkit.Accessor;
+import com.sun.webkit.WebPage;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
+import netscape.javascript.JSObject;
+import org.w3c.dom.Document;
+
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.w3c.dom.Document;
-
-import com.machinepublishers.jbrowserdriver.AppThread.Sync;
-import com.sun.javafx.webkit.Accessor;
-import com.sun.webkit.WebPage;
-
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
-import netscape.javascript.JSObject;
 
 class ContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();
@@ -154,16 +151,16 @@ class ContextItem {
         Util.handleException(e);
       }
       final ContextItem thisObject = this;
-      AppThread.exec(context.statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          engine.get().setJavaScriptEnabled(SettingsManager.settings().javascript());
-          httpListener.set(new HttpListener(thisObject,
-              context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
-          Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
-          engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
-          return null;
-        }
+      AppThread.exec(context.statusCode, () -> {
+        Settings settings = SettingsManager.settings();
+        engine.get().setJavaScriptEnabled(settings.javascript());
+        //If null engine uses automatic value.
+        engine.get().setUserDataDirectory(context.userDataDirectory.get());
+        httpListener.set(new HttpListener(thisObject,
+            context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
+        Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
+        engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
+        return null;
       });
     }
   }
