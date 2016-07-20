@@ -42,6 +42,7 @@ class Context {
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicReference<File> userDataDirectory = new AtomicReference<>();
+  private final File autoUserDataDirectory;
   final AtomicInteger statusCode = new AtomicInteger(-1);
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
@@ -50,18 +51,18 @@ class Context {
 
   Context() {
     synchronized (lock) {
-      //UDD must be computed before any ContextItem is initialized.
-      File userDataDirectory = SettingsManager.settings().userDataDirectory();
-      if (userDataDirectory == null) {
-        //Temporary because cookies aren't saved too.
-        try {
-          //App has its own temp dir, so this won't collide with other instance.
-          userDataDirectory = Files.createTempDirectory("userdata").toFile();
-        } catch (IOException e) {
-          Util.handleException(e);
-        }
+      File userDataDirectory = null;
+      //Temporary because cookies aren't saved too.
+      try {
+        //App has its own temp dir, so this won't collide with other instances.
+        userDataDirectory = Files.createTempDirectory("userdata").toFile();
+      } catch (IOException e) {
+        Util.handleException(e);
       }
-      this.userDataDirectory.set(userDataDirectory);
+      autoUserDataDirectory = userDataDirectory;
+      //UDD must be computed before any ContextItem is initialized.
+      userDataDirectory = SettingsManager.settings().userDataDirectory();
+      this.userDataDirectory.set(userDataDirectory == null ? autoUserDataDirectory : userDataDirectory);
       ContextItem newContext = new ContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
@@ -78,13 +79,15 @@ class Context {
     removeItems();
     synchronized (lock) {
       File userDataDirectory = this.userDataDirectory.get();
-      if (userDataDirectory != null) {
+      if (userDataDirectory != null && userDataDirectory != autoUserDataDirectory) {
         try {
           FileUtils.cleanDirectory(userDataDirectory);
         } catch (IOException e) {
-          e.printStackTrace();
+          Util.handleException(e);
         }
       }
+      userDataDirectory = SettingsManager.settings().userDataDirectory();
+      this.userDataDirectory.set(userDataDirectory == null ? autoUserDataDirectory : userDataDirectory);
       statusCode.set(-1);
       ContextItem newContext = new ContextItem();
       newContext.init(driver, this);
