@@ -29,7 +29,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.internal.FindsByClassName;
 import org.openqa.selenium.internal.FindsByCssSelector;
 import org.openqa.selenium.internal.FindsById;
@@ -896,9 +905,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
       if (System.currentTimeMillis() > timeoutAt) {
         throw new TimeoutException(
             "Timeout of " +
-            context.timeouts.get().getScriptTimeoutMS() + 
-            "ms reached for waiting async script to complete."
-        );
+                context.timeouts.get().getScriptTimeoutMS() +
+                "ms reached for waiting async script to complete.");
       }
     }
   }
