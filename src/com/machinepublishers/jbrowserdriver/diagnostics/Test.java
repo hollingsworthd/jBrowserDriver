@@ -95,6 +95,7 @@ public class Test {
         }
       });
       Runtime.getRuntime().addShutdownHook(shutdownHook);
+      final String mainPage = "http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP;
       final int ajaxWait = 150;
       final Settings.Builder builder = Settings.builder()
           .processes(TEST_PORTS_RMI)
@@ -110,14 +111,14 @@ public class Test {
       /*
        * Load a page
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       test(driver.getStatusCode() == 200);
       long initialRequestId = HttpServer.previousRequestId();
 
       /*
        * Load page from cache
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
       boolean viaHeader = false;
@@ -133,11 +134,11 @@ public class Test {
        * Driver reset
        */
       driver.reset();
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() == initialRequestId);
       driver.reset(builder.cacheDir(null).build());
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       test(driver.getStatusCode() == 200);
       test(HttpServer.previousRequestId() != initialRequestId);
 
@@ -157,20 +158,20 @@ public class Test {
       driver.findElement(By.id("populate-local-storage")).click();
       driver.findElement(By.id("load-from-local-storage")).click();
       test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.findElement(By.id("load-from-local-storage")).click();
       test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
       driver.reset();
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.findElement(By.id("load-from-local-storage")).click();
       test("".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
       driver.reset(builder.userDataDirectory(userDataDir).build());
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.findElement(By.id("populate-local-storage")).click();
       driver.findElement(By.id("load-from-local-storage")).click();
       test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
       driver.reset();
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.findElement(By.id("load-from-local-storage")).click();
       test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
 
@@ -410,7 +411,7 @@ public class Test {
       driver.switchTo().defaultContent();
       driver.switchTo().frame("testiframe");
       test(driver.findElementById("iframebody") != null);
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       test(driver.getPageSource() != null);
       driver.switchTo().frame(driver.findElementByTagName("iframe"));
       test(driver.findElementById("iframebody") != null);
@@ -421,7 +422,7 @@ public class Test {
       driver.findElement(By.id("iframe-anchor")).click(); //TODO iframe coord offset needed on any other methods?
       driver.pageWait();
       test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.switchTo().frame(driver.findElementByTagName("iframe"));
       Actions actions = new Actions(driver);
       actions.moveToElement(driver.findElement(By.id("iframe-anchor")));
@@ -429,7 +430,7 @@ public class Test {
       actions.build().perform();
       driver.pageWait();
       test(HttpServer.previousRequest().get(0).startsWith("GET /iframe.htm?param=fromiframe"));
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.get(mainPage);
       driver.switchTo().frame(driver.findElementByTagName("iframe"));
       driver.getMouse().click(((Locatable) driver.findElement(By.id("iframe-anchor"))).getCoordinates());
       driver.getMouse().mouseMove(((Locatable) driver.findElement(By.id("iframe-anchor"))).getCoordinates(), 5, 5);
@@ -442,7 +443,7 @@ public class Test {
       /*
        * Redirects and cookies
        */
-      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/redirect/site1#testfragment");
+      driver.get(mainPage + "/redirect/site1#testfragment");
       test(HttpServer.previousRequestId() != initialRequestId);
       test(driver.getStatusCode() == 200);
       test(driver.getCurrentUrl().endsWith("/redirect/site2#testfragment"));
@@ -543,7 +544,7 @@ public class Test {
       driver.manage().timeouts().pageLoadTimeout(1, TimeUnit.MILLISECONDS);
       error = null;
       try {
-        driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP + "/wait-forever");
+        driver.get(mainPage + "/wait-forever");
       } catch (TimeoutException e) {
         error = e;
       }
