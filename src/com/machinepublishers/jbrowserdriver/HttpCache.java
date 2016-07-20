@@ -98,7 +98,7 @@ class HttpCache implements HttpCacheStorage {
   }
 
   private static class Lock implements Closeable {
-    private static final int MAX_RETRIES = 20;
+    private static final int MAX_RETRIES = 50;
     private static final int RETRY_SLEEP = 100;
     private static final Set<String> locks = new HashSet<String>();
     private String lockName;
@@ -109,6 +109,7 @@ class HttpCache implements HttpCacheStorage {
     private FileChannel channel;
 
     Lock(File file, boolean read, boolean create) throws IOException {
+      this.file = file;
       this.lockName = file.getAbsolutePath();
       synchronized (locks) {
         while (true) {
