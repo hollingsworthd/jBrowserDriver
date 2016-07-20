@@ -32,16 +32,23 @@ interface TimeoutsRemote extends Remote {
   TimeoutsRemote setScriptTimeout(long duration, TimeUnit unit)
       throws RemoteException;
 
+  TimeoutsServer setAlertTimeout(long duration, TimeUnit unit)
+      throws RemoteException;
+
   long getImplicitlyWaitMS() throws RemoteException;
 
   long getPageLoadTimeoutMS() throws RemoteException;
 
   long getScriptTimeoutMS() throws RemoteException;
 
+  long getAlertTimeoutMS() throws RemoteException;
+
   AtomicLong getImplicitlyWaitObjMS() throws RemoteException;
 
   AtomicLong getPageLoadTimeoutObjMS() throws RemoteException;
 
   AtomicLong getScriptTimeoutObjMS() throws RemoteException;
+
+  AtomicLong getAlertTimeoutObjMS() throws RemoteException;
 
 }

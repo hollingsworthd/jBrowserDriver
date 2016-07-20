@@ -29,15 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotVisibleException;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.internal.FindsByClassName;
 import org.openqa.selenium.internal.FindsByCssSelector;
 import org.openqa.selenium.internal.FindsById;
@@ -129,7 +121,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   private final AtomicLong frameId = new AtomicLong();
 
   ElementServer(final JSObject node, final Context context) throws RemoteException {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -155,7 +147,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   static ElementServer create(final Context context) {
-    final JSObject doc = AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    final JSObject doc = AppThread.exec(context.statusCode,
         new Sync<JSObject>() {
           @Override
           public JSObject perform() {
@@ -220,7 +212,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void click() {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -248,7 +240,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         });
 
     if (node instanceof HTMLOptionElement) {
-      AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+      AppThread.exec(context.statusCode,
           new Sync<Object>() {
             @Override
             public Object perform() {
@@ -267,7 +259,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             }
           });
     } else {
-      AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+      AppThread.exec(context.statusCode,
           new Sync<Object>() {
             @Override
             public Object perform() {
@@ -319,7 +311,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void submit() {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -340,7 +332,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void sendKeys(final CharSequence... keys) {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -365,7 +357,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void clear() {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -384,7 +376,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getAttribute(final String attrName) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<String>() {
           @Override
           public String perform() {
@@ -416,7 +408,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getCssValue(final String name) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<String>() {
           @Override
           public String perform() {
@@ -448,7 +440,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Point remoteGetLocation() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Point>() {
           @Override
           public Point perform() {
@@ -474,7 +466,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Dimension remoteGetSize() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Dimension>() {
           @Override
           public Dimension perform() {
@@ -502,7 +494,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Rectangle remoteGetRect() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Rectangle>() {
           @Override
           public Rectangle perform() {
@@ -557,7 +549,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isDisplayed() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -572,7 +564,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isEnabled() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -588,7 +580,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isSelected() {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Boolean>() {
           @Override
           public Boolean perform() {
@@ -631,7 +623,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByXPath(final String expr) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -667,7 +659,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private List byTagName(final String tagName) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -686,7 +678,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByCssSelector(final String expr) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<ElementServer>() {
           @Override
           public ElementServer perform() {
@@ -710,7 +702,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByCssSelector(final String expr) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -786,7 +778,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
 
   private List byLinkText(final String text,
       final boolean multiple, final boolean partial) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<List<ElementServer>>() {
           @Override
           public List<ElementServer> perform() {
@@ -856,16 +848,22 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   public Object executeAsyncScript(final String script, final Object... args) {
     final JavascriptNames jsNames = new JavascriptNames();
     script(true, script, args, jsNames);
+    long timeoutAt = context.timeouts.get().getScriptTimeoutMS();
+    if (timeoutAt > 0) {
+      timeoutAt += System.currentTimeMillis();
+    } else {
+      timeoutAt = Long.MAX_VALUE;
+    }
     int sleep = 1;
     final int sleepBackoff = 2;
-    final int sleepMax = 500;
+    final int sleepMax = 0x101;
     while (true) {
       sleep = sleep < sleepMax ? sleep * sleepBackoff : sleep;
       try {
         Thread.sleep(sleep);
       } catch (InterruptedException e) {}
       Object result = AppThread.exec(
-          context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+          context.statusCode,
           new Sync<Object>() {
             @Override
             public Object perform() {
@@ -894,6 +892,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           }
         }
         return parsed;
+      }
+      if (System.currentTimeMillis() > timeoutAt) {
+        throw new TimeoutException(
+            "Timeout of " +
+            context.timeouts.get().getScriptTimeoutMS() + 
+            "ms reached for waiting async script to complete."
+        );
       }
     }
   }
@@ -928,7 +933,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         }
       }
     }
-    return parseScriptResult(AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return parseScriptResult(AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -968,7 +973,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private Object parseScriptResult(final Object obj) {
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -1040,7 +1045,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Point locate() {
-    AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    AppThread.exec(context.statusCode,
         new Sync<Object>() {
           @Override
           public Point perform() {
@@ -1049,7 +1054,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             return null;
           }
         });
-    return AppThread.exec(context.statusCode, context.timeouts.get().getScriptTimeoutMS(),
+    return AppThread.exec(context.statusCode,
         new Sync<Point>() {
           @Override
           public Point perform() {
