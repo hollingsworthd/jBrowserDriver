@@ -24,7 +24,6 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Level;
@@ -1063,7 +1062,15 @@ public class Settings implements Serializable {
       return this;
     }
 
-    public Builder userDataDirectory(File userDataDirectory) throws IOException {
+    /**
+     * Defaults to <code>null</code>.
+     *
+     * @param userDataDirectory A directory to store user website data, e.g. localStorage.
+     * @return this Builder
+     *
+     * @see javafx.scene.web.WebEngine#userDataDirectory
+     */
+    public Builder userDataDirectory(File userDataDirectory) {
       this.userDataDirectory = userDataDirectory;
       return this;
     }
@@ -1158,7 +1165,6 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
       //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
       set(capabilities, PropertyName.JAVA_OPTIONS, StringUtils.join(this.javaOptions, "\t"));
-      set(capabilities, PropertyName.USER_DATA_DIRECTORY, this.userDataDirectory.toString());
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -1167,6 +1173,10 @@ public class Settings implements Serializable {
 
       if (this.cacheDir != null) {
         set(capabilities, PropertyName.CACHE_DIR, this.cacheDir.getAbsolutePath());
+      }
+
+      if (this.userDataDirectory != null) {
+        capabilities.setCapability(PropertyName.USER_DATA_DIRECTORY.propertyName, this.userDataDirectory.getAbsolutePath());
       }
 
       if (this.timezone != null) {

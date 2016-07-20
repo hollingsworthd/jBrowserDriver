@@ -25,9 +25,6 @@ import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 import org.w3c.dom.Document;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -157,19 +154,8 @@ class ContextItem {
       AppThread.exec(context.statusCode, () -> {
         Settings settings = SettingsManager.settings();
         engine.get().setJavaScriptEnabled(settings.javascript());
-        File userDataDirectory = settings.userDataDirectory();
-        if (userDataDirectory == null) {
-          //App has its own temp dir.
-          //Temporary because cookies aren't saved too.
-          try {
-            userDataDirectory = Files.createTempDirectory("userdata").toFile();
-          } catch (IOException e) {
-            Util.handleException(e);
-          }
-        }
-        if (userDataDirectory != null) {
-            engine.get().setUserDataDirectory(userDataDirectory);
-        }
+        //If null engine uses automatic value.
+        engine.get().setUserDataDirectory(context.userDataDirectory.get());
         httpListener.set(new HttpListener(thisObject,
             context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
         Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());

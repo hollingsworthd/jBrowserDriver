@@ -1,4 +1,4 @@
-/* 
+/*
  * jBrowserDriver (TM)
  * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
  * https://github.com/MachinePublishers/jBrowserDriver
@@ -8,7 +8,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,20 +17,18 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.Capabilities;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.openqa.selenium.Capabilities;
-
-import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class Context {
   final AtomicBoolean initialized = new AtomicBoolean();
@@ -43,6 +41,7 @@ class Context {
   final AtomicReference<NavigationServer> navigation = new AtomicReference<NavigationServer>();
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
+  final AtomicReference<File> userDataDirectory = new AtomicReference<>();
   final AtomicInteger statusCode = new AtomicInteger(-1);
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
@@ -51,6 +50,18 @@ class Context {
 
   Context() {
     synchronized (lock) {
+      //UDD must be computed before any ContextItem is initialized.
+      File userDataDirectory = SettingsManager.settings().userDataDirectory();
+      if (userDataDirectory == null) {
+        //Temporary because cookies aren't saved too.
+        try {
+          //App has its own temp dir, so this won't collide with other instance.
+          userDataDirectory = Files.createTempDirectory("userdata").toFile();
+        } catch (IOException e) {
+          Util.handleException(e);
+        }
+      }
+      this.userDataDirectory.set(userDataDirectory);
       ContextItem newContext = new ContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
@@ -66,6 +77,14 @@ class Context {
   void reset(JBrowserDriverServer driver) {
     removeItems();
     synchronized (lock) {
+      File userDataDirectory = this.userDataDirectory.get();
+      if (userDataDirectory != null) {
+        try {
+          FileUtils.cleanDirectory(userDataDirectory);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
       statusCode.set(-1);
       ContextItem newContext = new ContextItem();
       newContext.init(driver, this);
