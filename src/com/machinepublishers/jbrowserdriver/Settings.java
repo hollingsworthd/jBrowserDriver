@@ -1057,8 +1057,16 @@ public class Settings implements Serializable {
     }
 
     /**
-     * Defaults to <code>null</code>.
+     * User data/local storage directory used by the browser. Callers may provide their own directory to share user data
+     * across instances or to prevent the user data from being automatically deleted after resets or quits.
+     * <p>
+     * Defaults to <code>null</code>, meaning that a temp directory will be automatically created and destroyed as needed for user data.
      *
+     * <p><ul>
+     * <li>Java system property <code>jbd.userdatadirectory</code> overrides this setting. Use a string file path as the value.</li>
+     * <li>{@link Capabilities} name <code>jbd.userdatadirectory</code> alternately configures this setting. Use a string file path as the value.</li>
+     * </ul><p>
+     * 
      * @param userDataDirectory
      *          A directory to store user website data, e.g. localStorage.
      * @return this Builder
