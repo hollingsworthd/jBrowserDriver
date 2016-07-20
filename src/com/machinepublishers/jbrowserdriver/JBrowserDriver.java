@@ -89,16 +89,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Deprecated
   public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
-  private static final Intercept intercept;
-  static {
-    Intercept interceptTmp = null;
-    try {
-      interceptTmp = new Intercept();
-    } catch (Throwable t) {
-      Util.handleException(t);
-    }
-    intercept = interceptTmp;
-  }
   private static final Set<SocketLock> locks = new HashSet<SocketLock>();
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
@@ -365,16 +355,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           new ProcessExecutor()
               .environment(System.getenv())
               .addListener(new ProcessListener() {
-                @Override
-                public void afterStop(Process process) {
-                  intercept.deallocate();
-                }
-
-                @Override
-                public void beforeStart(ProcessExecutor executor) {
-                  intercept.allocate();
-                }
-
                 @Override
                 public void afterStart(Process proc, ProcessExecutor executor) {
                   process.set(proc);

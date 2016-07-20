@@ -212,7 +212,6 @@ public class Settings implements Serializable {
     private int connectionReqTimeout = -1;
     private String host = "127.0.0.1";
     private String[] javaOptions;
-    //TODO    private ResponseInterceptor[] responseInterceptors;
     private File userDataDirectory;
 
     /**
@@ -910,24 +909,6 @@ public class Settings implements Serializable {
       return this;
     }
 
-    //TODO
-    //    /**
-    //     * <p><ul>
-    //     * <li>Java system property <code>jbd.responseinterceptors</code> overrides this setting.</li>
-    //     * <li>{@link Capabilities} name <code>jbd.responseinterceptors</code> alternately configures this setting.</li>
-    //     * <li>Note that the value must be a base-64 encoded string of a serialized ResponseInterceptor array.
-    //     * </ul><p>
-    //     *
-    //     * @param responseInterceptors
-    //     *          Interceptors to modify the response before it's passed to the browser.
-    //     *
-    //     * @return this Builder
-    //     */
-    //    public Builder responseInterceptors(ResponseInterceptor... responseInterceptors) {
-    //      this.responseInterceptors = Arrays.copyOf(responseInterceptors, responseInterceptors.length);
-    //      return this;
-    //    }
-
     /**
      * Log full requests and responses (excluding response bodies).
      * <p>
@@ -1177,7 +1158,6 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.SOCKET_TIMEOUT_MS, this.socketTimeout);
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
-      //TODO set(capabilities, PropertyName.RESPONSE_INTERCEPTORS, this.responseInterceptors);
       set(capabilities, PropertyName.JAVA_OPTIONS, StringUtils.join(this.javaOptions, "\t"));
 
       if (this.screen != null) {
@@ -1291,19 +1271,6 @@ public class Settings implements Serializable {
     }
   }
 
-  //TODO
-  //  private static void set(DesiredCapabilities capabilities, PropertyName name, ResponseInterceptor[] val) {
-  //    if (val != null && val.length > 0) {
-  //      ByteArrayOutputStream streamOut = new ByteArrayOutputStream();
-  //      try (ObjectOutputStream objectOut = new ObjectOutputStream(streamOut)) {
-  //        objectOut.writeObject(val);
-  //      } catch (Throwable t) {
-  //        Util.handleException(t);
-  //      }
-  //      capabilities.setCapability(name.propertyName, Base64.getEncoder().encodeToString(streamOut.toByteArray()));
-  //    }
-  //  }
-
   private static int parse(Map capabilities, PropertyName name, int fallback) {
     if (capabilities.get(name.propertyName) != null) {
       return Integer.parseInt(capabilities.get(name.propertyName).toString());
@@ -1341,20 +1308,6 @@ public class Settings implements Serializable {
     }
     return fallback;
   }
-
-  //TODO
-  //  private static ResponseInterceptor[] parse(Map capabilities, PropertyName name, ResponseInterceptor[] fallback) {
-  //    if (capabilities.get(name.propertyName) != null) {
-  //      BufferedInputStream bufferIn = new BufferedInputStream(new ByteArrayInputStream(
-  //          Base64.getDecoder().decode(capabilities.get(name.propertyName).toString())));
-  //      try (ObjectInputStream objectIn = new ObjectInputStream(bufferIn)) {
-  //        return (ResponseInterceptor[]) objectIn.readObject();
-  //      } catch (Throwable t) {
-  //        Util.handleException(t);
-  //      }
-  //    }
-  //    return fallback;
-  //  }
 
   private static File parse(Map capabilities, PropertyName name, File fallback) {
     if (capabilities.containsKey(name.propertyName)) {
@@ -1406,7 +1359,6 @@ public class Settings implements Serializable {
   private final int connectionReqTimeout;
   private final String host;
   private final List<String> javaOptions;
-  //TODO private final ResponseInterceptor[] responseInterceptors;
   private final File userDataDirectory;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1472,7 +1424,6 @@ public class Settings implements Serializable {
     this.socketTimeout = parse(properties, PropertyName.SOCKET_TIMEOUT_MS, builder.socketTimeout);
     this.connectTimeout = parse(properties, PropertyName.CONNECT_TIMEOUT_MS, builder.connectTimeout);
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
-    //TODO this.responseInterceptors = parse(properties, PropertyName.RESPONSE_INTERCEPTORS, builder.responseInterceptors);
     this.cacheDir = parse(properties, PropertyName.CACHE_DIR, builder.cacheDir);
     this.userDataDirectory = parse(properties, PropertyName.USER_DATA_DIRECTORY, builder.userDataDirectory);
     this.host = parse(properties, PropertyName.HOST, builder.host);
@@ -1740,10 +1691,6 @@ public class Settings implements Serializable {
   List<String> javaOptions() {
     return javaOptions;
   }
-  //TODO
-  //  ResponseInterceptor[] responseInterceptors() {
-  //    return responseInterceptors;
-  //  }
 
   File userDataDirectory() {
     if (userDataDirectory != null) {
