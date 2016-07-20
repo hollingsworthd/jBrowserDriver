@@ -48,27 +48,17 @@ class Context {
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicReference<File> userDataDirectory = new AtomicReference<>();
-  private final File autoUserDataDirectory;
   final AtomicInteger statusCode = new AtomicInteger(-1);
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
   private int current = 0;
+  private final AtomicReference<File> autoUserDataDirectory = new AtomicReference<>();;
   private final Object lock = new Object();
 
   Context() {
     synchronized (lock) {
-      File userDataDirectory = null;
-      //Temporary because cookies aren't saved too.
-      try {
-        //App has its own temp dir, so this won't collide with other instances.
-        userDataDirectory = Files.createTempDirectory("userdata").toFile();
-      } catch (IOException e) {
-        Util.handleException(e);
-      }
-      autoUserDataDirectory = userDataDirectory;
-      //UDD must be computed before any ContextItem is initialized.
-      userDataDirectory = SettingsManager.settings().userDataDirectory();
-      this.userDataDirectory.set(userDataDirectory == null ? autoUserDataDirectory : userDataDirectory);
+      //UserData dir must be computed before any ContextItem is initialized.
+      setUpUserDataDir();
       ContextItem newContext = new ContextItem();
       items.add(newContext);
       itemMap.put(newContext.itemId.get(), newContext);
@@ -81,16 +71,28 @@ class Context {
     }
   }
 
-  void reset(JBrowserDriverServer driver) {
-    removeItems();
-    synchronized (lock) {
+  private void setUpUserDataDir() {
+    FileUtils.deleteQuietly(autoUserDataDirectory.get());
+    autoUserDataDirectory.set(null);
+    if (SettingsManager.settings().userDataDirectory() == null) {
+      //Temporary because cookies aren't saved too.
+      //App has its own temp dir, so this won't collide with other instances.
       try {
-        FileUtils.cleanDirectory(autoUserDataDirectory);
+        userDataDirectory.set(Files.createTempDirectory("jbd_userdata_").toFile());
       } catch (IOException e) {
         Util.handleException(e);
       }
-      File userDataDirectory = SettingsManager.settings().userDataDirectory();
-      this.userDataDirectory.set(userDataDirectory == null ? autoUserDataDirectory : userDataDirectory);
+      autoUserDataDirectory.set(userDataDirectory.get());
+    } else {
+      userDataDirectory.set(SettingsManager.settings().userDataDirectory());
+      userDataDirectory.get().mkdirs();
+    }
+  }
+
+  void reset(JBrowserDriverServer driver) {
+    removeItems();
+    synchronized (lock) {
+      setUpUserDataDir();
       statusCode.set(-1);
       ContextItem newContext = new ContextItem();
       newContext.init(driver, this);

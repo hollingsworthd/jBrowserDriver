@@ -44,6 +44,17 @@
       <input type="hidden" name="form-field" value="test-form-value">
       <input type="submit" id="form-submit">
     </form>
-    
+    <button id="populate-local-storage" onclick="populateLocalStorage();">save to local storage</button>
+    <button id="load-from-local-storage" onclick="loadFromLocalStorage();">load from local storage</button>
+    <div id="local-storage-value-holder"></div>
+    <script>
+      var populateLocalStorage = function(){
+        localStorage.setItem("local-storage-test", "test-value");
+      };
+      var loadFromLocalStorage = function(){
+        document.getElementById("local-storage-value-holder").innerHTML
+          = localStorage.getItem("local-storage-test");
+      };
+    </script>
   </body>
 </html>

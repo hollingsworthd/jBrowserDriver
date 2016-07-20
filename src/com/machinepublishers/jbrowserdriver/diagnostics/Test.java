@@ -86,10 +86,12 @@ public class Test {
     try {
       HttpServer.launch(TEST_PORT_HTTP);
       final File cacheDir = Files.createTempDirectory("jbd_test_cache").toFile();
+      final File userDataDir = Files.createTempDirectory("jbd_test_userdata").toFile();
       shutdownHook = new Thread(new Runnable() {
         @Override
         public void run() {
           FileUtils.deleteQuietly(cacheDir);
+          FileUtils.deleteQuietly(userDataDir);
         }
       });
       Runtime.getRuntime().addShutdownHook(shutdownHook);
@@ -148,6 +150,29 @@ public class Test {
         test(!StringUtils.isEmpty(entry.getMessage()));
       }
       test(messages == 3);
+
+      /*
+       * User-data directory
+       */
+      driver.findElement(By.id("populate-local-storage")).click();
+      driver.findElement(By.id("load-from-local-storage")).click();
+      test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.findElement(By.id("load-from-local-storage")).click();
+      test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
+      driver.reset();
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.findElement(By.id("load-from-local-storage")).click();
+      test("".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
+      driver.reset(builder.userDataDirectory(userDataDir).build());
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.findElement(By.id("populate-local-storage")).click();
+      driver.findElement(By.id("load-from-local-storage")).click();
+      test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
+      driver.reset();
+      driver.get("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP);
+      driver.findElement(By.id("load-from-local-storage")).click();
+      test("test-value".equals(driver.findElement(By.id("local-storage-value-holder")).getText()));
 
       /*
        * Select DOM elements
