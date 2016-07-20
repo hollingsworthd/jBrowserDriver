@@ -151,6 +151,8 @@ public class Settings implements Serializable {
     LOGS_MAX("jbd.logsmax"),
     LOGGER("jbd.logger"),
     JAVA_OPTIONS("jbd.javaoptions"),
+    JAVA_BINARY("jbd.javabinary"),
+    JAVA_EXPORT_MODULES("jbd.javaexportmodules"),
     USER_DATA_DIRECTORY("jbd.userdatadirectory"),
     @Deprecated
     WIRE_CONSOLE("jbd.wireconsole"),
@@ -212,6 +214,8 @@ public class Settings implements Serializable {
     private int connectionReqTimeout = -1;
     private String host = "127.0.0.1";
     private String[] javaOptions;
+    private String javaBinary;
+    private boolean javaExportModules;
     private File userDataDirectory;
 
     /**
@@ -1056,6 +1060,16 @@ public class Settings implements Serializable {
       return this;
     }
 
+    public Builder javaBinary(String javaBinary) {
+      this.javaBinary = javaBinary;
+      return this;
+    }
+
+    public Builder javaExportModules(boolean javaExportModules) {
+      this.javaExportModules = javaExportModules;
+      return this;
+    }
+
     /**
      * User data/local storage directory used by the browser. Callers may provide their own directory to share user data
      * across instances or to prevent the user data from being automatically deleted after resets or quits.
@@ -1167,6 +1181,8 @@ public class Settings implements Serializable {
       set(capabilities, PropertyName.CONNECT_TIMEOUT_MS, this.connectTimeout);
       set(capabilities, PropertyName.CONNECTION_REQ_TIMEOUT_MS, this.connectionReqTimeout);
       set(capabilities, PropertyName.JAVA_OPTIONS, StringUtils.join(this.javaOptions, "\t"));
+      set(capabilities, PropertyName.JAVA_BINARY, this.javaBinary);
+      set(capabilities, PropertyName.JAVA_EXPORT_MODULES, this.javaExportModules);
 
       if (this.screen != null) {
         set(capabilities, PropertyName.SCREEN_WIDTH, this.screen.getWidth());
@@ -1367,6 +1383,8 @@ public class Settings implements Serializable {
   private final int connectionReqTimeout;
   private final String host;
   private final List<String> javaOptions;
+  private final String javaBinary;
+  private final boolean javaExportModules;
   private final File userDataDirectory;
 
   private Settings(Settings.Builder builder, Map properties) {
@@ -1396,6 +1414,8 @@ public class Settings implements Serializable {
     } else {
       this.javaOptions = Collections.unmodifiableList(Arrays.asList(builder.javaOptions));
     }
+    this.javaBinary = parse(properties, PropertyName.JAVA_BINARY, builder.javaBinary);
+    this.javaExportModules = parse(properties, PropertyName.JAVA_EXPORT_MODULES, builder.javaExportModules);
     if (properties.get(PropertyName.WIRE_CONSOLE.propertyName) != null) {
       System.err.println("jBrowserDriver: The jbd.wireconsole setting is deprecated and will be removed in v2.0.0. Use jbd.logwire, jbd.logger, or jbd.logsmax instead.");
       this.logWire = parse(properties, PropertyName.WIRE_CONSOLE, builder.logWire);
@@ -1698,6 +1718,14 @@ public class Settings implements Serializable {
 
   List<String> javaOptions() {
     return javaOptions;
+  }
+
+  String javaBinary() {
+    return javaBinary;
+  }
+
+  boolean javaExportModules() {
+    return javaExportModules;
   }
 
   File userDataDirectory() {

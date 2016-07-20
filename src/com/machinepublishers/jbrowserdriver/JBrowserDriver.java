@@ -92,6 +92,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final Set<SocketLock> locks = new HashSet<SocketLock>();
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
+  private static final String JAVA_BIN;
   private static final List<String> args;
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
@@ -101,12 +102,12 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   static {
     List<String> argsTmp = new ArrayList<String>();
+    File javaBin = new File(System.getProperty("java.home") + "/bin/java");
+    if (!javaBin.exists()) {
+      javaBin = new File(javaBin.getAbsolutePath() + ".exe");
+    }
+    JAVA_BIN = javaBin.getAbsolutePath();
     try {
-      File javaBin = new File(System.getProperty("java.home") + "/bin/java");
-      if (!javaBin.exists()) {
-        javaBin = new File(javaBin.getCanonicalPath() + ".exe");
-      }
-      argsTmp.add(javaBin.getCanonicalPath());
       for (Object keyObj : System.getProperties().keySet()) {
         String key = keyObj.toString();
         if (key != null && key.startsWith("jbd.rmi.")) {
@@ -146,27 +147,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       new JarOutputStream(new FileOutputStream(classpathJar), manifest).close();
       argsTmp.add("-classpath");
       argsTmp.add(classpathJar.getCanonicalPath());
-      String version = System.getProperty("java.specification.version");
-      if (version != null) {
-        try {
-          if (Double.parseDouble(version) >= 9) {
-            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit.network.data=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.http=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.https=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.file=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
-            argsTmp.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
-          }
-        } catch (NumberFormatException e) {
-          //ignore this
-        }
-      }
     } catch (Throwable t) {
       Util.handleException(t);
     }
@@ -342,8 +322,23 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     new Thread(new Runnable() {
       @Override
       public void run() {
-        List<String> myArgs = new ArrayList<String>(args);
-
+        List<String> myArgs = new ArrayList<String>();
+        myArgs.add(settings.javaBinary() == null ? JAVA_BIN : settings.javaBinary());
+        myArgs.addAll(args);
+        if (settings.javaExportModules()) {
+          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
+          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
+          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.data=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.http=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.https=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.file=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
+          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
+          myArgs.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
+          myArgs.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
+          myArgs.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
+        }
         myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
         myArgs.add("-Djava.rmi.server.hostname=" + settings.host());
         myArgs.addAll(settings.javaOptions());
