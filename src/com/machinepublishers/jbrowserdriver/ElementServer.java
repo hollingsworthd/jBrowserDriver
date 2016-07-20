@@ -866,48 +866,57 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     int sleep = 1;
     final int sleepBackoff = 2;
     final int sleepMax = 0x101;
-    while (true) {
-      sleep = sleep < sleepMax ? sleep * sleepBackoff : sleep;
-      try {
-        Thread.sleep(sleep);
-      } catch (InterruptedException e) {}
-      Object result = AppThread.exec(
+    try {
+      while (true) {
+        sleep = sleep < sleepMax ? sleep * sleepBackoff : sleep;
+        try {
+          Thread.sleep(sleep);
+        } catch (InterruptedException e) {}
+        Object result = AppThread.exec(
+            context.statusCode,
+            new Sync<Object>() {
+              @Override
+              public Object perform() {
+                validate(false);
+                return node.eval(new StringBuilder()
+                    .append("(function(){return this.")
+                    .append(jsNames.callbackVal)
+                    .append(";})();").toString());
+              }
+            });
+        if (!(result instanceof String) || !"undefined".equals(result.toString())) {
+          Object parsed = parseScriptResult(result);
+          if (parsed instanceof List) {
+            if (((List) parsed).size() == 0) {
+              return null;
+            }
+            if (((List) parsed).size() == 1) {
+              return ((List) parsed).get(0);
+            }
+          }
+          return parsed;
+        }
+        if (System.currentTimeMillis() > timeoutAt) {
+          throw new TimeoutException(
+              "Timeout of " +
+                  context.timeouts.get().getScriptTimeoutMS() +
+                  "ms reached for waiting async script to complete.");
+        }
+      }
+    } finally {
+      AppThread.exec(
           context.statusCode,
           new Sync<Object>() {
             @Override
             public Object perform() {
               validate(false);
-              try {
-                return node.eval(new StringBuilder()
-                    .append("(function(){return this.")
-                    .append(jsNames.callbackVal)
-                    .append(";})();").toString());
-              } finally {
-                node.eval(new StringBuilder()
-                    .append("delete ")
-                    .append(jsNames.callbackVal)
-                    .append(";").toString());
-              }
+              node.eval(new StringBuilder()
+                  .append("delete ")
+                  .append(jsNames.callbackVal)
+                  .append(";").toString());
+              return null;
             }
           });
-      if (!(result instanceof String) || !"undefined".equals(result.toString())) {
-        Object parsed = parseScriptResult(result);
-        if (parsed instanceof List) {
-          if (((List) parsed).size() == 0) {
-            return null;
-          }
-          if (((List) parsed).size() == 1) {
-            return ((List) parsed).get(0);
-          }
-        }
-        return parsed;
-      }
-      if (System.currentTimeMillis() > timeoutAt) {
-        throw new TimeoutException(
-            "Timeout of " +
-                context.timeouts.get().getScriptTimeoutMS() +
-                "ms reached for waiting async script to complete.");
-      }
     }
   }
 
