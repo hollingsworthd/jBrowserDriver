@@ -32,7 +32,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
 
   NavigationServer(final AtomicReference<JBrowserDriverServer> driver,
       final Context context, final AtomicInteger statusCode)
-          throws RemoteException {
+      throws RemoteException {
     this.driver = driver;
     this.context = context;
     this.statusCode = statusCode;

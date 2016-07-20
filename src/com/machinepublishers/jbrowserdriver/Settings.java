@@ -17,18 +17,26 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
-
-import java.io.File;
-import java.io.Serializable;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 /**
  * An immutable class which contains settings for the browser.
@@ -99,7 +107,8 @@ public class Settings implements Serializable {
   }
 
   private enum PropertyName {
-    @Deprecated PORTS("jbd.ports"),
+    @Deprecated
+    PORTS("jbd.ports"),
     PORT_RANGES("jbd.portranges"),
     PROCESSES("jbd.processes"),
     HOST("jbd.host"),
@@ -143,10 +152,14 @@ public class Settings implements Serializable {
     LOGGER("jbd.logger"),
     JAVA_OPTIONS("jbd.javaoptions"),
     USER_DATA_DIRECTORY("jbd.userdatadirectory"),
-    @Deprecated WIRE_CONSOLE("jbd.wireconsole"),
-    @Deprecated TRACE_CONSOLE("jbd.traceconsole"),
-    @Deprecated WARN_CONSOLE("jbd.warnconsole"),
-    @Deprecated MAX_LOGS("jbd.maxlogs");
+    @Deprecated
+    WIRE_CONSOLE("jbd.wireconsole"),
+    @Deprecated
+    TRACE_CONSOLE("jbd.traceconsole"),
+    @Deprecated
+    WARN_CONSOLE("jbd.warnconsole"),
+    @Deprecated
+    MAX_LOGS("jbd.maxlogs");
 
     private final String propertyName;
 
@@ -1065,7 +1078,8 @@ public class Settings implements Serializable {
     /**
      * Defaults to <code>null</code>.
      *
-     * @param userDataDirectory A directory to store user website data, e.g. localStorage.
+     * @param userDataDirectory
+     *          A directory to store user website data, e.g. localStorage.
      * @return this Builder
      *
      * @see javafx.scene.web.WebEngine#userDataDirectory
@@ -1075,7 +1089,7 @@ public class Settings implements Serializable {
       return this;
     }
 
-      /**
+    /**
      * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logWire, logsMax, or logger.
      */
     @Deprecated
@@ -1344,8 +1358,8 @@ public class Settings implements Serializable {
 
   private static File parse(Map capabilities, PropertyName name, File fallback) {
     if (capabilities.containsKey(name.propertyName)) {
-        Object pathName = capabilities.get(name.propertyName);
-        if (pathName == null || pathName.equals("")) {
+      Object pathName = capabilities.get(name.propertyName);
+      if (pathName == null || pathName.equals("")) {
         return null;
       }
       return new File(pathName.toString());

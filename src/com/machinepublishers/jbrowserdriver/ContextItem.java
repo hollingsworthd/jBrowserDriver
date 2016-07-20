@@ -17,19 +17,21 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import com.sun.javafx.webkit.Accessor;
-import com.sun.webkit.WebPage;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
-import netscape.javascript.JSObject;
-import org.w3c.dom.Document;
-
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.w3c.dom.Document;
+
+import com.sun.javafx.webkit.Accessor;
+import com.sun.webkit.WebPage;
+
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
+import netscape.javascript.JSObject;
 
 class ContextItem {
   private static final AtomicLong currentItemId = new AtomicLong();

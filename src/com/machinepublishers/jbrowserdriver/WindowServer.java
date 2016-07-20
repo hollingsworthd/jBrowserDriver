@@ -32,7 +32,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
 
   WindowServer(final AtomicReference<Stage> stage,
       final AtomicInteger statusCode)
-          throws RemoteException {
+      throws RemoteException {
     this.stage = stage;
     this.statusCode = statusCode;
   }

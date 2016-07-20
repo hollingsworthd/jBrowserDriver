@@ -17,18 +17,24 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Sync;
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.Capabilities;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.Capabilities;
+
+import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 
 class Context {
   final AtomicBoolean initialized = new AtomicBoolean();

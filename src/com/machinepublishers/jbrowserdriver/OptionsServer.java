@@ -44,7 +44,7 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
 
   OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
-          throws RemoteException {
+      throws RemoteException {
     this.context = context;
     this.timeouts = timeouts;
   }
