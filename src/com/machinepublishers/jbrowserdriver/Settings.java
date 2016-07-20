@@ -1746,6 +1746,9 @@ public class Settings implements Serializable {
   //  }
 
   File userDataDirectory() {
+    if (userDataDirectory != null) {
+      userDataDirectory.mkdirs();
+    }
     return userDataDirectory;
   }
 }

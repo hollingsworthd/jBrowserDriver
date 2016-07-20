@@ -84,15 +84,12 @@ class Context {
   void reset(JBrowserDriverServer driver) {
     removeItems();
     synchronized (lock) {
-      File userDataDirectory = this.userDataDirectory.get();
-      if (userDataDirectory != null && userDataDirectory != autoUserDataDirectory) {
-        try {
-          FileUtils.cleanDirectory(userDataDirectory);
-        } catch (IOException e) {
-          Util.handleException(e);
-        }
+      try {
+        FileUtils.cleanDirectory(autoUserDataDirectory);
+      } catch (IOException e) {
+        Util.handleException(e);
       }
-      userDataDirectory = SettingsManager.settings().userDataDirectory();
+      File userDataDirectory = SettingsManager.settings().userDataDirectory();
       this.userDataDirectory.set(userDataDirectory == null ? autoUserDataDirectory : userDataDirectory);
       statusCode.set(-1);
       ContextItem newContext = new ContextItem();
