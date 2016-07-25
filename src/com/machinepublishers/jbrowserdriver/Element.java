@@ -327,14 +327,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    */
   @Override
   public WebElement findElement(By by) {
-    try {
-      synchronized (lock) {
-        return constructElement(remote.findElement(by), driver, lock);
-      }
-    } catch (Throwable t) {
-      Util.handleException(t);
-      return null;
-    }
+    return by.findElement(this);
   }
 
   /**
@@ -342,16 +335,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    */
   @Override
   public List<WebElement> findElements(By by) {
-    try {
-      List<ElementRemote> elements;
-      synchronized (lock) {
-        elements = remote.findElements(by);
-      }
-      return constructList(elements, driver, lock);
-    } catch (Throwable t) {
-      Util.handleException(t);
-      return new ArrayList<WebElement>();
-    }
+    return by.findElements(this);
   }
 
   /**

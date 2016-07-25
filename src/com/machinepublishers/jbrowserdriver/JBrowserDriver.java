@@ -618,12 +618,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public WebElement findElement(By by) {
-    try {
-      return by.findElement(this);
-    } catch (Throwable t) {
-      Util.handleException(t);
-      return null;
-    }
+    return by.findElement(this);
   }
 
   /**
@@ -631,12 +626,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Override
   public List<WebElement> findElements(By by) {
-    try {
-      return by.findElements(this);
-    } catch (Throwable t) {
-      Util.handleException(t);
-      return new ArrayList<WebElement>();
-    }
+    return by.findElements(this);
   }
 
   /**
