@@ -19,7 +19,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
@@ -28,14 +27,11 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
     org.openqa.selenium.WebDriver.Navigation {
   private final AtomicReference<JBrowserDriverServer> driver;
   private final Context context;
-  private final AtomicInteger statusCode;
 
-  NavigationServer(final AtomicReference<JBrowserDriverServer> driver,
-      final Context context, final AtomicInteger statusCode)
+  NavigationServer(final AtomicReference<JBrowserDriverServer> driver, final Context context)
       throws RemoteException {
     this.driver = driver;
     this.context = context;
-    this.statusCode = statusCode;
   }
 
   /**
@@ -43,7 +39,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void back() {
-    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -61,7 +57,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void forward() {
-    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             try {
@@ -79,7 +75,7 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
    */
   @Override
   public void refresh() {
-    AppThread.exec(statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
+    AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
         new Sync<Object>() {
           public Object perform() {
             context.item().view.get().getEngine().reload();

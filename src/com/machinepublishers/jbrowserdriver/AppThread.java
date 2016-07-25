@@ -19,7 +19,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.openqa.selenium.TimeoutException;
@@ -38,14 +37,14 @@ class AppThread {
   private static class Runner<T> implements Runnable {
     private static final int MAX_DELAY = 500;
     private final Sync<T> action;
-    private final AtomicInteger statusCode;
+    private final StatusCode statusCode;
     private final AtomicBoolean done;
     private final AtomicReference<T> returned;
     private final int delay;
     private final AtomicBoolean cancel;
     private final AtomicReference<Throwable> failure;
 
-    public Runner(Sync<T> action, AtomicInteger statusCode) {
+    public Runner(Sync<T> action, StatusCode statusCode) {
       this.action = action;
       this.statusCode = statusCode;
       this.done = new AtomicBoolean();
@@ -106,7 +105,7 @@ class AppThread {
   }
 
   private static void pause() {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new Sync<Object>() {
       @Override
       public Object perform() {
         try {
@@ -129,19 +128,23 @@ class AppThread {
     }
   }
 
-  static <T> T exec(final AtomicInteger statusCode, final Sync<T> action) {
+  static <T> T exec(final Sync<T> action) {
+    return exec(false, new StatusCode(), 0, action);
+  }
+
+  static <T> T exec(final StatusCode statusCode, final Sync<T> action) {
     return exec(false, statusCode, 0, action);
   }
 
-  static <T> T exec(final boolean pauseAfterExec, final AtomicInteger statusCode, final Sync<T> action) {
+  static <T> T exec(final boolean pauseAfterExec, final StatusCode statusCode, final Sync<T> action) {
     return exec(pauseAfterExec, statusCode, 0, action);
   }
 
-  static <T> T exec(final AtomicInteger statusCode, final long timeout, final Sync<T> action) {
+  static <T> T exec(final StatusCode statusCode, final long timeout, final Sync<T> action) {
     return exec(false, statusCode, timeout, action);
   }
 
-  static <T> T exec(final boolean pauseAfterExec, final AtomicInteger statusCode, final long timeout,
+  static <T> T exec(final boolean pauseAfterExec, final StatusCode statusCode, final long timeout,
       final Sync<T> action) {
     try {
       if ((boolean) Platform.isFxApplicationThread()) {

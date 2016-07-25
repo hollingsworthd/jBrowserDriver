@@ -18,15 +18,18 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.html.HTMLFrameElement;
+import org.w3c.dom.html.HTMLIFrameElement;
 
 import com.sun.javafx.webkit.Accessor;
-import com.sun.webkit.WebPage;
 
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -44,61 +47,108 @@ class ContextItem {
   final AtomicBoolean initialized = new AtomicBoolean();
   final AtomicReference<String> itemId = new AtomicReference<String>();
   final AtomicReference<Context> context = new AtomicReference<Context>();
-  private final Frames frames = new Frames();
+  final StatusCode statusCode = new StatusCode();
+  private final Object lock = new Object();
   private ElementServer frame;
 
   ContextItem() {
     itemId.set(Long.toString(currentItemId.getAndIncrement()));
   }
 
-  ElementServer selectedFrame() {
-    synchronized (frames) {
-      if (frame != null
-          && (!(frame.node() instanceof Document) || !frames.conatins(frame.node()))) {
-        boolean foundFrame = false;
-        try {
-          if (frame.frameId() > 0) {
-            Document doc = Accessor.getPageFor(engine.get()).getDocument(frame.frameId());
-            if (doc instanceof JSObject) {
-              selectFrame(new ElementServer((JSObject) doc, context.get()));
-              foundFrame = true;
-            }
+  JSObject selectedFrameDoc() {
+    synchronized (lock) {
+      if (frame != null && ancestors(engine.get().getDocument(), frame.node()) != null) {
+        if (frame.node() instanceof HTMLIFrameElement) {
+          Document doc = ((HTMLIFrameElement) frame.node()).getContentDocument();
+          if (doc instanceof JSObject) {
+            return (JSObject) doc;
           }
-        } catch (Throwable t) {}
-        if (!foundFrame) {
-          deselectFrame();
+        }
+        if (frame.node() instanceof HTMLFrameElement) {
+          Document doc = ((HTMLFrameElement) frame.node()).getContentDocument();
+          if (doc instanceof JSObject) {
+            return (JSObject) doc;
+          }
         }
       }
-      return frame;
+      frame = null;
+      Document doc = engine.get().getDocument();
+      if (doc instanceof JSObject) {
+        return (JSObject) doc;
+      }
+      return null;
     }
   }
 
   boolean containsFrame(JSObject doc) {
-    synchronized (frames) {
-      return frames.conatins(doc);
+    return engine.get().getDocument().equals(doc) || ancestors(engine.get().getDocument(), doc) != null;
+  }
+
+  private List<Node> ancestors(Document doc, JSObject targetNode) {
+    if (targetNode != null) {
+      List<Node> list = new ArrayList<Node>();
+      try {
+        List elements = new ArrayList();
+        elements.addAll(new ElementServer((JSObject) doc, this).findElementsByTagName("frame"));
+        elements.addAll(new ElementServer((JSObject) doc, this).findElementsByTagName("iframe"));
+        for (Object cur : elements) {
+          JSObject node = ((ElementServer) cur).node();
+          if (node instanceof Node) {
+            list.add((Node) node);
+          }
+        }
+      } catch (RemoteException e) {
+        Util.handleException(e);
+      }
+      for (Node cur : list) {
+        Document curDoc = null;
+        if (cur instanceof HTMLFrameElement) {
+          curDoc = ((HTMLFrameElement) cur).getContentDocument();
+        } else if (cur instanceof HTMLIFrameElement) {
+          curDoc = ((HTMLIFrameElement) cur).getContentDocument();
+        }
+        Document targetDoc = null;
+        if (targetNode instanceof HTMLFrameElement) {
+          targetDoc = ((HTMLFrameElement) targetNode).getContentDocument();
+        } else if (targetNode instanceof HTMLIFrameElement) {
+          targetDoc = ((HTMLIFrameElement) targetNode).getContentDocument();
+        } else if (targetNode instanceof Document) {
+          targetDoc = (Document) targetNode;
+        }
+        if (curDoc.equals(targetDoc)) {
+          List<Node> ancestors = new ArrayList<Node>();
+          ancestors.add(cur);
+          return ancestors;
+        }
+        List<Node> ancestors = ancestors(curDoc, targetNode);
+        if (ancestors != null) {
+          ancestors.add(cur);
+          return ancestors;
+        }
+      }
     }
+    return null;
+
   }
 
   org.openqa.selenium.Point selectedFrameLocation() {
-    synchronized (frames) {
-      ElementServer selectedFrame = selectedFrame();
+    synchronized (lock) {
       int xCoord = 0;
       int yCoord = 0;
-      if (selectedFrame != null) {
-        long frameId = frames.id(selectedFrame.node());
-        WebPage webPage = Accessor.getPageFor(engine.get());
-        List<Long> ancestors = frames.ancestors(frameId);
-        ancestors.add(frameId);
-        for (Long curFrameId : ancestors) {
-          try {
-            org.w3c.dom.Element owner = webPage.getOwnerElement(curFrameId);
-            if (owner instanceof JSObject) {
-              org.openqa.selenium.Point point = new ElementServer(((JSObject) owner), context.get()).getLocation();
-              xCoord += point.getX();
-              yCoord += point.getY();
+      if (frame != null) {
+        List<Node> ancestors = ancestors(engine.get().getDocument(), frame.node());
+        if (ancestors != null) {
+          for (Node cur : ancestors) {
+            try {
+              if (cur instanceof JSObject) {
+                org.openqa.selenium.Point point = new ElementServer((JSObject) cur, this).getLocation();
+                xCoord += point.getX();
+                yCoord += point.getY();
+              }
+            } catch (RemoteException e) {
+              Util.handleException(e);
             }
-          } catch (RemoteException e) {
-            Util.handleException(e);
+
           }
         }
       }
@@ -107,37 +157,27 @@ class ContextItem {
   }
 
   void deselectFrame() {
-    synchronized (frames) {
+    synchronized (lock) {
       frame = null;
     }
   }
 
   void selectFrame(ElementServer frame) {
-    synchronized (frames) {
-      frame.setFrameId(frames.id(frame.node()));
-      this.frame = frame;
-    }
-  }
-
-  void resetFrameId(long frameId) {
-    synchronized (frames) {
-      frames.reset(frameId);
-    }
-  }
-
-  void addFrameId(long frameId) {
-    synchronized (frames) {
-      WebPage webPage = Accessor.getPageFor(engine.get());
-      frames.add(frameId, (JSObject) webPage.getDocument(frameId),
-          (JSObject) webPage.getOwnerElement(frameId), webPage.getParentFrame(frameId));
-    }
-  }
-
-  long currentFrameId() {
-    synchronized (frames) {
-      ElementServer selectedFrame = selectedFrame();
-      long selectedId = selectedFrame == null ? 0 : frames.id(selectedFrame.node());
-      return selectedId == 0 ? frames.rootId() : selectedId;
+    synchronized (lock) {
+      this.frame = null;
+      if (frame != null && frame.node() instanceof Document && !frame.node().equals(engine.get().getDocument())) {
+        List<Node> ancestors = ancestors(engine.get().getDocument(), frame.node());
+        if (ancestors != null && !ancestors.isEmpty() && ancestors.get(0) instanceof JSObject) {
+          try {
+            this.frame = new ElementServer((JSObject) ancestors.get(0), this);
+          } catch (RemoteException e) {
+            Util.handleException(e);
+          }
+        }
+      } else if (frame != null &&
+          (frame.node() instanceof HTMLIFrameElement || frame.node() instanceof HTMLFrameElement)) {
+        this.frame = frame;
+      }
     }
   }
 
@@ -147,19 +187,20 @@ class ContextItem {
       SettingsManager.register(stage, view);
       engine.set(view.get().getEngine());
       try {
-        window.set(new WindowServer(stage, context.statusCode));
+        window.set(new WindowServer(stage, statusCode));
         context.alert.get().listen(this);
       } catch (RemoteException e) {
         Util.handleException(e);
       }
       final ContextItem thisObject = this;
-      AppThread.exec(context.statusCode, () -> {
+      AppThread.exec(statusCode, () -> {
         Settings settings = SettingsManager.settings();
         engine.get().setJavaScriptEnabled(settings.javascript());
         //If null engine uses automatic value.
         engine.get().setUserDataDirectory(context.userDataDirectory.get());
         httpListener.set(new HttpListener(thisObject,
-            context.statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
+            statusCode, context.timeouts.get().getPageLoadTimeoutObjMS()));
+        httpListener.get().init();
         Accessor.getPageFor(view.get().getEngine()).addLoadListenerClient(httpListener.get());
         engine.get().setCreatePopupHandler(new PopupHandler(driver, context));
         return null;

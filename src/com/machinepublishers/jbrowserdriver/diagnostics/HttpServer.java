@@ -20,6 +20,7 @@ package com.machinepublishers.jbrowserdriver.diagnostics;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.io.IOUtils;
 
 public class HttpServer {
   private static final AtomicBoolean loop = new AtomicBoolean();
@@ -42,18 +45,24 @@ public class HttpServer {
   private static final byte[] iframeBody;
   private static final byte[] iframeContent;
   private static final byte[] redirectContent;
+  private static final byte[] imageBody;
+  private static final byte[] imageContent;
   static {
-    byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "200 OK");
+    byte[][] resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "200 OK", null);
     indexBody = resource[0];
     indexContent = resource[1];
 
-    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "201 Created");
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/test.htm", "201 Created", null);
     postBody = resource[0];
     postContent = resource[1];
 
-    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm", "200 OK");
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/iframe.htm", "200 OK", null);
     iframeBody = resource[0];
     iframeContent = resource[1];
+
+    resource = resource("/com/machinepublishers/jbrowserdriver/diagnostics/image.png", "200 OK", "image/png");
+    imageBody = resource[0];
+    imageContent = resource[1];
 
     byte[] redirectContentTmp = null;
     try {
@@ -75,18 +84,15 @@ public class HttpServer {
     redirectContent = redirectContentTmp;
   }
 
-  private static byte[][] resource(String path, String status) {
-    final char[] chars = new char[8192];
-    StringBuilder builder = new StringBuilder(chars.length);
+  private static byte[][] resource(String path, String status, String contentType) {
     byte[] bodyTmp = null;
     byte[] contentTmp = null;
-    try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(HttpServer.class.getResourceAsStream(path)))) {
-      for (int len; -1 != (len = reader.read(chars, 0, chars.length)); builder.append(chars, 0, len));
-      bodyTmp = builder.toString().getBytes("utf-8");
+    try (InputStream inputStream = HttpServer.class.getResourceAsStream(path)) {
+      bodyTmp = IOUtils.toByteArray(inputStream);
       contentTmp = new String("HTTP/1.1 " + status + "\n"
           + "Content-Length: " + bodyTmp.length + "\n"
-          //Don't set content-type -- test that it's added automatically
+          //Don't set content-type for text/html -- test that it's added automatically
+          + (contentType == null ? "" : "Content-Type: " + contentType + "\n")
           + "Expires: Sun, 09 Feb 2116 01:01:01 GMT\n"
           + "Connection: close\n\n").getBytes("utf-8");
     } catch (Throwable t) {
@@ -135,6 +141,9 @@ public class HttpServer {
                     synchronized (HttpServer.class) {
                       HttpServer.class.wait();
                     }
+                  } else if (line.startsWith("GET /image.png")) {
+                    output.write(imageContent, 0, imageContent.length);
+                    output.write(imageBody, 0, imageBody.length);
                   }
                 }
                 previousRequest.set(request);

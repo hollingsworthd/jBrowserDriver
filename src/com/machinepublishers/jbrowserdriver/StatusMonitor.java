@@ -33,7 +33,6 @@ class StatusMonitor {
   private final Set<String> discarded = new HashSet<String>();
   private final Map<String, String> redirects = new HashMap<String, String>();
   private final List<String> startedUrls = new ArrayList<String>();
-  private boolean monitoring;
 
   static StatusMonitor instance() {
     return instance;
@@ -48,11 +47,11 @@ class StatusMonitor {
     return url.endsWith("/") ? url : new StringBuilder().append(url).append("/").toString();
   }
 
-  boolean isPrimaryDocument(boolean requireSelectedFrame, String url) {
+  boolean isPrimaryDocument(boolean requireMainFrame, String url) {
     synchronized (lock) {
       String canonicalUrl = canonicalUrl(url);
       return primaryDocuments.containsKey(canonicalUrl)
-          && (!requireSelectedFrame || primaryDocuments.get(canonicalUrl));
+          && (!requireMainFrame || primaryDocuments.get(canonicalUrl));
     }
   }
 
@@ -80,24 +79,21 @@ class StatusMonitor {
     }
   }
 
-  void startStatusMonitor(String url) {
+  void monitor(String url) {
     synchronized (lock) {
-      monitoring = true;
       startedUrls.add(canonicalUrl(url));
     }
   }
 
-  void addPrimaryDocument(boolean selectedFrame, String url) {
+  void addPrimaryDocument(boolean mainFrame, String url) {
     synchronized (lock) {
-      primaryDocuments.put(canonicalUrl(url), selectedFrame);
+      primaryDocuments.put(canonicalUrl(url), mainFrame);
     }
   }
 
-  void addStatusMonitor(URL url, StreamConnection conn) {
+  void monitor(URL url, StreamConnection conn) {
     synchronized (lock) {
-      if (monitoring) {
-        connections.put(canonicalUrl(url.toExternalForm()), conn);
-      }
+      connections.put(canonicalUrl(url.toExternalForm()), conn);
     }
   }
 
@@ -107,10 +103,9 @@ class StatusMonitor {
     }
   }
 
-  int stopStatusMonitor(String url) {
+  int status(String url) {
     StreamConnection conn = null;
     synchronized (lock) {
-      monitoring = false;
       conn = connections.get(canonicalUrl(url));
       for (int i = startedUrls.size() - 1; conn == null && i > -1; i--) {
         conn = connections.get(startedUrls.get(i));
@@ -128,19 +123,17 @@ class StatusMonitor {
     return code;
   }
 
-  void clearStatusMonitor() {
+  void clear() {
     synchronized (lock) {
-      if (!monitoring) {
-        for (StreamConnection conn : connections.values()) {
-          Util.close(conn);
-        }
-        StreamConnection.cleanUp();
-        connections.clear();
-        primaryDocuments.clear();
-        discarded.clear();
-        redirects.clear();
-        startedUrls.clear();
+      for (StreamConnection conn : connections.values()) {
+        Util.close(conn);
       }
+      StreamConnection.cleanUp();
+      connections.clear();
+      primaryDocuments.clear();
+      discarded.clear();
+      redirects.clear();
+      startedUrls.clear();
     }
   }
 }

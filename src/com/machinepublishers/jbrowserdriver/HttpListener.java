@@ -17,13 +17,12 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.sun.javafx.webkit.Accessor;
 import com.sun.webkit.LoadListenerClient;
@@ -68,20 +67,40 @@ class HttpListener implements LoadListenerClient {
     errors = Collections.unmodifiableMap(errorsTmp);
   }
 
-  private final List<Thread> ajaxListeners = new ArrayList<Thread>();
   private final Map<String, Long> resources = new HashMap<String, Long>();
   private final ContextItem contextItem;
-  private final AtomicInteger statusCode;
+  private final StatusCode statusCode;
   private final AtomicLong timeoutMS;
   private final StatusMonitor statusMonitor;
   private final LogsServer logs;
+  private final AtomicReference<Thread> ajaxListenerThread = new AtomicReference<Thread>();
+  private final AjaxListener ajaxListener;
+  private final AtomicInteger newStatusCode = new AtomicInteger();
 
-  HttpListener(ContextItem contextItem, AtomicInteger statusCode, AtomicLong timeoutMS) {
+  HttpListener(ContextItem contextItem, StatusCode statusCode, AtomicLong timeoutMS) {
     this.contextItem = contextItem;
     this.statusCode = statusCode;
     this.timeoutMS = timeoutMS;
     this.statusMonitor = StatusMonitor.instance();
     this.logs = LogsServer.instance();
+    this.ajaxListener = new AjaxListener(
+        this.newStatusCode, this.statusCode, this.resources, this.timeoutMS.get());
+  }
+
+  void init() {
+    this.ajaxListenerThread.set(new Thread(ajaxListener));
+    this.ajaxListenerThread.get().setDaemon(true);
+    this.ajaxListenerThread.get().start();
+  }
+
+  @Override
+  protected void finalize() throws Throwable {
+    try {
+      super.finalize();
+    } catch (Throwable t) {}
+    try {
+      this.ajaxListenerThread.get().interrupt();
+    } catch (Throwable t) {}
   }
 
   private void trace(String label, long frame, int state, String url,
@@ -131,23 +150,12 @@ class HttpListener implements LoadListenerClient {
   }
 
   void resetStatusCode() {
-    resetStatusCode(true);
-  }
-
-  private void resetStatusCode(boolean startNewListener) {
     synchronized (statusCode) {
-      for (Thread thread : ajaxListeners) {
-        thread.interrupt();
-      }
-      ajaxListeners.clear();
+      newStatusCode.set(0);
       statusCode.set(0);
       resources.clear();
-      if (startNewListener) {
-        Thread thread = new Thread(new AjaxListener(
-            200, statusCode, resources, timeoutMS.get()));
-        ajaxListeners.add(thread);
-        thread.start();
-      }
+      StatusMonitor.instance().clear();
+      statusCode.notifyAll();
     }
   }
 
@@ -161,39 +169,30 @@ class HttpListener implements LoadListenerClient {
     if (settings == null) {
       throw new RuntimeException("Request made after browser closed. Ignoring...");
     }
+    final long mainFrame = Accessor.getPageFor(contextItem.engine.get()).getMainFrame();
     synchronized (statusCode) {
-      if (state == LoadListenerClient.PAGE_STARTED) {
-        contextItem.resetFrameId(frame);
-        if (settings.logJavascript()) {
-          JavascriptLog.attach(Accessor.getPageFor(contextItem.engine.get()), frame);
-        }
+      if (state == LoadListenerClient.PAGE_STARTED && settings.logJavascript()) {
+        JavascriptLog.attach(Accessor.getPageFor(contextItem.engine.get()), frame);
       }
-      contextItem.addFrameId(frame);
       if (state == LoadListenerClient.PAGE_STARTED
           || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
-        if (contextItem.currentFrameId() == frame) {
-          if (state == LoadListenerClient.PAGE_STARTED) {
-            StatusMonitor.instance().clearStatusMonitor();
-          }
-          resetStatusCode(false);
-          resources.put(frame + url, System.currentTimeMillis());
-          statusMonitor.startStatusMonitor(url);
-          statusMonitor.addPrimaryDocument(true, url);
+        resources.put(frame + url, System.currentTimeMillis());
+        statusMonitor.monitor(url);
+        statusMonitor.addPrimaryDocument(mainFrame == frame, url);
+      } else if (state == LoadListenerClient.PAGE_FINISHED
+          || state == LoadListenerClient.LOAD_STOPPED
+          || state == LoadListenerClient.LOAD_FAILED) {
+        if (mainFrame == frame) {
+          newStatusCode.set(statusMonitor.status(url));
         } else {
-          statusMonitor.addPrimaryDocument(false, url);
+          newStatusCode.compareAndSet(0, statusMonitor.status(url));
         }
-      } else if (statusCode.get() == 0
-          && contextItem.currentFrameId() == frame
-          && (state == LoadListenerClient.PAGE_FINISHED
-              || state == LoadListenerClient.LOAD_STOPPED
-              || state == LoadListenerClient.LOAD_FAILED)) {
-        final int newStatusCode = statusMonitor.stopStatusMonitor(url);
         resources.remove(frame + url);
-        Thread thread = new Thread(new AjaxListener(newStatusCode, statusCode,
-            resources, timeoutMS.get()));
-        ajaxListeners.add(thread);
-        thread.start();
+        String original = statusMonitor.originalFromRedirect(url);
+        if (original != null) {
+          resources.remove(frame + original);
+        }
       }
     }
     if (settings.logTrace()) {

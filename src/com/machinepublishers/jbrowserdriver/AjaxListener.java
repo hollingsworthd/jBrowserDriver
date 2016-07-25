@@ -28,13 +28,13 @@ import javafx.application.Platform;
 class AjaxListener implements Runnable {
   private static final long MAX_WAIT_DEFAULT = 15000;
   private static final int IDLE_COUNT_TARGET = 3;
-  private final Integer newStatusCode;
-  private final AtomicInteger statusCode;
+  private final AtomicInteger newStatusCode;
+  private final StatusCode statusCode;
   private final Map<String, Long> resources;
   private final long timeoutMS;
 
-  AjaxListener(final int newStatusCode,
-      final AtomicInteger statusCode,
+  AjaxListener(final AtomicInteger newStatusCode,
+      final StatusCode statusCode,
       final Map<String, Long> resources, final long timeoutMS) {
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
@@ -47,74 +47,80 @@ class AjaxListener implements Runnable {
    */
   @Override
   public void run() {
-    int size = 0;
-    final long start = System.currentTimeMillis();
-    long time = start;
-    final Settings settings = SettingsManager.settings();
-    final AtomicBoolean done = new AtomicBoolean();
-    Platform.runLater(new Runnable() {
-      @Override
-      public void run() {
-        synchronized (done) {
-          done.set(true);
-          done.notifyAll();
+    while (true) {
+      synchronized (statusCode) {
+        while (statusCode.get() != 0) {
+          try {
+            statusCode.wait();
+          } catch (InterruptedException e) {}
         }
       }
-    });
-    synchronized (done) {
-      while (!done.get()) {
-        try {
-          done.wait();
-        } catch (InterruptedException e) {}
-      }
-    }
-    if (settings != null) {
-      final long sleepMS = Math.max(settings.ajaxWait() / IDLE_COUNT_TARGET, 0);
-      int idleCount = 0;
-      int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
-      while (time - start < timeoutMS) {
-        try {
-          Thread.sleep(sleepMS);
-        } catch (InterruptedException e) {
-          return;
+      int size = 0;
+      final long start = System.currentTimeMillis();
+      long time = start;
+      final Settings settings = SettingsManager.settings();
+      final AtomicBoolean done = new AtomicBoolean();
+      Platform.runLater(new Runnable() {
+        @Override
+        public void run() {
+          synchronized (done) {
+            done.set(true);
+            done.notifyAll();
+          }
         }
-        time = System.currentTimeMillis();
-        synchronized (statusCode) {
-          if (Thread.interrupted()) {
+      });
+      synchronized (done) {
+        while (!done.get()) {
+          try {
+            done.wait();
+          } catch (InterruptedException e) {}
+        }
+      }
+      if (settings != null) {
+        final long sleepMS = Math.max(settings.ajaxWait() / IDLE_COUNT_TARGET, 0);
+        int idleCount = 0;
+        int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
+        while (time - start < timeoutMS) {
+          try {
+            Thread.sleep(sleepMS);
+          } catch (InterruptedException e) {
             return;
           }
-          final Set<String> remove = new HashSet<String>();
-          for (Map.Entry<String, Long> entry : resources.entrySet()) {
-            if (time - entry.getValue() > settings.ajaxResourceTimeout()) {
-              remove.add(entry.getKey());
+          time = System.currentTimeMillis();
+          synchronized (statusCode) {
+            if (Thread.interrupted()) {
+              return;
             }
+            final Set<String> remove = new HashSet<String>();
+            for (Map.Entry<String, Long> entry : resources.entrySet()) {
+              if (time - entry.getValue() > settings.ajaxResourceTimeout()) {
+                remove.add(entry.getKey());
+              }
+            }
+            for (String key : remove) {
+              resources.remove(key);
+            }
+            size = resources.size();
           }
-          for (String key : remove) {
-            resources.remove(key);
+          if (size == 0) {
+            ++idleCount;
+          } else {
+            idleCount = 0;
           }
-          size = resources.size();
-        }
-        if (size == 0) {
-          ++idleCount;
-        } else {
-          idleCount = 0;
-        }
-        if (idleCount == idleCountTarget) {
-          break;
+          if (idleCount == idleCountTarget) {
+            break;
+          }
         }
       }
-    }
-    synchronized (statusCode) {
-      if (Thread.interrupted()) {
-        return;
-      }
-      if (newStatusCode == null) {
+      synchronized (statusCode) {
+        if (Thread.interrupted()) {
+          return;
+        }
+        int newStatusCodeVal = newStatusCode.getAndSet(0);
+        newStatusCodeVal = newStatusCodeVal <= 0 ? 200 : newStatusCodeVal;
         resources.clear();
-        statusCode.set(200);
-        statusCode.notifyAll();
-      } else {
-        resources.clear();
-        statusCode.set(newStatusCode);
+        StatusMonitor.instance().clear();
+        statusCode.set(newStatusCodeVal);
         statusCode.notifyAll();
       }
     }

@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.FileUtils;
@@ -48,7 +47,6 @@ class Context {
   final AtomicReference<AlertServer> alert = new AtomicReference<AlertServer>();
   final AtomicReference<Robot> robot = new AtomicReference<Robot>();
   final AtomicReference<File> userDataDirectory = new AtomicReference<>();
-  final AtomicInteger statusCode = new AtomicInteger(-1);
   private final Map<String, ContextItem> itemMap = new LinkedHashMap<String, ContextItem>();
   private final List<ContextItem> items = new ArrayList<ContextItem>();
   private int current = 0;
@@ -93,7 +91,6 @@ class Context {
     removeItems();
     synchronized (lock) {
       setUpUserDataDir();
-      statusCode.set(-1);
       ContextItem newContext = new ContextItem();
       newContext.init(driver, this);
       items.add(newContext);
@@ -113,7 +110,7 @@ class Context {
           keyboard.set(new KeyboardServer(robot));
           mouse.set(new MouseServer(robot));
           navigation.set(new NavigationServer(
-              new AtomicReference<JBrowserDriverServer>(driver), this, statusCode));
+              new AtomicReference<JBrowserDriverServer>(driver), this));
           options.set(new OptionsServer(this, timeouts));
         } catch (RemoteException e) {
           Util.handleException(e);
@@ -123,18 +120,16 @@ class Context {
   }
 
   ContextItem item() {
-    if (current < items.size()) {
-      return items.get(current);
+    synchronized (lock) {
+      if (current < items.size()) {
+        return items.get(current);
+      }
     }
     return null;
   }
 
-  List<ContextItem> items() {
-    return items;
-  }
-
   String itemId() {
-    return AppThread.exec(statusCode,
+    return AppThread.exec(
         new Sync<String>() {
           @Override
           public String perform() {
@@ -146,7 +141,7 @@ class Context {
   }
 
   Set<String> itemIds() {
-    return AppThread.exec(statusCode,
+    return AppThread.exec(
         new Sync<Set<String>>() {
           @Override
           public Set<String> perform() {
@@ -159,7 +154,7 @@ class Context {
 
   ContextItem spawn(final JBrowserDriverServer driver) {
     final Context thisObj = this;
-    return AppThread.exec(statusCode,
+    return AppThread.exec(
         new Sync<ContextItem>() {
           @Override
           public ContextItem perform() {
@@ -176,7 +171,7 @@ class Context {
   }
 
   void setCurrent(final String id) {
-    AppThread.exec(statusCode,
+    AppThread.exec(
         new Sync<Object>() {
           @Override
           public Object perform() {
@@ -190,47 +185,50 @@ class Context {
   }
 
   void removeItem() {
-    AppThread.exec(statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        synchronized (lock) {
-          items.get(current).stage.get().close();
-          itemMap.remove(items.remove(current).itemId.get());
-          current = 0;
-          return null;
-        }
-      }
-    });
+    AppThread.exec(
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            synchronized (lock) {
+              items.get(current).stage.get().close();
+              itemMap.remove(items.remove(current).itemId.get());
+              current = 0;
+              return null;
+            }
+          }
+        });
   }
 
   void removeItem(final String itemId) {
-    AppThread.exec(statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        synchronized (lock) {
-          itemMap.remove(itemId).stage.get().close();
-          items.remove(itemId);
-          current = 0;
-          return null;
-        }
-      }
-    });
+    AppThread.exec(
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            synchronized (lock) {
+              itemMap.remove(itemId).stage.get().close();
+              items.remove(itemId);
+              current = 0;
+              return null;
+            }
+          }
+        });
   }
 
   void removeItems() {
-    AppThread.exec(statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        synchronized (lock) {
-          for (ContextItem curItem : items) {
-            curItem.stage.get().close();
+    AppThread.exec(
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            synchronized (lock) {
+              for (ContextItem curItem : items) {
+                curItem.stage.get().close();
+              }
+              items.clear();
+              itemMap.clear();
+              current = 0;
+              return null;
+            }
           }
-          items.clear();
-          itemMap.clear();
-          current = 0;
-          return null;
-        }
-      }
-    });
+        });
   }
 }

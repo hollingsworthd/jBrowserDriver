@@ -17,8 +17,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.webkit.WebPage;
 
@@ -47,17 +45,18 @@ class JavascriptLog {
   }
 
   static void attach(WebPage page, long frameId) {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
-      @Override
-      public Object perform() {
-        JSObject window = (JSObject) page.executeScript(frameId, "(function(){return window;})();");
-        if (window != null) {
-          window.setMember(bridgeName, bridge);
-          page.executeScript(frameId, consoleScript);
-        }
-        return null;
-      }
-    });
+    AppThread.exec(
+        new Sync<Object>() {
+          @Override
+          public Object perform() {
+            JSObject window = (JSObject) page.executeScript(frameId, "(function(){return window;})();");
+            if (window != null) {
+              window.setMember(bridgeName, bridge);
+              page.executeScript(frameId, consoleScript);
+            }
+            return null;
+          }
+        });
   }
 
   private static final String consoleFunction(String jsName) {

@@ -305,7 +305,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
           }
           context.get().setCookieStore(cookieStore);
           context.get().setRequestConfig(config.get().build());
-          StatusMonitor.instance().addStatusMonitor(url, this);
+          StatusMonitor.instance().monitor(url, this);
         }
       }
     } catch (Throwable t) {

@@ -18,7 +18,6 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.rmi.RemoteException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
@@ -28,10 +27,9 @@ import javafx.stage.Stage;
 class WindowServer extends RemoteObject implements WindowRemote,
     org.openqa.selenium.WebDriver.Window {
   private final AtomicReference<Stage> stage;
-  private final AtomicInteger statusCode;
+  private final StatusCode statusCode;
 
-  WindowServer(final AtomicReference<Stage> stage,
-      final AtomicInteger statusCode)
+  WindowServer(final AtomicReference<Stage> stage, final StatusCode statusCode)
       throws RemoteException {
     this.stage = stage;
     this.statusCode = statusCode;
@@ -64,7 +62,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public Point remoteGetPosition() {
-    return AppThread.exec(new AtomicInteger(-1), new Sync<Point>() {
+    return AppThread.exec(new Sync<Point>() {
       @Override
       public Point perform() {
         return new Point((int) Math.rint((Double) stage.get().getX()),
@@ -86,7 +84,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public Dimension remoteGetSize() {
-    return AppThread.exec(new AtomicInteger(-1), new Sync<Dimension>() {
+    return AppThread.exec(new Sync<Dimension>() {
       @Override
       public Dimension perform() {
         return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
@@ -100,7 +98,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void maximize() {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().setMaximized(!stage.get().isMaximized());
@@ -114,7 +112,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setPosition(org.openqa.selenium.Point point) {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new Sync<Object>() {
       @Override
       public Object perform() {
         if (!stage.get().isFullScreen()) {
@@ -151,7 +149,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setSize(org.openqa.selenium.Dimension dimension) {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new Sync<Object>() {
       @Override
       public Object perform() {
         if (!stage.get().isFullScreen()) {
@@ -196,7 +194,7 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void fullscreen() {
-    AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+    AppThread.exec(new Sync<Object>() {
       @Override
       public Object perform() {
         stage.get().setFullScreen(!stage.get().isFullScreen());

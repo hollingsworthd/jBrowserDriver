@@ -31,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -244,16 +243,14 @@ class Robot {
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final Context context;
-  private final AtomicInteger statusCode;
 
   Robot(final Context context) {
-    robot.set(AppThread.exec(context.statusCode, new Sync<com.sun.glass.ui.Robot>() {
+    robot.set(AppThread.exec(context.item().statusCode, new Sync<com.sun.glass.ui.Robot>() {
       public com.sun.glass.ui.Robot perform() {
         return Application.GetApplication().createRobot();
       }
     }));
     this.context = context;
-    this.statusCode = context.statusCode;
   }
 
   private static int[] convertKey(int codePoint) {
@@ -289,7 +286,7 @@ class Robot {
         } catch (InterruptedException e) {}
       }
     }
-    AppThread.exec(statusCode, new Sync<Object>() {
+    AppThread.exec(context.item().statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         return null;
@@ -298,7 +295,7 @@ class Robot {
   }
 
   private void unlock() {
-    AppThread.exec(statusCode, new Sync<Object>() {
+    AppThread.exec(context.item().statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         return null;
@@ -317,7 +314,7 @@ class Robot {
       if (ints.length > 0) {
         final int[] converted = convertKey(ints[0]);
         if (converted != null) {
-          AppThread.exec(statusCode, new Sync<Object>() {
+          AppThread.exec(context.item().statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               for (int j = 0; j < converted.length; j++) {
@@ -340,7 +337,7 @@ class Robot {
       if (ints.length > 0) {
         final int[] converted = convertKey(ints[0]);
         if (converted != null) {
-          AppThread.exec(statusCode, new Sync<Object>() {
+          AppThread.exec(context.item().statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               for (int j = converted.length - 1; j > -1; j--) {
@@ -380,7 +377,7 @@ class Robot {
         for (int i = 0; i < ints.length; i++) {
           final int[] converted = convertKey(ints[i]);
           if (converted != null) {
-            AppThread.exec(true, statusCode, new Sync<Object>() {
+            AppThread.exec(true, context.item().statusCode, new Sync<Object>() {
               @Override
               public Object perform() {
                 for (int j = 0; j < converted.length; j++) {
@@ -395,7 +392,7 @@ class Robot {
           final boolean lastKey = i == 0;
           final int[] converted = convertKey(ints[i]);
           if (converted != null) {
-            AppThread.exec(false, statusCode, new Sync<Object>() {
+            AppThread.exec(false, context.item().statusCode, new Sync<Object>() {
               @Override
               public Object perform() {
                 for (int j = converted.length - 1; j > -1; j--) {
@@ -420,7 +417,7 @@ class Robot {
           } else {
             codePoint = ints[i];
           }
-          AppThread.exec(!lastKey, statusCode, new Sync<Object>() {
+          AppThread.exec(!lastKey, context.item().statusCode, new Sync<Object>() {
             @Override
             public Object perform() {
               int[] converted = convertKey(codePoint);
@@ -456,7 +453,7 @@ class Robot {
   void typeEnter() {
     lock();
     try {
-      AppThread.exec(statusCode, new Sync<Object>() {
+      AppThread.exec(context.item().statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().keyPress(KeyEvent.VK_ENTER);
@@ -476,7 +473,7 @@ class Robot {
   void mouseMove(final double viewportX, final double viewportY) {
     lock();
     try {
-      AppThread.exec(statusCode, new Sync<Object>() {
+      AppThread.exec(context.item().statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -500,7 +497,7 @@ class Robot {
   void mouseMoveBy(final double viewportX, final double viewportY) {
     lock();
     try {
-      AppThread.exec(statusCode, new Sync<Object>() {
+      AppThread.exec(context.item().statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           Stage stage = context.item().stage.get();
@@ -537,7 +534,7 @@ class Robot {
   }
 
   private void mousePressHelper(final MouseButton button) {
-    AppThread.exec(statusCode, new Sync<Object>() {
+    AppThread.exec(context.item().statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         robot.get().mousePress(button.getValue());
@@ -556,7 +553,7 @@ class Robot {
   }
 
   private void mouseReleaseHelper(final MouseButton button) {
-    AppThread.exec(true, statusCode, new Sync<Object>() {
+    AppThread.exec(true, context.item().statusCode, new Sync<Object>() {
       @Override
       public Object perform() {
         if (button == MouseButton.LEFT) {
@@ -571,7 +568,7 @@ class Robot {
   void mouseWheel(final int wheelAmt) {
     lock();
     try {
-      AppThread.exec(statusCode, new Sync<Object>() {
+      AppThread.exec(context.item().statusCode, new Sync<Object>() {
         @Override
         public Object perform() {
           robot.get().mouseWheel(wheelAmt);
@@ -586,7 +583,7 @@ class Robot {
   byte[] screenshot() {
     lock();
     try {
-      return AppThread.exec(statusCode, new Sync<byte[]>() {
+      return AppThread.exec(context.item().statusCode, new Sync<byte[]>() {
         @Override
         public byte[] perform() {
           BufferedImage image = null;

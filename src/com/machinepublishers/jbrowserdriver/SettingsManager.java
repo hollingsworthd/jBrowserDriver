@@ -19,7 +19,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
@@ -112,7 +111,7 @@ class SettingsManager {
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
           isMonocle());
-      AppThread.exec(new AtomicInteger(-1), new Sync<Object>() {
+      AppThread.exec(new Sync<Object>() {
         public Object perform() {
           try {
             app.start();
