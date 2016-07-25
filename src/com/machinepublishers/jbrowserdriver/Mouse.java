@@ -32,7 +32,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void click(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteClick(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {
@@ -46,7 +46,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void contextClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteContextClick(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {
@@ -60,7 +60,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void doubleClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteDoubleClick(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {
@@ -74,7 +74,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void mouseDown(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteMouseDown(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {
@@ -88,7 +88,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteMouseMove(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {
@@ -102,7 +102,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords, long xOffset, long yOffset) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteMouseMove(coords == null ? null : new Coordinates(coords), xOffset, yOffset);
       }
     } catch (Throwable t) {
@@ -116,7 +116,7 @@ class Mouse implements org.openqa.selenium.interactions.Mouse {
   @Override
   public void mouseUp(org.openqa.selenium.interactions.internal.Coordinates coords) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteMouseUp(coords == null ? null : new Coordinates(coords));
       }
     } catch (Throwable t) {

@@ -35,7 +35,7 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void accept() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.accept();
       }
     } catch (Throwable t) {
@@ -49,7 +49,7 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void dismiss() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.dismiss();
       }
     } catch (Throwable t) {
@@ -63,7 +63,7 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public String getText() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getText();
       }
     } catch (Throwable t) {
@@ -78,7 +78,7 @@ class Alert implements org.openqa.selenium.Alert {
   @Override
   public void sendKeys(String text) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.sendKeys(text);
       }
     } catch (Throwable t) {

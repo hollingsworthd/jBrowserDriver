@@ -51,7 +51,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
   @Override
   public org.openqa.selenium.Point inViewPort() {
     if (inViewport == null) {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         try {
           return remote.locate().toSelenium();
         } catch (Throwable t) {

@@ -34,7 +34,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts implicitlyWait(long duration, TimeUnit unit) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         TimeoutsRemote timeouts = remote.implicitlyWait(duration, unit);
         if (timeouts == null) {
           return null;
@@ -53,7 +53,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts pageLoadTimeout(long duration, TimeUnit unit) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         TimeoutsRemote timeouts = remote.pageLoadTimeout(duration, unit);
         if (timeouts == null) {
           return null;
@@ -72,7 +72,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
   @Override
   public Timeouts setScriptTimeout(long duration, TimeUnit unit) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         TimeoutsRemote timeouts = remote.setScriptTimeout(duration, unit);
         if (timeouts == null) {
           return null;
@@ -87,7 +87,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
 
   public Timeouts setAlertTimeout(long duration, TimeUnit unit) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         TimeoutsRemote timeouts = remote.setAlertTimeout(duration, unit);
         if (timeouts == null) {
           return null;
@@ -102,7 +102,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
 
   long getImplicitlyWaitMS() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getImplicitlyWaitMS();
       }
     } catch (Throwable t) {
@@ -113,7 +113,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
 
   long getPageLoadTimeoutMS() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getPageLoadTimeoutMS();
       }
     } catch (Throwable t) {
@@ -124,7 +124,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
 
   long getScriptTimeoutMS() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getScriptTimeoutMS();
       }
     } catch (Throwable t) {
@@ -135,7 +135,7 @@ class Timeouts implements org.openqa.selenium.WebDriver.Timeouts {
 
   long getAlertTimeoutMS() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getAlertTimeoutMS();
       }
     } catch (Throwable t) {

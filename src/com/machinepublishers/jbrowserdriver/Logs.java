@@ -36,7 +36,7 @@ class Logs implements org.openqa.selenium.logging.Logs {
   @Override
   public LogEntries get(String type) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getRemote(type).toLogEntries();
       }
     } catch (Throwable t) {
@@ -51,7 +51,7 @@ class Logs implements org.openqa.selenium.logging.Logs {
   @Override
   public Set<String> getAvailableLogTypes() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getAvailableLogTypes();
       }
     } catch (Throwable t) {

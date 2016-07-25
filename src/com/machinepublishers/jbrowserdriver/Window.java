@@ -32,7 +32,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public org.openqa.selenium.Point getPosition() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.remoteGetPosition().toSelenium();
       }
     } catch (Throwable t) {
@@ -47,7 +47,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public org.openqa.selenium.Dimension getSize() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.remoteGetSize().toSelenium();
       }
     } catch (Throwable t) {
@@ -62,7 +62,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void maximize() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.maximize();
       }
     } catch (Throwable t) {
@@ -76,7 +76,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void setPosition(final org.openqa.selenium.Point point) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteSetPosition(new Point(point));
       }
     } catch (Throwable t) {
@@ -90,7 +90,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void setSize(final org.openqa.selenium.Dimension dimension) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.remoteSetSize(new Dimension(dimension));
       }
     } catch (Throwable t) {
@@ -104,7 +104,7 @@ class Window implements org.openqa.selenium.WebDriver.Window {
   @Override
   public void fullscreen() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.fullscreen();
       }
     } catch (Throwable t) {

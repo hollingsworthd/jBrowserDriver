@@ -35,7 +35,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public void activateEngine(String name) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.activateEngine(name);
       }
     } catch (Throwable t) {
@@ -49,7 +49,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public void deactivate() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.deactivate();
       }
     } catch (Throwable t) {
@@ -63,7 +63,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public String getActiveEngine() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getActiveEngine();
       }
     } catch (Throwable t) {
@@ -78,7 +78,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public List<String> getAvailableEngines() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getAvailableEngines();
       }
     } catch (Throwable t) {
@@ -93,7 +93,7 @@ class ImeHandler implements org.openqa.selenium.WebDriver.ImeHandler {
   @Override
   public boolean isActivated() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.isActivated();
       }
     } catch (Throwable t) {

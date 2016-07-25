@@ -33,7 +33,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void pressKey(CharSequence key) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.pressKey(key);
       }
     } catch (Throwable t) {
@@ -47,7 +47,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void releaseKey(CharSequence key) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.releaseKey(key);
       }
     } catch (Throwable t) {
@@ -61,7 +61,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
   @Override
   public void sendKeys(CharSequence... keys) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.sendKeys(keys);
       }
     } catch (Throwable t) {
@@ -71,7 +71,7 @@ class Keyboard implements org.openqa.selenium.interactions.Keyboard {
 
   boolean isShiftPressed() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.isShiftPressed();
       }
     } catch (Throwable t) {

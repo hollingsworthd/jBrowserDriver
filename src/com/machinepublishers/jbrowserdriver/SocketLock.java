@@ -18,7 +18,15 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class SocketLock implements Serializable {
+  final AtomicBoolean expired = new AtomicBoolean();
 
+  SocketLock validated() {
+    if (expired.get()) {
+      throw new IllegalStateException("Operation attempted, but browser already quit.");
+    }
+    return this;
+  }
 }

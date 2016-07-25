@@ -37,7 +37,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebElement activeElement() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return Element.constructElement(remote.activeElement(), driver, lock);
       }
     } catch (Throwable t) {
@@ -52,7 +52,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public org.openqa.selenium.Alert alert() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return new Alert(remote.alert(), lock);
       }
     } catch (Throwable t) {
@@ -67,7 +67,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver defaultContent() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.defaultContent();
       }
       return driver;
@@ -83,7 +83,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver frame(int index) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.frame(index);
       }
       return driver;
@@ -99,7 +99,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver frame(String nameOrId) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.frame(nameOrId);
       }
       return driver;
@@ -124,7 +124,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver parentFrame() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.parentFrame();
       }
       return driver;
@@ -140,7 +140,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   @Override
   public WebDriver window(String windowHandle) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.window(windowHandle);
       }
       return driver;

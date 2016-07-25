@@ -34,7 +34,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void back() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.back();
       }
     } catch (Throwable t) {
@@ -48,7 +48,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void forward() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.forward();
       }
     } catch (Throwable t) {
@@ -62,7 +62,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void refresh() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.refresh();
       }
     } catch (Throwable t) {
@@ -76,7 +76,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void to(String url) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.to(url);
       }
     } catch (Throwable t) {
@@ -90,7 +90,7 @@ class Navigation implements org.openqa.selenium.WebDriver.Navigation {
   @Override
   public void to(URL url) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.to(url);
       }
     } catch (Throwable t) {

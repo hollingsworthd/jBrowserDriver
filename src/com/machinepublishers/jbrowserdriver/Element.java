@@ -98,7 +98,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   void activate() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.activate();
       }
     } catch (Throwable t) {
@@ -108,7 +108,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
 
   void scriptParam(ElementId id) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.scriptParam(id);
       }
     } catch (Throwable t) {
@@ -122,7 +122,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public void click() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.click();
       }
     } catch (Throwable t) {
@@ -136,7 +136,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public void submit() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.submit();
       }
     } catch (Throwable t) {
@@ -150,7 +150,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public void sendKeys(final CharSequence... keys) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.sendKeys(keys);
       }
     } catch (Throwable t) {
@@ -164,7 +164,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public void clear() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         remote.clear();
       }
     } catch (Throwable t) {
@@ -178,7 +178,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public String getAttribute(final String attrName) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getAttribute(attrName);
       }
     } catch (Throwable t) {
@@ -193,7 +193,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public String getCssValue(final String name) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getCssValue(name);
       }
     } catch (Throwable t) {
@@ -208,7 +208,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public org.openqa.selenium.Point getLocation() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.remoteGetLocation().toSelenium();
       }
     } catch (Throwable t) {
@@ -223,7 +223,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public org.openqa.selenium.Dimension getSize() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.remoteGetSize().toSelenium();
       }
     } catch (Throwable t) {
@@ -238,7 +238,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public org.openqa.selenium.Rectangle getRect() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.remoteGetRect().toSelenium();
       }
     } catch (Throwable t) {
@@ -253,7 +253,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public String getTagName() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getTagName();
       }
     } catch (Throwable t) {
@@ -268,7 +268,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public String getText() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.getText();
       }
     } catch (Throwable t) {
@@ -283,7 +283,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public boolean isDisplayed() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.isDisplayed();
       }
     } catch (Throwable t) {
@@ -298,7 +298,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public boolean isEnabled() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.isEnabled();
       }
     } catch (Throwable t) {
@@ -313,7 +313,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public boolean isSelected() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return remote.isSelected();
       }
     } catch (Throwable t) {
@@ -344,7 +344,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByXPath(final String expr) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByXPath(expr), driver, lock);
       }
     } catch (Throwable t) {
@@ -360,7 +360,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByXPath(final String expr) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByXPath(expr);
       }
       return constructList(elements, driver, lock);
@@ -376,7 +376,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByTagName(String tagName) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByTagName(tagName), driver, lock);
       }
     } catch (Throwable t) {
@@ -392,7 +392,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByTagName(String tagName) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByTagName(tagName);
       }
       return constructList(elements, driver, lock);
@@ -408,7 +408,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByCssSelector(final String expr) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByCssSelector(expr), driver, lock);
       }
     } catch (Throwable t) {
@@ -424,7 +424,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByCssSelector(final String expr) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByCssSelector(expr);
       }
       return constructList(elements, driver, lock);
@@ -440,7 +440,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByName(String name) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByName(name), driver, lock);
       }
     } catch (Throwable t) {
@@ -456,7 +456,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByName(String name) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByName(name);
       }
       return constructList(elements, driver, lock);
@@ -472,7 +472,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByLinkText(final String text) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByLinkText(text), driver, lock);
       }
     } catch (Throwable t) {
@@ -487,7 +487,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByPartialLinkText(String text) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByPartialLinkText(text), driver, lock);
       }
     } catch (Throwable t) {
@@ -503,7 +503,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByLinkText(String text) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByLinkText(text);
       }
       return constructList(elements, driver, lock);
@@ -520,7 +520,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByPartialLinkText(String text) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByPartialLinkText(text);
       }
       return constructList(elements, driver, lock);
@@ -536,7 +536,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementByClassName(String cssClass) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementByClassName(cssClass), driver, lock);
       }
     } catch (Throwable t) {
@@ -552,7 +552,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsByClassName(String cssClass) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsByClassName(cssClass);
       }
       return constructList(elements, driver, lock);
@@ -568,7 +568,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public WebElement findElementById(final String id) {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return constructElement(remote.findElementById(id), driver, lock);
       }
     } catch (Throwable t) {
@@ -584,7 +584,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public List<WebElement> findElementsById(String id) {
     try {
       List<ElementRemote> elements;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         elements = remote.findElementsById(id);
       }
       return constructList(elements, driver, lock);
@@ -601,7 +601,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeAsyncScript(final String script, final Object... args) {
     try {
       Object result;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         result = remote.executeAsyncScript(script, Element.scriptParams(args));
       }
       return constructObject(result, driver, lock);
@@ -618,7 +618,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public Object executeScript(final String script, final Object... args) {
     try {
       Object result;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         result = remote.executeScript(script, Element.scriptParams(args));
       }
       return constructObject(result, driver, lock);
@@ -655,7 +655,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   @Override
   public Coordinates getCoordinates() {
     try {
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         return new Coordinates(remote, lock);
       }
     } catch (Throwable t) {
@@ -671,7 +671,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
   public <X> X getScreenshotAs(OutputType<X> outputType) throws WebDriverException {
     try {
       byte[] bytes = null;
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         bytes = remote.getScreenshot();
       }
       if (bytes == null) {
@@ -697,7 +697,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
    */
   @Override
   public int hashCode() {
-    synchronized (lock) {
+    synchronized (lock.validated()) {
       try {
         return remote.remoteHashCode();
       } catch (Throwable t) {
@@ -715,7 +715,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     if (obj instanceof Element) {
       ElementId id = new ElementId();
       ((Element) obj).scriptParam(id);
-      synchronized (lock) {
+      synchronized (lock.validated()) {
         try {
           return remote.remoteEquals(id);
         } catch (Throwable t) {
