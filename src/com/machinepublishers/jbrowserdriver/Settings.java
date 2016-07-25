@@ -1060,11 +1060,37 @@ public class Settings implements Serializable {
       return this;
     }
 
+    /**
+     * The path to the Java executable or the Java command used to launch child JRE browser processes.
+     * <p>
+     * Defaults to <code>null</code>, meaning that the same Java executable running the parent process will be used to launch the child processes.
+     *
+     * <p><ul>
+     * <li>Java system property <code>jbd.javabinary</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.javabinary</code> alternately configures this setting.</li>
+     * </ul><p>
+     *
+     * @param options
+     * @return this Builder
+     */
     public Builder javaBinary(String javaBinary) {
       this.javaBinary = javaBinary;
       return this;
     }
 
+    /**
+     * Allows this library to run on Java 9. Enabling this option precludes running on Java 8.
+     * <p>
+     * Defaults to <code>false</code> (i.e., Java 8 compatible).
+     *
+     * <p><ul>
+     * <li>Java system property <code>jbd.javaexportmodules</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.javaexportmodules</code> alternately configures this setting.</li>
+     * </ul><p>
+     *
+     * @param options
+     * @return this Builder
+     */
     public Builder javaExportModules(boolean javaExportModules) {
       this.javaExportModules = javaExportModules;
       return this;
