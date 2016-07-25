@@ -77,10 +77,10 @@ class Context {
       //App has its own temp dir, so this won't collide with other instances.
       try {
         userDataDirectory.set(Files.createTempDirectory("jbd_userdata_").toFile());
+        autoUserDataDirectory.set(userDataDirectory.get());
       } catch (IOException e) {
         Util.handleException(e);
       }
-      autoUserDataDirectory.set(userDataDirectory.get());
     } else {
       userDataDirectory.set(SettingsManager.settings().userDataDirectory());
       userDataDirectory.get().mkdirs();
