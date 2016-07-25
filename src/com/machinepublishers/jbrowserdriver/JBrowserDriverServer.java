@@ -257,6 +257,8 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
           long nextWait = waitMS - (System.currentTimeMillis() - start);
           if (nextWait >= 0) {
             context.get().item().statusCode.wait(nextWait);
+          } else if (waitMS == 0) {
+            context.get().item().statusCode.wait();
           } else {
             break;
           }

@@ -28,14 +28,16 @@ import javafx.application.Platform;
 class AjaxListener implements Runnable {
   private static final long MAX_WAIT_DEFAULT = 15000;
   private static final int IDLE_COUNT_TARGET = 3;
+  private final AtomicBoolean started;
   private final AtomicInteger newStatusCode;
   private final StatusCode statusCode;
   private final Map<String, Long> resources;
   private final long timeoutMS;
 
-  AjaxListener(final AtomicInteger newStatusCode,
+  AjaxListener(final AtomicBoolean started, final AtomicInteger newStatusCode,
       final StatusCode statusCode,
       final Map<String, Long> resources, final long timeoutMS) {
+    this.started = started;
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
     this.resources = resources;
@@ -117,7 +119,7 @@ class AjaxListener implements Runnable {
           return;
         }
         int newStatusCodeVal = newStatusCode.getAndSet(0);
-        newStatusCodeVal = newStatusCodeVal <= 0 ? 200 : newStatusCodeVal;
+        newStatusCodeVal = newStatusCodeVal <= 0 ? (started.get() ? 0 : 200) : newStatusCodeVal;
         resources.clear();
         StatusMonitor.instance().clear();
         statusCode.set(newStatusCodeVal);

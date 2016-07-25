@@ -20,6 +20,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -76,6 +77,7 @@ class HttpListener implements LoadListenerClient {
   private final AtomicReference<Thread> ajaxListenerThread = new AtomicReference<Thread>();
   private final AjaxListener ajaxListener;
   private final AtomicInteger newStatusCode = new AtomicInteger();
+  private final AtomicBoolean started = new AtomicBoolean();
 
   HttpListener(ContextItem contextItem, StatusCode statusCode, AtomicLong timeoutMS) {
     this.contextItem = contextItem;
@@ -84,7 +86,7 @@ class HttpListener implements LoadListenerClient {
     this.statusMonitor = StatusMonitor.instance();
     this.logs = LogsServer.instance();
     this.ajaxListener = new AjaxListener(
-        this.newStatusCode, this.statusCode, this.resources, this.timeoutMS.get());
+        this.started, this.newStatusCode, this.statusCode, this.resources, this.timeoutMS.get());
   }
 
   void init() {
@@ -154,6 +156,7 @@ class HttpListener implements LoadListenerClient {
       newStatusCode.set(0);
       statusCode.set(0);
       resources.clear();
+      started.set(false);
       StatusMonitor.instance().clear();
       statusCode.notifyAll();
     }
@@ -177,6 +180,7 @@ class HttpListener implements LoadListenerClient {
       if (state == LoadListenerClient.PAGE_STARTED
           || state == LoadListenerClient.PAGE_REDIRECTED
           || state == LoadListenerClient.DOCUMENT_AVAILABLE) {
+        started.set(true);
         resources.put(frame + url, System.currentTimeMillis());
         statusMonitor.monitor(url);
         statusMonitor.addPrimaryDocument(mainFrame == frame, url);
