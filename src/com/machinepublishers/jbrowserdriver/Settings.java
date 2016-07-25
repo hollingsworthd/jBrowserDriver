@@ -197,7 +197,7 @@ public class Settings implements Serializable {
     private long ajaxWait = 150;
     private long ajaxResourceTimeout = 2000;
     private boolean blockAds;
-    private boolean quickRender = true;
+    private boolean quickRender;
     private int maxRouteConnections = 8;
     private int maxConnections = 300;
     private String ssl;
@@ -750,9 +750,9 @@ public class Settings implements Serializable {
      * Exclude web page images and binary data from rendering.
      * <p>
      * These resources are still requested and can optionally be saved to disk (see the Settings options).
-     * Some versions of Java are inefficient (memory-wise) in rendering images.
+     * Some older versions of Java are inefficient (memory-wise) in rendering images.
      * <p>
-     * Defaults to <code>true</code>.
+     * Defaults to <code>false</code>.
      *
      * <p><ul>
      * <li>Java system property <code>jbd.quickrender</code> overrides this setting.</li>
