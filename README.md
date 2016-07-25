@@ -13,10 +13,10 @@ Or install via Maven:
 <dependency>
   <groupId>com.machinepublishers</groupId>
   <artifactId>jbrowserdriver</artifactId>
-  <version>0.16.0</version>
+  <version>0.16.1</version>
 </dependency>
 ```
-For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.16.0|jar).
+For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.16.1|jar).
 
 ## Prerequisites
 There's no need to install any web browser and this works headlessly on a server (headed is also supported which is useful for debugging).
