@@ -15,15 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openqa.selenium.remote.server;
+package com.machinepublishers.jbrowserdriver;
 
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.server.DefaultDriverProvider;
 
-import com.machinepublishers.jbrowserdriver.JBrowserDriver;
-
-public class JBrowserDriverProvider extends DefaultDriverProvider {
-  public JBrowserDriverProvider() {
+/**
+ * Internal use only.
+ * 
+ * @deprecated
+ */
+public class SeleniumProvider extends DefaultDriverProvider {
+  public SeleniumProvider() {
     super(new DesiredCapabilities("jbrowserdriver", "1", Platform.ANY), JBrowserDriver.class);
   }
 }

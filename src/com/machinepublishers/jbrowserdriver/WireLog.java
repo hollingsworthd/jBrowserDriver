@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.logging;
+package com.machinepublishers.jbrowserdriver;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -23,7 +23,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class JbdWireLog implements Log, Serializable {
+import org.apache.commons.logging.Log;
+
+/**
+ * Internal use only.
+ * 
+ * @deprecated
+ */
+public class WireLog implements Log, Serializable {
   private static final Pattern request = Pattern.compile("^http-outgoing-[0-9]+\\s>>\\s\"(.+)\"$");
   private static final Pattern response = Pattern.compile(
       "^http-outgoing-[0-9]+\\s<<\\s\"((?:HTTP/.+)|(?:[^:]+:\\s.+))\"$");
@@ -31,10 +38,10 @@ public class JbdWireLog implements Log, Serializable {
   private static final AtomicReference<Appendable> appender = new AtomicReference<Appendable>();
 
   public static void setAppender(Appendable appender) {
-    JbdWireLog.appender.set(appender);
+    WireLog.appender.set(appender);
   }
 
-  public JbdWireLog(String s) {}
+  public WireLog(String s) {}
 
   @Override
   public void debug(Object objMessage) {

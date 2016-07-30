@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-import org.apache.commons.logging.JbdWireLog;
 import org.openqa.selenium.logging.LogEntries;
 
+@SuppressWarnings("deprecation") //WireLog is not actually deprecated--it's for internal use only
 class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium.logging.Logs {
   private static class WireAppender implements Appendable {
     @Override
@@ -52,7 +52,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   }
 
   static {
-    JbdWireLog.setAppender(new WireAppender());
+    WireLog.setAppender(new WireAppender());
   }
 
   private final LinkedList<Entry> wire = new LinkedList<Entry>();
@@ -73,7 +73,7 @@ class LogsServer extends RemoteObject implements LogsRemote, org.openqa.selenium
   static void updateSettings() {
     Settings settings = SettingsManager.settings();
     if (settings != null && settings.logWire()) {
-      System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.JbdWireLog");
+      System.setProperty("org.apache.commons.logging.Log", "com.machinepublishers.jbrowserdriver.WireLog");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "DEBUG");
     } else {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");

@@ -65,7 +65,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.cookie.JbdCookieSpecProvider;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.ssl.SSLContexts;
@@ -75,7 +74,7 @@ class StreamConnectionClient {
   private static final Set<String> nonCachedMethods = Collections.unmodifiableSet(new HashSet<String>(
       Arrays.asList(new String[] { "POST", "PUT", "DELETE" })));
   private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
-      .register("custom", new JbdCookieSpecProvider())
+      .register("custom", new LaxCookieSpecProvider())
       .build();
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);

@@ -1,1 +1,1 @@
-org.openqa.selenium.remote.server.JBrowserDriverProvider
+com.machinepublishers.jbrowserdriver.SeleniumProvider
