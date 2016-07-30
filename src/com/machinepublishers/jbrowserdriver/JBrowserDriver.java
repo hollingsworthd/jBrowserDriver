@@ -68,7 +68,7 @@ import org.zeroturnaround.process.Processes;
 
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
-import io.github.lukehutch.fastclasspathscanner.classpath.ClasspathFinder;
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 
 /**
  * A Selenium-compatible and WebKit-based web driver written in pure Java.
@@ -115,7 +115,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         }
       }
 
-      List<File> items = new ClasspathFinder().getUniqueClasspathElements();
+      List<File> items = new FastClasspathScanner().getUniqueClasspathElements();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
       List<String> paths = new ArrayList<String>();
