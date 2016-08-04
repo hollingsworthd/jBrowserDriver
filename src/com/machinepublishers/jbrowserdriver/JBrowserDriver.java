@@ -19,6 +19,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -93,7 +94,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
   private static final String JAVA_BIN;
-  private static final List<String> args;
+  private static final List<String> inheritedArgs;
+  private static final List<String> classpathSimpleArgs;
+  private static final List<String> classpathUnpackedArgs;
+  private static final AtomicReference<List<String>> classpathArgs = new AtomicReference<>();
+  private static final AtomicBoolean firstLaunch = new AtomicBoolean(true);
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
           "Warning: Single GUI Threadiong is enabled, FPS should be slower"
@@ -101,7 +106,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final AtomicLong sessionIdCounter = new AtomicLong();
 
   static {
-    List<String> argsTmp = new ArrayList<String>();
+    List<String> inheritedArgsTmp = new ArrayList<String>();
+    List<String> classpathSimpleTmp = new ArrayList<String>();
+    List<String> classpathUnpackedTmp = new ArrayList<String>();
     File javaBin = new File(System.getProperty("java.home") + "/bin/java");
     if (!javaBin.exists()) {
       javaBin = new File(javaBin.getAbsolutePath() + ".exe");
@@ -111,18 +118,21 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       for (Object keyObj : System.getProperties().keySet()) {
         String key = keyObj.toString();
         if (key != null && key.startsWith("jbd.rmi.")) {
-          argsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
+          inheritedArgsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
         }
       }
 
-      List<File> items = new FastClasspathScanner().getUniqueClasspathElements();
+      List<File> classpathElements = new FastClasspathScanner().getUniqueClasspathElements();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
-      List<String> paths = new ArrayList<String>();
-      for (File curItem : items) {
-        paths.add(curItem.getAbsoluteFile().toURI().toURL().toExternalForm());
-        if (curItem.isFile() && curItem.getPath().endsWith(".jar")) {
-          try (ZipFile jar = new ZipFile(curItem)) {
+      List<String> pathsSimple = new ArrayList<String>();
+      List<String> pathsUnpacked = new ArrayList<String>();
+      for (File curElement : classpathElements) {
+        String rootLevelElement = curElement.getAbsoluteFile().toURI().toURL().toExternalForm();
+        pathsSimple.add(rootLevelElement);
+        pathsUnpacked.add(rootLevelElement);
+        if (curElement.isFile() && curElement.getPath().endsWith(".jar")) {
+          try (ZipFile jar = new ZipFile(curElement)) {
             Enumeration<? extends ZipEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
               ZipEntry entry = entries.nextElement();
@@ -131,7 +141,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
                   File childJar = new File(classpathDir,
                       Util.randomFileName() + ".jar");
                   Files.copy(in, childJar.toPath());
-                  paths.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
+                  pathsUnpacked.add(childJar.getAbsoluteFile().toURI().toURL().toExternalForm());
                   childJar.deleteOnExit();
                 }
               }
@@ -139,18 +149,30 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           }
         }
       }
-      Manifest manifest = new Manifest();
-      manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-      manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, StringUtils.join(paths, ' '));
-      File classpathJar = new File(classpathDir, "classpath.jar");
-      classpathJar.deleteOnExit();
-      new JarOutputStream(new FileOutputStream(classpathJar), manifest).close();
-      argsTmp.add("-classpath");
-      argsTmp.add(classpathJar.getCanonicalPath());
+      classpathSimpleTmp = createClasspathJar(classpathDir, "classpath-simple.jar", pathsSimple);
+      classpathUnpackedTmp = createClasspathJar(classpathDir, "classpath-unpacked.jar", pathsUnpacked);
     } catch (Throwable t) {
       Util.handleException(t);
     }
-    args = Collections.unmodifiableList(argsTmp);
+    inheritedArgs = Collections.unmodifiableList(inheritedArgsTmp);
+    classpathSimpleArgs = Collections.unmodifiableList(classpathSimpleTmp);
+    classpathUnpackedArgs = Collections.unmodifiableList(classpathUnpackedTmp);
+  }
+
+  private static List<String> createClasspathJar(File dir, String jarName, List<String> manifestClasspath)
+      throws IOException {
+    List<String> classpathArgs = new ArrayList<String>();
+    Manifest manifest = new Manifest();
+    manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+    manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH,
+        StringUtils.join(manifestClasspath, ' '));
+    File classpathJar = new File(dir, jarName);
+    classpathJar.deleteOnExit();
+    try (JarOutputStream stream = new JarOutputStream(
+        new FileOutputStream(classpathJar), manifest)) {}
+    classpathArgs.add("-classpath");
+    classpathArgs.add(classpathJar.getCanonicalPath());
+    return classpathArgs;
   }
 
   static {
@@ -277,8 +299,22 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         } catch (InterruptedException e) {}
       }
     }
-    sessionId = new SessionId(launchProcess(settings, configuredPortGroup.get()));
+    SessionId sessionIdTmp = null;
+    synchronized (firstLaunch) {
+      if (firstLaunch.compareAndSet(true, false)) {
+        classpathArgs.set(classpathUnpackedArgs);
+        sessionIdTmp = new SessionId(launchProcess(settings, configuredPortGroup.get()));
+        if (actualPortGroup.get() == null) {
+          classpathArgs.set(classpathSimpleArgs);
+        }
+      }
+    }
     if (actualPortGroup.get() == null) {
+      sessionIdTmp = new SessionId(launchProcess(settings, configuredPortGroup.get()));
+    }
+    sessionId = sessionIdTmp;
+    if (actualPortGroup.get() == null) {
+      endProcess();
       Util.handleException(new IllegalStateException("Could not launch browser."));
     }
     JBrowserDriverRemote instanceTmp = null;
@@ -324,7 +360,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       public void run() {
         List<String> myArgs = new ArrayList<String>();
         myArgs.add(settings.javaBinary() == null ? JAVA_BIN : settings.javaBinary());
-        myArgs.addAll(args);
+        myArgs.addAll(inheritedArgs);
+        myArgs.addAll(classpathArgs.get());
         if (settings.javaExportModules()) {
           myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
           myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
@@ -348,7 +385,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         myArgs.add(Long.toString(portGroup.parentAlt));
         try {
           new ProcessExecutor()
-              .environment(System.getenv())
               .addListener(new ProcessListener() {
                 @Override
                 public void afterStart(Process proc, ProcessExecutor executor) {
@@ -398,8 +434,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         } catch (Throwable t) {
           Util.handleException(t);
         }
-        endProcess();
-        FileUtils.deleteQuietly(tmpDir);
         synchronized (ready) {
           ready.set(true);
           ready.notifyAll();
@@ -1086,6 +1120,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           }
         }
       }
+      FileUtils.deleteQuietly(tmpDir);
       synchronized (locks) {
         locks.remove(lock);
       }
