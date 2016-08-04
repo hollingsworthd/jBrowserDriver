@@ -334,7 +334,7 @@ public final class MonocleApplication extends Application {
     File[] files;
     String filePaths = dialog.getEditor().getText();
     if (filePaths != null && !filePaths.isEmpty()) {
-      String[] filePathParts = filePaths.split(":");
+      String[] filePathParts = filePaths.split("\t");
       files = new File[filePathParts.length];
       for (int i = 0; i < filePathParts.length; i++) {
         files[i] = new File(filePathParts[i]);
