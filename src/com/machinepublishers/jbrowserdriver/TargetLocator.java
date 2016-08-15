@@ -19,7 +19,6 @@ package com.machinepublishers.jbrowserdriver;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.internal.WrapsElement;
 
 class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
@@ -115,11 +114,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    */
   @Override
   public WebDriver frame(WebElement element) {
-    WebElement unwrapped = element;
-    while (unwrapped instanceof WrapsElement) {
-      unwrapped = ((WrapsElement) unwrapped).getWrappedElement();
-    }
-    ((Element) unwrapped).activate();
+    ((Element) Util.unwrap(element)).activate();
     return driver;
   }
 

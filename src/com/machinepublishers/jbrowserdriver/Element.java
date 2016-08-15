@@ -38,7 +38,6 @@ import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
 import org.openqa.selenium.internal.Locatable;
 import org.openqa.selenium.internal.WrapsDriver;
-import org.openqa.selenium.internal.WrapsElement;
 
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable,
@@ -632,10 +631,7 @@ class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClass
     if (args != null) {
       Object[] argsOut = new Object[args.length];
       for (int i = 0; i < args.length; i++) {
-        Object arg = args[i];
-        while (arg instanceof WrapsElement) {
-          arg = ((WrapsElement) arg).getWrappedElement();
-        }
+        Object arg = Util.unwrap(args[i]);
         if (arg instanceof Element) {
           ElementId id = new ElementId();
           ((Element) arg).scriptParam(id);
