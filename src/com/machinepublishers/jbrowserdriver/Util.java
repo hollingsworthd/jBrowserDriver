@@ -37,6 +37,7 @@ import javax.net.ssl.SSLProtocolException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.internal.WrapsElement;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.thoughtworks.selenium.SeleniumException;
@@ -139,5 +140,9 @@ class Util {
       }
       throw new WebDriverException(message, throwable);
     }
+  }
+
+  static Object unwrap(Object element) {
+    return element instanceof WrapsElement ? unwrap(((WrapsElement) element).getWrappedElement()) : element;
   }
 }

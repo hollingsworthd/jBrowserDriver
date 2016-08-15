@@ -114,7 +114,7 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
    */
   @Override
   public WebDriver frame(WebElement element) {
-    ((Element) element).activate();
+    ((Element) Util.unwrap(element)).activate();
     return driver;
   }
 
