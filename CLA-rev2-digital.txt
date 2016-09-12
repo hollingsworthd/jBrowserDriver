@@ -14,3 +14,4 @@ Contribution is being made on behalf of a corporation.
 
 Arseniy Skvortsov https://github.com/askvortsov/ 2016-07-19
 Valery Yatsynovich https://github.com/valfirst 2016-08-15
+Michael Pinnegar https://github.com/jazzepi 2016-09-12

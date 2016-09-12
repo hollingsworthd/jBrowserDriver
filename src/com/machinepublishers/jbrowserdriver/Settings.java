@@ -986,6 +986,25 @@ public class Settings implements Serializable {
     }
 
     /**
+     * At what log level the logger should log
+     * <p>
+     * Defaults to <code>Level.ALL</code>
+     * <p>
+     * The loggerLevel can be <code>null</code> meaning no logging will be done.
+     *
+     * @param loggerLevel
+     * @return this Builder
+     */
+    public Builder loggerLevel(Level loggerLevel) {
+      if (loggerLevel == null) {
+        this.logger.setLevel(Level.OFF);
+      } else {
+        this.logger.setLevel(loggerLevel);
+      }
+      return this;
+    }
+
+    /**
      * The name of a Java Logger to handle log messages.
      * <p>
      * Logs are also available via the Selenium logging APIs--this logger has no effect on that.
@@ -1070,7 +1089,7 @@ public class Settings implements Serializable {
      * <li>{@link Capabilities} name <code>jbd.javabinary</code> alternately configures this setting.</li>
      * </ul><p>
      *
-     * @param options
+     * @param javaBinary
      * @return this Builder
      */
     public Builder javaBinary(String javaBinary) {
@@ -1088,7 +1107,7 @@ public class Settings implements Serializable {
      * <li>{@link Capabilities} name <code>jbd.javaexportmodules</code> alternately configures this setting.</li>
      * </ul><p>
      *
-     * @param options
+     * @param javaExportModules
      * @return this Builder
      */
     public Builder javaExportModules(boolean javaExportModules) {
@@ -1496,8 +1515,8 @@ public class Settings implements Serializable {
       String portString = properties.get(PropertyName.PORTS.propertyName).toString();
       Collection<Long> ports = new LinkedHashSet<Long>();
       String[] ranges = portString.split(",");
-      for (int i = 0; i < ranges.length; i++) {
-        String[] bounds = ranges[i].split("-");
+      for (String range : ranges) {
+        String[] bounds = range.split("-");
         long low = Long.parseLong(bounds[0]);
         long high = bounds.length > 1 ? Long.parseLong(bounds[1]) : low;
         for (long j = low; j <= high; j++) {
