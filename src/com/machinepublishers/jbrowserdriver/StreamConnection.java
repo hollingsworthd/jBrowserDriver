@@ -242,6 +242,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         }
       }
     }
+    cookieStore.addCsrfHeaders(settings, req);
   }
 
   ///////////////////////////////////////////////////////////
