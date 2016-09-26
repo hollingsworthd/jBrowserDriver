@@ -154,6 +154,8 @@ public class Settings implements Serializable {
     JAVA_BINARY("jbd.javabinary"),
     JAVA_EXPORT_MODULES("jbd.javaexportmodules"),
     USER_DATA_DIRECTORY("jbd.userdatadirectory"),
+    CSRF_REQUEST_TOKEN("jbd.csrfreqtoken"),
+    CSRF_RESPONSE_TOKEN("jbd.csrfresptoken"),
     @Deprecated
     WIRE_CONSOLE("jbd.wireconsole"),
     @Deprecated
@@ -217,6 +219,8 @@ public class Settings implements Serializable {
     private String javaBinary;
     private boolean javaExportModules;
     private File userDataDirectory;
+    private String csrfRequestToken;
+    private String csrfResponseToken;
 
     /**
      * Headers to be sent on each request.
@@ -1136,6 +1140,26 @@ public class Settings implements Serializable {
       this.userDataDirectory = userDataDirectory;
       return this;
     }
+    
+    /**
+     * Enables CSRF token handling. Searches for XSRF-TOKEN in response headers and sends X-XSRF-TOKEN in request headers.
+     * @return this Builder
+     */
+    public Builder csrf() {
+    	return csrf("X-XSRF-TOKEN", "XSRF-TOKEN");
+    }
+    
+    /**
+     * Enables CSRF token handling
+     * @param requestToken The header to send in each request header
+     * @param responseToken The token to search for in response headers
+     * @return this Builder
+     */
+    public Builder csrf(String requestToken, String responseToken) {
+    	this.csrfRequestToken = requestToken;
+    	this.csrfResponseToken = responseToken;
+    	return this;
+    }
 
     /**
      * @deprecated Will be removed in v2.0.0. Instead use Settings Builder's logWire, logsMax, or logger.
@@ -1431,6 +1455,8 @@ public class Settings implements Serializable {
   private final String javaBinary;
   private final boolean javaExportModules;
   private final File userDataDirectory;
+  private final String csrfRequestToken;
+  private final String csrfResponseToken;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -1499,6 +1525,8 @@ public class Settings implements Serializable {
     this.connectionReqTimeout = parse(properties, PropertyName.CONNECTION_REQ_TIMEOUT_MS, builder.connectionReqTimeout);
     this.cacheDir = parse(properties, PropertyName.CACHE_DIR, builder.cacheDir);
     this.userDataDirectory = parse(properties, PropertyName.USER_DATA_DIRECTORY, builder.userDataDirectory);
+    this.csrfRequestToken = parse(properties, PropertyName.CSRF_REQUEST_TOKEN, builder.csrfRequestToken);
+    this.csrfResponseToken = parse(properties, PropertyName.CSRF_RESPONSE_TOKEN, builder.csrfResponseToken);
     this.host = parse(properties, PropertyName.HOST, builder.host);
     String portRangesTmp = null;
     int processesTmp = -1;
@@ -1775,5 +1803,13 @@ public class Settings implements Serializable {
 
   File userDataDirectory() {
     return userDataDirectory;
+  }
+
+  String getCsrfRequestToken() {
+    return csrfRequestToken;
+  }
+
+  String getCsrfResponseToken() {
+	return csrfResponseToken;
   }
 }

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.CookieSpec;
@@ -137,6 +138,32 @@ class CookieStore extends CookieHandler implements org.apache.http.client.Cookie
     canonical = canonical.startsWith("/") ? canonical : "/" + canonical;
     canonical = canonical.endsWith("/") ? canonical : canonical + "/";
     return canonical.toLowerCase();
+  }
+  
+  public void addCsrfHeaders(Settings settings, HttpRequestBase req) {
+    final String reqHost = canonicalHost(req.getURI().getHost());
+	final String reqPath = canonicalPath(req.getURI().getPath());
+	final boolean reqSecure = isSecure(req.getURI().getScheme());
+	    
+	List<Cookie> list;
+    synchronized (store) {
+      list = store.getCookies();
+    }
+    String csrfToken = null;
+    for (Cookie cookie : list) {
+      if ((!cookie.isSecure() || reqSecure)
+          && reqHost.endsWith(canonicalHost(cookie.getDomain()))
+          && reqPath.startsWith(canonicalPath(cookie.getPath()))) {
+      	if(SettingsManager.settings().getCsrfResponseToken() != null && 
+       		  cookie.getName().equalsIgnoreCase(SettingsManager.settings().getCsrfResponseToken())) {
+       	  csrfToken = cookie.getValue();
+       	  break;
+        }
+      }
+    }
+    if(csrfToken != null) {
+      req.addHeader(SettingsManager.settings().getCsrfRequestToken(), csrfToken);
+    }
   }
 
   /**
