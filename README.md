@@ -13,7 +13,7 @@ Or install via Maven:
 <dependency>
   <groupId>com.machinepublishers</groupId>
   <artifactId>jbrowserdriver</artifactId>
-  <version>0.16.4</version>
+  <version>0.17.0</version>
 </dependency>
 ```
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|0.16.4|jar).
