@@ -92,35 +92,33 @@ class SocketFactory extends RMISocketFactory implements Serializable {
 
   private Socket createSocket(AtomicReference<Socket> socket,
       int localPort, int foreignPort, boolean background) throws IOException {
-    synchronized (Object.class) {
-      final int retries = 15;
-      for (int i = 1, sleep = 2; i <= retries; i++, sleep *= 2) {
+    final int retries = 15;
+    for (int i = 1, sleep = 2; i <= retries; i++, sleep *= 2) {
+      try {
+        if (!background) {
+          Util.close(socket.get());
+        }
+        socket.set(new Socket());
+        socket.get().setReuseAddress(true);
+        socket.get().setTcpNoDelay(true);
+        socket.get().setKeepAlive(true);
+        socket.get().bind(new InetSocketAddress(host, localPort));
+        socket.get().connect(new InetSocketAddress(host, foreignPort));
+        return socket.get();
+      } catch (IOException e) {
         try {
-          if (!background) {
-            Util.close(socket.get());
+          if (background || i == retries) {
+            throw e;
           }
-          socket.set(new Socket());
-          socket.get().setReuseAddress(true);
-          socket.get().setTcpNoDelay(true);
-          socket.get().setKeepAlive(true);
-          socket.get().bind(new InetSocketAddress(host, localPort));
-          socket.get().connect(new InetSocketAddress(host, foreignPort));
-          return socket.get();
-        } catch (IOException e) {
           try {
-            if (background || i == retries) {
-              throw e;
-            }
-            try {
-              Thread.sleep(sleep);
-            } catch (InterruptedException e2) {}
-          } finally {
-            Util.close(socket.get());
-          }
+            Thread.sleep(sleep);
+          } catch (InterruptedException e2) {}
+        } finally {
+          Util.close(socket.get());
         }
       }
-      throw new IOException();
     }
+    throw new IOException();
   }
 
   @Override
