@@ -18,6 +18,8 @@
 package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Proxy server settings.
@@ -30,6 +32,7 @@ public class ProxyConfig implements Serializable {
   private final String user;
   private final String password;
   private final boolean expectContinue;
+  private final Set<String> nonProxyHosts;
 
   /**
    * The proxy type.
@@ -56,6 +59,7 @@ public class ProxyConfig implements Serializable {
     user = null;
     password = null;
     expectContinue = false;
+    nonProxyHosts = Collections.emptySet();
   }
 
   /**
@@ -66,7 +70,7 @@ public class ProxyConfig implements Serializable {
    * @param port
    */
   public ProxyConfig(Type type, String host, int port) {
-    this(type, host, port, null, null, true);
+    this(type, host, port, null, null, true, Collections.emptySet());
   }
 
   /**
@@ -79,7 +83,22 @@ public class ProxyConfig implements Serializable {
    * @param password
    */
   public ProxyConfig(Type type, String host, int port, String user, String password) {
-    this(type, host, port, user, password, true);
+    this(type, host, port, user, password, true, Collections.emptySet());
+  }
+
+  /**
+   * Creates a proxy.
+   *
+   * @param type
+   * @param host
+   * @param port
+   * @param user
+   * @param password
+   * @param expectContinue
+   *          Whether the proxy uses "Expect: 100-Continue" functionality
+   */
+  public ProxyConfig(Type type, String host, int port, String user, String password, boolean expectContinue) {
+    this(type, host, port, user, password, expectContinue, Collections.emptySet());
   }
 
   /**
@@ -92,8 +111,10 @@ public class ProxyConfig implements Serializable {
    * @param password
    * @param expectContinue
    *          Whether the proxy uses "Expect: 100-Continue" functionality
+   * @param nonProxyHosts
+   *          Set of hosts that should be reached directly, bypassing the proxy.
    */
-  public ProxyConfig(Type type, String host, int port, String user, String password, boolean expectContinue) {
+  public ProxyConfig(Type type, String host, int port, String user, String password, boolean expectContinue, Set<String> nonProxyHosts) {
     this.type = type;
     this.host = host;
     this.port = port;
@@ -101,6 +122,7 @@ public class ProxyConfig implements Serializable {
     this.user = user;
     this.password = password;
     this.expectContinue = expectContinue;
+    this.nonProxyHosts = nonProxyHosts;
   }
 
   boolean directConnection() {
@@ -137,5 +159,9 @@ public class ProxyConfig implements Serializable {
 
   boolean expectContinue() {
     return expectContinue;
+  }
+
+  Set<String> nonProxyHosts() {
+    return nonProxyHosts;
   }
 }

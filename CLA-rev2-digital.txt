@@ -16,3 +16,4 @@ Arseniy Skvortsov https://github.com/askvortsov/ 2016-07-19
 Valery Yatsynovich https://github.com/valfirst 2016-08-15
 Michael Pinnegar https://github.com/jazzepi 2016-09-12
 Thomas Cashman https://github.com/tomcashman 2016-09-26
+Alex Luketa https://github.com/aluketa 2016-10-14
