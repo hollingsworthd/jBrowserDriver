@@ -40,7 +40,6 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.internal.WrapsElement;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.thoughtworks.selenium.SeleniumException;
 
 class Util {
   private static final Pattern charsetPattern = Pattern.compile(
@@ -126,9 +125,8 @@ class Util {
         throwable = throwable.getCause();
         message = throwable.getMessage();
       }
-      if ((throwable instanceof WebDriverException || throwable instanceof SeleniumException)
-          && throwable instanceof RuntimeException) {
-        //Wrap the exception to ensure complete/helpful stack trace info and also preserve the original subtype 
+      if (throwable instanceof WebDriverException && throwable instanceof RuntimeException) {
+        //Wrap the exception to ensure complete/helpful stack trace info and also preserve the original subtype
         try {
           throwable = throwable.getClass().getConstructor(String.class, Throwable.class).newInstance(message, throwable);
         } catch (Throwable t) {
