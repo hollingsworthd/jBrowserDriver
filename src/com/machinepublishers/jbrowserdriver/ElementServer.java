@@ -121,6 +121,24 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     IS_VISIBLE = builder.toString();
   }
 
+  private static final String SCROLL_INTO_VIEW;
+  static {
+    StringBuilder builder = new StringBuilder();
+    builder.append("var me = this;");
+    builder.append("(function(){");
+    builder.append("  var rect = me.getBoundingClientRect();");
+    builder.append("  if(rect");
+    builder.append("      && (rect.top < 0");
+    builder.append("      || rect.left < 0");
+    builder.append("      || rect.bottom > window.innerHeight");
+    builder.append("      || rect.right > window.innerWidth");
+    builder.append("      || rect.bottom > document.documentElement.clientHeight");
+    builder.append("      || rect.right > document.documentElement.clientWidth)) {");
+    builder.append("    me.scrollIntoView();");
+    builder.append("  }");
+    builder.append("})();");
+    SCROLL_INTO_VIEW = builder.toString();
+  }
   private static final Pattern rgb = Pattern.compile(
       "rgb\\(([0-9]{1,3}), ([0-9]{1,3}), ([0-9]{1,3})\\)");
   private static final Map<ElementId, ElementServer> map = new HashMap<ElementId, ElementServer>();
@@ -219,7 +237,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Object perform() {
             validate(false);
-            node.call("scrollIntoView");
+            node.eval(SCROLL_INTO_VIEW);
             if (contextItem.context.get().keyboard.get().isShiftPressed()) {
               node.eval(
                   new StringBuilder()
@@ -339,7 +357,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Object perform() {
             validate(true);
-            node.call("scrollIntoView");
+            node.eval(SCROLL_INTO_VIEW);
             node.call("focus");
             return null;
           }
@@ -365,7 +383,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           public Object perform() {
             validate(false);
             contextItem.httpListener.get().resetStatusCode();
-            node.call("scrollIntoView");
+            node.eval(SCROLL_INTO_VIEW);
             node.call("focus");
             node.eval("this.value='';");
             return null;
@@ -1060,7 +1078,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           @Override
           public Point perform() {
             validate(false);
-            node.call("scrollIntoView");
+            node.eval(SCROLL_INTO_VIEW);
             return null;
           }
         });
