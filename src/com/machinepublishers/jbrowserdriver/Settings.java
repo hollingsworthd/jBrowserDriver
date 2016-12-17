@@ -1452,6 +1452,7 @@ public class Settings implements Serializable {
   private final int connectionReqTimeout;
   private final String host;
   private final List<String> javaOptions;
+  private final boolean customClasspath;
   private final String javaBinary;
   private final boolean javaExportModules;
   private final File userDataDirectory;
@@ -1485,6 +1486,7 @@ public class Settings implements Serializable {
     } else {
       this.javaOptions = Collections.unmodifiableList(Arrays.asList(builder.javaOptions));
     }
+    this.customClasspath = this.javaOptions.contains("-classpath") || this.javaOptions.contains("-cp");
     this.javaBinary = parse(properties, PropertyName.JAVA_BINARY, builder.javaBinary);
     this.javaExportModules = parse(properties, PropertyName.JAVA_EXPORT_MODULES, builder.javaExportModules);
     if (properties.get(PropertyName.WIRE_CONSOLE.propertyName) != null) {
@@ -1795,6 +1797,10 @@ public class Settings implements Serializable {
 
   String javaBinary() {
     return javaBinary;
+  }
+
+  boolean customClasspath() {
+    return customClasspath;
   }
 
   boolean javaExportModules() {

@@ -95,8 +95,8 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
   private static final String JAVA_BIN;
   private static final List<String> inheritedArgs;
-  private static final List<String> classpathSimpleArgs;
-  private static final List<String> classpathUnpackedArgs;
+  private static volatile List<String> classpathSimpleArgs;
+  private static volatile List<String> classpathUnpackedArgs;
   private static final AtomicReference<List<String>> classpathArgs = new AtomicReference<>();
   private static final AtomicBoolean firstLaunch = new AtomicBoolean(true);
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
@@ -107,8 +107,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   static {
     List<String> inheritedArgsTmp = new ArrayList<String>();
-    List<String> classpathSimpleTmp = new ArrayList<String>();
-    List<String> classpathUnpackedTmp = new ArrayList<String>();
     File javaBin = new File(System.getProperty("java.home") + "/bin/java");
     if (!javaBin.exists()) {
       javaBin = new File(javaBin.getAbsolutePath() + ".exe");
@@ -121,7 +119,17 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           inheritedArgsTmp.add("-D" + key.substring("jbd.rmi.".length()) + "=" + System.getProperty(key));
         }
       }
+    } catch (Throwable t) {
+      Util.handleException(t);
+    }
+    inheritedArgs = Collections.unmodifiableList(inheritedArgsTmp);
 
+  }
+
+  private static void initClasspath() {
+    List<String> classpathSimpleTmp = new ArrayList<String>();
+    List<String> classpathUnpackedTmp = new ArrayList<String>();
+    try {
       List<File> classpathElements = new FastClasspathScanner().getUniqueClasspathElements();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
@@ -154,7 +162,6 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     } catch (Throwable t) {
       Util.handleException(t);
     }
-    inheritedArgs = Collections.unmodifiableList(inheritedArgsTmp);
     classpathSimpleArgs = Collections.unmodifiableList(classpathSimpleTmp);
     classpathUnpackedArgs = Collections.unmodifiableList(classpathUnpackedTmp);
   }
@@ -300,12 +307,15 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       }
     }
     SessionId sessionIdTmp = null;
-    synchronized (firstLaunch) {
-      if (firstLaunch.compareAndSet(true, false)) {
-        classpathArgs.set(classpathUnpackedArgs);
-        sessionIdTmp = new SessionId(launchProcess(settings, configuredPortGroup.get()));
-        if (actualPortGroup.get() == null) {
-          classpathArgs.set(classpathSimpleArgs);
+    if (!settings.customClasspath()) {
+      synchronized (firstLaunch) {
+        if (firstLaunch.compareAndSet(true, false)) {
+          initClasspath();
+          classpathArgs.set(classpathUnpackedArgs);
+          sessionIdTmp = new SessionId(launchProcess(settings, configuredPortGroup.get()));
+          if (actualPortGroup.get() == null) {
+            classpathArgs.set(classpathSimpleArgs);
+          }
         }
       }
     }
@@ -361,7 +371,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
         List<String> myArgs = new ArrayList<String>();
         myArgs.add(settings.javaBinary() == null ? JAVA_BIN : settings.javaBinary());
         myArgs.addAll(inheritedArgs);
-        myArgs.addAll(classpathArgs.get());
+        if (!settings.customClasspath()) {
+          myArgs.addAll(classpathArgs.get());
+        }
         if (settings.javaExportModules()) {
           myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
           myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
