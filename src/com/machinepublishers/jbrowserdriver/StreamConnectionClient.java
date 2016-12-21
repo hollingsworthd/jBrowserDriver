@@ -17,33 +17,23 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
-import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyStore;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
-
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -68,14 +58,15 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 
 class StreamConnectionClient {
-  private static final Set<String> nonCachedMethods = Collections.unmodifiableSet(new HashSet<String>(
-      Arrays.asList(new String[] { "POST", "PUT", "DELETE" })));
-  private static final Registry<CookieSpecProvider> cookieProvider = RegistryBuilder.<CookieSpecProvider> create()
-      .register("custom", new LaxCookieSpecProvider())
-      .build();
+  private static final Set<String> nonCachedMethods =
+      Collections.unmodifiableSet(new HashSet<String>(
+          Arrays.asList(new String[] {"POST", "PUT", "DELETE"})));
+  private static final Registry<CookieSpecProvider> cookieProvider =
+      RegistryBuilder.<CookieSpecProvider>create()
+          .register("custom", new LaxCookieSpecProvider())
+          .build();
   private static Pattern pemBlock = Pattern.compile(
       "-----BEGIN CERTIFICATE-----\\s*(.*?)\\s*-----END CERTIFICATE-----", Pattern.DOTALL);
 
@@ -92,7 +83,8 @@ class StreamConnectionClient {
     File cacheDirTmp = SettingsManager.settings().cacheDir();
     FileRemover shutdownHookTmp = null;
     try {
-      cacheDirTmp = cacheDirTmp == null ? Files.createTempDirectory("jbd_webcache_").toFile() : cacheDirTmp;
+      cacheDirTmp =
+          cacheDirTmp == null ? Files.createTempDirectory("jbd_webcache_").toFile() : cacheDirTmp;
       if (SettingsManager.settings().cacheDir() == null) {
         shutdownHookTmp = new FileRemover(cacheDirTmp);
         Runtime.getRuntime().addShutdownHook(shutdownHookTmp);
@@ -112,8 +104,9 @@ class StreamConnectionClient {
         .setMaxObjectSize(SettingsManager.settings().cacheEntrySize())
         .build();
     ConnectionSocketFactory sslSocketFactory = SettingsManager.settings()
-        .hostnameVerification() ? new SslSocketFactory(sslContext()) : new SslSocketWithoutHostnameVerificationFactory(sslContext());
-    registry = RegistryBuilder.<ConnectionSocketFactory> create()
+        .hostnameVerification() ? new SslSocketFactory(sslContext())
+        : new SslSocketWithoutHostnameVerificationFactory(sslContext());
+    registry = RegistryBuilder.<ConnectionSocketFactory>create()
         .register("https", sslSocketFactory)
         .register("http", new SocketFactory())
         .build();
@@ -122,12 +115,13 @@ class StreamConnectionClient {
     manager.setMaxTotal(SettingsManager.settings().maxConnections());
     client = clientBuilderHelper(HttpClientBuilder.create(), manager);
     cachingClient = clientBuilderHelper(CachingHttpClientBuilder.create()
-        .setCacheConfig(cacheConfig)
-        .setHttpCacheStorage(httpCache),
+            .setCacheConfig(cacheConfig)
+            .setHttpCacheStorage(httpCache),
         manager);
   }
 
-  private static CloseableHttpClient clientBuilderHelper(HttpClientBuilder builder, PoolingHttpClientConnectionManager manager) {
+  private static CloseableHttpClient clientBuilderHelper(HttpClientBuilder builder,
+      PoolingHttpClientConnectionManager manager) {
     return builder
         .disableRedirectHandling()
         .disableAutomaticRetries()
@@ -135,7 +129,8 @@ class StreamConnectionClient {
         .setConnectionManager(manager)
         .setRequestExecutor(new HttpRequestExecutor() {
           @Override
-          protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn, HttpContext context) throws IOException, HttpException {
+          protected HttpResponse doSendRequest(HttpRequest request, HttpClientConnection conn,
+              HttpContext context) throws IOException, HttpException {
             request.removeHeaders("Via");
             return super.doSendRequest(request, conn, context);
           }
@@ -149,11 +144,13 @@ class StreamConnectionClient {
   protected void finalize() throws Throwable {
     try {
       super.finalize();
-    } catch (Throwable t) {}
+    } catch (Throwable t) {
+    }
     try {
       Runtime.getRuntime().removeShutdownHook(shutdownHook);
       shutdownHook.run();
-    } catch (Throwable t) {}
+    } catch (Throwable t) {
+    }
   }
 
   File cacheDir() {
@@ -176,72 +173,46 @@ class StreamConnectionClient {
   }
 
   private static SSLContext sslContext() {
-    final String property = SettingsManager.settings().ssl();
-    if (property != null && !property.isEmpty() && !"null".equals(property)) {
-      if ("trustanything".equals(property)) {
-        try {
-          return SSLContexts.custom().loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()),
-              new TrustStrategy() {
-                public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                  return true;
-                }
-              }).build();
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
-        }
-      } else {
-        try {
-          String location = property;
-          location = location.equals("compatible")
-              ? "https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt" : location;
-          File cachedPemFile = new File("./pemfile_cached");
-          boolean remote = location.startsWith("https://") || location.startsWith("http://");
-          if (remote && cachedPemFile.exists()
-              && (System.currentTimeMillis() - cachedPemFile.lastModified() < 48 * 60 * 60 * 1000)) {
-            location = cachedPemFile.getAbsolutePath();
-            remote = false;
-          }
-          String pemBlocks = null;
-          if (remote) {
-            HttpURLConnection remotePemFile = (HttpURLConnection) StreamHandler.defaultConnection(new URL(location));
-            remotePemFile.setRequestMethod("GET");
-            remotePemFile.connect();
-            pemBlocks = Util.toString(remotePemFile.getInputStream(),
-                Util.charset(remotePemFile));
-            cachedPemFile.delete();
-            Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
-          } else {
-            pemBlocks = new String(Files.readAllBytes(
-                Paths.get(new File(location).getAbsolutePath())), "utf-8");
-          }
-          KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-          keyStore.load(null);
-          CertificateFactory cf = CertificateFactory.getInstance("X.509");
-          Matcher matcher = pemBlock.matcher(pemBlocks);
-          boolean found = false;
-          while (matcher.find()) {
-            String pemBlock = matcher.group(1).replaceAll("[\\n\\r]+", "");
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(Base64.getDecoder().decode(pemBlock));
-            java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) cf.generateCertificate(byteStream);
-            String alias = cert.getSubjectX500Principal().getName("RFC2253");
-            if (alias != null && !keyStore.containsAlias(alias)) {
-              found = true;
-              keyStore.setCertificateEntry(alias, cert);
-            }
-          }
-          if (found) {
-            KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManager.init(keyStore, null);
-            TrustManagerFactory trustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManager.init(keyStore);
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
-            return context;
-          }
-        } catch (Throwable t) {
-          LogsServer.instance().exception(t);
+    try {
+      KeyStore keyStore = KeyStore.getInstance("Windows-MY");
+      keyStore.load(null, null);
+
+      Enumeration en = keyStore.aliases();
+      boolean found = false;
+
+      while (en.hasMoreElements()) {
+        String aliasKey = (String) en.nextElement();
+        if (aliasKey.contains("LEAFMILL")) {
+          found = true;
         }
       }
+      if (found) {
+        KeyManagerFactory keyManager =
+            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManager.init(keyStore, null);
+        TrustManagerFactory trustManager =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManager.init(keyStore);
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
+
+        /*
+        context.init(keyManager.getKeyManagers(), new X509TrustManager[] { new X509TrustManager() {
+          public X509Certificate[] getAcceptedIssuers() {
+            return null;
+          }
+
+          public void checkClientTrusted(X509Certificate[] chain, String authType) {
+          }
+
+          public void checkServerTrusted(X509Certificate[] chain, String authType) {
+          }
+        }}, null);
+        */
+        return context;
+      }
+    } catch (Throwable t) {
+      LogsServer.instance().exception(t);
     }
     return SSLContexts.createSystemDefault();
   }
@@ -257,7 +228,8 @@ class StreamConnectionClient {
     }
   }
 
-  private static class SslSocketWithoutHostnameVerificationFactory extends SSLConnectionSocketFactory {
+  private static class SslSocketWithoutHostnameVerificationFactory
+      extends SSLConnectionSocketFactory {
     public SslSocketWithoutHostnameVerificationFactory(final SSLContext sslContext) {
       super(sslContext, NoopHostnameVerifier.INSTANCE);
     }
