@@ -24,6 +24,7 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -34,6 +35,7 @@ import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -194,9 +196,9 @@ class StreamConnectionClient {
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustManager.init(keyStore);
         SSLContext context = SSLContext.getInstance("TLS");
-        context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
+        //context.init(keyManager.getKeyManagers(), trustManager.getTrustManagers(), null);
 
-        /*
+
         context.init(keyManager.getKeyManagers(), new X509TrustManager[] { new X509TrustManager() {
           public X509Certificate[] getAcceptedIssuers() {
             return null;
@@ -208,7 +210,7 @@ class StreamConnectionClient {
           public void checkServerTrusted(X509Certificate[] chain, String authType) {
           }
         }}, null);
-        */
+
         return context;
       }
     } catch (Throwable t) {
