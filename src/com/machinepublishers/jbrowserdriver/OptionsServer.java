@@ -20,15 +20,15 @@ package com.machinepublishers.jbrowserdriver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.cookie.ClientCookie;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openqa.selenium.Cookie;
 
@@ -41,6 +41,7 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
   private static final Pattern domain = Pattern.compile(".*?://(?:[^/]*@)?\\[?([^\\]:/]*).*");
+  private static final DateFormat cookieDf = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz");
 
   OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
@@ -65,13 +66,23 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
       }
     }
     out.setDomain(domainStr == null ? in.getDomain() : domainStr);
+    out.setAttribute("domain", "." + out.getDomain());
     if (in.getExpiry() != null) {
       out.setExpiryDate(in.getExpiry());
+      cookieDf.setTimeZone(TimeZone.getTimeZone("GMT"));
+      out.setAttribute("expires", cookieDf.format(in.getExpiry()));
     }
     out.setPath(in.getPath());
+    out.setAttribute("path", in.getPath());
     out.setSecure(in.isSecure());
+    if (in.isSecure()) {
+      out.setAttribute("secure", null);
+    }
     out.setValue(in.getValue());
-    out.setVersion(1);
+    out.setVersion(0);
+    if (in.isHttpOnly()) {
+      out.setAttribute("httponly", null);
+    }
     return out;
   }
 
@@ -81,7 +92,8 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
         in.getDomain(),
         in.getPath(),
         in.getExpiryDate(),
-        in.isSecure());
+        in.isSecure(),
+        ((ClientCookie)in).containsAttribute("httponly"));
   }
 
   /**
