@@ -1,6 +1,6 @@
 /* 
  * jBrowserDriver (TM)
- * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
+ * Copyright (C) 2014-2017 Machine Publishers, LLC and the jBrowserDriver contributors
  * https://github.com/MachinePublishers/jBrowserDriver
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -327,18 +329,37 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       endProcess();
       Util.handleException(new IllegalStateException("Could not launch browser."));
     }
+    HeartbeatRemote heartbeatTmp = null;
     JBrowserDriverRemote instanceTmp = null;
     try {
       synchronized (lock.validated()) {
-        instanceTmp = (JBrowserDriverRemote) LocateRegistry
+        Registry registry = LocateRegistry
             .getRegistry(settings.host(), (int) actualPortGroup.get().child,
-                new SocketFactory(settings.host(), actualPortGroup.get(), locks))
-            .lookup("JBrowserDriverRemote");
+                new SocketFactory(settings.host(), actualPortGroup.get(), locks));
+        heartbeatTmp = (HeartbeatRemote) registry.lookup("HeartbeatRemote");
+        instanceTmp = (JBrowserDriverRemote) registry.lookup("JBrowserDriverRemote");
         instanceTmp.setUp(settings);
       }
     } catch (Throwable t) {
       Util.handleException(t);
     }
+    final HeartbeatRemote heartbeat = heartbeatTmp;
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while (true) {
+          if (processEnded.get()) {
+            return;
+          }
+          try {
+            heartbeat.heartbeat();
+          } catch (RemoteException e) {}
+          try {
+            Thread.sleep(5000);
+          } catch (InterruptedException e) {}
+        }
+      }
+    }).start();
     remote = instanceTmp;
     LogsRemote logsRemote = null;
     try {
