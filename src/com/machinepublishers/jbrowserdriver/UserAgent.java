@@ -161,6 +161,25 @@ public class UserAgent {
    */
   public UserAgent(Family family, String vendor, String platform,
       String oscpu, String appVersion, String userAgentString) {
+    this(family, "en-US", vendor, platform, oscpu, appVersion, userAgentString);
+  }
+
+  /**
+   * @param family
+   *          Category of browsers which share similar properties
+   * @param vendor
+   *          Property of the navigator object
+   * @param platform
+   *          Property of the navigator object
+   * @param oscpu
+   *          Property of the navigator object
+   * @param appVersion
+   *          Property of the navigator object
+   * @param userAgentString
+   *          Property of the navigator object and also sent on headers
+   */
+  public UserAgent(Family family, String language, String vendor, String platform,
+      String oscpu, String appVersion, String userAgentString) {
     StringBuilder builder = new StringBuilder();
     builder.append(baseNavigator);
     if (family == Family.MOZILLA) {
@@ -169,7 +188,7 @@ public class UserAgent {
       builder.append(webkitNavigator);
     }
     Map<String, String> navigator = new LinkedHashMap<String, String>();
-    navigator.put("language", "'en-US'");//TODO support others
+    navigator.put("language", "'" + (language == null ? "" : language) + "'");
     navigator.put("vendor", "'" + (vendor == null ? "" : vendor) + "'");
     navigator.put("platform", "'" + (platform == null ? "" : platform) + "'");
     navigator.put("oscpu", "'" + (oscpu == null ? "" : oscpu) + "'");
