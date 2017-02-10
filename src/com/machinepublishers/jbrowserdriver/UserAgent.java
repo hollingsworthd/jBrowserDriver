@@ -167,6 +167,8 @@ public class UserAgent {
   /**
    * @param family
    *          Category of browsers which share similar properties
+   * @param language
+   *          Language property of the navigator object
    * @param vendor
    *          Property of the navigator object
    * @param platform
