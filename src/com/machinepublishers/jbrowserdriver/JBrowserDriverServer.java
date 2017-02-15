@@ -213,12 +213,16 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         return outerHtml;
       }
     }
-    WebPage page = Accessor.getPageFor(context.get().item().engine.get());
-    String html = page.getHtml(page.getMainFrame());
-    if (html != null && !html.isEmpty()) {
-      return html;
-    }
-    return page.getInnerText(page.getMainFrame());
+    return AppThread.exec(context.get().item().statusCode, new Sync<String>() {
+      public String perform() {
+        WebPage page = Accessor.getPageFor(context.get().item().engine.get());
+        String html = page.getHtml(page.getMainFrame());
+        if (html != null && !html.isEmpty()) {
+          return html;
+        }
+        return page.getInnerText(page.getMainFrame());
+      }
+    });
   }
 
   /**
