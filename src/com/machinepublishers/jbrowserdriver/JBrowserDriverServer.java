@@ -1,6 +1,6 @@
 /* 
  * jBrowserDriver (TM)
- * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
+ * Copyright (C) 2014-2017 Machine Publishers, LLC and the jBrowserDriver contributors
  * https://github.com/MachinePublishers/jBrowserDriver
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,6 +115,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         }
       }
       registry = registryTmp;
+      registry.rebind("HeartbeatRemote", new HeartbeatServer());
       registry.rebind("JBrowserDriverRemote", new JBrowserDriverServer());
 
       RMISocketFactory.setSocketFactory(socketFactory.get());

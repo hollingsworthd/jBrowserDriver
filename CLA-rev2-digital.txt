@@ -17,3 +17,5 @@ Valery Yatsynovich https://github.com/valfirst 2016-08-15
 Michael Pinnegar https://github.com/jazzepi 2016-09-12
 Thomas Cashman https://github.com/tomcashman 2016-09-26
 Alex Luketa https://github.com/aluketa 2016-10-14
+Trask Stalnaker https://github.com/trask 2017-02-08
+Petr Jerabek https://github.com/cikorka 2017-02-10
