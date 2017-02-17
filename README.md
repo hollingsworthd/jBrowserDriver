@@ -122,4 +122,4 @@ Feel free to discuss bugs and new features by opening a [new issue](https://gith
 
 - - -
 
-Copyright (C) 2014-2016 [Machine Publishers, LLC](https://machinepublishers.com) and the jBrowserDriver contributors
+Copyright (C) 2014-2017 [Machine Publishers, LLC](https://machinepublishers.com) and the jBrowserDriver contributors
