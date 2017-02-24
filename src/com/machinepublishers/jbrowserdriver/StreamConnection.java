@@ -1,4 +1,4 @@
-/* 
+/*
  * jBrowserDriver (TM)
  * Copyright (C) 2014-2016 Machine Publishers, LLC and the jBrowserDriver contributors
  * https://github.com/MachinePublishers/jBrowserDriver
@@ -8,7 +8,7 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,6 +61,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -292,6 +293,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             req.set(new HttpDelete(uri));
           } else if ("TRACE".equals(method.get())) {
             req.set(new HttpTrace(uri));
+          } else if ("PATCH".equals(method.get())) {
+            req.set(new HttpPatch(uri));
           }
           processHeaders(SettingsManager.settings(), req.get());
           ProxyConfig proxy = SettingsManager.settings().proxy();
@@ -323,6 +326,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
             ((HttpPost) req.get()).setEntity(new ByteArrayEntity(reqData.get().toByteArray()));
           } else if ("PUT".equals(method.get())) {
             ((HttpPut) req.get()).setEntity(new ByteArrayEntity(reqData.get().toByteArray()));
+          } else if ("PATCH".equals(method.get())) {
+            ((HttpPatch) req.get()).setEntity(new ByteArrayEntity(reqData.get().toByteArray()));
           }
           response.set(client.get().execute(req.get(), context.get()));
           if (response.get() != null && response.get().getEntity() != null) {
