@@ -267,7 +267,8 @@ class StreamConnection extends HttpURLConnection implements Closeable {
               .setCookieSpec("custom")
               .setSocketTimeout(SettingsManager.settings().socketTimeout())
               .setConnectTimeout(SettingsManager.settings().connectTimeout())
-              .setConnectionRequestTimeout(SettingsManager.settings().connectionReqTimeout());
+              .setConnectionRequestTimeout(SettingsManager.settings().connectionReqTimeout())
+              .setLocalAddress(SettingsManager.settings().getLocalIp());
           URI uri = null;
           try {
             uri = url.toURI();
