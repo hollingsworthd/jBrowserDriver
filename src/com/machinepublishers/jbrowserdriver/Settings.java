@@ -221,6 +221,7 @@ public class Settings implements Serializable {
     private File userDataDirectory;
     private String csrfRequestToken;
     private String csrfResponseToken;
+    private InetAddress nicAddress;
 
     /**
      * Headers to be sent on each request.
@@ -1140,6 +1141,17 @@ public class Settings implements Serializable {
       this.userDataDirectory = userDataDirectory;
       return this;
     }
+	  
+    /**
+     * Used for binding to a specific NIC
+     * 
+     * @param nicAddress
+     * @return
+     */
+     public Builder setLocalIp(InetAddress nicAddress) {
+       this.nicAddress = nicAddress;
+       return this;
+     }
     
     /**
      * Enables CSRF token handling. Searches for XSRF-TOKEN in response headers and sends X-XSRF-TOKEN in request headers.
@@ -1458,6 +1470,7 @@ public class Settings implements Serializable {
   private final File userDataDirectory;
   private final String csrfRequestToken;
   private final String csrfResponseToken;
+  private final InetAddress nicAddress;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -1601,6 +1614,7 @@ public class Settings implements Serializable {
     userAgentTmp = userAgentTmp == null ? defaults.userAgent : userAgentTmp;
     this.requestHeaders = requestHeadersTmp;
     this.userAgentString = userAgentTmp.userAgentString();
+    this.nicAddress = builder.nicAddress;
 
     ProxyConfig proxyTmp = builder.proxy;
     if (properties.get(PropertyName.PROXY_TYPE.propertyName) != null
@@ -1817,5 +1831,9 @@ public class Settings implements Serializable {
 
   String getCsrfResponseToken() {
 	return csrfResponseToken;
+  }
+	
+  InetAddress getLocalIp() {
+    return nicAddress;
   }
 }
