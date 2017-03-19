@@ -1149,7 +1149,7 @@ public class Settings implements Serializable {
      * @param nicAddress
      * @return
      */
-    public Builder setLocalIp(InetAddress nicAddress) {
+    public Builder localIp(InetAddress nicAddress) {
       this.nicAddress = nicAddress;
       return this;
     }
