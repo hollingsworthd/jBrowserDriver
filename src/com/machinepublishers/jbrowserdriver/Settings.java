@@ -19,6 +19,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1141,36 +1142,40 @@ public class Settings implements Serializable {
       this.userDataDirectory = userDataDirectory;
       return this;
     }
-	  
+
     /**
      * Used for binding to a specific NIC
      * 
      * @param nicAddress
      * @return
      */
-     public Builder setLocalIp(InetAddress nicAddress) {
-       this.nicAddress = nicAddress;
-       return this;
-     }
-    
+    public Builder setLocalIp(InetAddress nicAddress) {
+      this.nicAddress = nicAddress;
+      return this;
+    }
+
     /**
      * Enables CSRF token handling. Searches for XSRF-TOKEN in response headers and sends X-XSRF-TOKEN in request headers.
+     * 
      * @return this Builder
      */
     public Builder csrf() {
-    	return csrf("X-XSRF-TOKEN", "XSRF-TOKEN");
+      return csrf("X-XSRF-TOKEN", "XSRF-TOKEN");
     }
-    
+
     /**
      * Enables CSRF token handling
-     * @param requestToken The header to send in each request header
-     * @param responseToken The token to search for in response headers
+     * 
+     * @param requestToken
+     *          The header to send in each request header
+     * @param responseToken
+     *          The token to search for in response headers
      * @return this Builder
      */
     public Builder csrf(String requestToken, String responseToken) {
-    	this.csrfRequestToken = requestToken;
-    	this.csrfResponseToken = responseToken;
-    	return this;
+      this.csrfRequestToken = requestToken;
+      this.csrfResponseToken = responseToken;
+      return this;
     }
 
     /**
@@ -1830,9 +1835,9 @@ public class Settings implements Serializable {
   }
 
   String getCsrfResponseToken() {
-	return csrfResponseToken;
+    return csrfResponseToken;
   }
-	
+
   InetAddress getLocalIp() {
     return nicAddress;
   }
