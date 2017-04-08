@@ -19,6 +19,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -32,6 +33,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
@@ -221,6 +228,13 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         if (html != null && !html.isEmpty()) {
           return html;
         }
+        try {
+          StringWriter stringWriter = new StringWriter();
+          Transformer transformer = TransformerFactory.newInstance().newTransformer();
+          transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+          transformer.transform(new DOMSource(context.get().item().engine.get().getDocument()), new StreamResult(stringWriter));
+          return stringWriter.toString();
+        } catch (Throwable t) {}
         return page.getInnerText(page.getMainFrame());
       }
     });
