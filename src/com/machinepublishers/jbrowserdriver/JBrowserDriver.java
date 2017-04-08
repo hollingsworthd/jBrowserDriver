@@ -187,10 +187,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   }
 
   public static void initWorkThread() {
-	int previousInstanceCount = runningInstances.getAndIncrement();
-	if(previousInstanceCount > 0) {
-		return;
-	}
+    int previousInstanceCount = runningInstances.getAndIncrement();
+    if (previousInstanceCount > 0) {
+      return;
+    }
     Thread work = new Thread(new Runnable() {
       @Override
       public void run() {
