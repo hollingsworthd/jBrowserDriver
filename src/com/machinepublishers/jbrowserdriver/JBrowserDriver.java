@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
@@ -92,6 +93,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   @Deprecated
   public static final String KEYBOARD_DELETE = Util.KEYBOARD_DELETE;
+  private static final AtomicInteger runningInstances = new AtomicInteger(0);
   private static final Set<SocketLock> locks = new HashSet<SocketLock>();
   private static final Set<Job> waiting = new LinkedHashSet<Job>();
   private static final Set<PortGroup> portGroupsActive = new LinkedHashSet<PortGroup>();
@@ -184,12 +186,16 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
     return classpathArgs;
   }
 
-  static {
+  public static void initWorkThread() {
+	int previousInstanceCount = runningInstances.getAndIncrement();
+	if(previousInstanceCount > 0) {
+		return;
+	}
     Thread work = new Thread(new Runnable() {
       @Override
       public void run() {
         synchronized (waiting) {
-          while (true) {
+          while (runningInstances.get() > 0) {
             List<Job> selectedJobs = new ArrayList<Job>();
             for (Job job : waiting) {
               for (PortGroup curPortGroup : job.settings.portGroups()) {
@@ -283,6 +289,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    * @param settings
    */
   public JBrowserDriver(final Settings settings) {
+    initWorkThread();
     synchronized (locks) {
       locks.add(lock);
     }
@@ -1131,6 +1138,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
 
   private void endProcess() {
     if (processEnded.compareAndSet(false, true)) {
+      runningInstances.decrementAndGet();
       lock.expired.set(true);
       final Process proc = process.get();
       if (proc != null) {
