@@ -254,6 +254,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   private final SocketLock lock = new SocketLock();
   private final File tmpDir;
   private final FileRemover shutdownHook;
+  private final Thread heartbeatThread;
 
   /**
    * Constructs a browser with default settings, UTC timezone, and no proxy.
@@ -351,7 +352,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
       Util.handleException(t);
     }
     final HeartbeatRemote heartbeat = heartbeatTmp;
-    new Thread(new Runnable() {
+    heartbeatThread = new Thread(new Runnable() {
       @Override
       public void run() {
         while (true) {
@@ -366,7 +367,9 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           } catch (InterruptedException e) {}
         }
       }
-    }).start();
+    });
+    heartbeatThread.setName("Heartbeat");
+    heartbeatThread.start();
     remote = instanceTmp;
     LogsRemote logsRemote = null;
     try {
@@ -1161,6 +1164,10 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
           }
         }
       }
+      try {
+        heartbeatThread.interrupt();
+        heartbeatThread.join();   
+      } catch (Exception e) {}
       FileUtils.deleteQuietly(tmpDir);
       synchronized (locks) {
         locks.remove(lock);
