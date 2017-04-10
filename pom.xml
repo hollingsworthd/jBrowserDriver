@@ -5,7 +5,7 @@
   <artifactId>jbrowserdriver</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A programmable, embeddable web browser driver compatible with the Selenium WebDriver spec -- headless, WebKit-based, pure Java</description>
-  <version>0.17.7-SNAPSHOT</version>
+  <version>0.17.8-SNAPSHOT</version>
   <packaging>jar</packaging>
   <url>https://github.com/machinepublishers/jbrowserdriver</url>
   <scm>
