@@ -21,3 +21,4 @@ Trask Stalnaker https://github.com/trask 2017-02-08
 Petr Jerabek https://github.com/cikorka 2017-02-10
 Bodo Junglas https://github.com/untoldwind 2017-02-23
 Arya Farzan https://github.com/arya6000 2017-03-18
+Vitali Kepin https://github.com/vkepin 2017-05-16
