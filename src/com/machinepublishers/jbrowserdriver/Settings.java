@@ -32,11 +32,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 /**
@@ -1309,6 +1312,21 @@ public class Settings implements Serializable {
 
     Settings build(Capabilities capabilities) {
       Map properties = new HashMap(capabilities.asMap());
+      Proxy proxy = Proxy.extractFrom(capabilities);
+      if (proxy != null) {
+        String proxyConfigString = proxy.getHttpProxy();
+        if (proxyConfigString != null) {
+          Pattern pattern = Pattern.compile("(?:http(?:s)?:\\/\\/)?(?:([^:@]*):([^:@]*)@)?([^:@]*)(?::(\\d+))?");
+          Matcher matcher = pattern.matcher(proxyConfigString);
+          if (matcher.matches()) {
+            properties.put(PropertyName.PROXY_TYPE.propertyName, ProxyConfig.Type.HTTP);
+            properties.put(PropertyName.PROXY_USERNAME.propertyName, matcher.group(1));
+            properties.put(PropertyName.PROXY_PASSWORD.propertyName, matcher.group(2));
+            properties.put(PropertyName.PROXY_HOST.propertyName, matcher.group(3));
+            properties.put(PropertyName.PROXY_PORT.propertyName, matcher.group(4));
+          }
+        }
+      }
       for (Map.Entry entry : System.getProperties().entrySet()) {
         properties.put(entry.getKey(), entry.getValue());
       }

@@ -30,9 +30,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -272,12 +274,11 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
    */
   public JBrowserDriver(Capabilities capabilities) {
     this(Settings.builder().build(capabilities));
-    if (!(capabilities instanceof Serializable)) {
-      capabilities = new DesiredCapabilities(capabilities);
-    }
+    Map capabilitiesMap = new HashMap(capabilities.asMap());
+    capabilitiesMap.remove("proxy");
     try {
       synchronized (lock.validated()) {
-        remote.storeCapabilities(capabilities);
+        remote.storeCapabilities(new DesiredCapabilities(capabilitiesMap));
       }
     } catch (Throwable t) {
       Util.handleException(t);
