@@ -556,7 +556,8 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           public String perform() {
             validate(false);
             if ((Boolean) node.eval(IS_VISIBLE)) {
-              Object text = node.getMember("innerText");
+              String textAttribute = "TEXTAREA".equals(node.getMember("tagName")) ? "textContent" : "innerText";
+              Object text = node.getMember(textAttribute);
               return text instanceof String ? ((String) text).trim() : "";
             }
             return "";
