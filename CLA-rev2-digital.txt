@@ -1,4 +1,4 @@
-The maintainers of jBrowserDriver, requests that You sign a
+The maintainers of jBrowserDriver requests that You sign a
 Contributor License Agreement ("CLA") regarding any software code and/or
 documentation You desire to contribute to jBrowserDriver ("Contribution").
 
