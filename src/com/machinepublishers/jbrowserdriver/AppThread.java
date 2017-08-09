@@ -132,6 +132,10 @@ class AppThread {
     return exec(false, new StatusCode(), 0, action);
   }
 
+  static <T> T exec(final Sync<T> action, long timeout) {
+    return exec(false, new StatusCode(), timeout, action);
+  }
+
   static <T> T exec(final StatusCode statusCode, final Sync<T> action) {
     return exec(false, statusCode, 0, action);
   }
