@@ -86,7 +86,7 @@ class HttpListener implements LoadListenerClient {
     this.statusMonitor = StatusMonitor.instance();
     this.logs = LogsServer.instance();
     this.ajaxListener = new AjaxListener(
-        this.started, this.newStatusCode, this.statusCode, this.resources, this.timeoutMS.get());
+        this.started, this.newStatusCode, this.statusCode, this.resources, this.timeoutMS);
   }
 
   void init() {
