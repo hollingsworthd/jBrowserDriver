@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javafx.application.Platform;
 
@@ -32,16 +33,16 @@ class AjaxListener implements Runnable {
   private final AtomicInteger newStatusCode;
   private final StatusCode statusCode;
   private final Map<String, Long> resources;
-  private final long timeoutMS;
+  private final AtomicLong timeoutMS;
 
   AjaxListener(final AtomicBoolean started, final AtomicInteger newStatusCode,
       final StatusCode statusCode,
-      final Map<String, Long> resources, final long timeoutMS) {
+      final Map<String, Long> resources, final AtomicLong timeoutMS) {
     this.started = started;
     this.newStatusCode = newStatusCode;
     this.statusCode = statusCode;
     this.resources = resources;
-    this.timeoutMS = timeoutMS <= 0 ? MAX_WAIT_DEFAULT : timeoutMS;
+    this.timeoutMS = timeoutMS;
   }
 
   /**
@@ -82,7 +83,7 @@ class AjaxListener implements Runnable {
         final long sleepMS = Math.max(settings.ajaxWait() / IDLE_COUNT_TARGET, 0);
         int idleCount = 0;
         int idleCountTarget = sleepMS == 0 ? 1 : IDLE_COUNT_TARGET;
-        while (time - start < timeoutMS) {
+        while (time - start < (timeoutMS.get() <= 0 ? MAX_WAIT_DEFAULT : timeoutMS.get())) {
           try {
             Thread.sleep(sleepMS);
           } catch (InterruptedException e) {
