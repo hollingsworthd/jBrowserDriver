@@ -337,7 +337,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
                     .append(context.get().timeouts.get().getPageLoadTimeoutMS())
                     .append("ms reached.").toString());
               }
-            });
+            }, context.get().timeouts.get().getPageLoadTimeoutMS());
       }
     }
   }
