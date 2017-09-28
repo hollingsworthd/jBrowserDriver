@@ -58,7 +58,6 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.internal.Killable;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.CommandExecutor;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -84,7 +83,7 @@ import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
  * <p>
  * Licensed under the Apache License version 2.0.
  */
-public class JBrowserDriver extends RemoteWebDriver implements Killable {
+public class JBrowserDriver extends RemoteWebDriver {
 
   //TODO handle jbd.fork=false
 
@@ -1244,7 +1243,7 @@ public class JBrowserDriver extends RemoteWebDriver implements Killable {
   /**
    * {@inheritDoc}
    */
-  @Override
+  @Deprecated
   public void kill() {
     endProcess();
   }

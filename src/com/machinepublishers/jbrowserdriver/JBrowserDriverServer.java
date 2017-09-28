@@ -58,7 +58,6 @@ import org.openqa.selenium.internal.FindsByLinkText;
 import org.openqa.selenium.internal.FindsByName;
 import org.openqa.selenium.internal.FindsByTagName;
 import org.openqa.selenium.internal.FindsByXPath;
-import org.openqa.selenium.internal.Killable;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
 import com.sun.javafx.webkit.Accessor;
@@ -68,7 +67,7 @@ import com.sun.webkit.network.CookieManager;
 class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     WebDriver, JavascriptExecutor, FindsById, FindsByClassName, FindsByLinkText, FindsByName,
     FindsByCssSelector, FindsByTagName, FindsByXPath, HasInputDevices, HasCapabilities,
-    TakesScreenshot, Killable {
+    TakesScreenshot {
   private static final AtomicInteger childPort = new AtomicInteger();
   private static final AtomicReference<SocketFactory> socketFactory = new AtomicReference<SocketFactory>();
   private static Registry registry;
@@ -622,7 +621,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   /**
    * {@inheritDoc}
    */
-  @Override
+  @Deprecated
   public void kill() {}
 
   /**
