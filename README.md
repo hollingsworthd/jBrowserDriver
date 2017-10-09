@@ -69,13 +69,25 @@ public class Example {
 }
 ```
 
-#### Selenium Grid Example:
+#### Running from a remote Selenium server:
 
-Start the hub: `java -jar selenium-server-standalone-2.53.0.jar -role hub`
+You can also run JBrowserDriver from a remotely running Selenium server.
 
-Start the node: `java -classpath "selenium-server-standalone-2.53.0.jar:jBrowserDriver-v0.13.0/dist/*" org.openqa.grid.selenium.GridLauncher -role node http://localhost:4444/grid/register -browser browserName=jbrowserdriver,version=1,platform=ANY`
+First start the remote selenium server(s):
+
+ * If you are running using Selenium standalone mode:
+
+    Start the standalone server: `java -classpath "selenium-server-standalone-2.53.0.jar:jBrowserDriver-v0.17.0/dist/*" org.openqa.grid.selenium.GridLauncher -browser browserName=jbrowserdriver,version=1,platform=ANY`
+
+ * If you are running using Selenium Grid mode:
+
+    Start the hub: `java -jar selenium-server-standalone-2.53.0.jar -role hub`
+
+    Start the node: `java -classpath "selenium-server-standalone-2.53.0.jar:jBrowserDriver-v0.17.0/dist/*" org.openqa.grid.selenium.GridLauncher -role node http://localhost:4444/grid/register -browser browserName=jbrowserdriver,version=1,platform=ANY`
 
 &nbsp;&nbsp;*On Windows, replace the colon in the classpath with a semi-colon.*
+
+Whether you are using standalone mode or grid mode, you can use this code to call jBrowserDriver remotely:
 
 ```java
 import java.net.MalformedURLException;
@@ -109,8 +121,6 @@ public class Example {
   }
 }
 ```
-
-
 
 ## Building
 Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which is also available in most Linux package repos) and then from the project root run `mvn clean compile install`. To use in [Eclipse](http://www.eclipse.org/downloads/), either import the existing Java project from the root directory or import the Maven pom.xml file. However, if you merely want to use this as a dependency in a separate project, see the [Download](https://github.com/MachinePublishers/jBrowserDriver#download) section.
