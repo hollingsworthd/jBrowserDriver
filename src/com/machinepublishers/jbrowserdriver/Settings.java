@@ -160,6 +160,7 @@ public class Settings implements Serializable {
     USER_DATA_DIRECTORY("jbd.userdatadirectory"),
     CSRF_REQUEST_TOKEN("jbd.csrfreqtoken"),
     CSRF_RESPONSE_TOKEN("jbd.csrfresptoken"),
+    BLOCK_MEDIA("jbd.blockmedia"),
     @Deprecated
     WIRE_CONSOLE("jbd.wireconsole"),
     @Deprecated
@@ -226,6 +227,7 @@ public class Settings implements Serializable {
     private String csrfRequestToken;
     private String csrfResponseToken;
     private InetAddress nicAddress;
+    private boolean blockMedia;
 
     /**
      * Headers to be sent on each request.
@@ -1134,7 +1136,7 @@ public class Settings implements Serializable {
      * <li>Java system property <code>jbd.userdatadirectory</code> overrides this setting. Use a string file path as the value.</li>
      * <li>{@link Capabilities} name <code>jbd.userdatadirectory</code> alternately configures this setting. Use a string file path as the value.</li>
      * </ul><p>
-     * 
+     *
      * @param userDataDirectory
      *          A directory to store user website data, e.g. localStorage.
      * @return this Builder
@@ -1148,7 +1150,7 @@ public class Settings implements Serializable {
 
     /**
      * Used for binding to a specific NIC
-     * 
+     *
      * @param nicAddress
      * @return this Builder
      */
@@ -1159,7 +1161,7 @@ public class Settings implements Serializable {
 
     /**
      * Enables CSRF token handling. Searches for XSRF-TOKEN in response headers and sends X-XSRF-TOKEN in request headers.
-     * 
+     *
      * @return this Builder
      */
     public Builder csrf() {
@@ -1168,7 +1170,7 @@ public class Settings implements Serializable {
 
     /**
      * Enables CSRF token handling
-     * 
+     *
      * @param requestToken
      *          The header to send in each request header
      * @param responseToken
@@ -1178,6 +1180,26 @@ public class Settings implements Serializable {
     public Builder csrf(String requestToken, String responseToken) {
       this.csrfRequestToken = requestToken;
       this.csrfResponseToken = responseToken;
+      return this;
+    }
+
+    /**
+     * Whether requests for common media types should be blocked.
+     * <p>
+     * Based on the content-type or file extension of the requested asset
+     * <p>
+     * Defaults to <code>false</code>.
+     *
+     * <p><ul>
+     * <li>Java system property <code>jbd.blockmedia</code> overrides this setting.</li>
+     * <li>{@link Capabilities} name <code>jbd.blockmedia</code> alternately configures this setting.</li>
+     * </ul><p>
+     *
+     * @param blockMedia
+     * @return this Builder
+     */
+    public Builder blockMedia(boolean blockMedia) {
+      this.blockMedia = blockMedia;
       return this;
     }
 
@@ -1306,6 +1328,7 @@ public class Settings implements Serializable {
         set(capabilities, PropertyName.PROXY_PASSWORD, proxy.password());
         set(capabilities, PropertyName.PROXY_EXPECT_CONTINUE, proxy.expectContinue());
       }
+      set(capabilities, PropertyName.BLOCK_MEDIA, this.blockMedia);
 
       return capabilities;
     }
@@ -1494,6 +1517,7 @@ public class Settings implements Serializable {
   private final String csrfRequestToken;
   private final String csrfResponseToken;
   private final InetAddress nicAddress;
+  private final boolean blockMedia;
 
   private Settings(Settings.Builder builder, Map properties) {
     Settings.Builder defaults = Settings.builder();
@@ -1682,6 +1706,7 @@ public class Settings implements Serializable {
     scriptBuilder.append("'));})();");
     scriptBuilder.append("</script>");
     this.script = scriptBuilder.toString();
+    this.blockMedia = parse(properties, PropertyName.BLOCK_MEDIA, builder.blockMedia);
   }
 
   RequestHeaders headers() {
@@ -1858,5 +1883,9 @@ public class Settings implements Serializable {
 
   InetAddress getLocalIp() {
     return nicAddress;
+  }
+
+  boolean blockMedia() {
+    return blockMedia;
   }
 }

@@ -100,7 +100,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       ".svg", ".gif", ".jpeg", ".jpg", ".png",
       ".ico", ".webm", ".mp4", ".ogg", ".ogv",
       ".mp3", ".aac", ".wav", ".swf", ".woff",
-      ".otf", ".ttf" })));
+      ".otf", ".ttf","css" })));
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final Map<String, String> reqHeadersCasing = new HashMap<String, String>();
@@ -127,7 +127,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       BufferedReader reader = null;
       try {
         reader = new BufferedReader(
-            new InputStreamReader(StreamConnection.class.getResourceAsStream("/com/machinepublishers/jbrowserdriver/ad-hosts.txt")));
+            new InputStreamReader(StreamConnection.class.getResourceAsStream("/com/machinepublishers/jbrowserdriver/ad-hosts.txt.soleb")));
         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
           adHosts.add(line);
         }
@@ -263,54 +263,58 @@ class StreamConnection extends HttpURLConnection implements Closeable {
         } else if (isBlocked(url.getHost())) {
           skip.set(true);
         } else if (SettingsManager.settings() != null) {
-          config.get()
-              .setCookieSpec("custom")
-              .setSocketTimeout(SettingsManager.settings().socketTimeout())
-              .setConnectTimeout(SettingsManager.settings().connectTimeout())
-              .setConnectionRequestTimeout(SettingsManager.settings().connectionReqTimeout())
-              .setLocalAddress(SettingsManager.settings().getLocalIp());
-          URI uri = null;
-          try {
-            uri = url.toURI();
-          } catch (URISyntaxException e) {
-            //decode components of the url first, because often the problem is partially encoded urls
-            uri = new URI(url.getProtocol(),
-                url.getAuthority(),
-                url.getPath() == null ? null : URLDecoder.decode(url.getPath(), "utf-8"),
-                url.getQuery() == null ? null : URLDecoder.decode(url.getQuery(), "utf-8"),
-                url.getRef() == null ? null : URLDecoder.decode(url.getRef(), "utf-8"));
-          }
-          if ("OPTIONS".equals(method.get())) {
-            req.set(new HttpOptions(uri));
-          } else if ("GET".equals(method.get())) {
-            req.set(new HttpGet(uri));
-          } else if ("HEAD".equals(method.get())) {
-            req.set(new HttpHead(uri));
-          } else if ("POST".equals(method.get())) {
-            req.set(new HttpPost(uri));
-          } else if ("PUT".equals(method.get())) {
-            req.set(new HttpPut(uri));
-          } else if ("DELETE".equals(method.get())) {
-            req.set(new HttpDelete(uri));
-          } else if ("TRACE".equals(method.get())) {
-            req.set(new HttpTrace(uri));
-          } else if ("PATCH".equals(method.get())) {
-            req.set(new HttpPatch(uri));
-          }
-          processHeaders(SettingsManager.settings(), req.get());
-          ProxyConfig proxy = SettingsManager.settings().proxy();
-          if (proxy != null && !proxy.directConnection() && !proxy.nonProxyHosts().contains(uri.getHost())) {
-            config.get().setExpectContinueEnabled(proxy.expectContinue());
-            InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
-            if (proxy.type() == ProxyConfig.Type.SOCKS) {
-              context.get().setAttribute("proxy.socks.address", proxyAddress);
-            } else {
-              config.get().setProxy(new HttpHost(proxy.host(), proxy.port()));
+          if (SettingsManager.settings().blockMedia() && isMedia()) {
+            skip.set(true);
+          } else {
+            config.get()
+                .setCookieSpec("custom")
+                .setSocketTimeout(SettingsManager.settings().socketTimeout())
+                .setConnectTimeout(SettingsManager.settings().connectTimeout())
+                .setConnectionRequestTimeout(SettingsManager.settings().connectionReqTimeout())
+                .setLocalAddress(SettingsManager.settings().getLocalIp());
+            URI uri = null;
+            try {
+              uri = url.toURI();
+            } catch (URISyntaxException e) {
+              //decode components of the url first, because often the problem is partially encoded urls
+              uri = new URI(url.getProtocol(),
+                  url.getAuthority(),
+                  url.getPath() == null ? null : URLDecoder.decode(url.getPath(), "utf-8"),
+                  url.getQuery() == null ? null : URLDecoder.decode(url.getQuery(), "utf-8"),
+                  url.getRef() == null ? null : URLDecoder.decode(url.getRef(), "utf-8"));
             }
+            if ("OPTIONS".equals(method.get())) {
+              req.set(new HttpOptions(uri));
+            } else if ("GET".equals(method.get())) {
+              req.set(new HttpGet(uri));
+            } else if ("HEAD".equals(method.get())) {
+              req.set(new HttpHead(uri));
+            } else if ("POST".equals(method.get())) {
+              req.set(new HttpPost(uri));
+            } else if ("PUT".equals(method.get())) {
+              req.set(new HttpPut(uri));
+            } else if ("DELETE".equals(method.get())) {
+              req.set(new HttpDelete(uri));
+            } else if ("TRACE".equals(method.get())) {
+              req.set(new HttpTrace(uri));
+            } else if ("PATCH".equals(method.get())) {
+              req.set(new HttpPatch(uri));
+            }
+            processHeaders(SettingsManager.settings(), req.get());
+            ProxyConfig proxy = SettingsManager.settings().proxy();
+            if (proxy != null && !proxy.directConnection() && !proxy.nonProxyHosts().contains(uri.getHost())) {
+              config.get().setExpectContinueEnabled(proxy.expectContinue());
+              InetSocketAddress proxyAddress = new InetSocketAddress(proxy.host(), proxy.port());
+              if (proxy.type() == ProxyConfig.Type.SOCKS) {
+                context.get().setAttribute("proxy.socks.address", proxyAddress);
+              } else {
+                config.get().setProxy(new HttpHost(proxy.host(), proxy.port()));
+              }
+            }
+            context.get().setCookieStore(cookieStore);
+            context.get().setRequestConfig(config.get().build());
+            StatusMonitor.instance().monitor(url, this);
           }
-          context.get().setCookieStore(cookieStore);
-          context.get().setRequestConfig(config.get().build());
-          StatusMonitor.instance().monitor(url, this);
         }
       }
     } catch (Throwable t) {
