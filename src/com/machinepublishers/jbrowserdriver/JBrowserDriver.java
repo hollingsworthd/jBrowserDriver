@@ -1240,9 +1240,15 @@ public class JBrowserDriver extends RemoteWebDriver {
     }
   }
 
-  /**
-   * {@inheritDoc}
+  /*
+   * This interface was removed in latest Selenium.
+   * It remains here for backwards compatibility.
+   * Ignore any warnings about an @Override annotation missing.
    */
+  public void kill() {
+    endProcess();
+  }
+
   @Override
   public <X> X getScreenshotAs(final OutputType<X> outputType) throws WebDriverException {
     try {

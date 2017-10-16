@@ -621,7 +621,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   /**
    * {@inheritDoc}
    */
-  @Override
+  @Deprecated
   public void kill() {}
 
   /**
