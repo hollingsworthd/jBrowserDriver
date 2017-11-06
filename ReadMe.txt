@@ -10,5 +10,5 @@ INSTALLATION:
     <dependency>
       <groupId>com.machinepublishers</groupId>
       <artifactId>jbrowserdriver</artifactId>
-      <version>0.17.10</version>
+      <version>0.17.11</version>
     </dependency>
