@@ -55,6 +55,7 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -277,7 +278,7 @@ public class JBrowserDriver extends RemoteWebDriver {
     capabilitiesMap.remove("proxy");
     try {
       synchronized (lock.validated()) {
-        remote.storeCapabilities(new DesiredCapabilities(capabilitiesMap));
+        remote.storeCapabilities(new MutableCapabilities(capabilitiesMap));
       }
     } catch (Throwable t) {
       Util.handleException(t);
@@ -569,7 +570,7 @@ public class JBrowserDriver extends RemoteWebDriver {
       Util.handleException(t);
     }
     if (!(capabilities instanceof Serializable)) {
-      capabilities = new DesiredCapabilities(capabilities);
+      capabilities = new MutableCapabilities(capabilities);
     }
     try {
       synchronized (lock.validated()) {
