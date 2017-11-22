@@ -28,7 +28,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,6 +61,8 @@ import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Sequence;
+import org.openqa.selenium.interactions.SourceType;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.CommandExecutor;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -72,6 +76,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import org.zeroturnaround.process.PidProcess;
 import org.zeroturnaround.process.Processes;
 
+import com.google.common.collect.ImmutableMap;
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
@@ -1339,5 +1344,53 @@ public class JBrowserDriver extends RemoteWebDriver {
   @Override
   public FileDetector getFileDetector() {
     return super.getFileDetector();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  @SuppressWarnings("unchecked")
+  public void perform(Collection<Sequence> actions) {
+    Map<String, Object> emptyPauseAction = ImmutableMap.of("duration", 0L, "type", "pause");
+
+    EnumMap<SourceType, List<Map<String, Object>>> mappedActions = new EnumMap<>(SourceType.class);
+    for (Sequence sequence : actions) {
+      Map<String, Object> sequenceValues = sequence.toJson();
+      SourceType sourceType = SourceType.valueOf(((String) sequenceValues.get("type")).toUpperCase());
+      mappedActions.put(sourceType, (List<Map<String, Object>>) sequenceValues.get("actions"));
+    }
+
+    Element lastProcessedElement = null;
+    int sequenceSize = mappedActions.values().iterator().next().size();
+    for (int cursor = 0; cursor < sequenceSize; cursor++) {
+      int counter = 0;
+      for (Map.Entry<SourceType, List<Map<String, Object>>> actionEntry : mappedActions.entrySet()) {
+        Map<String, Object> action = actionEntry.getValue().get(cursor);
+        if (!emptyPauseAction.equals(action)) {
+          String actionType = (String) action.get("type");
+          Object executor = chooseExecutor(actionEntry.getKey());
+          lastProcessedElement = W3CActions.findActionByType(actionType).perform(executor, lastProcessedElement,
+          	  action);
+          break;
+        }
+        if (counter == mappedActions.entrySet().size() - 1) {
+          W3CActions.PAUSE.perform(getMouse(), lastProcessedElement, emptyPauseAction);
+        } else {
+          counter++;
+        }
+      }
+    }
+  }
+
+  private Object chooseExecutor(SourceType sourceType) {
+    switch (sourceType) {
+    case KEY:
+      return getKeyboard();
+    case POINTER:
+      return getMouse();
+    default:
+      throw new IllegalArgumentException("Source type with name " + sourceType + " is not supported");
+    }
   }
 }
