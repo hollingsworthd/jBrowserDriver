@@ -17,8 +17,6 @@
  */
 package com.machinepublishers.jbrowserdriver;
 
-import org.openqa.selenium.security.Credentials;
-
 class Alert implements org.openqa.selenium.Alert {
 
   private final AlertRemote remote;
@@ -84,21 +82,5 @@ class Alert implements org.openqa.selenium.Alert {
     } catch (Throwable t) {
       Util.handleException(t);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void authenticateUsing(Credentials credentials) {
-    //TODO handle basic auth
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO handle basic auth
   }
 }

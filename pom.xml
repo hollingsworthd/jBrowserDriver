@@ -34,7 +34,7 @@
   </licenses>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <selenium.version>2.53.0</selenium.version> <!-- note: selenium does not follow semantic versioning -->
+    <selenium.version>3.8.1</selenium.version> <!-- note: selenium does not follow semantic versioning -->
   </properties>
   <dependencies>
     <dependency>

@@ -20,18 +20,12 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import org.openqa.selenium.security.Credentials;
-
 interface AlertRemote extends Remote {
   void accept() throws RemoteException;
-
-  void authenticateUsing(Credentials arg0) throws RemoteException;
 
   void dismiss() throws RemoteException;
 
   String getText() throws RemoteException;
 
   void sendKeys(String arg0) throws RemoteException;
-
-  void setCredentials(Credentials credentials) throws RemoteException;
 }
