@@ -40,108 +40,33 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-cache</artifactId>
-      <version>4.5.2</version>
+      <version>4.5.4</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.2</version>
+      <version>1.7.25</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>1.7.2</version>
+      <version>1.7.25</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-api</artifactId>
       <version>${selenium.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.google.code.gson</groupId>
-          <artifactId>gson</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-remote-driver</artifactId>
       <version>${selenium.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>cglib</groupId>
-          <artifactId>cglib-nodep</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-exec</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.java.dev.jna</groupId>
-          <artifactId>jna</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.java.dev.jna</groupId>
-          <artifactId>jna-platform</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.code.gson</groupId>
-          <artifactId>gson</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-server</artifactId>
       <version>${selenium.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.beust</groupId>
-          <artifactId>jcommander</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>bcprov-jdk15on</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>bcpkix-jdk15on</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>mx4j</groupId>
-          <artifactId>mx4j-tools</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.seleniumhq.selenium</groupId>
-          <artifactId>jetty-repacked</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.seleniumhq.selenium</groupId>
-          <artifactId>jetty-rc-repacked</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.jcip</groupId>
-          <artifactId>jcip-annotations</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.seleniumhq.selenium</groupId>
-          <artifactId>selenium-java</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.yaml</groupId>
-          <artifactId>snakeyaml</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>19.0</version>
     </dependency>
     <dependency>
       <groupId>org.zeroturnaround</groupId>
@@ -151,7 +76,7 @@
     <dependency>
       <groupId>io.github.lukehutch</groupId>
       <artifactId>fast-classpath-scanner</artifactId>
-      <version>2.0.16</version>
+      <version>2.9.3</version>
     </dependency>
   </dependencies>
   <distributionManagement>
@@ -206,28 +131,11 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.3</version>
-        <configuration>
-          <shadedArtifactAttached>true</shadedArtifactAttached>
-          <shadedClassifierName>uberjar</shadedClassifierName>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.9.1</version>
         <configuration>
           <nodeprecated>true</nodeprecated>
-          <includeDependencySources>true</includeDependencySources>
+          <includeDependencySources>false</includeDependencySources>
           <dependencySourceIncludes>
             <dependencySourceInclude>org.seleniumhq.selenium:selenium-api</dependencySourceInclude>
           </dependencySourceIncludes>
