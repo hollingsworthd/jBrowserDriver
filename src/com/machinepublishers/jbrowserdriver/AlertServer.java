@@ -22,8 +22,6 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.openqa.selenium.security.Credentials;
-
 import javafx.event.EventHandler;
 import javafx.scene.web.PromptData;
 import javafx.scene.web.WebEvent;
@@ -102,22 +100,6 @@ class AlertServer extends RemoteObject implements AlertRemote,
     synchronized (lock) {
       inputs.add(text);
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void setCredentials(Credentials credentials) {
-    // TODO Auto-generated method stub
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void authenticateUsing(Credentials arg0) {
-    //TODO handle basic auth
   }
 
   private final class AlertHandler implements EventHandler<WebEvent<String>> {
