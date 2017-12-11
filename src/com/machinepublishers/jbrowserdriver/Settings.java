@@ -951,7 +951,7 @@ public class Settings implements Serializable {
      * </ul><p>
      *
      * @param logJavascript
-     * @return
+     * @return this Builder
      */
     public Builder logJavascript(boolean logJavascript) {
       this.logJavascript = logJavascript;
@@ -1150,7 +1150,7 @@ public class Settings implements Serializable {
      * Used for binding to a specific NIC
      * 
      * @param nicAddress
-     * @return
+     * @return this Builder
      */
     public Builder localIp(InetAddress nicAddress) {
       this.nicAddress = nicAddress;
