@@ -132,4 +132,4 @@ Feel free to discuss bugs and new features by opening a [new issue](https://gith
 
 - - -
 
-Copyright (C) 2014-2017 jBrowserDriver committers
+Copyright (C) 2014-2018 jBrowserDriver committers

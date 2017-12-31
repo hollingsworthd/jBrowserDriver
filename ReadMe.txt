@@ -1,5 +1,5 @@
 jBrowserDriver (TM)
-Copyright (C) 2014-2017 jBrowserDriver committers
+Copyright (C) 2014-2018 jBrowserDriver committers
 https://github.com/MachinePublishers/jBrowserDriver
 
 
