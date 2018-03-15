@@ -11,7 +11,6 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -227,6 +226,8 @@ public class AjaxResponseTest {
         connectTimeout(50000).
         connectionReqTimeout(50000).
         socketTimeout(50000).
+        quickRender(true).
+        logTrace(true).
         build());
 
 
