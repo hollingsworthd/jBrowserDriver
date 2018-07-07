@@ -26,3 +26,5 @@ D. Hollingsworth https://github.com/hollingsworthd 2017-06-25
 Nicholas DiPiazza https://github.com/nddipiazza/ 2017-08-08
 Alena Liashenka https://github.com/eichhornchen27 2017-12-08
 Uladzislau Arlouski https://github.com/uarlouski 2017-12-11
+contributions by (Vincent Smith https://github.com/vosmith 2018-06-08)
+included by (Adam Howard https://github.com/medavox 2018-07-06)
