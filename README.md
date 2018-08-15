@@ -13,7 +13,7 @@ Or install via Maven:
 <dependency>
   <groupId>com.machinepublishers</groupId>
   <artifactId>jbrowserdriver</artifactId>
-  <version>1.0.0-RC1</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 For other install options, see the [Central Repository](http://search.maven.org/#artifactdetails|com.machinepublishers|jbrowserdriver|1.0.0-RC1|jar).
@@ -129,6 +129,9 @@ Install and configure [Maven v3.x](https://maven.apache.org/download.cgi) (which
 Pull requests are welcome, and we ask people contributing code to agree to the [CLA](https://github.com/MachinePublishers/jBrowserDriver/blob/master/CLA-rev2-digital.txt) which is similar to the agreement used by the Selenium Project. Signing the CLA is simply a matter of editing the file to add your digital "signature" and adding it to your pull request.
 
 Feel free to discuss bugs and new features by opening a [new issue](https://github.com/MachinePublishers/jBrowserDriver/issues/new).
+
+## Support
+Purchase support and development services by contacting ops@machinepublishers.com
 
 - - -
 
