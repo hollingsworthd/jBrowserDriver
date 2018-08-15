@@ -37,7 +37,7 @@ import javax.net.ssl.SSLProtocolException;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.ConnectionClosedException;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.internal.WrapsElement;
+import org.openqa.selenium.WrapsElement;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
