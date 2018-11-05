@@ -66,8 +66,7 @@ public class HttpServer {
 
     byte[] redirectContentTmp = null;
     try {
-      redirectContentTmp = new String(""
-          + "HTTP/1.1 302 Found\n"
+      redirectContentTmp = ("HTTP/1.1 302 Found\n"
           + "Server: Initech/1.1\n"
           + "X-FRAME-OPTIONS: SAMEORIGIN\n"
           + "Set-Cookie: JSESSIONID=ABC123; Path=/redirect/; HttpOnly\n"
@@ -89,7 +88,7 @@ public class HttpServer {
     byte[] contentTmp = null;
     try (InputStream inputStream = HttpServer.class.getResourceAsStream(path)) {
       bodyTmp = IOUtils.toByteArray(inputStream);
-      contentTmp = new String("HTTP/1.1 " + status + "\n"
+      contentTmp = ("HTTP/1.1 " + status + "\n"
           + "Content-Length: " + bodyTmp.length + "\n"
           //Don't set content-type for text/html -- test that it's added automatically
           + (contentType == null ? "" : "Content-Type: " + contentType + "\n")
