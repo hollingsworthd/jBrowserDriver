@@ -65,7 +65,6 @@ import org.openqa.selenium.interactions.Sequence;
 import org.openqa.selenium.interactions.SourceType;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.CommandExecutor;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.ErrorHandler;
 import org.openqa.selenium.remote.FileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
