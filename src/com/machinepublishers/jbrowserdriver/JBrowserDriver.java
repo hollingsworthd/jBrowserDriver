@@ -504,13 +504,11 @@ public class JBrowserDriver extends RemoteWebDriver {
       LogRecord record = null;
       if (message.startsWith(">")) {
         String[] parts = message.substring(1).split("/", 3);
-        record = new LogRecord(Level.parse(parts[0]),
-            new StringBuilder().append(prefix).append(" ").append(parts[2]).toString());
+        record = new LogRecord(Level.parse(parts[0]), prefix + " " + parts[2]);
         record.setSourceMethodName(parts[1]);
         record.setSourceClassName(JBrowserDriver.class.getName());
       } else {
-        record = new LogRecord(Level.WARNING,
-            new StringBuilder().append(prefix).append(" ").append(message).toString());
+        record = new LogRecord(Level.WARNING, prefix + " " + message);
         record.setSourceMethodName(null);
         record.setSourceClassName(JBrowserDriver.class.getName());
       }

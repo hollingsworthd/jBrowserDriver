@@ -409,8 +409,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               }
             }
 
-            obj = executeScript(new StringBuilder()
-                .append("return this.getAttribute('").append(attrName).append("');").toString());
+      obj = executeScript("return this.getAttribute('" + attrName + "');");
             if (obj != null) {
               String str = obj.toString();
               if (!StringUtils.isEmpty(str)) {
@@ -448,8 +447,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
     if (rgbStr != null) {
       Matcher matcher = rgb.matcher(rgbStr);
       if (matcher.matches()) {
-        return new StringBuilder().append("rgba(").append(matcher.group(1)).append(", ")
-            .append(matcher.group(2)).append(", ").append(matcher.group(3)).append(", 1)").toString();
+        return "rgba(" + matcher.group(1) + ", " + matcher.group(2) + ", " + matcher.group(3) + ", 1)";
       }
     }
     return rgbStr == null ? "" : rgbStr;
@@ -752,7 +750,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByName(String name) {
-    return findElementByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
+    return findElementByCssSelector("*[name='" + name + "']");
   }
 
   /**
@@ -760,7 +758,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByName(String name) {
-    return findElementsByCssSelector(new StringBuilder().append("*[name='").append(name).append("']").toString());
+    return findElementsByCssSelector("*[name='" + name + "']");
   }
 
   /**
@@ -842,8 +840,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private List byCssClass(String cssClass) {
-    return asList(executeScript(
-        new StringBuilder().append("return this.getElementsByClassName('").append(cssClass).append("');").toString()));
+    return asList(executeScript("return this.getElementsByClassName('" + cssClass + "');"));
   }
 
   /**
@@ -851,7 +848,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementById(final String id) {
-    return findElementByCssSelector(new StringBuilder("*[id='").append(id).append("']").toString());
+    return findElementByCssSelector("*[id='" + id + "']");
   }
 
   /**
@@ -859,7 +856,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsById(String id) {
-    return findElementsByCssSelector(new StringBuilder().append("*[id='").append(id).append("']").toString());
+    return findElementsByCssSelector("*[id='" + id + "']");
   }
 
   /**
@@ -890,10 +887,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
               @Override
               public Object perform() {
                 validate(false);
-                return node.eval(new StringBuilder()
-                    .append("(function(){return this.")
-                    .append(jsNames.callbackVal)
-                    .append(";})();").toString());
+              return node.eval("(function(){return this." + jsNames.callbackVal + ";})();");
               }
             });
         if (!(result instanceof String) || !"undefined".equals(result.toString())) {
@@ -922,10 +916,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             @Override
             public Object perform() {
               validate(false);
-              node.eval(new StringBuilder()
-                  .append("delete ")
-                  .append(jsNames.callbackVal)
-                  .append(";").toString());
+            node.eval("delete " + jsNames.callbackVal + ";");
               return null;
             }
           });
@@ -992,9 +983,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
             } catch (Throwable t) {
               return t;
             } finally {
-              node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.exec).append(";").toString());
+        node.eval("delete " + "this." + jsNames.exec + ";");
               if (callback) {
-                node.eval(new StringBuilder().append("delete ").append("this.").append(jsNames.callback).append(";").toString());
+          node.eval("delete " + "this." + jsNames.callback + ";");
               }
             }
           }

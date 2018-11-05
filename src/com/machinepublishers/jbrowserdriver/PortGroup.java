@@ -33,7 +33,7 @@ class PortGroup implements Serializable {
     this.parent = parent;
     this.parentAlt = parentAlt;
     this.ports = new long[] { child, parent, parentAlt };
-    this.id = new StringBuilder().append(child).append("/").append(parent).append("/").append(parentAlt).toString();
+    this.id = String.valueOf(child) + "/" + parent + "/" + parentAlt;
     this.hashCode = id.hashCode();
   }
 

@@ -32,11 +32,7 @@ class LogHandler extends Handler {
 
   @Override
   public void publish(LogRecord record) {
-    String message = new StringBuilder()
-        .append("[")
-        .append(dateFormat.format(new Date(record.getMillis())))
-        .append("]")
-        .append(record.getMessage()).toString();
+    String message = "[" + dateFormat.format(new Date(record.getMillis())) + "]" + record.getMessage();
     if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
       System.err.println(message);
     } else {

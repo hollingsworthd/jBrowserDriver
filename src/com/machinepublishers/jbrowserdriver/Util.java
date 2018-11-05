@@ -48,10 +48,7 @@ class Util {
   static final String KEYBOARD_DELETE = "jbrowserdriver-keyboard-delete";
 
   static String randomPropertyName() {
-    return new StringBuilder()
-        .append(RandomStringUtils.randomAlphabetic(1))
-        .append(randomAlphanumeric())
-        .toString();
+    return RandomStringUtils.randomAlphabetic(1) + randomAlphanumeric();
   }
 
   static String randomFileName() {

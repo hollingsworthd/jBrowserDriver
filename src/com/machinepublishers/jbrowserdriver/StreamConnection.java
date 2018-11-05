@@ -355,11 +355,9 @@ class StreamConnection extends HttpURLConnection implements Closeable {
                 if (!location.contains("#")) {
                   int fromIndex = location.indexOf("//") + 2;
                   if (fromIndex <= location.length() && location.substring(fromIndex).contains("/")) {
-                    response.get().setHeader("Location",
-                        new StringBuilder().append(location).append("#").append(this.urlFragment).toString());
+                    response.get().setHeader("Location", location + "#" + this.urlFragment);
                   } else {
-                    response.get().setHeader("Location",
-                        new StringBuilder().append(location).append("/#").append(this.urlFragment).toString());
+                    response.get().setHeader("Location", location + "/#" + this.urlFragment);
                   }
                 }
               }

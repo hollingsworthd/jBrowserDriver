@@ -167,8 +167,7 @@ class AppThread {
           }
           if (!runner.done.get()) {
             runner.cancel.set(true);
-            throw new TimeoutException(new StringBuilder()
-                .append("Timeout of ").append(timeout).append("ms reached.").toString());
+            throw new TimeoutException("Timeout of " + timeout + "ms reached.");
           }
         }
         handleExecutionException(runner.failure.get());
