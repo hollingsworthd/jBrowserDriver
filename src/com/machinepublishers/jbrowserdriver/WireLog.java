@@ -53,7 +53,7 @@ public class WireLog implements Log, Serializable {
           message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
           if (!message.isEmpty()) {
             try {
-              appender.get().append("----->> " + message);
+              appender.get().append("----->> ").append(message);
             } catch (IOException e) {
               e.printStackTrace();
             }
@@ -64,7 +64,7 @@ public class WireLog implements Log, Serializable {
             message = matcher.group(1).replace("[\\r]", "").replace("[\\n]", "");
             if (!message.isEmpty()) {
               try {
-                appender.get().append("<<----- " + message);
+                appender.get().append("<<----- ").append(message);
               } catch (IOException e) {
                 e.printStackTrace();
               }
