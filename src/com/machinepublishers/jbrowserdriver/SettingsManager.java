@@ -92,18 +92,15 @@ class SettingsManager {
     ProxyAuth.add(settings.get().proxy());
     if (isMonocle() &&
         com.sun.glass.ui.Application.GetApplication() == null) {
-      new Thread(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            Application.launch(App.class,
-                new String[] {
-                    Integer.toString(settings.get().screenWidth()),
-                    Integer.toString(settings.get().screenHeight()),
-                    Boolean.toString(isMonocle()) });
-          } catch (Throwable t) {
-            LogsServer.instance().exception(t);
-          }
+      new Thread(() -> {
+        try {
+          Application.launch(App.class,
+              new String[] {
+                  Integer.toString(settings.get().screenWidth()),
+                  Integer.toString(settings.get().screenHeight()),
+                  Boolean.toString(isMonocle()) });
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
         }
       }).start();
     } else {
@@ -111,15 +108,13 @@ class SettingsManager {
       app.init(
           settings.get().screenWidth(), settings.get().screenHeight(),
           isMonocle());
-      AppThread.exec(new Sync<Object>() {
-        public Object perform() {
-          try {
-            app.start();
-          } catch (Throwable t) {
-            LogsServer.instance().exception(t);
-          }
-          return null;
+      AppThread.exec(() -> {
+        try {
+          app.start();
+        } catch (Throwable t) {
+          LogsServer.instance().exception(t);
         }
+        return null;
       });
     }
     stage.set(App.getStage());

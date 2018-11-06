@@ -40,16 +40,14 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
   @Override
   public void back() {
     AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            try {
-              context.item().view.get().getEngine().getHistory().go(-1);
-            } catch (IndexOutOfBoundsException e) {
-              LogsServer.instance().exception(e);
-            }
-            return null;
-          }
-        });
+            () -> {
+              try {
+                context.item().view.get().getEngine().getHistory().go(-1);
+              } catch (IndexOutOfBoundsException e) {
+                LogsServer.instance().exception(e);
+              }
+              return null;
+            });
   }
 
   /**
@@ -58,16 +56,14 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
   @Override
   public void forward() {
     AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            try {
-              context.item().view.get().getEngine().getHistory().go(1);
-            } catch (IndexOutOfBoundsException e) {
-              LogsServer.instance().exception(e);
-            }
-            return null;
-          }
-        });
+            () -> {
+              try {
+                context.item().view.get().getEngine().getHistory().go(1);
+              } catch (IndexOutOfBoundsException e) {
+                LogsServer.instance().exception(e);
+              }
+              return null;
+            });
   }
 
   /**
@@ -76,12 +72,10 @@ class NavigationServer extends RemoteObject implements NavigationRemote,
   @Override
   public void refresh() {
     AppThread.exec(context.item().statusCode, ((TimeoutsServer) driver.get().manage().timeouts()).getPageLoadTimeoutMS(),
-        new Sync<Object>() {
-          public Object perform() {
-            context.item().view.get().getEngine().reload();
-            return null;
-          }
-        });
+            () -> {
+              context.item().view.get().getEngine().reload();
+              return null;
+            });
   }
 
   /**

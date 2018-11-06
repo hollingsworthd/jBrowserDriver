@@ -148,15 +148,11 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   private final AtomicLong frameId = new AtomicLong();
 
   ElementServer(final JSObject node, final ContextItem contextItem) throws RemoteException {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(node, contextItem);
-            node.getMember("");
-            return null;
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(node, contextItem);
+      node.getMember("");
+      return null;
+    });
     this.node = node;
     this.contextItem = contextItem;
   }
@@ -174,13 +170,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   static ElementServer create(final ContextItem contextItem) {
-    final JSObject doc = AppThread.exec(contextItem.statusCode,
-        new Sync<JSObject>() {
-          @Override
-          public JSObject perform() {
-            return contextItem.selectedFrameDoc();
-          }
-        });
+    final JSObject doc = AppThread.exec(contextItem.statusCode, contextItem::selectedFrameDoc);
     try {
       return new ElementServer(doc, contextItem);
     } catch (RemoteException e) {
@@ -232,97 +222,85 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void click() {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            node.eval(SCROLL_INTO_VIEW);
-            if (contextItem.context.get().keyboard.get().isShiftPressed()) {
-              node.eval(
-                  new StringBuilder()
-                      .append("this.origOnclick = this.onclick;")
-                      .append("this.onclick=function(event){")
-                      .append("  this.target='_blank';")
-                      .append("  if(event){")
-                      .append("    if(event.stopPropagation){")
-                      .append("      event.stopPropagation();")
-                      .append("    }")
-                      .append("  }")
-                      .append("  if(this.origOnclick){")
-                      .append("    this.origOnclick(event? event: null);")
-                      .append("  }")
-                      .append("  this.onclick = this.origOnclick;")
-                      .append("};").toString());
-            }
-            return null;
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      node.eval(SCROLL_INTO_VIEW);
+      if (contextItem.context.get().keyboard.get().isShiftPressed()) {
+        node.eval(
+            new StringBuilder()
+                .append("this.origOnclick = this.onclick;")
+                .append("this.onclick=function(event){")
+                .append("  this.target='_blank';")
+                .append("  if(event){")
+                .append("    if(event.stopPropagation){")
+                .append("      event.stopPropagation();")
+                .append("    }")
+                .append("  }")
+                .append("  if(this.origOnclick){")
+                .append("    this.origOnclick(event? event: null);")
+                .append("  }")
+                .append("  this.onclick = this.origOnclick;")
+                .append("};").toString());
+      }
+      return null;
+    });
 
     if (node instanceof HTMLOptionElement) {
-      AppThread.exec(contextItem.statusCode,
-          new Sync<Object>() {
-            @Override
-            public Object perform() {
-              validate(false);
-              try {
-                new ElementServer((JSObject) ((HTMLOptionElement) node).getParentNode(), contextItem).click();
-              } catch (RemoteException e) {
-                Util.handleException(e);
-              }
-              int index = ((HTMLOptionElement) node).getIndex();
-              for (int i = 0; i <= index; i++) {
-                contextItem.context.get().robot.get().keysType(Keys.DOWN);
-              }
-              contextItem.context.get().robot.get().keysType(Keys.SPACE);
-              return null;
-            }
-          });
+      AppThread.exec(contextItem.statusCode, () -> {
+        validate(false);
+        try {
+          new ElementServer((JSObject) ((HTMLOptionElement) node).getParentNode(), contextItem).click();
+        } catch (RemoteException e) {
+          Util.handleException(e);
+        }
+        int index = ((HTMLOptionElement) node).getIndex();
+        for (int i = 0; i <= index; i++) {
+          contextItem.context.get().robot.get().keysType(Keys.DOWN);
+        }
+        contextItem.context.get().robot.get().keysType(Keys.SPACE);
+        return null;
+      });
     } else {
-      AppThread.exec(contextItem.statusCode,
-          new Sync<Object>() {
-            @Override
-            public Object perform() {
-              validate(true);
-              final JSObject obj = (JSObject) node.call("getBoundingClientRect");
-              final double top = Double.parseDouble(obj.getMember("top").toString());
-              final double left = Double.parseDouble(obj.getMember("left").toString());
-              final double bottom = Double.parseDouble(obj.getMember("bottom").toString());
-              final double right = Double.parseDouble(obj.getMember("right").toString());
-              double clickX = (left + right) / 2d;
-              double clickY = (top + bottom) / 2d;
-              ElementServer doc = ElementServer.create(contextItem);
-              if (!node.equals(doc.node.eval(
-                  "(function(){return document.elementFromPoint(" + clickX + "," + clickY + ");})();"))) {
-                final Stage stage = contextItem.stage.get();
-                final int minX = Math.max(0, (int) Math.floor(left));
-                final int maxX = Math.min((int) Math.ceil(stage.getScene().getWidth()), (int) Math.ceil(right));
-                final int minY = Math.max(0, (int) Math.floor(top));
-                final int maxY = Math.min((int) Math.ceil(stage.getScene().getHeight()), (int) Math.ceil(bottom));
-                final int incX = (int) Math.max(1, .05d * (double) (maxX - minX));
-                final int incY = (int) Math.max(1, .05d * (double) (maxY - minY));
-                for (int x = minX; x <= maxX; x += incX) {
-                  boolean found = false;
-                  for (int y = minY; y <= maxY; y += incY) {
-                    if (node.equals(doc.node.eval(
-                        "(function(){return document.elementFromPoint(" + x + "," + y + ");})();"))) {
-                      clickX = x;
-                      clickY = y;
-                      found = true;
-                      break;
-                    }
-                  }
-                  if (found) {
-                    break;
-                  }
-                }
+      AppThread.exec(contextItem.statusCode, () -> {
+        validate(true);
+        final JSObject obj = (JSObject) node.call("getBoundingClientRect");
+        final double top = Double.parseDouble(obj.getMember("top").toString());
+        final double left = Double.parseDouble(obj.getMember("left").toString());
+        final double bottom = Double.parseDouble(obj.getMember("bottom").toString());
+        final double right = Double.parseDouble(obj.getMember("right").toString());
+        double clickX = (left + right) / 2d;
+        double clickY = (top + bottom) / 2d;
+        ElementServer doc = ElementServer.create(contextItem);
+        if (!node.equals(doc.node.eval(
+            "(function(){return document.elementFromPoint(" + clickX + "," + clickY + ");})();"))) {
+          final Stage stage = contextItem.stage.get();
+          final int minX = Math.max(0, (int) Math.floor(left));
+          final int maxX = Math.min((int) Math.ceil(stage.getScene().getWidth()), (int) Math.ceil(right));
+          final int minY = Math.max(0, (int) Math.floor(top));
+          final int maxY = Math.min((int) Math.ceil(stage.getScene().getHeight()), (int) Math.ceil(bottom));
+          final int incX = (int) Math.max(1, .05d * (double) (maxX - minX));
+          final int incY = (int) Math.max(1, .05d * (double) (maxY - minY));
+          for (int x = minX; x <= maxX; x += incX) {
+            boolean found = false;
+            for (int y = minY; y <= maxY; y += incY) {
+              if (node.equals(doc.node.eval(
+                  "(function(){return document.elementFromPoint(" + x + "," + y + ");})();"))) {
+                clickX = x;
+                clickY = y;
+                found = true;
+                break;
               }
-              final org.openqa.selenium.Point frameLocation = contextItem.selectedFrameLocation();
-              contextItem.context.get().robot.get().mouseMove(clickX + frameLocation.getX(), clickY + frameLocation.getY());
-              contextItem.context.get().robot.get().mouseClick(MouseButton.LEFT);
-              return null;
             }
-          });
+            if (found) {
+              break;
+            }
+          }
+        }
+        final org.openqa.selenium.Point frameLocation = contextItem.selectedFrameLocation();
+        contextItem.context.get().robot.get().mouseMove(clickX + frameLocation.getX(), clickY + frameLocation.getY());
+        contextItem.context.get().robot.get().mouseClick(MouseButton.LEFT);
+        return null;
+      });
     }
   }
 
@@ -331,20 +309,16 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void submit() {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            contextItem.httpListener.get().resetStatusCode();
-            if (node instanceof HTMLInputElement) {
-              ((HTMLInputElement) node).getForm().submit();
-            } else if (node instanceof HTMLFormElement) {
-              ((HTMLFormElement) node).submit();
-            }
-            return null;
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      contextItem.httpListener.get().resetStatusCode();
+      if (node instanceof HTMLInputElement) {
+        ((HTMLInputElement) node).getForm().submit();
+      } else if (node instanceof HTMLFormElement) {
+        ((HTMLFormElement) node).submit();
+      }
+      return null;
+    });
   }
 
   /**
@@ -352,16 +326,12 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void sendKeys(final CharSequence... keys) {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(true);
-            node.eval(SCROLL_INTO_VIEW);
-            node.call("focus");
-            return null;
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(true);
+      node.eval(SCROLL_INTO_VIEW);
+      node.call("focus");
+      return null;
+    });
     final boolean fileChooser = node instanceof HTMLInputElement && "file".equalsIgnoreCase(getAttribute("type"));
     if (fileChooser) {
       click();
@@ -377,18 +347,14 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public void clear() {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            contextItem.httpListener.get().resetStatusCode();
-            node.eval(SCROLL_INTO_VIEW);
-            node.call("focus");
-            node.eval("this.value='';");
-            return null;
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      contextItem.httpListener.get().resetStatusCode();
+      node.eval(SCROLL_INTO_VIEW);
+      node.call("focus");
+      node.eval("this.value='';");
+      return null;
+    });
   }
 
   /**
@@ -396,30 +362,26 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getAttribute(final String attrName) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            validate(false);
-            Object obj = node.getMember(attrName);
-            if (obj != null) {
-              String str = obj.toString();
-              if (!StringUtils.isEmpty(str) && !"undefined".equals(str)) {
-                return str;
-              }
-            }
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      Object obj = node.getMember(attrName);
+      if (obj != null) {
+        String str = obj.toString();
+        if (!StringUtils.isEmpty(str) && !"undefined".equals(str)) {
+          return str;
+        }
+      }
 
       obj = executeScript("return this.getAttribute('" + attrName + "');");
-            if (obj != null) {
-              String str = obj.toString();
-              if (!StringUtils.isEmpty(str)) {
-                return str;
-              }
-            }
+      if (obj != null) {
+        String str = obj.toString();
+        if (!StringUtils.isEmpty(str)) {
+          return str;
+        }
+      }
 
-            return null;
-          }
-        });
+      return null;
+    });
   }
 
   /**
@@ -427,20 +389,16 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getCssValue(final String name) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            validate(false);
-            return cleanUpCssVal((String) (node.eval(new StringBuilder()
-                .append("var me = this;")
-                .append("(function(){")
-                .append("  return window.getComputedStyle(me).getPropertyValue('")
-                .append(name)
-                .append("');")
-                .append("})();").toString())));
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      return cleanUpCssVal((String) (node.eval(new StringBuilder()
+          .append("var me = this;")
+          .append("(function(){")
+          .append("  return window.getComputedStyle(me).getPropertyValue('")
+          .append(name)
+          .append("');")
+          .append("})();").toString())));
+    });
   }
 
   private static String cleanUpCssVal(String rgbStr) {
@@ -458,17 +416,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Point remoteGetLocation() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Point>() {
-          @Override
-          public Point perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            return new Point(x + 1, y + 1);
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(true);
+      JSObject obj = (JSObject) node.call("getBoundingClientRect");
+      int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+      int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+      return new Point(x + 1, y + 1);
+    });
   }
 
   /**
@@ -484,19 +438,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Dimension remoteGetSize() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Dimension>() {
-          @Override
-          public Dimension perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-            return new Dimension(x2 - x, y2 - y);
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(true);
+      JSObject obj = (JSObject) node.call("getBoundingClientRect");
+      int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+      int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+      int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+      int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+      return new Dimension(x2 - x, y2 - y);
+    });
   }
 
   /**
@@ -512,19 +462,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Rectangle remoteGetRect() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Rectangle>() {
-          @Override
-          public Rectangle perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
-            int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
-            int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
-            int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
-            return new Rectangle(x + 1, y + 1, y2 - y, x2 - x);
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(true);
+      JSObject obj = (JSObject) node.call("getBoundingClientRect");
+      int y = (int) Math.rint(Double.parseDouble(obj.getMember("top").toString()));
+      int y2 = (int) Math.rint(Double.parseDouble(obj.getMember("bottom").toString()));
+      int x = (int) Math.rint(Double.parseDouble(obj.getMember("left").toString()));
+      int x2 = (int) Math.rint(Double.parseDouble(obj.getMember("right").toString()));
+      return new Rectangle(x + 1, y + 1, y2 - y, x2 - x);
+    });
   }
 
   /**
@@ -548,19 +494,15 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public String getText() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            validate(false);
-            if ((Boolean) node.eval(IS_VISIBLE)) {
-              String textAttribute = "TEXTAREA".equals(node.getMember("tagName")) ? "textContent" : "innerText";
-              Object text = node.getMember(textAttribute);
-              return text instanceof String ? ((String) text).trim() : "";
-            }
-            return "";
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      if ((Boolean) node.eval(IS_VISIBLE)) {
+        String textAttribute = "TEXTAREA".equals(node.getMember("tagName")) ? "textContent" : "innerText";
+        Object text = node.getMember(textAttribute);
+        return text instanceof String ? ((String) text).trim() : "";
+      }
+      return "";
+    });
   }
 
   /**
@@ -568,14 +510,10 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isDisplayed() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Boolean>() {
-          @Override
-          public Boolean perform() {
-            validate(false);
-            return (Boolean) node.eval(IS_VISIBLE);
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      return (Boolean) node.eval(IS_VISIBLE);
+    });
   }
 
   /**
@@ -583,15 +521,11 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isEnabled() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Boolean>() {
-          @Override
-          public Boolean perform() {
-            validate(false);
-            String val = node.getMember("disabled").toString();
-            return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      String val = node.getMember("disabled").toString();
+      return val == null || "undefined".equals(val) || val.isEmpty() || "false".equals(val);
+    });
   }
 
   /**
@@ -599,17 +533,13 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public boolean isSelected() {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Boolean>() {
-          @Override
-          public Boolean perform() {
-            validate(false);
-            String selected = node.getMember("selected").toString();
-            String checked = node.getMember("checked").toString();
-            return (selected != null && !"undefined".equals(selected) && !"false".equals(selected) && !selected.isEmpty())
-                || (checked != null && !"undefined".equals(checked) && !"false".equals(checked) && !checked.isEmpty());
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      String selected = node.getMember("selected").toString();
+      String checked = node.getMember("checked").toString();
+      return (selected != null && !"undefined".equals(selected) && !"false".equals(selected) && !selected.isEmpty())
+          || (checked != null && !"undefined".equals(checked) && !"false".equals(checked) && !checked.isEmpty());
+    });
   }
 
   /**
@@ -642,22 +572,18 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByXPath(final String expr) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<List<ElementServer>>() {
-          @Override
-          public List<ElementServer> perform() {
-            validate(false);
-            return asList(executeScript(new StringBuilder()
-                .append("var iter = ")
-                .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
-                .append("var items = [];")
-                .append("var cur = null;")
-                .append("while(cur = iter.iterateNext()){")
-                .append("  items.push(cur);")
-                .append("}")
-                .append("return items;").toString(), expr, node));
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      return asList(executeScript(new StringBuilder()
+          .append("var iter = ")
+          .append("  document.evaluate(arguments[0], arguments[1], null, XPathResult.ORDERED_NODE_ITERATOR_TYPE);")
+          .append("var items = [];")
+          .append("var cur = null;")
+          .append("while(cur = iter.iterateNext()){")
+          .append("  items.push(cur);")
+          .append("}")
+          .append("return items;").toString(), expr, node));
+    });
   }
 
   /**
@@ -678,18 +604,14 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   }
 
   private List byTagName(final String tagName) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<List<ElementServer>>() {
-          @Override
-          public List<ElementServer> perform() {
-            validate(false);
-            if (node != null) {
-              return asList(parseScriptResult(
-                  node.call("getElementsByTagName", new Object[] { tagName })));
-            }
-            return new ArrayList<ElementServer>();
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      if (node != null) {
+        return asList(parseScriptResult(
+            node.call("getElementsByTagName", new Object[] { tagName })));
+      }
+      return new ArrayList<ElementServer>();
+    });
   }
 
   /**
@@ -697,23 +619,19 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public ElementServer findElementByCssSelector(final String expr) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<ElementServer>() {
-          @Override
-          public ElementServer perform() {
-            validate(false);
-            JSObject result = (JSObject) node.call("querySelector", new Object[] { expr });
-            if (result == null) {
-              return null;
-            }
-            try {
-              return new ElementServer(result, contextItem);
-            } catch (RemoteException e) {
-              Util.handleException(e);
-              return null;
-            }
-          }
-        });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      JSObject result = (JSObject) node.call("querySelector", new Object[] { expr });
+      if (result == null) {
+        return null;
+      }
+      try {
+        return new ElementServer(result, contextItem);
+      } catch (RemoteException e) {
+        Util.handleException(e);
+        return null;
+      }
+    });
   }
 
   /**
@@ -721,28 +639,24 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public List findElementsByCssSelector(final String expr) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<List<ElementServer>>() {
-          @Override
-          public List<ElementServer> perform() {
-            validate(false);
-            List<ElementServer> elements = new ArrayList<ElementServer>();
-            JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
-            for (int i = 0;; i++) {
-              Object cur = result.getSlot(i);
-              if (cur instanceof Node) {
-                try {
-                  elements.add(new ElementServer((JSObject) cur, contextItem));
-                } catch (RemoteException e) {
-                  Util.handleException(e);
-                }
-              } else {
-                break;
-              }
-            }
-            return elements;
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      List<ElementServer> elements = new ArrayList<ElementServer>();
+      JSObject result = (JSObject) node.call("querySelectorAll", new Object[] { expr });
+      for (int i = 0;; i++) {
+        Object cur = result.getSlot(i);
+        if (cur instanceof Node) {
+          try {
+            elements.add(new ElementServer((JSObject) cur, contextItem));
+          } catch (RemoteException e) {
+            Util.handleException(e);
           }
-        });
+        } else {
+          break;
+        }
+      }
+      return elements;
+    });
   }
 
   /**
@@ -797,29 +711,25 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
 
   private List byLinkText(final String text,
       final boolean multiple, final boolean partial) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<List<ElementServer>>() {
-          @Override
-          public List<ElementServer> perform() {
-            validate(false);
-            List<ElementServer> elements = new ArrayList<ElementServer>();
-            List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
-            for (ElementServer cur : nodes) {
-              String curText = cur.getText();
-              if (curText == null) {
-                continue;
-              }
-              if ((partial && curText.contains(text))
-                  || (!partial && curText.equals(text))) {
-                elements.add(cur);
-                if (!multiple) {
-                  break;
-                }
-              }
-            }
-            return elements;
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      List<ElementServer> elements = new ArrayList<ElementServer>();
+      List<ElementServer> nodes = (List<ElementServer>) findElementsByTagName("a");
+      for (ElementServer cur : nodes) {
+        String curText = cur.getText();
+        if (curText == null) {
+          continue;
+        }
+        if ((partial && curText.contains(text))
+            || (!partial && curText.equals(text))) {
+          elements.add(cur);
+          if (!multiple) {
+            break;
           }
-        });
+        }
+      }
+      return elements;
+    });
   }
 
   /**
@@ -882,13 +792,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
           Thread.sleep(sleep);
         } catch (InterruptedException e) {}
         Object result = AppThread.exec(
-            contextItem.statusCode,
-            new Sync<Object>() {
-              @Override
-              public Object perform() {
-                validate(false);
+            contextItem.statusCode, () -> {
+              validate(false);
               return node.eval("(function(){return this." + jsNames.callbackVal + ";})();");
-              }
             });
         if (!(result instanceof String) || !"undefined".equals(result.toString())) {
           Object parsed = parseScriptResult(result);
@@ -911,14 +817,10 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
       }
     } finally {
       AppThread.exec(
-          contextItem.statusCode,
-          new Sync<Object>() {
-            @Override
-            public Object perform() {
-              validate(false);
+          contextItem.statusCode, () -> {
+            validate(false);
             node.eval("delete " + jsNames.callbackVal + ";");
-              return null;
-            }
+            return null;
           });
     }
   }
@@ -953,111 +855,103 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         }
       }
     }
-    return parseScriptResult(AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            List<Object> argList = new ArrayList<Object>();
-            if (args != null) {
-              argList.addAll(Arrays.asList(args));
-            }
-            try {
-              if (callback) {
-                argList.add(null);
-                node.eval(new StringBuilder().append("(function(){")
-                    .append("this.").append(jsNames.callback).append(" = function(){")
-                    .append(jsNames.callbackVal).append(" = arguments && arguments.length > 0? arguments[0] : null;")
-                    .append("}")
-                    .append("}).apply(this);")
-                    .append("this.").append(jsNames.exec).append(" = function(){")
-                    .append("arguments[arguments.length-1] = this.").append(jsNames.callback).append(";")
-                    .append("return (function(){").append(script).append("}).apply(this, arguments);")
-                    .append("};").toString());
-              } else {
-                node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = function(){")
-                    .append("return (function(){").append(script).append("}).apply(this, arguments);")
-                    .append("};").toString());
-              }
-              return node.call(jsNames.exec, argList.toArray(new Object[0]));
-            } catch (Throwable t) {
-              return t;
-            } finally {
+    return parseScriptResult(AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      List<Object> argList = new ArrayList<Object>();
+      if (args != null) {
+        argList.addAll(Arrays.asList(args));
+      }
+      try {
+        if (callback) {
+          argList.add(null);
+          node.eval(new StringBuilder().append("(function(){")
+              .append("this.").append(jsNames.callback).append(" = function(){")
+              .append(jsNames.callbackVal).append(" = arguments && arguments.length > 0? arguments[0] : null;")
+              .append("}")
+              .append("}).apply(this);")
+              .append("this.").append(jsNames.exec).append(" = function(){")
+              .append("arguments[arguments.length-1] = this.").append(jsNames.callback).append(";")
+              .append("return (function(){").append(script).append("}).apply(this, arguments);")
+              .append("};").toString());
+        } else {
+          node.eval(new StringBuilder().append("this.").append(jsNames.exec).append(" = function(){")
+              .append("return (function(){").append(script).append("}).apply(this, arguments);")
+              .append("};").toString());
+        }
+        return node.call(jsNames.exec, argList.toArray(new Object[0]));
+      } catch (Throwable t) {
+        return t;
+      } finally {
         node.eval("delete " + "this." + jsNames.exec + ";");
-              if (callback) {
+        if (callback) {
           node.eval("delete " + "this." + jsNames.callback + ";");
-              }
-            }
-          }
-        }));
+        }
+      }
+    }));
   }
 
   private Object parseScriptResult(final Object obj) {
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            validate(false);
-            AppThread.handleExecutionException(obj);
-            if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
-              return null;
-            }
-            if (obj instanceof Node) {
-              try {
-                return new ElementServer((JSObject) obj, contextItem);
-              } catch (RemoteException e) {
-                Util.handleException(e);
-                return null;
-              }
-            }
-            if (obj instanceof JSObject) {
-              List<Object> list = new ArrayList<Object>();
-              boolean isList = false;
-              for (int i = 0;; i++) {
-                Object cur = ((JSObject) obj).getSlot(i);
-                if (cur instanceof String && "undefined".equals(cur.toString())) {
-                  break;
-                }
-                isList = true;
-                list.add(parseScriptResult(cur));
-              }
-              if (isList) {
-                return list;
-              }
-              if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
-                return obj.toString();
-              }
-              if (Boolean.TRUE.equals(executeScript("return Array.isArray(arguments[0]);", obj))) {
-                return new ArrayList<Object>();
-              }
-              List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
-                  .append("var list = [];")
-                  .append("for(var propertyName in arguments[0]){")
-                  .append("list.push(propertyName);")
-                  .append("var val = arguments[0][propertyName];")
-                  .append("list.push(val === undefined? null : val);")
-                  .append("}")
-                  .append("return list.length > 0? list : undefined;").toString(),
-                  obj);
-              //TODO ES6 will support Symbol keys
-              Map map = new LinkedHashMap();
-              for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
-                map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
-              }
-              return map;
-            }
-            if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
-              return obj;
-            }
-            if (obj instanceof Integer) {
-              return new Long((Integer) obj);
-            }
-            if (obj instanceof Float) {
-              return new Double((Float) obj);
-            }
-            return obj.toString();
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      AppThread.handleExecutionException(obj);
+      if (obj == null || (obj instanceof String && "undefined".equals(obj.toString()))) {
+        return null;
+      }
+      if (obj instanceof Node) {
+        try {
+          return new ElementServer((JSObject) obj, contextItem);
+        } catch (RemoteException e) {
+          Util.handleException(e);
+          return null;
+        }
+      }
+      if (obj instanceof JSObject) {
+        List<Object> list = new ArrayList<Object>();
+        boolean isList = false;
+        for (int i = 0;; i++) {
+          Object cur = ((JSObject) obj).getSlot(i);
+          if (cur instanceof String && "undefined".equals(cur.toString())) {
+            break;
           }
-        });
+          isList = true;
+          list.add(parseScriptResult(cur));
+        }
+        if (isList) {
+          return list;
+        }
+        if ("function".equals(executeScript("return typeof arguments[0];", obj))) {
+          return obj.toString();
+        }
+        if (Boolean.TRUE.equals(executeScript("return Array.isArray(arguments[0]);", obj))) {
+          return new ArrayList<Object>();
+        }
+        List<Object> mapAsList = (List<Object>) executeScript(new StringBuilder()
+            .append("var list = [];")
+            .append("for(var propertyName in arguments[0]){")
+            .append("list.push(propertyName);")
+            .append("var val = arguments[0][propertyName];")
+            .append("list.push(val === undefined? null : val);")
+            .append("}")
+            .append("return list.length > 0? list : undefined;").toString(),
+            obj);
+        //TODO ES6 will support Symbol keys
+        Map map = new LinkedHashMap();
+        for (int i = 0; mapAsList != null && i < mapAsList.size(); i += 2) {
+          map.put(mapAsList.get(i).toString(), mapAsList.get(i + 1));
+        }
+        return map;
+      }
+      if (obj instanceof Boolean || obj instanceof Long || obj instanceof Double) {
+        return obj;
+      }
+      if (obj instanceof Integer) {
+        return new Long((Integer) obj);
+      }
+      if (obj instanceof Float) {
+        return new Double((Float) obj);
+      }
+      return obj.toString();
+    });
   }
 
   /**
@@ -1065,30 +959,22 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
    */
   @Override
   public Point locate() {
-    AppThread.exec(contextItem.statusCode,
-        new Sync<Object>() {
-          @Override
-          public Point perform() {
-            validate(false);
-            node.eval(SCROLL_INTO_VIEW);
-            return null;
-          }
-        });
-    return AppThread.exec(contextItem.statusCode,
-        new Sync<Point>() {
-          @Override
-          public Point perform() {
-            validate(true);
-            JSObject obj = (JSObject) node.call("getBoundingClientRect");
-            double y = Double.parseDouble(obj.getMember("top").toString());
-            double x = Double.parseDouble(obj.getMember("left").toString());
-            y = y < 0d ? 0d : y;
-            x = x < 0d ? 0d : x;
-            final org.openqa.selenium.Point frameLocation = contextItem.selectedFrameLocation();
-            return new Point((int) Math.rint(x) + 1 + frameLocation.getX(),
-                (int) Math.rint(y) + 1 + frameLocation.getY());
-          }
-        });
+    AppThread.exec(contextItem.statusCode, () -> {
+      validate(false);
+      node.eval(SCROLL_INTO_VIEW);
+      return null;
+    });
+    return AppThread.exec(contextItem.statusCode, () -> {
+      validate(true);
+      JSObject obj = (JSObject) node.call("getBoundingClientRect");
+      double y = Double.parseDouble(obj.getMember("top").toString());
+      double x = Double.parseDouble(obj.getMember("left").toString());
+      y = y < 0d ? 0d : y;
+      x = x < 0d ? 0d : x;
+      final org.openqa.selenium.Point frameLocation = contextItem.selectedFrameLocation();
+      return new Point((int) Math.rint(x) + 1 + frameLocation.getX(),
+          (int) Math.rint(y) + 1 + frameLocation.getY());
+    });
   }
 
   /**
@@ -1115,13 +1001,9 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   @Override
   public int remoteHashCode() {
     return AppThread.exec(
-        contextItem.statusCode,
-        new Sync<Integer>() {
-          @Override
-          public Integer perform() {
-            validate(false);
-            return node.hashCode();
-          }
+        contextItem.statusCode, () -> {
+          validate(false);
+          return node.hashCode();
         });
   }
 
@@ -1131,18 +1013,14 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
   @Override
   public boolean remoteEquals(ElementId id) {
     return AppThread.exec(
-        contextItem.statusCode,
-        new Sync<Boolean>() {
-          @Override
-          public Boolean perform() {
-            validate(false);
-            ElementServer other;
-            synchronized (map) {
-              other = map.remove(id);
-            }
-            other.validate(false);
-            return node.equals(other.node);
+        contextItem.statusCode, () -> {
+          validate(false);
+          ElementServer other;
+          synchronized (map) {
+            other = map.remove(id);
           }
+          other.validate(false);
+          return node.equals(other.node);
         });
   }
 

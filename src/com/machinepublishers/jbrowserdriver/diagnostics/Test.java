@@ -87,12 +87,9 @@ public class Test {
       HttpServer.launch(TEST_PORT_HTTP);
       final File cacheDir = Files.createTempDirectory("jbd_test_cache").toFile();
       final File userDataDir = Files.createTempDirectory("jbd_test_userdata").toFile();
-      shutdownHook = new Thread(new Runnable() {
-        @Override
-        public void run() {
-          FileUtils.deleteQuietly(cacheDir);
-          FileUtils.deleteQuietly(userDataDir);
-        }
+      shutdownHook = new Thread(() -> {
+        FileUtils.deleteQuietly(cacheDir);
+        FileUtils.deleteQuietly(userDataDir);
       });
       Runtime.getRuntime().addShutdownHook(shutdownHook);
       final String mainPage = "http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + TEST_PORT_HTTP;

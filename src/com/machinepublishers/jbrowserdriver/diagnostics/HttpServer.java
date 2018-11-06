@@ -110,47 +110,44 @@ public class HttpServer {
 
   public static void launch(int port) {
     if (loop.compareAndSet(false, true)) {
-      new Thread(new Runnable() {
-        @Override
-        public void run() {
-          try (ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getLoopbackAddress())) {
-            listener.set(serverSocket);
-            while (loop.get()) {
-              try (Socket socket = serverSocket.accept();
-                  DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                List<String> request = new ArrayList<String>();
-                for (String line; (line = reader.readLine()) != null;) {
-                  request.add(line);
-                  if (line.startsWith("GET / ")) {
-                    output.write(indexContent, 0, indexContent.length);
-                    output.write(indexBody, 0, indexBody.length);
-                  } else if (line.startsWith("POST / ")) {
-                    output.write(postContent, 0, postContent.length);
-                    output.write(postBody, 0, postBody.length);
-                  } else if (line.startsWith("GET /iframe.htm")) {
-                    output.write(iframeContent, 0, iframeContent.length);
-                    output.write(iframeBody, 0, iframeBody.length);
-                  } else if (line.startsWith("GET /redirect/site1 ")) {
-                    output.write(redirectContent);
-                  } else if (line.startsWith("GET /redirect/site2 ")) {
-                    output.write(iframeContent, 0, iframeContent.length);
-                    output.write(iframeBody, 0, iframeBody.length);
-                  } else if (line.startsWith("GET /wait-forever ")) {
-                    synchronized (HttpServer.class) {
-                      HttpServer.class.wait();
-                    }
-                  } else if (line.startsWith("GET /image.png")) {
-                    output.write(imageContent, 0, imageContent.length);
-                    output.write(imageBody, 0, imageBody.length);
+      new Thread(() -> {
+        try (ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getLoopbackAddress())) {
+          listener.set(serverSocket);
+          while (loop.get()) {
+            try (Socket socket = serverSocket.accept();
+                DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+              List<String> request = new ArrayList<String>();
+              for (String line; (line = reader.readLine()) != null;) {
+                request.add(line);
+                if (line.startsWith("GET / ")) {
+                  output.write(indexContent, 0, indexContent.length);
+                  output.write(indexBody, 0, indexBody.length);
+                } else if (line.startsWith("POST / ")) {
+                  output.write(postContent, 0, postContent.length);
+                  output.write(postBody, 0, postBody.length);
+                } else if (line.startsWith("GET /iframe.htm")) {
+                  output.write(iframeContent, 0, iframeContent.length);
+                  output.write(iframeBody, 0, iframeBody.length);
+                } else if (line.startsWith("GET /redirect/site1 ")) {
+                  output.write(redirectContent);
+                } else if (line.startsWith("GET /redirect/site2 ")) {
+                  output.write(iframeContent, 0, iframeContent.length);
+                  output.write(iframeBody, 0, iframeBody.length);
+                } else if (line.startsWith("GET /wait-forever ")) {
+                  synchronized (HttpServer.class) {
+                    HttpServer.class.wait();
                   }
+                } else if (line.startsWith("GET /image.png")) {
+                  output.write(imageContent, 0, imageContent.length);
+                  output.write(imageBody, 0, imageBody.length);
                 }
-                previousRequest.set(request);
-                previousRequestId.incrementAndGet();
               }
+              previousRequest.set(request);
+              previousRequestId.incrementAndGet();
             }
-          } catch (Throwable t) {}
-        }
+          }
+        } catch (Throwable t) {}
       }).start();
     }
   }

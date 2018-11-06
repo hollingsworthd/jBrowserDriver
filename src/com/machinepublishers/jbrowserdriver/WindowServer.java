@@ -40,12 +40,9 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void close() {
-    AppThread.exec(statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().close();
-        return null;
-      }
+    AppThread.exec(statusCode, () -> {
+      stage.get().close();
+      return null;
     });
   }
 
@@ -62,13 +59,8 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public Point remoteGetPosition() {
-    return AppThread.exec(new Sync<Point>() {
-      @Override
-      public Point perform() {
-        return new Point((int) Math.rint((Double) stage.get().getX()),
-            (int) Math.rint((Double) stage.get().getY()));
-      }
-    });
+    return AppThread.exec(() -> new Point((int) Math.rint((Double) stage.get().getX()),
+        (int) Math.rint((Double) stage.get().getY())));
   }
 
   /**
@@ -84,13 +76,8 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public Dimension remoteGetSize() {
-    return AppThread.exec(new Sync<Dimension>() {
-      @Override
-      public Dimension perform() {
-        return new Dimension((int) Math.rint((Double) stage.get().getWidth()),
-            (int) Math.rint((Double) stage.get().getHeight()));
-      }
-    });
+    return AppThread.exec(() -> new Dimension((int) Math.rint((Double) stage.get().getWidth()),
+        (int) Math.rint((Double) stage.get().getHeight())));
   }
 
   /**
@@ -98,12 +85,9 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void maximize() {
-    AppThread.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().setMaximized(!stage.get().isMaximized());
-        return null;
-      }
+    AppThread.exec(() -> {
+      stage.get().setMaximized(!stage.get().isMaximized());
+      return null;
     });
   }
 
@@ -112,27 +96,24 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setPosition(org.openqa.selenium.Point point) {
-    AppThread.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        if (!stage.get().isFullScreen()) {
-          int screenWidth = SettingsManager.settings().screenWidth();
-          int screenHeight = SettingsManager.settings().screenHeight();
+    AppThread.exec(() -> {
+      if (!stage.get().isFullScreen()) {
+        int screenWidth = SettingsManager.settings().screenWidth();
+        int screenHeight = SettingsManager.settings().screenHeight();
 
-          int width = (int) Math.rint((Double) stage.get().getWidth());
-          int height = (int) Math.rint((Double) stage.get().getHeight());
+        int width = (int) Math.rint((Double) stage.get().getWidth());
+        int height = (int) Math.rint((Double) stage.get().getHeight());
 
-          int newX = Math.max(0, Math.min(screenWidth - width, point.getX()));
-          int newY = Math.max(0, Math.min(screenHeight - height, point.getY()));
+        int newX = Math.max(0, Math.min(screenWidth - width, point.getX()));
+        int newY = Math.max(0, Math.min(screenHeight - height, point.getY()));
 
-          stage.get().hide();
-          stage.get().setMaximized(false);
-          stage.get().setX(newX);
-          stage.get().setY(newY);
-          stage.get().show();
-        }
-        return null;
+        stage.get().hide();
+        stage.get().setMaximized(false);
+        stage.get().setX(newX);
+        stage.get().setY(newY);
+        stage.get().show();
       }
+      return null;
     });
   }
 
@@ -149,35 +130,32 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void setSize(org.openqa.selenium.Dimension dimension) {
-    AppThread.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        if (!stage.get().isFullScreen()) {
-          int screenWidth = SettingsManager.settings().screenWidth();
-          int screenHeight = SettingsManager.settings().screenHeight();
+    AppThread.exec(() -> {
+      if (!stage.get().isFullScreen()) {
+        int screenWidth = SettingsManager.settings().screenWidth();
+        int screenHeight = SettingsManager.settings().screenHeight();
 
-          int xPos = (int) Math.rint((Double) stage.get().getX());
-          int yPos = (int) Math.rint((Double) stage.get().getY());
+        int xPos = (int) Math.rint((Double) stage.get().getX());
+        int yPos = (int) Math.rint((Double) stage.get().getY());
 
-          if ((dimension.getWidth() > screenWidth - xPos && xPos > 0)
-              || (dimension.getHeight() > screenHeight - yPos && yPos > 0)) {
-            xPos = 0;
-            yPos = 0;
-          }
-
-          int newWidth = Math.max(0, Math.min(screenWidth - xPos, dimension.getWidth()));
-          int newHeight = Math.max(0, Math.min(screenHeight - yPos, dimension.getHeight()));
-
-          stage.get().hide();
-          stage.get().setMaximized(false);
-          stage.get().setX(xPos);
-          stage.get().setY(yPos);
-          stage.get().setWidth(newWidth);
-          stage.get().setHeight(newHeight);
-          stage.get().show();
+        if ((dimension.getWidth() > screenWidth - xPos && xPos > 0)
+            || (dimension.getHeight() > screenHeight - yPos && yPos > 0)) {
+          xPos = 0;
+          yPos = 0;
         }
-        return null;
+
+        int newWidth = Math.max(0, Math.min(screenWidth - xPos, dimension.getWidth()));
+        int newHeight = Math.max(0, Math.min(screenHeight - yPos, dimension.getHeight()));
+
+        stage.get().hide();
+        stage.get().setMaximized(false);
+        stage.get().setX(xPos);
+        stage.get().setY(yPos);
+        stage.get().setWidth(newWidth);
+        stage.get().setHeight(newHeight);
+        stage.get().show();
       }
+      return null;
     });
   }
 
@@ -194,12 +172,9 @@ class WindowServer extends RemoteObject implements WindowRemote,
    */
   @Override
   public void fullscreen() {
-    AppThread.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        stage.get().setFullScreen(!stage.get().isFullScreen());
-        return null;
-      }
+    AppThread.exec(() -> {
+      stage.get().setFullScreen(!stage.get().isFullScreen());
+      return null;
     });
   }
 }

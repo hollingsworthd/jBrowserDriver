@@ -181,11 +181,7 @@ class StreamConnectionClient {
       if ("trustanything".equals(property)) {
         try {
           return SSLContexts.custom().loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()),
-              new TrustStrategy() {
-                public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                  return true;
-                }
-              }).build();
+                  (chain, authType) -> true).build();
         } catch (Throwable t) {
           LogsServer.instance().exception(t);
         }
