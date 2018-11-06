@@ -19,7 +19,7 @@ package com.machinepublishers.jbrowserdriver;
 
 import java.io.Serializable;
 
-class Coordinates implements org.openqa.selenium.interactions.internal.Coordinates, Serializable {
+class Coordinates implements org.openqa.selenium.interactions.Coordinates, Serializable {
 
   private final Point inViewport;
   private final ElementRemote remote;
@@ -31,7 +31,7 @@ class Coordinates implements org.openqa.selenium.interactions.internal.Coordinat
     this.inViewport = null;
   }
 
-  Coordinates(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  Coordinates(org.openqa.selenium.interactions.Coordinates coords) {
     this.inViewport = coords.inViewPort() == null ? null : new Point(coords.inViewPort());
     this.remote = null;
     this.lock = null;

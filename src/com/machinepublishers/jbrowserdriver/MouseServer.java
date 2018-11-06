@@ -34,7 +34,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void click(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void click(org.openqa.selenium.interactions.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
@@ -53,7 +53,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void contextClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void contextClick(org.openqa.selenium.interactions.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
@@ -72,7 +72,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void doubleClick(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void doubleClick(org.openqa.selenium.interactions.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
@@ -92,7 +92,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseDown(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void mouseDown(org.openqa.selenium.interactions.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
@@ -111,7 +111,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void mouseMove(org.openqa.selenium.interactions.Coordinates coords) {
     robot.get().mouseMove(coords.inViewPort());
   }
 
@@ -127,7 +127,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseMove(org.openqa.selenium.interactions.internal.Coordinates coords, long xOffset, long yOffset) {
+  public void mouseMove(org.openqa.selenium.interactions.Coordinates coords, long xOffset, long yOffset) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     } else {
@@ -147,7 +147,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
    * {@inheritDoc}
    */
   @Override
-  public void mouseUp(org.openqa.selenium.interactions.internal.Coordinates coords) {
+  public void mouseUp(org.openqa.selenium.interactions.Coordinates coords) {
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
