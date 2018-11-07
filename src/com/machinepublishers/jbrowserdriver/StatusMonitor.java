@@ -44,7 +44,7 @@ class StatusMonitor {
     }
     int fragmentIndex = url.indexOf("#");
     url = fragmentIndex > -1 ? url.substring(0, fragmentIndex) : url;
-    return url.endsWith("/") ? url : new StringBuilder().append(url).append("/").toString();
+    return url.endsWith("/") ? url : url + "/";
   }
 
   boolean isPrimaryDocument(boolean requireMainFrame, String url) {

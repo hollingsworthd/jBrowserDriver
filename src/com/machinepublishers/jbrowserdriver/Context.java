@@ -129,106 +129,78 @@ class Context {
   }
 
   String itemId() {
-    return AppThread.exec(
-        new Sync<String>() {
-          @Override
-          public String perform() {
-            synchronized (lock) {
-              return items.get(current).itemId.get();
-            }
-          }
-        });
+    return AppThread.exec(() -> {
+      synchronized (lock) {
+        return items.get(current).itemId.get();
+      }
+    });
   }
 
   Set<String> itemIds() {
-    return AppThread.exec(
-        new Sync<Set<String>>() {
-          @Override
-          public Set<String> perform() {
-            synchronized (lock) {
-              return new LinkedHashSet<String>(itemMap.keySet());
-            }
-          }
-        });
+    return AppThread.exec((Sync<Set<String>>) () -> {
+      synchronized (lock) {
+        return new LinkedHashSet<String>(itemMap.keySet());
+      }
+    });
   }
 
   ContextItem spawn(final JBrowserDriverServer driver) {
     final Context thisObj = this;
-    return AppThread.exec(
-        new Sync<ContextItem>() {
-          @Override
-          public ContextItem perform() {
-            synchronized (lock) {
-              ContextItem newContext = new ContextItem();
-              newContext.init(driver, thisObj);
-              newContext.stage.get().toBack();
-              items.add(newContext);
-              itemMap.put(newContext.itemId.get(), newContext);
-              return newContext;
-            }
-          }
-        });
+    return AppThread.exec(() -> {
+      synchronized (lock) {
+        ContextItem newContext = new ContextItem();
+        newContext.init(driver, thisObj);
+        newContext.stage.get().toBack();
+        items.add(newContext);
+        itemMap.put(newContext.itemId.get(), newContext);
+        return newContext;
+      }
+    });
   }
 
   void setCurrent(final String id) {
-    AppThread.exec(
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            synchronized (lock) {
-              current = items.indexOf(itemMap.get(id));
-              items.get(current).stage.get().toFront();
-              return null;
-            }
-          }
-        });
+    AppThread.exec(() -> {
+      synchronized (lock) {
+        current = items.indexOf(itemMap.get(id));
+        items.get(current).stage.get().toFront();
+        return null;
+      }
+    });
   }
 
   void removeItem() {
-    AppThread.exec(
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            synchronized (lock) {
-              items.get(current).stage.get().close();
-              itemMap.remove(items.remove(current).itemId.get());
-              current = 0;
-              return null;
-            }
-          }
-        });
+    AppThread.exec(() -> {
+      synchronized (lock) {
+        items.get(current).stage.get().close();
+        itemMap.remove(items.remove(current).itemId.get());
+        current = 0;
+        return null;
+      }
+    });
   }
 
   void removeItem(final String itemId) {
-    AppThread.exec(
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            synchronized (lock) {
-              itemMap.remove(itemId).stage.get().close();
-              items.remove(itemId);
-              current = 0;
-              return null;
-            }
-          }
-        });
+    AppThread.exec(() -> {
+      synchronized (lock) {
+        itemMap.remove(itemId).stage.get().close();
+        items.remove(itemId);
+        current = 0;
+        return null;
+      }
+    });
   }
 
   void removeItems() {
-    AppThread.exec(
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            synchronized (lock) {
-              for (ContextItem curItem : items) {
-                curItem.stage.get().close();
-              }
-              items.clear();
-              itemMap.clear();
-              current = 0;
-              return null;
-            }
-          }
-        });
+    AppThread.exec(() -> {
+      synchronized (lock) {
+        for (ContextItem curItem : items) {
+          curItem.stage.get().close();
+        }
+        items.clear();
+        itemMap.clear();
+        current = 0;
+        return null;
+      }
+    });
   }
 }

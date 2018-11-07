@@ -73,14 +73,11 @@ class AppThread {
         synchronized (statusCode) {
           if (statusCode.get() == 0) {
             final Runner newRunner = new Runner(this);
-            new Thread(new Runnable() {
-              @Override
-              public void run() {
-                try {
-                  Thread.sleep(delay);
-                } catch (InterruptedException e) {}
-                Platform.runLater(newRunner);
-              }
+            new Thread(() -> {
+              try {
+                Thread.sleep(delay);
+              } catch (InterruptedException e) {}
+              Platform.runLater(newRunner);
             }).start();
           } else {
             if (statusCode.get() > 299) {
@@ -105,14 +102,11 @@ class AppThread {
   }
 
   private static void pause() {
-    AppThread.exec(new Sync<Object>() {
-      @Override
-      public Object perform() {
-        try {
-          Thread.sleep(30 + rand.nextInt(40));
-        } catch (Throwable t) {}
-        return null;
-      }
+    AppThread.exec(() -> {
+      try {
+        Thread.sleep(30 + rand.nextInt(40));
+      } catch (Throwable t) {}
+      return null;
     });
   }
 
@@ -167,8 +161,7 @@ class AppThread {
           }
           if (!runner.done.get()) {
             runner.cancel.set(true);
-            throw new TimeoutException(new StringBuilder()
-                .append("Timeout of ").append(timeout).append("ms reached.").toString());
+            throw new TimeoutException("Timeout of " + timeout + "ms reached.");
           }
         }
         handleExecutionException(runner.failure.get());

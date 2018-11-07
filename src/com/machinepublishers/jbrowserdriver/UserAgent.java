@@ -217,7 +217,7 @@ public class UserAgent {
         builder.append("',{value:").append(entry.getValue());
         builder.append("});");
         builder.append("}catch(e){");
-        builder.append("window.navigator = Object.create(navigator, {" + entry.getKey());
+        builder.append("window.navigator = Object.create(navigator, {").append(entry.getKey());
         builder.append(":{value:").append(entry.getValue()).append("}");
         builder.append("});");
         builder.append("}");

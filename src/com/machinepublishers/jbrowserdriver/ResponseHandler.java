@@ -83,11 +83,9 @@ class ResponseHandler {
   private static void writeContentToDisk(byte[] content, File dir, String url, String contentType, String contentDisposition) {
     String filename = Util.randomFileName();
 
-    File contentFile = new File(dir,
-        new StringBuilder().append(filename).append(".content").toString());
+    File contentFile = new File(dir, filename + ".content");
 
-    File metaFile = new File(dir,
-        new StringBuilder().append(filename).append(".metadata").toString());
+    File metaFile = new File(dir, filename + ".metadata");
 
     contentFile.deleteOnExit();
     metaFile.deleteOnExit();
@@ -122,16 +120,11 @@ class ResponseHandler {
         } else {
           matcher = html.matcher(content);
           if (matcher.find()) {
-            intercepted = matcher.replaceFirst(new StringBuilder()
-                .append(matcher.group(0))
-                .append("<head>")
-                .append(settings.script())
-                .append("</head>").toString());
+            intercepted = matcher.replaceFirst(matcher.group(0) + "<head>" + settings.script() + "</head>");
           } else {
             matcher = body.matcher(content);
             if (matcher.find()) {
-              intercepted = (new StringBuilder().append("<html><head>").append(settings.script())
-                  .append("</head>").append(content).append("</html>").toString());
+              intercepted = ("<html><head>" + settings.script() + "</head>" + content + "</html>");
             } else {
               intercepted = content;
             }

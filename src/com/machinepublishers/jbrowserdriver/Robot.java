@@ -245,11 +245,7 @@ class Robot {
   private final Context context;
 
   Robot(final Context context) {
-    robot.set(AppThread.exec(context.item().statusCode, new Sync<com.sun.glass.ui.Robot>() {
-      public com.sun.glass.ui.Robot perform() {
-        return Application.GetApplication().createRobot();
-      }
-    }));
+    robot.set(AppThread.exec(context.item().statusCode, () -> Application.GetApplication().createRobot()));
     this.context = context;
   }
 
@@ -286,21 +282,11 @@ class Robot {
         } catch (InterruptedException e) {}
       }
     }
-    AppThread.exec(context.item().statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        return null;
-      }
-    });
+    AppThread.exec(context.item().statusCode, () -> null);
   }
 
   private void unlock() {
-    AppThread.exec(context.item().statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        return null;
-      }
-    });
+    AppThread.exec(context.item().statusCode, () -> null);
     curThread.incrementAndGet();
     synchronized (curThread) {
       curThread.notifyAll();
@@ -314,14 +300,11 @@ class Robot {
       if (ints.length > 0) {
         final int[] converted = convertKey(ints[0]);
         if (converted != null) {
-          AppThread.exec(context.item().statusCode, new Sync<Object>() {
-            @Override
-            public Object perform() {
-              for (int j = 0; j < converted.length; j++) {
-                robot.get().keyPress(converted[j]);
-              }
-              return null;
+          AppThread.exec(context.item().statusCode, () -> {
+            for (int j = 0; j < converted.length; j++) {
+              robot.get().keyPress(converted[j]);
             }
+            return null;
           });
         }
       }
@@ -337,17 +320,14 @@ class Robot {
       if (ints.length > 0) {
         final int[] converted = convertKey(ints[0]);
         if (converted != null) {
-          AppThread.exec(context.item().statusCode, new Sync<Object>() {
-            @Override
-            public Object perform() {
-              for (int j = converted.length - 1; j > -1; j--) {
-                if (j == 0) {
-                  context.item().httpListener.get().resetStatusCode();
-                }
-                robot.get().keyRelease(converted[j]);
+          AppThread.exec(context.item().statusCode, () -> {
+            for (int j = converted.length - 1; j > -1; j--) {
+              if (j == 0) {
+                context.item().httpListener.get().resetStatusCode();
               }
-              return null;
+              robot.get().keyRelease(converted[j]);
             }
+            return null;
           });
         }
       }
@@ -377,14 +357,11 @@ class Robot {
         for (int i = 0; i < ints.length; i++) {
           final int[] converted = convertKey(ints[i]);
           if (converted != null) {
-            AppThread.exec(true, context.item().statusCode, new Sync<Object>() {
-              @Override
-              public Object perform() {
-                for (int j = 0; j < converted.length; j++) {
-                  robot.get().keyPress(converted[j]);
-                }
-                return null;
+            AppThread.exec(true, context.item().statusCode, () -> {
+              for (int j = 0; j < converted.length; j++) {
+                robot.get().keyPress(converted[j]);
               }
+              return null;
             });
           }
         }
@@ -392,17 +369,14 @@ class Robot {
           final boolean lastKey = i == 0;
           final int[] converted = convertKey(ints[i]);
           if (converted != null) {
-            AppThread.exec(false, context.item().statusCode, new Sync<Object>() {
-              @Override
-              public Object perform() {
-                for (int j = converted.length - 1; j > -1; j--) {
-                  if (lastKey && j == 0) {
-                    context.item().httpListener.get().resetStatusCode();
-                  }
-                  robot.get().keyRelease(converted[j]);
+            AppThread.exec(false, context.item().statusCode, () -> {
+              for (int j = converted.length - 1; j > -1; j--) {
+                if (lastKey && j == 0) {
+                  context.item().httpListener.get().resetStatusCode();
                 }
-                return null;
+                robot.get().keyRelease(converted[j]);
               }
+              return null;
             });
           }
         }
@@ -417,31 +391,28 @@ class Robot {
           } else {
             codePoint = ints[i];
           }
-          AppThread.exec(!lastKey, context.item().statusCode, new Sync<Object>() {
-            @Override
-            public Object perform() {
-              int[] converted = convertKey(codePoint);
-              if (converted == null) {
-                if (lastKey) {
+          AppThread.exec(!lastKey, context.item().statusCode, () -> {
+            int[] converted = convertKey(codePoint);
+            if (converted == null) {
+              if (lastKey) {
+                context.item().httpListener.get().resetStatusCode();
+              }
+              context.item().view.get().fireEvent(
+                  new javafx.scene.input.KeyEvent(
+                      javafx.scene.input.KeyEvent.KEY_TYPED, new String(new int[] { codePoint }, 0, 1), "", KeyCode.UNDEFINED,
+                      false, false, false, false));
+            } else {
+              for (int j = 0; j < converted.length; j++) {
+                robot.get().keyPress(converted[j]);
+              }
+              for (int j = converted.length - 1; j > -1; j--) {
+                if (lastKey && j == 0) {
                   context.item().httpListener.get().resetStatusCode();
                 }
-                context.item().view.get().fireEvent(
-                    new javafx.scene.input.KeyEvent(
-                        javafx.scene.input.KeyEvent.KEY_TYPED, new String(new int[] { codePoint }, 0, 1), "", KeyCode.UNDEFINED,
-                        false, false, false, false));
-              } else {
-                for (int j = 0; j < converted.length; j++) {
-                  robot.get().keyPress(converted[j]);
-                }
-                for (int j = converted.length - 1; j > -1; j--) {
-                  if (lastKey && j == 0) {
-                    context.item().httpListener.get().resetStatusCode();
-                  }
-                  robot.get().keyRelease(converted[j]);
-                }
+                robot.get().keyRelease(converted[j]);
               }
-              return null;
             }
+            return null;
           });
         }
       }
@@ -453,13 +424,10 @@ class Robot {
   void typeEnter() {
     lock();
     try {
-      AppThread.exec(context.item().statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          robot.get().keyPress(KeyEvent.VK_ENTER);
-          robot.get().keyRelease(KeyEvent.VK_ENTER);
-          return null;
-        }
+      AppThread.exec(context.item().statusCode, () -> {
+        robot.get().keyPress(KeyEvent.VK_ENTER);
+        robot.get().keyRelease(KeyEvent.VK_ENTER);
+        return null;
       });
     } finally {
       unlock();
@@ -473,21 +441,18 @@ class Robot {
   void mouseMove(final double viewportX, final double viewportY) {
     lock();
     try {
-      AppThread.exec(context.item().statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          Stage stage = context.item().stage.get();
-          double adjustedX = Math.max(0, Math.min(viewportX, stage.getScene().getWidth() - 1));
-          double adjustedY = Math.max(0, Math.min(viewportY, stage.getScene().getHeight() - 1));
-          robot.get().mouseMove(
-              (int) Math.rint(adjustedX
-                  + (Double) stage.getX()
-                  + (Double) stage.getScene().getX()),
-              (int) Math.rint(adjustedY
-                  + (Double) stage.getY()
-                  + (Double) stage.getScene().getY()));
-          return null;
-        }
+      AppThread.exec(context.item().statusCode, () -> {
+        Stage stage = context.item().stage.get();
+        double adjustedX = Math.max(0, Math.min(viewportX, stage.getScene().getWidth() - 1));
+        double adjustedY = Math.max(0, Math.min(viewportY, stage.getScene().getHeight() - 1));
+        robot.get().mouseMove(
+            (int) Math.rint(adjustedX
+                + (Double) stage.getX()
+                + (Double) stage.getScene().getX()),
+            (int) Math.rint(adjustedY
+                + (Double) stage.getY()
+                + (Double) stage.getScene().getY()));
+        return null;
       });
     } finally {
       unlock();
@@ -497,17 +462,14 @@ class Robot {
   void mouseMoveBy(final double viewportX, final double viewportY) {
     lock();
     try {
-      AppThread.exec(context.item().statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          Stage stage = context.item().stage.get();
-          robot.get().mouseMove(
-              (int) Math.rint(Math.max(0, Math.min(stage.getScene().getWidth() - 1,
-                  viewportX + new Double((Integer) robot.get().getMouseX())))),
-              (int) Math.rint(Math.max(0, Math.min(stage.getScene().getHeight() - 1,
-                  viewportY + new Double((Integer) robot.get().getMouseY())))));
-          return null;
-        }
+      AppThread.exec(context.item().statusCode, () -> {
+        Stage stage = context.item().stage.get();
+        robot.get().mouseMove(
+            (int) Math.rint(Math.max(0, Math.min(stage.getScene().getWidth() - 1,
+                viewportX + new Double((Integer) robot.get().getMouseX())))),
+            (int) Math.rint(Math.max(0, Math.min(stage.getScene().getHeight() - 1,
+                viewportY + new Double((Integer) robot.get().getMouseY())))));
+        return null;
       });
     } finally {
       unlock();
@@ -534,12 +496,9 @@ class Robot {
   }
 
   private void mousePressHelper(final MouseButton button) {
-    AppThread.exec(context.item().statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        robot.get().mousePress(button.getValue());
-        return null;
-      }
+    AppThread.exec(context.item().statusCode, () -> {
+      robot.get().mousePress(button.getValue());
+      return null;
     });
   }
 
@@ -553,27 +512,21 @@ class Robot {
   }
 
   private void mouseReleaseHelper(final MouseButton button) {
-    AppThread.exec(true, context.item().statusCode, new Sync<Object>() {
-      @Override
-      public Object perform() {
-        if (button == MouseButton.LEFT) {
-          context.item().httpListener.get().resetStatusCode();
-        }
-        robot.get().mouseRelease(button.getValue());
-        return null;
+    AppThread.exec(true, context.item().statusCode, () -> {
+      if (button == MouseButton.LEFT) {
+        context.item().httpListener.get().resetStatusCode();
       }
+      robot.get().mouseRelease(button.getValue());
+      return null;
     });
   }
 
   void mouseWheel(final int wheelAmt) {
     lock();
     try {
-      AppThread.exec(context.item().statusCode, new Sync<Object>() {
-        @Override
-        public Object perform() {
-          robot.get().mouseWheel(wheelAmt);
-          return null;
-        }
+      AppThread.exec(context.item().statusCode, () -> {
+        robot.get().mouseWheel(wheelAmt);
+        return null;
       });
     } finally {
       unlock();
@@ -583,67 +536,64 @@ class Robot {
   byte[] screenshot() {
     lock();
     try {
-      return AppThread.exec(context.item().statusCode, new Sync<byte[]>() {
-        @Override
-        public byte[] perform() {
-          BufferedImage image = null;
+      return AppThread.exec(context.item().statusCode, () -> {
+        BufferedImage image = null;
 
-          Throwable attempt1 = null;
-          try {
-            image = SwingFXUtils.fromFXImage(
-                context.item().view.get().snapshot(
-                    new SnapshotParameters(),
-                    new WritableImage(
-                        (int) Math.rint((Double) context.item().view.get().getWidth()),
-                        (int) Math.rint((Double) context.item().view.get().getHeight()))),
-                null);
-          } catch (Throwable t) {
-            attempt1 = t;
-          }
-
-          Throwable attempt2 = null;
-          if (image == null && SettingsManager.isMonocle()) {
-            try {
-              final Stage stage = context.item().stage.get();
-              final Scene scene = stage.getScene();
-              final Pixels pixels = robot.get().getScreenCapture(
-                  (int) Math.rint(stage.getX() + scene.getX()),
-                  (int) Math.rint(stage.getY() + scene.getY()),
-                  (int) Math.rint(scene.getWidth()),
-                  (int) Math.rint(scene.getHeight()),
-                  false);
-              final ByteBuffer pixelBuffer = pixels.asByteBuffer();
-              final byte[] bytes = new byte[pixelBuffer.remaining()];
-              pixelBuffer.get(bytes);
-              final int bytesPerComponent = pixels.getBytesPerComponent();
-              final int width = pixels.getWidth();
-              final int height = pixels.getHeight();
-              final DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
-              final WritableRaster raster = Raster.createInterleavedRaster(buffer, width, height,
-                  bytesPerComponent * width, bytesPerComponent, new int[] { 2, 1, 0 }, null);
-              final ColorModel colorModel = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
-                  false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
-              image = new BufferedImage(colorModel, raster, true, null);
-            } catch (Throwable t) {
-              attempt2 = t;
-            }
-          }
-          if (image != null) {
-            ByteArrayOutputStream out = null;
-            try {
-              out = new ByteArrayOutputStream();
-              ImageIO.write(image, "png", out);
-              return out.toByteArray();
-            } catch (Throwable t) {
-              LogsServer.instance().exception(t);
-            } finally {
-              Util.close(out);
-            }
-          }
-          LogsServer.instance().exception(attempt1);
-          LogsServer.instance().exception(attempt2);
-          return null;
+        Throwable attempt1 = null;
+        try {
+          image = SwingFXUtils.fromFXImage(
+              context.item().view.get().snapshot(
+                  new SnapshotParameters(),
+                  new WritableImage(
+                      (int) Math.rint((Double) context.item().view.get().getWidth()),
+                      (int) Math.rint((Double) context.item().view.get().getHeight()))),
+              null);
+        } catch (Throwable t) {
+          attempt1 = t;
         }
+
+        Throwable attempt2 = null;
+        if (image == null && SettingsManager.isMonocle()) {
+          try {
+            final Stage stage = context.item().stage.get();
+            final Scene scene = stage.getScene();
+            final Pixels pixels = robot.get().getScreenCapture(
+                (int) Math.rint(stage.getX() + scene.getX()),
+                (int) Math.rint(stage.getY() + scene.getY()),
+                (int) Math.rint(scene.getWidth()),
+                (int) Math.rint(scene.getHeight()),
+                false);
+            final ByteBuffer pixelBuffer = pixels.asByteBuffer();
+            final byte[] bytes = new byte[pixelBuffer.remaining()];
+            pixelBuffer.get(bytes);
+            final int bytesPerComponent = pixels.getBytesPerComponent();
+            final int width = pixels.getWidth();
+            final int height = pixels.getHeight();
+            final DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
+            final WritableRaster raster = Raster.createInterleavedRaster(buffer, width, height,
+                bytesPerComponent * width, bytesPerComponent, new int[] { 2, 1, 0 }, null);
+            final ColorModel colorModel = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
+                false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+            image = new BufferedImage(colorModel, raster, true, null);
+          } catch (Throwable t) {
+            attempt2 = t;
+          }
+        }
+        if (image != null) {
+          ByteArrayOutputStream out = null;
+          try {
+            out = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", out);
+            return out.toByteArray();
+          } catch (Throwable t) {
+            LogsServer.instance().exception(t);
+          } finally {
+            Util.close(out);
+          }
+        }
+        LogsServer.instance().exception(attempt1);
+        LogsServer.instance().exception(attempt2);
+        return null;
       });
     } finally {
       unlock();

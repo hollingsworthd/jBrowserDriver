@@ -183,14 +183,10 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    *          New settings to take effect, superseding the original ones
    */
   public void reset(final Settings settings) {
-    AppThread.exec(
-        new Sync<Object>() {
-          @Override
-          public Object perform() {
-            context.get().item().engine.get().getLoadWorker().cancel();
-            return null;
-          }
-        });
+    AppThread.exec(() -> {
+      context.get().item().engine.get().getLoadWorker().cancel();
+      return null;
+    });
     Accessor.getPageFor(context.get().item().engine.get()).stop();
     ((CookieStore) CookieManager.getDefault()).clear();
     StatusMonitor.instance().clear();
@@ -220,22 +216,20 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         return outerHtml;
       }
     }
-    return AppThread.exec(context.get().item().statusCode, new Sync<String>() {
-      public String perform() {
-        WebPage page = Accessor.getPageFor(context.get().item().engine.get());
-        String html = page.getHtml(page.getMainFrame());
-        if (html != null && !html.isEmpty()) {
-          return html;
-        }
-        try {
-          StringWriter stringWriter = new StringWriter();
-          Transformer transformer = TransformerFactory.newInstance().newTransformer();
-          transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-          transformer.transform(new DOMSource(context.get().item().engine.get().getDocument()), new StreamResult(stringWriter));
-          return stringWriter.toString();
-        } catch (Throwable t) {}
-        return page.getInnerText(page.getMainFrame());
+    return AppThread.exec(context.get().item().statusCode, () -> {
+      WebPage page = Accessor.getPageFor(context.get().item().engine.get());
+      String html = page.getHtml(page.getMainFrame());
+      if (html != null && !html.isEmpty()) {
+        return html;
       }
+      try {
+        StringWriter stringWriter = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.transform(new DOMSource(context.get().item().engine.get().getDocument()), new StreamResult(stringWriter));
+        return stringWriter.toString();
+      } catch (Throwable t) {}
+      return page.getInnerText(page.getMainFrame());
     });
   }
 
@@ -245,11 +239,8 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public String getCurrentUrl() {
     init();
-    return AppThread.exec(context.get().item().statusCode, new Sync<String>() {
-      public String perform() {
-        return context.get().item().view.get().getEngine().getLocation();
-      }
-    });
+    return AppThread.exec(context.get().item().statusCode,
+            () -> context.get().item().view.get().getEngine().getLocation());
   }
 
   /**
@@ -292,11 +283,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   @Override
   public String getTitle() {
     init();
-    return AppThread.exec(context.get().item().statusCode, new Sync<String>() {
-      public String perform() {
-        return context.get().item().view.get().getEngine().getTitle();
-      }
-    });
+    return AppThread.exec(context.get().item().statusCode, () -> context.get().item().view.get().getEngine().getTitle());
   }
 
   /**
@@ -308,12 +295,10 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     long start = System.currentTimeMillis();
     try {
       AppThread.exec(context.get().item().statusCode,
-          context.get().timeouts.get().getPageLoadTimeoutMS(), new Sync<Object>() {
-            public Object perform() {
-              context.get().item().httpListener.get().resetStatusCode();
-              context.get().item().engine.get().load(url);
-              return null;
-            }
+          context.get().timeouts.get().getPageLoadTimeoutMS(), () -> {
+            context.get().item().httpListener.get().resetStatusCode();
+            context.get().item().engine.get().load(url);
+            return null;
           });
       long end = System.currentTimeMillis();
       if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
@@ -326,17 +311,11 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
       }
     } finally {
       if (context.get().item().statusCode.get() == 0) {
-        AppThread.exec(
-            new Sync<Object>() {
-              @Override
-              public Object perform() {
-                context.get().item().engine.get().getLoadWorker().cancel();
-                throw new TimeoutException(new StringBuilder()
-                    .append("Timeout of ")
-                    .append(context.get().timeouts.get().getPageLoadTimeoutMS())
-                    .append("ms reached.").toString());
-              }
-            }, context.get().timeouts.get().getPageLoadTimeoutMS());
+        AppThread.exec(() -> {
+          context.get().item().engine.get().getLoadWorker().cancel();
+          throw new TimeoutException(
+                  "Timeout of " + context.get().timeouts.get().getPageLoadTimeoutMS() + "ms reached.");
+        }, context.get().timeouts.get().getPageLoadTimeoutMS());
       }
     }
   }

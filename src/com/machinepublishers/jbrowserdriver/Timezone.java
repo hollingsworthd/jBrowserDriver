@@ -212,8 +212,8 @@ public class Timezone {
         + (formattedOffsetHours < 10 ? "0" + formattedOffsetHours : "" + formattedOffsetHours)
         + (formattedOffsetMinutes == 0 ? "00"
             : (formattedOffsetMinutes < 10 ? "0" + formattedOffsetMinutes : formattedOffsetMinutes));
-    return daylight ? new StringBuilder().append(timeZoneDesc).append(" (").append(daylightTimzones.get(rawOffset)).append(")").toString()
-        : new StringBuilder().append(timeZoneDesc).append(" (").append(offsets.get(rawOffset)).append(")").toString();
+    return daylight ? timeZoneDesc + " (" + daylightTimzones.get(rawOffset) + ")"
+        : timeZoneDesc + " (" + offsets.get(rawOffset) + ")";
   }
 
   private void init() {

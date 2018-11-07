@@ -65,7 +65,6 @@ import org.openqa.selenium.interactions.Sequence;
 import org.openqa.selenium.interactions.SourceType;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.remote.CommandExecutor;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.ErrorHandler;
 import org.openqa.selenium.remote.FileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -198,41 +197,38 @@ public class JBrowserDriver extends RemoteWebDriver {
     if (previousInstanceCount > 0) {
       return;
     }
-    Thread work = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        synchronized (waiting) {
-          while (runningInstances.get() > 0) {
-            List<Job> selectedJobs = new ArrayList<Job>();
-            for (Job job : waiting) {
-              for (PortGroup curPortGroup : job.settings.portGroups()) {
-                boolean conflicts = false;
-                for (PortGroup curUsed : portGroupsActive) {
-                  if (curUsed.conflicts(curPortGroup)) {
-                    conflicts = true;
-                    break;
-                  }
-                }
-                if (!conflicts) {
-                  job.portGroup.set(curPortGroup);
+    Thread work = new Thread(() -> {
+      synchronized (waiting) {
+        while (runningInstances.get() > 0) {
+          List<Job> selectedJobs = new ArrayList<Job>();
+          for (Job job : waiting) {
+            for (PortGroup curPortGroup : job.settings.portGroups()) {
+              boolean conflicts = false;
+              for (PortGroup curUsed : portGroupsActive) {
+                if (curUsed.conflicts(curPortGroup)) {
+                  conflicts = true;
                   break;
                 }
               }
-              if (job.portGroup.get() != null) {
-                selectedJobs.add(job);
-                portGroupsActive.add(job.portGroup.get());
+              if (!conflicts) {
+                job.portGroup.set(curPortGroup);
+                break;
               }
             }
-            for (Job job : selectedJobs) {
-              waiting.remove(job);
-              synchronized (job) {
-                job.notifyAll();
-              }
+            if (job.portGroup.get() != null) {
+              selectedJobs.add(job);
+              portGroupsActive.add(job.portGroup.get());
             }
-            try {
-              waiting.wait();
-            } catch (InterruptedException e) {}
           }
+          for (Job job : selectedJobs) {
+            waiting.remove(job);
+            synchronized (job) {
+              job.notifyAll();
+            }
+          }
+          try {
+            waiting.wait();
+          } catch (InterruptedException e) {}
         }
       }
     });
@@ -358,20 +354,17 @@ public class JBrowserDriver extends RemoteWebDriver {
       Util.handleException(t);
     }
     final HeartbeatRemote heartbeat = heartbeatTmp;
-    heartbeatThread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        while (true) {
-          if (processEnded.get()) {
-            return;
-          }
-          try {
-            heartbeat.heartbeat();
-          } catch (RemoteException e) {}
-          try {
-            Thread.sleep(5000);
-          } catch (InterruptedException e) {}
+    heartbeatThread = new Thread(() -> {
+      while (true) {
+        if (processEnded.get()) {
+          return;
         }
+        try {
+          heartbeat.heartbeat();
+        } catch (RemoteException e) {}
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {}
       }
     });
     heartbeatThread.setName("Heartbeat");
@@ -402,91 +395,88 @@ public class JBrowserDriver extends RemoteWebDriver {
   private String launchProcess(final Settings settings, final PortGroup portGroup) {
     final AtomicBoolean ready = new AtomicBoolean();
     final AtomicReference<String> logPrefix = new AtomicReference<String>("");
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        List<String> myArgs = new ArrayList<String>();
-        myArgs.add(settings.javaBinary() == null ? JAVA_BIN : settings.javaBinary());
-        myArgs.addAll(inheritedArgs);
-        if (!settings.customClasspath()) {
-          myArgs.addAll(classpathArgs.get());
-        }
-        if (settings.javaExportModules()) {
-          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
-          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
-          myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.data=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.http=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.https=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.file=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
-          myArgs.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
-          myArgs.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
-          myArgs.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
-          myArgs.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
-        }
-        myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
-        myArgs.add("-Djava.rmi.server.hostname=" + settings.host());
-        myArgs.addAll(settings.javaOptions());
-        myArgs.add(JBrowserDriverServer.class.getName());
-        myArgs.add(Long.toString(portGroup.child));
-        myArgs.add(Long.toString(portGroup.parent));
-        myArgs.add(Long.toString(portGroup.parentAlt));
-        try {
-          new ProcessExecutor()
-              .addListener(new ProcessListener() {
-                @Override
-                public void afterStart(Process proc, ProcessExecutor executor) {
-                  process.set(proc);
-                }
-              })
-              .redirectOutput(new LogOutputStream() {
-                boolean done = false;
+    new Thread(() -> {
+      List<String> myArgs = new ArrayList<String>();
+      myArgs.add(settings.javaBinary() == null ? JAVA_BIN : settings.javaBinary());
+      myArgs.addAll(inheritedArgs);
+      if (!settings.customClasspath()) {
+        myArgs.addAll(classpathArgs.get());
+      }
+      if (settings.javaExportModules()) {
+        myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network=ALL-UNNAMED");
+        myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.about=ALL-UNNAMED");
+        myArgs.add("-XaddExports:javafx.web/com.sun.webkit.network.data=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.http=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.https=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.file=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.ftp=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.jar=ALL-UNNAMED");
+        myArgs.add("-XaddExports:java.base/sun.net.www.protocol.mailto=ALL-UNNAMED");
+        myArgs.add("-XaddExports:javafx.graphics/com.sun.glass.ui=ALL-UNNAMED");
+        myArgs.add("-XaddExports:javafx.web/com.sun.javafx.webkit=ALL-UNNAMED");
+        myArgs.add("-XaddExports:javafx.web/com.sun.webkit=ALL-UNNAMED");
+      }
+      myArgs.add("-Djava.io.tmpdir=" + tmpDir.getAbsolutePath());
+      myArgs.add("-Djava.rmi.server.hostname=" + settings.host());
+      myArgs.addAll(settings.javaOptions());
+      myArgs.add(JBrowserDriverServer.class.getName());
+      myArgs.add(Long.toString(portGroup.child));
+      myArgs.add(Long.toString(portGroup.parent));
+      myArgs.add(Long.toString(portGroup.parentAlt));
+      try {
+        new ProcessExecutor()
+            .addListener(new ProcessListener() {
+              @Override
+              public void afterStart(Process proc, ProcessExecutor executor) {
+                process.set(proc);
+              }
+            })
+            .redirectOutput(new LogOutputStream() {
+              boolean done = false;
 
-                @Override
-                protected void processLine(String line) {
-                  if (line != null && !line.isEmpty()) {
-                    if (!done) {
-                      synchronized (ready) {
-                        if (line.startsWith("ready on ports ")) {
-                          String[] parts = line.substring("ready on ports ".length()).split("/");
-                          actualPortGroup.set(new PortGroup(
-                              Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
-                          logPrefix.set(new StringBuilder()
-                              .append("[Instance ")
-                              .append(sessionIdCounter.incrementAndGet())
-                              .append("][Port ")
-                              .append(actualPortGroup.get().child)
-                              .append("]")
-                              .toString());
-                          ready.set(true);
-                          ready.notifyAll();
-                          done = true;
-                        } else {
-                          log(settings.logger(), logPrefix.get(), line);
-                        }
+              @Override
+              protected void processLine(String line) {
+                if (line != null && !line.isEmpty()) {
+                  if (!done) {
+                    synchronized (ready) {
+                      if (line.startsWith("ready on ports ")) {
+                        String[] parts = line.substring("ready on ports ".length()).split("/");
+                        actualPortGroup.set(new PortGroup(
+                            Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
+                        logPrefix.set(new StringBuilder()
+                            .append("[Instance ")
+                            .append(sessionIdCounter.incrementAndGet())
+                            .append("][Port ")
+                            .append(actualPortGroup.get().child)
+                            .append("]")
+                            .toString());
+                        ready.set(true);
+                        ready.notifyAll();
+                        done = true;
+                      } else {
+                        log(settings.logger(), logPrefix.get(), line);
                       }
-                    } else {
-                      log(settings.logger(), logPrefix.get(), line);
                     }
+                  } else {
+                    log(settings.logger(), logPrefix.get(), line);
                   }
                 }
-              })
-              .redirectError(new LogOutputStream() {
-                @Override
-                protected void processLine(String line) {
-                  log(settings.logger(), logPrefix.get(), line);
-                }
-              })
-              .destroyOnExit()
-              .command(myArgs).execute();
-        } catch (Throwable t) {
-          Util.handleException(t);
-        }
-        synchronized (ready) {
-          ready.set(true);
-          ready.notifyAll();
-        }
+              }
+            })
+            .redirectError(new LogOutputStream() {
+              @Override
+              protected void processLine(String line) {
+                log(settings.logger(), logPrefix.get(), line);
+              }
+            })
+            .destroyOnExit()
+            .command(myArgs).execute();
+      } catch (Throwable t) {
+        Util.handleException(t);
+      }
+      synchronized (ready) {
+        ready.set(true);
+        ready.notifyAll();
       }
     }).start();
     synchronized (ready) {
@@ -505,13 +495,11 @@ public class JBrowserDriver extends RemoteWebDriver {
       LogRecord record = null;
       if (message.startsWith(">")) {
         String[] parts = message.substring(1).split("/", 3);
-        record = new LogRecord(Level.parse(parts[0]),
-            new StringBuilder().append(prefix).append(" ").append(parts[2]).toString());
+        record = new LogRecord(Level.parse(parts[0]), prefix + " " + parts[2]);
         record.setSourceMethodName(parts[1]);
         record.setSourceClassName(JBrowserDriver.class.getName());
       } else {
-        record = new LogRecord(Level.WARNING,
-            new StringBuilder().append(prefix).append(" ").append(message).toString());
+        record = new LogRecord(Level.WARNING, prefix + " " + message);
         record.setSourceMethodName(null);
         record.setSourceClassName(JBrowserDriver.class.getName());
       }

@@ -59,8 +59,7 @@ class ProxyAuth implements CredentialsProvider {
   @Override
   public Credentials getCredentials(AuthScope authScope) {
     synchronized (lock) {
-      return proxies.get(new StringBuilder()
-          .append(authScope.getHost()).append(":").append(authScope.getPort()).toString());
+      return proxies.get(authScope.getHost() + ":" + authScope.getPort());
     }
   }
 

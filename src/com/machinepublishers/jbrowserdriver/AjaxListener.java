@@ -63,13 +63,10 @@ class AjaxListener implements Runnable {
       long time = start;
       final Settings settings = SettingsManager.settings();
       final AtomicBoolean done = new AtomicBoolean();
-      Platform.runLater(new Runnable() {
-        @Override
-        public void run() {
-          synchronized (done) {
-            done.set(true);
-            done.notifyAll();
-          }
+      Platform.runLater(() -> {
+        synchronized (done) {
+          done.set(true);
+          done.notifyAll();
         }
       });
       synchronized (done) {
