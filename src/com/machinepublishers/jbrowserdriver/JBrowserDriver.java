@@ -78,7 +78,7 @@ import org.zeroturnaround.process.Processes;
 import com.google.common.collect.ImmutableMap;
 import com.machinepublishers.jbrowserdriver.diagnostics.Test;
 
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
+import io.github.classgraph.ClassGraph;
 
 /**
  * A Selenium-compatible and WebKit-based web driver written in pure Java.
@@ -140,7 +140,7 @@ public class JBrowserDriver extends RemoteWebDriver {
     List<String> classpathSimpleTmp = new ArrayList<String>();
     List<String> classpathUnpackedTmp = new ArrayList<String>();
     try {
-      List<File> classpathElements = new FastClasspathScanner().getUniqueClasspathElements();
+      List<File> classpathElements = new ClassGraph().getClasspathFiles();
       final File classpathDir = Files.createTempDirectory("jbd_classpath_").toFile();
       Runtime.getRuntime().addShutdownHook(new FileRemover(classpathDir));
       List<String> pathsSimple = new ArrayList<String>();
