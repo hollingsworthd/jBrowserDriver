@@ -45,6 +45,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.WindowType;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.interactions.Locatable;
 import org.openqa.selenium.logging.LogEntry;
@@ -143,9 +144,9 @@ public class Test {
        * Javascript logs
        */
       int messages = 0;
-      for (LogEntry entry : driver.manage().logs().get("javascript").filter(Level.ALL)) {
-        ++messages;
-        test(!StringUtils.isEmpty(entry.getMessage()));
+      for (LogEntry entry : driver.manage().logs().get("javascript")) {
+          ++messages;
+          test(!StringUtils.isEmpty(entry.getMessage()));
       }
       test(messages == 3);
 
@@ -499,6 +500,19 @@ public class Test {
       test(driver.manage().window().getPosition().getY() == 0);
       test(driver.manage().window().getSize().getWidth() == 1024);
       test(driver.manage().window().getSize().getHeight() == 768);
+
+      /*
+       * Windows
+       */
+      String windowHandle = driver.getWindowHandle();
+      driver.switchTo().newWindow(WindowType.TAB);
+      test(driver.getWindowHandles().size() == 2);
+      driver.switchTo().window(new ArrayList<>(driver.getWindowHandles()).get(1));
+      test(!windowHandle.equals(driver.getWindowHandle()));
+      driver.close();
+      test(driver.getWindowHandles().size() == 1);
+      driver.switchTo().window(windowHandle);
+      test(windowHandle.equals(driver.getWindowHandle()));
 
       /*
        * Element visibility
