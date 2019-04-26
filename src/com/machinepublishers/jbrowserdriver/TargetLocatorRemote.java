@@ -20,6 +20,9 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WindowType;
+
 interface TargetLocatorRemote extends Remote {
   ElementRemote activeElement() throws RemoteException;
 
@@ -36,4 +39,6 @@ interface TargetLocatorRemote extends Remote {
   JBrowserDriverRemote parentFrame() throws RemoteException;
 
   JBrowserDriverRemote window(String windowHandle) throws RemoteException;
+
+  JBrowserDriverRemote newWindow(WindowType windowType) throws RemoteException;
 }

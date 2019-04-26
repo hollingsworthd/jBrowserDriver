@@ -19,8 +19,9 @@ package com.machinepublishers.jbrowserdriver;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.WindowType;
 
-class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
+class TargetLocator implements WebDriver.TargetLocator {
   private final TargetLocatorRemote remote;
   private final JBrowserDriver driver;
   private final SocketLock lock;
@@ -142,6 +143,19 @@ class TargetLocator implements org.openqa.selenium.WebDriver.TargetLocator {
     try {
       synchronized (lock.validated()) {
         remote.window(windowHandle);
+      }
+      return driver;
+    } catch (Throwable t) {
+      Util.handleException(t);
+      return null;
+    }
+  }
+
+  @Override
+  public WebDriver newWindow(WindowType windowType) {
+    try {
+      synchronized (lock.validated()) {
+        remote.newWindow(windowType);
       }
       return driver;
     } catch (Throwable t) {

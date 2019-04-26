@@ -21,10 +21,11 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.WindowType;
 
-class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
-    org.openqa.selenium.WebDriver.TargetLocator {
+class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote, WebDriver.TargetLocator {
 
   private final JBrowserDriverServer driver;
   private final Context context;
@@ -124,6 +125,12 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote,
   @Override
   public JBrowserDriverServer window(String windowHandle) {
     context.setCurrent(windowHandle);
+    return driver;
+  }
+
+  @Override
+  public JBrowserDriverServer newWindow(WindowType windowType) {
+    context.spawn(driver);
     return driver;
   }
 }
