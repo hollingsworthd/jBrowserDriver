@@ -90,6 +90,20 @@ interface JBrowserDriverRemote extends Remote {
 
   void get(String url) throws RemoteException;
 
+  /**
+   * Loads the given HTML content directly. This method is useful when you have an HTML String composed in memory, or loaded from some system which cannot be reached via a URL (for example, the HTML text may have come from a database). 
+   * @param html
+   * @throws RemoteException 
+   */
+  void load(final String html)  throws RemoteException;
+  /**
+   * Loads the given content directly. This method is useful when you have content composed in memory, or loaded from some system which cannot be reached via a URL (for example, the SVG text may have come from a database). 
+   *This method also allows you to specify the content type of the string being loaded, and so may optionally support other types besides just HTML.
+   * @param content
+   * @param contentType
+   * @throws RemoteException 
+   */
+  void load(String content,String contentType)  throws RemoteException;
   String getCurrentUrl() throws RemoteException;
 
   String getTitle() throws RemoteException;
