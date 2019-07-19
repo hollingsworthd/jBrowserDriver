@@ -290,6 +290,75 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
    * {@inheritDoc}
    */
   @Override
+  public void load(final String html) {
+    init();
+    long start = System.currentTimeMillis();
+    try {
+      AppThread.exec(context.get().item().statusCode,
+          context.get().timeouts.get().getPageLoadTimeoutMS(), () -> {
+            context.get().item().httpListener.get().resetStatusCode();
+            context.get().item().engine.get().loadContent(html);
+            return null;
+          });
+      long end = System.currentTimeMillis();
+      if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
+        getStatusCode();
+      } else {
+        long waitMS = context.get().timeouts.get().getPageLoadTimeoutMS() - (end - start);
+        if (waitMS > 0) {
+          getStatusCode(waitMS);
+        }
+      }
+    } finally {
+      if (context.get().item().statusCode.get() == 0) {
+        AppThread.exec(() -> {
+          context.get().item().engine.get().getLoadWorker().cancel();
+          throw new TimeoutException(
+                  "Timeout of " + context.get().timeouts.get().getPageLoadTimeoutMS() + "ms reached.");
+        }, context.get().timeouts.get().getPageLoadTimeoutMS());
+      }
+    }
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void load(final String content,final String contentType) {
+    init();
+    long start = System.currentTimeMillis();
+    try {
+      AppThread.exec(context.get().item().statusCode,
+          context.get().timeouts.get().getPageLoadTimeoutMS(), () -> {
+            context.get().item().httpListener.get().resetStatusCode();
+            context.get().item().engine.get().loadContent(content, contentType);
+            return null;
+          });
+      long end = System.currentTimeMillis();
+      if (context.get().timeouts.get().getPageLoadTimeoutMS() == 0) {
+        getStatusCode();
+      } else {
+        long waitMS = context.get().timeouts.get().getPageLoadTimeoutMS() - (end - start);
+        if (waitMS > 0) {
+          getStatusCode(waitMS);
+        }
+      }
+    } finally {
+      if (context.get().item().statusCode.get() == 0) {
+        AppThread.exec(() -> {
+          context.get().item().engine.get().getLoadWorker().cancel();
+          throw new TimeoutException(
+                  "Timeout of " + context.get().timeouts.get().getPageLoadTimeoutMS() + "ms reached.");
+        }, context.get().timeouts.get().getPageLoadTimeoutMS());
+      }
+    }
+  }
+
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void get(final String url) {
     init();
     long start = System.currentTimeMillis();
