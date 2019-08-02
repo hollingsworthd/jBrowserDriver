@@ -100,7 +100,7 @@ class StreamConnection extends HttpURLConnection implements Closeable {
       ".svg", ".gif", ".jpeg", ".jpg", ".png",
       ".ico", ".webm", ".mp4", ".ogg", ".ogv",
       ".mp3", ".aac", ".wav", ".swf", ".woff",
-      ".otf", ".ttf", ".css" })));
+      ".otf", ".ttf" })));
 
   private final Map<String, List<String>> reqHeaders = new LinkedHashMap<String, List<String>>();
   private final Map<String, String> reqHeadersCasing = new HashMap<String, String>();
