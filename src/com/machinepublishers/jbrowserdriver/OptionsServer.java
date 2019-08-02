@@ -41,7 +41,6 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
   private final ImeHandlerServer imeHandler = new com.machinepublishers.jbrowserdriver.ImeHandlerServer();
   private final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts;
   private static final Pattern domain = Pattern.compile(".*?://(?:[^/]*@)?\\[?([^\\]:/]*).*");
-  private static final DateFormat cookieDf = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz");
 
   OptionsServer(final Context context,
       final AtomicReference<com.machinepublishers.jbrowserdriver.TimeoutsServer> timeouts)
@@ -69,6 +68,7 @@ class OptionsServer extends RemoteObject implements OptionsRemote,
     out.setAttribute("domain", "." + out.getDomain());
     if (in.getExpiry() != null) {
       out.setExpiryDate(in.getExpiry());
+      DateFormat cookieDf = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz");
       cookieDf.setTimeZone(TimeZone.getTimeZone("GMT"));
       out.setAttribute("expires", cookieDf.format(in.getExpiry()));
     }
