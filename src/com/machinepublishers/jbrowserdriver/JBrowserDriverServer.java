@@ -213,7 +213,15 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     if (element != null) {
       String outerHtml = element.getAttribute("outerHTML");
       if (outerHtml != null && !outerHtml.isEmpty()) {
-        String docType = (String) executeScript("return new XMLSerializer().serializeToString(document.doctype);");
+        String docType = null;
+        try {
+          docType = (String) executeScript("return document.doctype ? new XMLSerializer().serializeToString(document.doctype) : '';");
+        } catch (Exception e) {
+          /*
+           * ignore -- not sure if there are cases where serialization where serialization 
+           * will fail and losing doctype doesn't seem important enough to go to fallbacks
+           */
+        }
         docType = docType == null || docType.isEmpty() ? "" : docType + "\n";
         return docType + outerHtml;
       }
