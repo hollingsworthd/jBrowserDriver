@@ -213,7 +213,9 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
     if (element != null) {
       String outerHtml = element.getAttribute("outerHTML");
       if (outerHtml != null && !outerHtml.isEmpty()) {
-        return outerHtml;
+        String docType = (String) executeScript("return new XMLSerializer().serializeToString(document.doctype);");
+        docType = docType == null || docType.isEmpty() ? "" : docType + "\n";
+        return docType + outerHtml;
       }
     }
     return AppThread.exec(context.get().item().statusCode, () -> {
@@ -240,7 +242,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
   public String getCurrentUrl() {
     init();
     return AppThread.exec(context.get().item().statusCode,
-            () -> context.get().item().view.get().getEngine().getLocation());
+        () -> context.get().item().view.get().getEngine().getLocation());
   }
 
   /**
@@ -314,7 +316,7 @@ class JBrowserDriverServer extends RemoteObject implements JBrowserDriverRemote,
         AppThread.exec(() -> {
           context.get().item().engine.get().getLoadWorker().cancel();
           throw new TimeoutException(
-                  "Timeout of " + context.get().timeouts.get().getPageLoadTimeoutMS() + "ms reached.");
+              "Timeout of " + context.get().timeouts.get().getPageLoadTimeoutMS() + "ms reached.");
         }, context.get().timeouts.get().getPageLoadTimeoutMS());
       }
     }

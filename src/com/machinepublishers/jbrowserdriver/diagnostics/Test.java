@@ -342,6 +342,17 @@ public class Test {
       test(!driver.findElementById("checkbox2").isSelected());
 
       /*
+       * Page source
+       */
+      test(driver.getPageSource().startsWith("<!DOCTYPE"));
+      test(driver.getPageSource().contains("<html>"));
+      test(driver.getPageSource().contains("<head>"));
+      test(driver.getPageSource().contains("<body "));
+      test(driver.getPageSource().contains("</html>"));
+      test(driver.getPageSource().contains("</head>"));
+      test(driver.getPageSource().contains("</body>"));
+      
+      /*
        * Cookie manager
        */
       driver.manage().addCookie(new Cookie("testname", "testvalue"));
