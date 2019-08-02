@@ -13,10 +13,10 @@ Or install via Maven:
 <dependency>
   <groupId>com.machinepublishers</groupId>
   <artifactId>jbrowserdriver</artifactId>
-  <version>1.1.0-RC1</version>
+  <version>1.1.0-RC2</version>
 </dependency>
 ```
-For other install options, see the [Central Repository](https://search.maven.org/artifact/com.machinepublishers/jbrowserdriver/1.1.0-RC1/jar).
+For other install options, see the [Central Repository](https://search.maven.org/artifact/com.machinepublishers/jbrowserdriver/1.1.0-RC2/jar).
 
 ## Prerequisites
 Java 8 with JavaFX:
