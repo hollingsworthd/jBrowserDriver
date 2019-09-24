@@ -41,6 +41,8 @@ import org.openqa.selenium.WrapsDriver;
 
 class Element implements WebElement, JavascriptExecutor, FindsById, FindsByClassName,
     FindsByLinkText, FindsByName, FindsByCssSelector, FindsByTagName, FindsByXPath, Locatable,
+    org.openqa.selenium.interactions.internal.Locatable, // Selenium 3.14 API (org.openqa.selenium.interactions.Actions) uses deprecated interface internally,
+                                                         // so we should implement it as well to avoid type casting issues.
     WrapsDriver {
   private final ElementRemote remote;
   private final JBrowserDriver driver;
