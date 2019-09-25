@@ -111,7 +111,7 @@ public class JBrowserDriver extends RemoteWebDriver {
   private static final AtomicBoolean firstLaunch = new AtomicBoolean(true);
   private static final Set<String> filteredLogs = Collections.unmodifiableSet(
       new HashSet<String>(Arrays.asList(new String[] {
-          "Warning: Single GUI Threadiong is enabled, FPS should be slower"
+          "Warning: Single GUI Threading is enabled, FPS should be slower"
       })));
   private static final AtomicLong sessionIdCounter = new AtomicLong();
 
