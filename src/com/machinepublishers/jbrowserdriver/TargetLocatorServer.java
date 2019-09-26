@@ -128,7 +128,7 @@ class TargetLocatorServer extends RemoteObject implements TargetLocatorRemote, W
     return driver;
   }
 
-  @Override
+  //@Override -- commented out to be compatible with Selenium 3 which does not have this API
   public JBrowserDriverServer newWindow(WindowType windowType) {
     context.spawn(driver);
     return driver;

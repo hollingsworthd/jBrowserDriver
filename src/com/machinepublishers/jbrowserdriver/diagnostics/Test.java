@@ -144,7 +144,7 @@ public class Test {
        * Javascript logs
        */
       int messages = 0;
-      for (LogEntry entry : driver.manage().logs().get("javascript")) {
+      for (LogEntry entry : driver.manage().logs().get("javascript").filter(Level.ALL)) {
           ++messages;
           test(!StringUtils.isEmpty(entry.getMessage()));
       }
@@ -516,7 +516,8 @@ public class Test {
        * Windows
        */
       String windowHandle = driver.getWindowHandle();
-      driver.switchTo().newWindow(WindowType.TAB);
+      //commented out to be compatible with selenium 3 which does not have this api
+      //driver.switchTo().newWindow(WindowType.TAB);
       test(driver.getWindowHandles().size() == 2);
       driver.switchTo().window(new ArrayList<>(driver.getWindowHandles()).get(1));
       test(!windowHandle.equals(driver.getWindowHandle()));

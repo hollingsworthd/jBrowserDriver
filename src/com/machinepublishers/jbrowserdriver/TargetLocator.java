@@ -151,7 +151,7 @@ class TargetLocator implements WebDriver.TargetLocator {
     }
   }
 
-  @Override
+  //@Override -- commented out to be compatible with Selenium 3 which does not have this API
   public WebDriver newWindow(WindowType windowType) {
     try {
       synchronized (lock.validated()) {
