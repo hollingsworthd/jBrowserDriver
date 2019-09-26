@@ -26,31 +26,28 @@ import java.net.URLStreamHandlerFactory;
 class StreamHandler implements URLStreamHandlerFactory {
   StreamHandler() {}
 
-  private static class HttpHandler extends sun.net.www.protocol.http.Handler {
+  private static class HttpHandler extends URLStreamHandler {
+    @Override
+    protected int getDefaultPort() {
+      return 80;
+    }
+
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       return new StreamConnection(url);
     }
-
-    private URLConnection defaultConnection(URL url) throws IOException {
-      return super.openConnection(url);
-    }
   }
 
-  private static class HttpsHandler extends sun.net.www.protocol.https.Handler {
+  private static class HttpsHandler extends URLStreamHandler {
+    @Override
+    protected int getDefaultPort() {
+      return 443;
+    }
+
     @Override
     protected URLConnection openConnection(URL url) throws IOException {
       return new StreamConnection(url);
     }
-
-    private URLConnection defaultConnection(URL url) throws IOException {
-      return super.openConnection(url);
-    }
-  }
-
-  static URLConnection defaultConnection(URL url) throws IOException {
-    return "https".equals(url.getProtocol())
-        ? new HttpsHandler().defaultConnection(url) : new HttpHandler().defaultConnection(url);
   }
 
   /**
@@ -69,18 +66,6 @@ class StreamHandler implements URLStreamHandlerFactory {
     }
     if ("data".equals(protocol)) {
       return new com.sun.webkit.network.data.Handler();
-    }
-    if ("file".equals(protocol)) {
-      return new sun.net.www.protocol.file.Handler();
-    }
-    if ("ftp".equals(protocol)) {
-      return new sun.net.www.protocol.ftp.Handler();
-    }
-    if ("jar".equals(protocol)) {
-      return new sun.net.www.protocol.jar.Handler();
-    }
-    if ("mailto".equals(protocol)) {
-      return new sun.net.www.protocol.mailto.Handler();
     }
     return null;
   }

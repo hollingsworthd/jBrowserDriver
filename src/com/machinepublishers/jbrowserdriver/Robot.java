@@ -39,6 +39,7 @@ import javax.imageio.ImageIO;
 import org.openqa.selenium.Keys;
 
 import com.machinepublishers.jbrowserdriver.AppThread.Sync;
+import com.sun.glass.events.MouseEvent;
 import com.sun.glass.ui.Application;
 import com.sun.glass.ui.Pixels;
 
@@ -47,199 +48,187 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 
 class Robot {
-  private static final Map<Keys, int[]> keysMap;
+  private static final Map<Keys, KeyCode[]> keysMap;
 
   static {
-    Map<Keys, int[]> keysMapTmp = new HashMap<Keys, int[]>();
-    keysMapTmp.put(Keys.ADD, new int[] { KeyEvent.VK_ADD });
-    keysMapTmp.put(Keys.ALT, new int[] { KeyEvent.VK_ALT });
-    keysMapTmp.put(Keys.ARROW_DOWN, new int[] { KeyEvent.VK_DOWN });
-    keysMapTmp.put(Keys.ARROW_LEFT, new int[] { KeyEvent.VK_LEFT });
-    keysMapTmp.put(Keys.ARROW_RIGHT, new int[] { KeyEvent.VK_RIGHT });
-    keysMapTmp.put(Keys.ARROW_UP, new int[] { KeyEvent.VK_UP });
-    keysMapTmp.put(Keys.BACK_SPACE, new int[] { KeyEvent.VK_BACK_SPACE });
-    keysMapTmp.put(Keys.CANCEL, new int[] { KeyEvent.VK_CANCEL });
-    keysMapTmp.put(Keys.CLEAR, new int[] { KeyEvent.VK_CLEAR });
-    keysMapTmp.put(Keys.COMMAND, new int[] { KeyEvent.VK_META });
-    keysMapTmp.put(Keys.CONTROL, new int[] { KeyEvent.VK_CONTROL });
-    keysMapTmp.put(Keys.DECIMAL, new int[] { KeyEvent.VK_DECIMAL });
-    keysMapTmp.put(Keys.DELETE, new int[] { KeyEvent.VK_DELETE });
-    keysMapTmp.put(Keys.DIVIDE, new int[] { KeyEvent.VK_DIVIDE });
-    keysMapTmp.put(Keys.DOWN, new int[] { KeyEvent.VK_DOWN });
-    keysMapTmp.put(Keys.END, new int[] { KeyEvent.VK_END });
-    keysMapTmp.put(Keys.ENTER, new int[] { KeyEvent.VK_ENTER });
-    keysMapTmp.put(Keys.EQUALS, new int[] { KeyEvent.VK_EQUALS });
-    keysMapTmp.put(Keys.ESCAPE, new int[] { KeyEvent.VK_ESCAPE });
-    keysMapTmp.put(Keys.F1, new int[] { KeyEvent.VK_F1 });
-    keysMapTmp.put(Keys.F10, new int[] { KeyEvent.VK_F10 });
-    keysMapTmp.put(Keys.F11, new int[] { KeyEvent.VK_F11 });
-    keysMapTmp.put(Keys.F12, new int[] { KeyEvent.VK_F12 });
-    keysMapTmp.put(Keys.F2, new int[] { KeyEvent.VK_F2 });
-    keysMapTmp.put(Keys.F3, new int[] { KeyEvent.VK_F3 });
-    keysMapTmp.put(Keys.F4, new int[] { KeyEvent.VK_F4 });
-    keysMapTmp.put(Keys.F5, new int[] { KeyEvent.VK_F5 });
-    keysMapTmp.put(Keys.F6, new int[] { KeyEvent.VK_F6 });
-    keysMapTmp.put(Keys.F7, new int[] { KeyEvent.VK_F7 });
-    keysMapTmp.put(Keys.F8, new int[] { KeyEvent.VK_F8 });
-    keysMapTmp.put(Keys.F9, new int[] { KeyEvent.VK_F9 });
-    keysMapTmp.put(Keys.HELP, new int[] { KeyEvent.VK_HELP });
-    keysMapTmp.put(Keys.HOME, new int[] { KeyEvent.VK_HOME });
-    keysMapTmp.put(Keys.INSERT, new int[] { KeyEvent.VK_INSERT });
-    keysMapTmp.put(Keys.LEFT, new int[] { KeyEvent.VK_LEFT });
-    keysMapTmp.put(Keys.LEFT_ALT, new int[] { KeyEvent.VK_ALT });
-    keysMapTmp.put(Keys.LEFT_CONTROL, new int[] { KeyEvent.VK_CONTROL });
-    keysMapTmp.put(Keys.LEFT_SHIFT, new int[] { KeyEvent.VK_SHIFT });
-    keysMapTmp.put(Keys.META, new int[] { KeyEvent.VK_META });
-    keysMapTmp.put(Keys.MULTIPLY, new int[] { KeyEvent.VK_MULTIPLY });
-    keysMapTmp.put(Keys.NUMPAD0, new int[] { KeyEvent.VK_NUMPAD0 });
-    keysMapTmp.put(Keys.NUMPAD1, new int[] { KeyEvent.VK_NUMPAD1 });
-    keysMapTmp.put(Keys.NUMPAD2, new int[] { KeyEvent.VK_NUMPAD2 });
-    keysMapTmp.put(Keys.NUMPAD3, new int[] { KeyEvent.VK_NUMPAD3 });
-    keysMapTmp.put(Keys.NUMPAD4, new int[] { KeyEvent.VK_NUMPAD4 });
-    keysMapTmp.put(Keys.NUMPAD5, new int[] { KeyEvent.VK_NUMPAD5 });
-    keysMapTmp.put(Keys.NUMPAD6, new int[] { KeyEvent.VK_NUMPAD6 });
-    keysMapTmp.put(Keys.NUMPAD7, new int[] { KeyEvent.VK_NUMPAD7 });
-    keysMapTmp.put(Keys.NUMPAD8, new int[] { KeyEvent.VK_NUMPAD8 });
-    keysMapTmp.put(Keys.NUMPAD9, new int[] { KeyEvent.VK_NUMPAD9 });
-    keysMapTmp.put(Keys.PAGE_DOWN, new int[] { KeyEvent.VK_PAGE_DOWN });
-    keysMapTmp.put(Keys.PAGE_UP, new int[] { KeyEvent.VK_PAGE_UP });
-    keysMapTmp.put(Keys.PAUSE, new int[] { KeyEvent.VK_PAUSE });
-    keysMapTmp.put(Keys.RETURN, new int[] { KeyEvent.VK_ENTER });
-    keysMapTmp.put(Keys.RIGHT, new int[] { KeyEvent.VK_RIGHT });
-    keysMapTmp.put(Keys.SEMICOLON, new int[] { KeyEvent.VK_SEMICOLON });
-    keysMapTmp.put(Keys.SEPARATOR, new int[] { KeyEvent.VK_SEPARATOR });
-    keysMapTmp.put(Keys.SHIFT, new int[] { KeyEvent.VK_SHIFT });
-    keysMapTmp.put(Keys.SPACE, new int[] { KeyEvent.VK_SPACE });
-    keysMapTmp.put(Keys.SUBTRACT, new int[] { KeyEvent.VK_SUBTRACT });
-    keysMapTmp.put(Keys.TAB, new int[] { KeyEvent.VK_TAB });
-    keysMapTmp.put(Keys.UP, new int[] { KeyEvent.VK_UP });
+    Map<Keys, KeyCode[]> keysMapTmp = new HashMap<Keys, KeyCode[]>();
+    keysMapTmp.put(Keys.ADD, new KeyCode[] { KeyCode.ADD });
+    keysMapTmp.put(Keys.ALT, new KeyCode[] { KeyCode.ALT });
+    keysMapTmp.put(Keys.ARROW_DOWN, new KeyCode[] { KeyCode.DOWN });
+    keysMapTmp.put(Keys.ARROW_LEFT, new KeyCode[] { KeyCode.LEFT });
+    keysMapTmp.put(Keys.ARROW_RIGHT, new KeyCode[] { KeyCode.RIGHT });
+    keysMapTmp.put(Keys.ARROW_UP, new KeyCode[] { KeyCode.UP });
+    keysMapTmp.put(Keys.BACK_SPACE, new KeyCode[] { KeyCode.BACK_SPACE });
+    keysMapTmp.put(Keys.CANCEL, new KeyCode[] { KeyCode.CANCEL });
+    keysMapTmp.put(Keys.CLEAR, new KeyCode[] { KeyCode.CLEAR });
+    keysMapTmp.put(Keys.COMMAND, new KeyCode[] { KeyCode.META });
+    keysMapTmp.put(Keys.CONTROL, new KeyCode[] { KeyCode.CONTROL });
+    keysMapTmp.put(Keys.DECIMAL, new KeyCode[] { KeyCode.DECIMAL });
+    keysMapTmp.put(Keys.DELETE, new KeyCode[] { KeyCode.DELETE });
+    keysMapTmp.put(Keys.DIVIDE, new KeyCode[] { KeyCode.DIVIDE });
+    keysMapTmp.put(Keys.DOWN, new KeyCode[] { KeyCode.DOWN });
+    keysMapTmp.put(Keys.END, new KeyCode[] { KeyCode.END });
+    keysMapTmp.put(Keys.ENTER, new KeyCode[] { KeyCode.ENTER });
+    keysMapTmp.put(Keys.EQUALS, new KeyCode[] { KeyCode.EQUALS });
+    keysMapTmp.put(Keys.ESCAPE, new KeyCode[] { KeyCode.ESCAPE });
+    keysMapTmp.put(Keys.F1, new KeyCode[] { KeyCode.F1 });
+    keysMapTmp.put(Keys.F10, new KeyCode[] { KeyCode.F10 });
+    keysMapTmp.put(Keys.F11, new KeyCode[] { KeyCode.F11 });
+    keysMapTmp.put(Keys.F12, new KeyCode[] { KeyCode.F12 });
+    keysMapTmp.put(Keys.F2, new KeyCode[] { KeyCode.F2 });
+    keysMapTmp.put(Keys.F3, new KeyCode[] { KeyCode.F3 });
+    keysMapTmp.put(Keys.F4, new KeyCode[] { KeyCode.F4 });
+    keysMapTmp.put(Keys.F5, new KeyCode[] { KeyCode.F5 });
+    keysMapTmp.put(Keys.F6, new KeyCode[] { KeyCode.F6 });
+    keysMapTmp.put(Keys.F7, new KeyCode[] { KeyCode.F7 });
+    keysMapTmp.put(Keys.F8, new KeyCode[] { KeyCode.F8 });
+    keysMapTmp.put(Keys.F9, new KeyCode[] { KeyCode.F9 });
+    keysMapTmp.put(Keys.HELP, new KeyCode[] { KeyCode.HELP });
+    keysMapTmp.put(Keys.HOME, new KeyCode[] { KeyCode.HOME });
+    keysMapTmp.put(Keys.INSERT, new KeyCode[] { KeyCode.INSERT });
+    keysMapTmp.put(Keys.LEFT, new KeyCode[] { KeyCode.LEFT });
+    keysMapTmp.put(Keys.LEFT_ALT, new KeyCode[] { KeyCode.ALT });
+    keysMapTmp.put(Keys.LEFT_CONTROL, new KeyCode[] { KeyCode.CONTROL });
+    keysMapTmp.put(Keys.LEFT_SHIFT, new KeyCode[] { KeyCode.SHIFT });
+    keysMapTmp.put(Keys.META, new KeyCode[] { KeyCode.META });
+    keysMapTmp.put(Keys.MULTIPLY, new KeyCode[] { KeyCode.MULTIPLY });
+    keysMapTmp.put(Keys.NUMPAD0, new KeyCode[] { KeyCode.NUMPAD0 });
+    keysMapTmp.put(Keys.NUMPAD1, new KeyCode[] { KeyCode.NUMPAD1 });
+    keysMapTmp.put(Keys.NUMPAD2, new KeyCode[] { KeyCode.NUMPAD2 });
+    keysMapTmp.put(Keys.NUMPAD3, new KeyCode[] { KeyCode.NUMPAD3 });
+    keysMapTmp.put(Keys.NUMPAD4, new KeyCode[] { KeyCode.NUMPAD4 });
+    keysMapTmp.put(Keys.NUMPAD5, new KeyCode[] { KeyCode.NUMPAD5 });
+    keysMapTmp.put(Keys.NUMPAD6, new KeyCode[] { KeyCode.NUMPAD6 });
+    keysMapTmp.put(Keys.NUMPAD7, new KeyCode[] { KeyCode.NUMPAD7 });
+    keysMapTmp.put(Keys.NUMPAD8, new KeyCode[] { KeyCode.NUMPAD8 });
+    keysMapTmp.put(Keys.NUMPAD9, new KeyCode[] { KeyCode.NUMPAD9 });
+    keysMapTmp.put(Keys.PAGE_DOWN, new KeyCode[] { KeyCode.PAGE_DOWN });
+    keysMapTmp.put(Keys.PAGE_UP, new KeyCode[] { KeyCode.PAGE_UP });
+    keysMapTmp.put(Keys.PAUSE, new KeyCode[] { KeyCode.PAUSE });
+    keysMapTmp.put(Keys.RETURN, new KeyCode[] { KeyCode.ENTER });
+    keysMapTmp.put(Keys.RIGHT, new KeyCode[] { KeyCode.RIGHT });
+    keysMapTmp.put(Keys.SEMICOLON, new KeyCode[] { KeyCode.SEMICOLON });
+    keysMapTmp.put(Keys.SEPARATOR, new KeyCode[] { KeyCode.SEPARATOR });
+    keysMapTmp.put(Keys.SHIFT, new KeyCode[] { KeyCode.SHIFT });
+    keysMapTmp.put(Keys.SPACE, new KeyCode[] { KeyCode.SPACE });
+    keysMapTmp.put(Keys.SUBTRACT, new KeyCode[] { KeyCode.SUBTRACT });
+    keysMapTmp.put(Keys.TAB, new KeyCode[] { KeyCode.TAB });
+    keysMapTmp.put(Keys.UP, new KeyCode[] { KeyCode.UP });
     keysMap = Collections.unmodifiableMap(keysMapTmp);
   }
 
-  private static final Map<String, int[]> textMap;
+  private static final Map<String, KeyCode[]> textMap;
 
   static {
-    Map<String, int[]> textMapTmp = new HashMap<String, int[]>();
-    textMapTmp.put("1", new int[] { KeyEvent.VK_1 });
-    textMapTmp.put("2", new int[] { KeyEvent.VK_2 });
-    textMapTmp.put("3", new int[] { KeyEvent.VK_3 });
-    textMapTmp.put("4", new int[] { KeyEvent.VK_4 });
-    textMapTmp.put("5", new int[] { KeyEvent.VK_5 });
-    textMapTmp.put("6", new int[] { KeyEvent.VK_6 });
-    textMapTmp.put("7", new int[] { KeyEvent.VK_7 });
-    textMapTmp.put("8", new int[] { KeyEvent.VK_8 });
-    textMapTmp.put("9", new int[] { KeyEvent.VK_9 });
-    textMapTmp.put("0", new int[] { KeyEvent.VK_0 });
-    textMapTmp.put("a", new int[] { KeyEvent.VK_A });
-    textMapTmp.put("b", new int[] { KeyEvent.VK_B });
-    textMapTmp.put("c", new int[] { KeyEvent.VK_C });
-    textMapTmp.put("d", new int[] { KeyEvent.VK_D });
-    textMapTmp.put("e", new int[] { KeyEvent.VK_E });
-    textMapTmp.put("f", new int[] { KeyEvent.VK_F });
-    textMapTmp.put("g", new int[] { KeyEvent.VK_G });
-    textMapTmp.put("h", new int[] { KeyEvent.VK_H });
-    textMapTmp.put("i", new int[] { KeyEvent.VK_I });
-    textMapTmp.put("j", new int[] { KeyEvent.VK_J });
-    textMapTmp.put("k", new int[] { KeyEvent.VK_K });
-    textMapTmp.put("l", new int[] { KeyEvent.VK_L });
-    textMapTmp.put("m", new int[] { KeyEvent.VK_M });
-    textMapTmp.put("n", new int[] { KeyEvent.VK_N });
-    textMapTmp.put("o", new int[] { KeyEvent.VK_O });
-    textMapTmp.put("p", new int[] { KeyEvent.VK_P });
-    textMapTmp.put("q", new int[] { KeyEvent.VK_Q });
-    textMapTmp.put("r", new int[] { KeyEvent.VK_R });
-    textMapTmp.put("s", new int[] { KeyEvent.VK_S });
-    textMapTmp.put("t", new int[] { KeyEvent.VK_T });
-    textMapTmp.put("u", new int[] { KeyEvent.VK_U });
-    textMapTmp.put("v", new int[] { KeyEvent.VK_V });
-    textMapTmp.put("w", new int[] { KeyEvent.VK_W });
-    textMapTmp.put("x", new int[] { KeyEvent.VK_X });
-    textMapTmp.put("y", new int[] { KeyEvent.VK_Y });
-    textMapTmp.put("z", new int[] { KeyEvent.VK_Z });
-    textMapTmp.put("A", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_A });
-    textMapTmp.put("B", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_B });
-    textMapTmp.put("C", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_C });
-    textMapTmp.put("D", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_D });
-    textMapTmp.put("E", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_E });
-    textMapTmp.put("F", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_F });
-    textMapTmp.put("G", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_G });
-    textMapTmp.put("H", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_H });
-    textMapTmp.put("I", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_I });
-    textMapTmp.put("J", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_J });
-    textMapTmp.put("K", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_K });
-    textMapTmp.put("L", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_L });
-    textMapTmp.put("M", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_M });
-    textMapTmp.put("N", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_N });
-    textMapTmp.put("O", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_O });
-    textMapTmp.put("P", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_P });
-    textMapTmp.put("Q", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Q });
-    textMapTmp.put("R", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_R });
-    textMapTmp.put("S", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_S });
-    textMapTmp.put("T", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_T });
-    textMapTmp.put("U", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_U });
-    textMapTmp.put("V", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_V });
-    textMapTmp.put("W", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_W });
-    textMapTmp.put("X", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_X });
-    textMapTmp.put("Y", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Y });
-    textMapTmp.put("Z", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_Z });
-    textMapTmp.put("`", new int[] { KeyEvent.VK_BACK_QUOTE });
-    textMapTmp.put("-", new int[] { KeyEvent.VK_MINUS });
-    textMapTmp.put("=", new int[] { KeyEvent.VK_EQUALS });
-    textMapTmp.put("[", new int[] { KeyEvent.VK_OPEN_BRACKET });
-    textMapTmp.put("]", new int[] { KeyEvent.VK_CLOSE_BRACKET });
-    textMapTmp.put("\\", new int[] { KeyEvent.VK_BACK_SLASH });
-    textMapTmp.put(";", new int[] { KeyEvent.VK_SEMICOLON });
-    textMapTmp.put("'", new int[] { KeyEvent.VK_QUOTE });
-    textMapTmp.put(",", new int[] { KeyEvent.VK_COMMA });
-    textMapTmp.put(".", new int[] { KeyEvent.VK_PERIOD });
-    textMapTmp.put("/", new int[] { KeyEvent.VK_SLASH });
-    textMapTmp.put("~", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_QUOTE });
-    textMapTmp.put("_", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_MINUS });
-    textMapTmp.put("+", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_EQUALS });
-    textMapTmp.put("{", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_OPEN_BRACKET });
-    textMapTmp.put("}", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_CLOSE_BRACKET });
-    textMapTmp.put("|", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_BACK_SLASH });
-    textMapTmp.put(":", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SEMICOLON });
-    textMapTmp.put("\"", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_QUOTE });
-    textMapTmp.put("<", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_COMMA });
-    textMapTmp.put(">", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_PERIOD });
-    textMapTmp.put("?", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_SLASH });
-    textMapTmp.put("!", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_1 });
-    textMapTmp.put("@", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_2 });
-    textMapTmp.put("#", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_3 });
-    textMapTmp.put("$", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_4 });
-    textMapTmp.put("%", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_5 });
-    textMapTmp.put("^", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_6 });
-    textMapTmp.put("&", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_7 });
-    textMapTmp.put("*", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_8 });
-    textMapTmp.put("(", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_9 });
-    textMapTmp.put(")", new int[] { KeyEvent.VK_SHIFT, KeyEvent.VK_0 });
-    textMapTmp.put("\t", new int[] { KeyEvent.VK_TAB });
-    textMapTmp.put("\n", new int[] { KeyEvent.VK_ENTER });
-    textMapTmp.put(" ", new int[] { KeyEvent.VK_SPACE });
+    Map<String, KeyCode[]> textMapTmp = new HashMap<String, KeyCode[]>();
+    textMapTmp.put("1", new KeyCode[] { KeyCode.DIGIT1 });
+    textMapTmp.put("2", new KeyCode[] { KeyCode.DIGIT2 });
+    textMapTmp.put("3", new KeyCode[] { KeyCode.DIGIT3 });
+    textMapTmp.put("4", new KeyCode[] { KeyCode.DIGIT4 });
+    textMapTmp.put("5", new KeyCode[] { KeyCode.DIGIT5 });
+    textMapTmp.put("6", new KeyCode[] { KeyCode.DIGIT6 });
+    textMapTmp.put("7", new KeyCode[] { KeyCode.DIGIT7 });
+    textMapTmp.put("8", new KeyCode[] { KeyCode.DIGIT8 });
+    textMapTmp.put("9", new KeyCode[] { KeyCode.DIGIT9 });
+    textMapTmp.put("0", new KeyCode[] { KeyCode.DIGIT0 });
+    textMapTmp.put("a", new KeyCode[] { KeyCode.A });
+    textMapTmp.put("b", new KeyCode[] { KeyCode.B });
+    textMapTmp.put("c", new KeyCode[] { KeyCode.C });
+    textMapTmp.put("d", new KeyCode[] { KeyCode.D });
+    textMapTmp.put("e", new KeyCode[] { KeyCode.E });
+    textMapTmp.put("f", new KeyCode[] { KeyCode.F });
+    textMapTmp.put("g", new KeyCode[] { KeyCode.G });
+    textMapTmp.put("h", new KeyCode[] { KeyCode.H });
+    textMapTmp.put("i", new KeyCode[] { KeyCode.I });
+    textMapTmp.put("j", new KeyCode[] { KeyCode.J });
+    textMapTmp.put("k", new KeyCode[] { KeyCode.K });
+    textMapTmp.put("l", new KeyCode[] { KeyCode.L });
+    textMapTmp.put("m", new KeyCode[] { KeyCode.M });
+    textMapTmp.put("n", new KeyCode[] { KeyCode.N });
+    textMapTmp.put("o", new KeyCode[] { KeyCode.O });
+    textMapTmp.put("p", new KeyCode[] { KeyCode.P });
+    textMapTmp.put("q", new KeyCode[] { KeyCode.Q });
+    textMapTmp.put("r", new KeyCode[] { KeyCode.R });
+    textMapTmp.put("s", new KeyCode[] { KeyCode.S });
+    textMapTmp.put("t", new KeyCode[] { KeyCode.T });
+    textMapTmp.put("u", new KeyCode[] { KeyCode.U });
+    textMapTmp.put("v", new KeyCode[] { KeyCode.V });
+    textMapTmp.put("w", new KeyCode[] { KeyCode.W });
+    textMapTmp.put("x", new KeyCode[] { KeyCode.X });
+    textMapTmp.put("y", new KeyCode[] { KeyCode.Y });
+    textMapTmp.put("z", new KeyCode[] { KeyCode.Z });
+    textMapTmp.put("A", new KeyCode[] { KeyCode.SHIFT, KeyCode.A });
+    textMapTmp.put("B", new KeyCode[] { KeyCode.SHIFT, KeyCode.B });
+    textMapTmp.put("C", new KeyCode[] { KeyCode.SHIFT, KeyCode.C });
+    textMapTmp.put("D", new KeyCode[] { KeyCode.SHIFT, KeyCode.D });
+    textMapTmp.put("E", new KeyCode[] { KeyCode.SHIFT, KeyCode.E });
+    textMapTmp.put("F", new KeyCode[] { KeyCode.SHIFT, KeyCode.F });
+    textMapTmp.put("G", new KeyCode[] { KeyCode.SHIFT, KeyCode.G });
+    textMapTmp.put("H", new KeyCode[] { KeyCode.SHIFT, KeyCode.H });
+    textMapTmp.put("I", new KeyCode[] { KeyCode.SHIFT, KeyCode.I });
+    textMapTmp.put("J", new KeyCode[] { KeyCode.SHIFT, KeyCode.J });
+    textMapTmp.put("K", new KeyCode[] { KeyCode.SHIFT, KeyCode.K });
+    textMapTmp.put("L", new KeyCode[] { KeyCode.SHIFT, KeyCode.L });
+    textMapTmp.put("M", new KeyCode[] { KeyCode.SHIFT, KeyCode.M });
+    textMapTmp.put("N", new KeyCode[] { KeyCode.SHIFT, KeyCode.N });
+    textMapTmp.put("O", new KeyCode[] { KeyCode.SHIFT, KeyCode.O });
+    textMapTmp.put("P", new KeyCode[] { KeyCode.SHIFT, KeyCode.P });
+    textMapTmp.put("Q", new KeyCode[] { KeyCode.SHIFT, KeyCode.Q });
+    textMapTmp.put("R", new KeyCode[] { KeyCode.SHIFT, KeyCode.R });
+    textMapTmp.put("S", new KeyCode[] { KeyCode.SHIFT, KeyCode.S });
+    textMapTmp.put("T", new KeyCode[] { KeyCode.SHIFT, KeyCode.T });
+    textMapTmp.put("U", new KeyCode[] { KeyCode.SHIFT, KeyCode.U });
+    textMapTmp.put("V", new KeyCode[] { KeyCode.SHIFT, KeyCode.V });
+    textMapTmp.put("W", new KeyCode[] { KeyCode.SHIFT, KeyCode.W });
+    textMapTmp.put("X", new KeyCode[] { KeyCode.SHIFT, KeyCode.X });
+    textMapTmp.put("Y", new KeyCode[] { KeyCode.SHIFT, KeyCode.Y });
+    textMapTmp.put("Z", new KeyCode[] { KeyCode.SHIFT, KeyCode.Z });
+    textMapTmp.put("`", new KeyCode[] { KeyCode.BACK_QUOTE });
+    textMapTmp.put("-", new KeyCode[] { KeyCode.MINUS });
+    textMapTmp.put("=", new KeyCode[] { KeyCode.EQUALS });
+    textMapTmp.put("[", new KeyCode[] { KeyCode.OPEN_BRACKET });
+    textMapTmp.put("]", new KeyCode[] { KeyCode.CLOSE_BRACKET });
+    textMapTmp.put("\\", new KeyCode[] { KeyCode.BACK_SLASH });
+    textMapTmp.put(";", new KeyCode[] { KeyCode.SEMICOLON });
+    textMapTmp.put("'", new KeyCode[] { KeyCode.QUOTE });
+    textMapTmp.put(",", new KeyCode[] { KeyCode.COMMA });
+    textMapTmp.put(".", new KeyCode[] { KeyCode.PERIOD });
+    textMapTmp.put("/", new KeyCode[] { KeyCode.SLASH });
+    textMapTmp.put("~", new KeyCode[] { KeyCode.SHIFT, KeyCode.BACK_QUOTE });
+    textMapTmp.put("_", new KeyCode[] { KeyCode.SHIFT, KeyCode.MINUS });
+    textMapTmp.put("+", new KeyCode[] { KeyCode.SHIFT, KeyCode.EQUALS });
+    textMapTmp.put("{", new KeyCode[] { KeyCode.SHIFT, KeyCode.OPEN_BRACKET });
+    textMapTmp.put("}", new KeyCode[] { KeyCode.SHIFT, KeyCode.CLOSE_BRACKET });
+    textMapTmp.put("|", new KeyCode[] { KeyCode.SHIFT, KeyCode.BACK_SLASH });
+    textMapTmp.put(":", new KeyCode[] { KeyCode.SHIFT, KeyCode.SEMICOLON });
+    textMapTmp.put("\"", new KeyCode[] { KeyCode.SHIFT, KeyCode.QUOTE });
+    textMapTmp.put("<", new KeyCode[] { KeyCode.SHIFT, KeyCode.COMMA });
+    textMapTmp.put(">", new KeyCode[] { KeyCode.SHIFT, KeyCode.PERIOD });
+    textMapTmp.put("?", new KeyCode[] { KeyCode.SHIFT, KeyCode.SLASH });
+    textMapTmp.put("!", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT1 });
+    textMapTmp.put("@", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT2 });
+    textMapTmp.put("#", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT3 });
+    textMapTmp.put("$", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT4 });
+    textMapTmp.put("%", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT5 });
+    textMapTmp.put("^", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT6 });
+    textMapTmp.put("&", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT7 });
+    textMapTmp.put("*", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT8 });
+    textMapTmp.put("(", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT9 });
+    textMapTmp.put(")", new KeyCode[] { KeyCode.SHIFT, KeyCode.DIGIT0 });
+    textMapTmp.put("\t", new KeyCode[] { KeyCode.TAB });
+    textMapTmp.put("\n", new KeyCode[] { KeyCode.ENTER });
+    textMapTmp.put(" ", new KeyCode[] { KeyCode.SPACE });
     textMap = Collections.unmodifiableMap(textMapTmp);
-  }
-
-  static enum MouseButton {
-    LEFT(com.sun.glass.ui.Robot.MOUSE_LEFT_BTN), MIDDLE(com.sun.glass.ui.Robot.MOUSE_MIDDLE_BTN), RIGHT(com.sun.glass.ui.Robot.MOUSE_RIGHT_BTN);
-    private final int value;
-
-    MouseButton(int value) {
-      this.value = value;
-    }
-
-    int getValue() {
-      return value;
-    }
   }
 
   private static final int LINE_FEED = "\n".codePointAt(0);
   private static final int CARRIAGE_RETURN = "\r".codePointAt(0);
   private static final int ENTER = Keys.ENTER.toString().codePointAt(0);
-  private final AtomicReference<com.sun.glass.ui.Robot> robot = new AtomicReference<com.sun.glass.ui.Robot>();
+  private final AtomicReference<com.sun.glass.ui.GlassRobot> robot = new AtomicReference<>();
   private final AtomicLong latestThread = new AtomicLong();
   private final AtomicLong curThread = new AtomicLong();
   private final Context context;
@@ -249,7 +238,7 @@ class Robot {
     this.context = context;
   }
 
-  private static int[] convertKey(int codePoint) {
+  private static KeyCode[] convertKey(int codePoint) {
     char[] chars = Character.toChars(codePoint);
     if (chars.length == 1) {
       Keys key = Keys.getKeyFromUnicode(chars[0]);
@@ -258,7 +247,7 @@ class Robot {
       }
     }
     String str = new String(new int[] { codePoint }, 0, 1);
-    int[] mapping = textMap.get(str);
+    KeyCode[] mapping = textMap.get(str);
     return mapping;
   }
 
@@ -298,7 +287,7 @@ class Robot {
     try {
       final int[] ints = chars.chars().toArray();
       if (ints.length > 0) {
-        final int[] converted = convertKey(ints[0]);
+        final KeyCode[] converted = convertKey(ints[0]);
         if (converted != null) {
           AppThread.exec(context.item().statusCode, () -> {
             for (int j = 0; j < converted.length; j++) {
@@ -318,7 +307,7 @@ class Robot {
     try {
       final int[] ints = chars.chars().toArray();
       if (ints.length > 0) {
-        final int[] converted = convertKey(ints[0]);
+        final KeyCode[] converted = convertKey(ints[0]);
         if (converted != null) {
           AppThread.exec(context.item().statusCode, () -> {
             for (int j = converted.length - 1; j > -1; j--) {
@@ -355,7 +344,7 @@ class Robot {
 
         int[] ints = chars.chars().toArray();
         for (int i = 0; i < ints.length; i++) {
-          final int[] converted = convertKey(ints[i]);
+          final KeyCode[] converted = convertKey(ints[i]);
           if (converted != null) {
             AppThread.exec(true, context.item().statusCode, () -> {
               for (int j = 0; j < converted.length; j++) {
@@ -367,7 +356,7 @@ class Robot {
         }
         for (int i = ints.length - 1; i > -1; i--) {
           final boolean lastKey = i == 0;
-          final int[] converted = convertKey(ints[i]);
+          final KeyCode[] converted = convertKey(ints[i]);
           if (converted != null) {
             AppThread.exec(false, context.item().statusCode, () -> {
               for (int j = converted.length - 1; j > -1; j--) {
@@ -392,7 +381,7 @@ class Robot {
             codePoint = ints[i];
           }
           AppThread.exec(!lastKey, context.item().statusCode, () -> {
-            int[] converted = convertKey(codePoint);
+            KeyCode[] converted = convertKey(codePoint);
             if (converted == null) {
               if (lastKey) {
                 context.item().httpListener.get().resetStatusCode();
@@ -425,8 +414,8 @@ class Robot {
     lock();
     try {
       AppThread.exec(context.item().statusCode, () -> {
-        robot.get().keyPress(KeyEvent.VK_ENTER);
-        robot.get().keyRelease(KeyEvent.VK_ENTER);
+        robot.get().keyPress(KeyCode.ENTER);
+        robot.get().keyRelease(KeyCode.ENTER);
         return null;
       });
     } finally {
@@ -466,9 +455,9 @@ class Robot {
         Stage stage = context.item().stage.get();
         robot.get().mouseMove(
             (int) Math.rint(Math.max(0, Math.min(stage.getScene().getWidth() - 1,
-                viewportX + new Double((Integer) robot.get().getMouseX())))),
+                viewportX + robot.get().getMouseX()))),
             (int) Math.rint(Math.max(0, Math.min(stage.getScene().getHeight() - 1,
-                viewportY + new Double((Integer) robot.get().getMouseY())))));
+                viewportY + robot.get().getMouseY()))));
         return null;
       });
     } finally {
@@ -497,7 +486,7 @@ class Robot {
 
   private void mousePressHelper(final MouseButton button) {
     AppThread.exec(context.item().statusCode, () -> {
-      robot.get().mousePress(button.getValue());
+      robot.get().mousePress(button);
       return null;
     });
   }
@@ -513,10 +502,10 @@ class Robot {
 
   private void mouseReleaseHelper(final MouseButton button) {
     AppThread.exec(true, context.item().statusCode, () -> {
-      if (button == MouseButton.LEFT) {
+      if (button == MouseButton.PRIMARY) {
         context.item().httpListener.get().resetStatusCode();
       }
-      robot.get().mouseRelease(button.getValue());
+      robot.get().mouseRelease(button);
       return null;
     });
   }
@@ -557,24 +546,12 @@ class Robot {
           try {
             final Stage stage = context.item().stage.get();
             final Scene scene = stage.getScene();
-            final Pixels pixels = robot.get().getScreenCapture(
+            SwingFXUtils.fromFXImage(robot.get().getScreenCapture(null,
                 (int) Math.rint(stage.getX() + scene.getX()),
                 (int) Math.rint(stage.getY() + scene.getY()),
                 (int) Math.rint(scene.getWidth()),
                 (int) Math.rint(scene.getHeight()),
-                false);
-            final ByteBuffer pixelBuffer = pixels.asByteBuffer();
-            final byte[] bytes = new byte[pixelBuffer.remaining()];
-            pixelBuffer.get(bytes);
-            final int bytesPerComponent = pixels.getBytesPerComponent();
-            final int width = pixels.getWidth();
-            final int height = pixels.getHeight();
-            final DataBuffer buffer = new DataBufferByte(bytes, bytes.length);
-            final WritableRaster raster = Raster.createInterleavedRaster(buffer, width, height,
-                bytesPerComponent * width, bytesPerComponent, new int[] { 2, 1, 0 }, null);
-            final ColorModel colorModel = new ComponentColorModel(ColorModel.getRGBdefault().getColorSpace(),
-                false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
-            image = new BufferedImage(colorModel, raster, true, null);
+                false), null);
           } catch (Throwable t) {
             attempt2 = t;
           }

@@ -27,10 +27,6 @@ package com.machinepublishers.glass.ui.monocle;
 
 import com.sun.glass.events.KeyEvent;
 import com.sun.glass.events.MouseEvent;
-import com.machinepublishers.glass.ui.monocle.IntSet;
-import com.machinepublishers.glass.ui.monocle.MonocleWindow;
-import com.machinepublishers.glass.ui.monocle.MonocleWindowManager;
-import com.machinepublishers.glass.ui.monocle.MouseState;
 
 /**
  * MouseState is a snapshot of mouse coordinates and which buttons are pressed.

@@ -34,11 +34,6 @@ import com.sun.glass.ui.Pixels;
 import com.sun.glass.ui.Screen;
 import com.sun.glass.ui.View;
 import com.sun.glass.ui.Window;
-import com.machinepublishers.glass.ui.monocle.MonocleCursor;
-import com.machinepublishers.glass.ui.monocle.MonocleView;
-import com.machinepublishers.glass.ui.monocle.MonocleWindowManager;
-import com.machinepublishers.glass.ui.monocle.NativePlatformFactory;
-import com.machinepublishers.glass.ui.monocle.NativeScreen;
 
 
 final class MonocleWindow extends Window {
@@ -117,7 +112,7 @@ final class MonocleWindow extends Window {
         if (h > 0) {
             //window height surpass window content height(ch)
             height = h;
-        } else if (cw > 0) {
+        } else if (ch > 0) {
             //content height changed
             height = ch;
         } else {

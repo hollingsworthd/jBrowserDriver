@@ -20,17 +20,13 @@ package com.machinepublishers.jbrowserdriver;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -50,6 +46,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
@@ -60,6 +57,7 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.cache.CacheConfig;
@@ -68,7 +66,6 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 
 class StreamConnectionClient {
   private static final Set<String> nonCachedMethods = Collections.unmodifiableSet(new HashSet<String>(
@@ -172,7 +169,8 @@ class StreamConnectionClient {
   CloseableHttpResponse execute(HttpRequestBase req, HttpClientContext context)
       throws ClientProtocolException, IOException {
     return !SettingsManager.settings().cache() || nonCachedMethods.contains(req.getMethod())
-        ? client.execute(req, context) : cachingClient.execute(req, context);
+        ? client.execute(req, context)
+        : cachingClient.execute(req, context);
   }
 
   private static SSLContext sslContext() {
@@ -181,7 +179,7 @@ class StreamConnectionClient {
       if ("trustanything".equals(property)) {
         try {
           return SSLContexts.custom().loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()),
-                  (chain, authType) -> true).build();
+              (chain, authType) -> true).build();
         } catch (Throwable t) {
           LogsServer.instance().exception(t);
         }
@@ -189,7 +187,8 @@ class StreamConnectionClient {
         try {
           String location = property;
           location = location.equals("compatible")
-              ? "https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt" : location;
+              ? "https://raw.githubusercontent.com/bagder/ca-bundle/master/ca-bundle.crt"
+              : location;
           File cachedPemFile = new File("./pemfile_cached");
           boolean remote = location.startsWith("https://") || location.startsWith("http://");
           if (remote && cachedPemFile.exists()
@@ -199,13 +198,11 @@ class StreamConnectionClient {
           }
           String pemBlocks = null;
           if (remote) {
-            HttpURLConnection remotePemFile = (HttpURLConnection) StreamHandler.defaultConnection(new URL(location));
-            remotePemFile.setRequestMethod("GET");
-            remotePemFile.connect();
-            pemBlocks = Util.toString(remotePemFile.getInputStream(),
-                Util.charset(remotePemFile));
-            cachedPemFile.delete();
-            Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
+            try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+              pemBlocks = new BasicResponseHandler().handleResponse(httpClient.execute(new HttpGet(location)));
+              cachedPemFile.delete();
+              Files.write(Paths.get(cachedPemFile.getAbsolutePath()), pemBlocks.getBytes("utf-8"));
+            }
           } else {
             pemBlocks = new String(Files.readAllBytes(
                 Paths.get(new File(location).getAbsolutePath())), "utf-8");

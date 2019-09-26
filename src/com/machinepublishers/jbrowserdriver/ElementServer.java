@@ -52,9 +52,7 @@ import org.w3c.dom.html.HTMLFormElement;
 import org.w3c.dom.html.HTMLInputElement;
 import org.w3c.dom.html.HTMLOptionElement;
 
-import com.machinepublishers.jbrowserdriver.AppThread.Sync;
-import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
-
+import javafx.scene.input.MouseButton;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 
@@ -298,7 +296,7 @@ class ElementServer extends RemoteObject implements ElementRemote, WebElement,
         }
         final org.openqa.selenium.Point frameLocation = contextItem.selectedFrameLocation();
         contextItem.context.get().robot.get().mouseMove(clickX + frameLocation.getX(), clickY + frameLocation.getY());
-        contextItem.context.get().robot.get().mouseClick(MouseButton.LEFT);
+        contextItem.context.get().robot.get().mouseClick(MouseButton.PRIMARY);
         return null;
       });
     }

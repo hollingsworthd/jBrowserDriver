@@ -73,11 +73,5 @@ final class MonocleTimer extends Timer {
             task = null;
         }
     }
-    
-    //Override -- not an annotation so we maintain backward compatibility with things earlier than Java 8u212
-    protected void _pause(long timer) {}
-    
-    //Override -- not an annotation so we maintain backward compatibility with things earlier than Java 8u212
-    protected void _resume(long timer) {}
 }
 

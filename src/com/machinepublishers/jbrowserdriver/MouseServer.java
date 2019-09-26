@@ -20,7 +20,7 @@ package com.machinepublishers.jbrowserdriver;
 import java.rmi.RemoteException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.machinepublishers.jbrowserdriver.Robot.MouseButton;
+import javafx.scene.input.MouseButton;
 
 class MouseServer extends RemoteObject implements MouseRemote,
     org.openqa.selenium.interactions.Mouse {
@@ -38,7 +38,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
-    robot.get().mouseClick(MouseButton.LEFT);
+    robot.get().mouseClick(MouseButton.PRIMARY);
   }
 
   /**
@@ -57,7 +57,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
-    robot.get().mouseClick(MouseButton.RIGHT);
+    robot.get().mouseClick(MouseButton.SECONDARY);
   }
 
   /**
@@ -76,8 +76,8 @@ class MouseServer extends RemoteObject implements MouseRemote,
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
-    robot.get().mouseClick(MouseButton.LEFT);
-    robot.get().mouseClick(MouseButton.LEFT);
+    robot.get().mouseClick(MouseButton.PRIMARY);
+    robot.get().mouseClick(MouseButton.PRIMARY);
   }
 
   /**
@@ -96,7 +96,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
-    robot.get().mousePress(MouseButton.LEFT);
+    robot.get().mousePress(MouseButton.PRIMARY);
   }
 
   /**
@@ -151,7 +151,7 @@ class MouseServer extends RemoteObject implements MouseRemote,
     if (coords != null) {
       robot.get().mouseMove(coords.inViewPort());
     }
-    robot.get().mouseRelease(MouseButton.LEFT);
+    robot.get().mouseRelease(MouseButton.PRIMARY);
   }
 
   /**
