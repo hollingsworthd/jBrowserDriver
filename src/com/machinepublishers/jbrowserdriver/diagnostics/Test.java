@@ -145,8 +145,8 @@ public class Test {
        */
       int messages = 0;
       for (LogEntry entry : driver.manage().logs().get("javascript").filter(Level.ALL)) {
-          ++messages;
-          test(!StringUtils.isEmpty(entry.getMessage()));
+        ++messages;
+        test(!StringUtils.isEmpty(entry.getMessage()));
       }
       test(messages == 3);
 
@@ -351,7 +351,7 @@ public class Test {
       test(driver.getPageSource().contains("</html>"));
       test(driver.getPageSource().contains("</head>"));
       test(driver.getPageSource().contains("</body>"));
-      
+
       /*
        * Cookie manager
        */
@@ -515,16 +515,16 @@ public class Test {
       /*
        * Windows
        */
-      String windowHandle = driver.getWindowHandle();
-      //commented out to be compatible with selenium 3 which does not have this api
+      //commented out to be compatible with selenium 3 which does not have newWindow api
+      //String windowHandle = driver.getWindowHandle();
       //driver.switchTo().newWindow(WindowType.TAB);
-      test(driver.getWindowHandles().size() == 2);
-      driver.switchTo().window(new ArrayList<>(driver.getWindowHandles()).get(1));
-      test(!windowHandle.equals(driver.getWindowHandle()));
-      driver.close();
-      test(driver.getWindowHandles().size() == 1);
-      driver.switchTo().window(windowHandle);
-      test(windowHandle.equals(driver.getWindowHandle()));
+      //test(driver.getWindowHandles().size() == 2);
+      //driver.switchTo().window(new ArrayList<>(driver.getWindowHandles()).get(1));
+      //test(!windowHandle.equals(driver.getWindowHandle()));
+      //driver.close();
+      //test(driver.getWindowHandles().size() == 1);
+      //driver.switchTo().window(windowHandle);
+      //test(windowHandle.equals(driver.getWindowHandle()));
 
       /*
        * Element visibility
