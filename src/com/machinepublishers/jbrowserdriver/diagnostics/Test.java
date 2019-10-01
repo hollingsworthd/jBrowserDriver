@@ -144,7 +144,7 @@ public class Test {
        * Javascript logs
        */
       int messages = 0;
-      for (LogEntry entry : driver.manage().logs().get("javascript").filter(Level.ALL)) {
+      for (LogEntry entry : driver.manage().logs().get("javascript")) {
         ++messages;
         test(!StringUtils.isEmpty(entry.getMessage()));
       }
