@@ -143,7 +143,12 @@ public class Timezone {
   public static final Timezone EUROPE_BUDAPEST = new Timezone("Europe/Budapest");
   public static final Timezone EUROPE_COPENHAGEN = new Timezone("Europe/Copenhagen");
   public static final Timezone EUROPE_ISTANBUL = new Timezone("Europe/Istanbul");
-  public static final Timezone EUROPE_KIEV = new Timezone("Europe/Kiev");
+  public static final Timezone EUROPE_KYIV = new Timezone("Europe/Kyiv");
+  /**
+  * Incorrect spelling of Europe/Kyiv. Use {@link #EUROPE_KYIV} instead.
+  */
+  @Deprecated
+  public static final Timezone EUROPE_KIEV = EUROPE_KYIV;
   public static final Timezone EUROPE_LONDON = new Timezone("Europe/London");
   public static final Timezone EUROPE_MADRID = new Timezone("Europe/Madrid");
   public static final Timezone EUROPE_MINSK = new Timezone("Europe/Minsk");
