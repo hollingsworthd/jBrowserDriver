@@ -1,7 +1,7 @@
 ### Thank you to our sponsors!
-[Ai Lives Don't Matter™](https://AiLivesDontMatter.com/)
-[SLOP CITY™](https://SLOPCITY.org/)
-[Digilore™](https://apps.apple.com/us/app/digilore-podcast-app/id6633130387)
+ * [Ai Lives Don't Matter™](https://AiLivesDontMatter.com/)
+ * [SLOP CITY™](https://SLOPCITY.org/)
+ * [Digilore™](https://apps.apple.com/us/app/digilore-podcast-app/id6633130387)
 
 # jBrowserDriver
 A programmable, embeddable web browser driver compatible with the Selenium WebDriver spec -- headless, WebKit-based, pure Java
